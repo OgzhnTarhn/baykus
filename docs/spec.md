@@ -157,7 +157,8 @@ Her modelin `n, s, m, l, x` boyutları var. Örnekler: `yolo26n.pt` (nano: en k�
 ### 4.4 Önceden eğitilmiş ağırlıklar ve transfer öğrenme
 - `yolo26s.pt` dosyası COCO veri setinde (80 sınıf, günlük fotoğraflar) önceden eğitilmiş.
 - Biz bu ağırlıklardan başlayıp kendi verimizle ince ayar (fine-tuning) yapacağız. Sıfırdan eğitmekten çok daha hızlı ve daha iyi sonuç verir.
-- **4 kanallı modelde dikkat edilecek nokta:** COCO ağırlıkları 3 kanal için. İlk katman 4 kanala uyarlanmalı. Yaygın yöntem: termal kanalın ağırlıklarını RGB ağırlıklarının ortalamasıyla başlatmak. Bunu deney olarak ölçeceğiz (E3b).
+- **4 kanallı modelde dikkat edilecek nokta:** COCO ağırlıkları 3 kanal için. Ultralytics (8.4.x) 4 kanallı modelde ilk katmanın kanal 0-2'sine COCO'nun RGB ağırlıklarını kopyalıyor, kanal 3'ü (termal) **rastgele** bırakıyor (`ul_default`). Literatürdeki yaygın alternatif termal kanalı RGB ağırlıklarının ortalamasıyla başlatmak (`rgb_mean`). Bunu deney olarak ölçeceğiz (E3, E3b).
+- **Kanal sırası:** Kopyalanan ağırlıklar kanal 0-2'nin R, G, B olduğunu varsayar. Ultralytics BGR→RGB çevirmesini sadece 3 kanallı görüntüde yapar; 4 kanallı TIFF dosyadan çözüldüğü sırayla modele gider. Bu yüzden dosyaya hangi sırayla yazılacağı H1 Spike A'da ölçülür (ADR 0004).
 
 ### 4.5 Veri formatı (Ultralytics / YOLO formatı)
 
@@ -523,7 +524,7 @@ mode: early_fusion            # rgb | ir | early_fusion
 model: yolo26s.pt
 data: data/dv_rgbt/data_rgbt4.yaml
 label_set: ir                 # eğitim etiketleri: ir | rgb
-first_conv_init: rgb_mean     # early_fusion için: rgb_mean | random
+first_conv_init: rgb_mean     # early_fusion için: ul_default | rgb_mean | random
 train:
   imgsz: 640
   epochs: 100
@@ -613,7 +614,7 @@ tracking:
 | E1 | Sadece RGB (s) | Normal kamera gece ne kadar çöküyor? | H2 |
 | E2 | Sadece IR (s) | Termal tek başına ne kadar iyi? | H2 |
 | E3 | Erken füzyon 4 kanal (s), `first_conv_init=rgb_mean` | Basit birleştirme yardım ediyor mu? | H3 |
-| E3b | E3 + `first_conv_init=random` | İlk katman başlatması ne kadar fark ediyor? | H3 |
+| E3b | E3 + `first_conv_init=ul_default` (Ultralytics varsayılanı: RGB kopya + T rastgele); bütçe varsa `random` | İlk katman başlatması ne kadar fark ediyor? | H3 |
 | E4 | Geç füzyon (E1 + E2, WBF) | İki model mi, tek birleşik model mi? | H3 |
 | E5 | E1-E4 için iki etiket seti | Skor ne kadar değişiyor? | H3 |
 | E6 | Sağlamlık paketi (E1-E4) | Hangi model hangi arızada dayanıyor? | H3 |
@@ -960,7 +961,7 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 ### H3 — Füzyon ve dürüst ölçüm
 | # | Issue | Kabul kriteri |
 |---|---|---|
-| 19 | E3 erken füzyon (`rgb_mean`) + E3b (`random`) | İki run JSON |
+| 19 | E3 erken füzyon (`rgb_mean`) + E3b (`ul_default`) | İki run JSON |
 | 20 | WBF **(S)** sarmalayıcısı + E4 geç füzyon (parametreler val'de seçilir) | Run JSON; seçilen parametreler ADR/notta |
 | 21 | Bozulma modülü (TDD) + sağlamlık CLI'ı + E6 | E1-E4 için eğriler |
 | 22 | HIT-UAV dönüştürücü + E7 | `car` ve `vehicle` AP'leri |
