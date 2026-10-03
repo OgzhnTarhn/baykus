@@ -1,7 +1,7 @@
 # Baykuş — RGB + Termal Füzyonlu Hava Görüntüsü Tespiti, Edge için Optimize, Uçtan Uca Sistem
 
 > **Proje adı:** Baykuş · **Repo / paket adı:** `baykus` · **Alt başlık (EN):** *RGB-Thermal aerial vehicle detection on the edge*
-> **Sahibi:** Oğuzhan Tarhan · **Tarih:** 2026-10-02 · **Sürüm:** v2.2 (eğitim: Colab · laptop: AMD Ryzen 7 8845HS, OpenVINO çıkarıldı) · **Süre:** 8 hafta · **Durum:** Onaylandı (2026-10-02)
+> **Sahibi:** Oğuzhan Tarhan · **Tarih:** 2026-10-04 · **Sürüm:** v2.3 (v2.2 + derin araştırma düzeltmeleri; eğitim: Colab · laptop: AMD Ryzen 7 8845HS, OpenVINO çıkarıldı) · **Süre:** 8 hafta · **Durum:** Onaylandı (2026-10-02)
 
 ---
 
@@ -40,6 +40,17 @@
 
 ## 0. v1'den bu yana ne değişti
 
+### v2.3 (2026-10-04)
+Kaynak: `docs/research/2026-10-04-derin-arastirma.md`. Sadece H1'i etkileyen düzeltmeler işlendi; sonraki haftaların önerileri (modality dropout, bootstrap güven aralığı, INT8'de head FP32, NPU spike'ı, takipçi kararı) ilgili haftanın planında ele alınacak.
+
+| Konu | v2.2 | **v2.3** |
+|---|---|---|
+| İlk katman başlatması | `rgb_mean \| random` | `ul_default` (Ultralytics varsayılanı: RGB kopya + T rastgele) eklendi. E3 = `rgb_mean`, E3b = `ul_default` (§4.4, §10.3, §13) |
+| 4 kanal sırası | Belirsiz | Ultralytics BGR→RGB çevirmesini sadece 3 kanalda yapıyor; dosyaya yazma sırası Spike A'da ölçülür (§4.4, ADR 0004) |
+| Hizasızlık | "1-20 px" tahmini | E0 raporunda iki etiket setinin merkez kayması ölçülür (FR-D7, §8.2) |
+| Model | YOLO26 | Değişmedi. YOLO27 duyuruldu ama ağırlık yok; ADR 0001'e not |
+
+### v2'ye kadar
 Ayrıntılı araştırma üç önemli kararı değiştirdi:
 
 | Konu | v1 | **v2** | Neden |
