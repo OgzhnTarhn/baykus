@@ -21,4 +21,5 @@ Tasarım: docs/spec.md · Haftalık plan: docs/plans/ · Kararlar: docs/adr/ · 
 - Test seti sadece final ölçümde; seçimler val ile.
 - Token/şifre hiçbir dosyaya yazılmaz.
 - Conventional Commits. "Bitti" demeden önce testleri çalıştır ve çıktıyı göster.
+- Commit'ler atomik: her commit tek bir mantıksal değişiklik. Commit mesajlarına ve PR açıklamalarına Claude imzası (Co-Authored-By, "Generated with Claude Code") eklenmez.
 - Her görev sonunda dur: ne yaptığını ve nedenini kullanıcıya açıkla, onay bekle.
