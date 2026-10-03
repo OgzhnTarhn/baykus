@@ -1,0 +1,24 @@
+# veri ve çıktılar
+data/
+datasets/
+runs/
+mlruns/
+*.pt
+*.onnx
+*.engine
+!fixtures/models/*.onnx
+# ortam
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+# derleme / web
+build/
+node_modules/
+.next/
+# gizli bilgiler
+.env
+kaggle.json
+*.token
