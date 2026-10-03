@@ -352,7 +352,7 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 - **FR-D4:** Aydınlatma etiketi (Gündüz / Gece / Karanlık gece). Resmi kaynaktan alınır. Yoksa türetme yöntemi (ör. RGB ortalama parlaklık eşikleri) belgelenir ve resmi sayılarla (14.478 / 5.468 / 8.493) karşılaştırılarak doğrulanır.
 - **FR-D5:** 4 kanallı görüntü üretimi: RGB (3) + IR (1) → tek bir 4 kanallı TIFF. Biçim, Ultralytics'in beklediği kanal düzenine göre 1. haftada kesinleşir. Sıkıştırma: deflate/LZW.
 - **FR-D6:** COCO JSON üretimi (her etiket seti için) ve kırılım listeleri (aydınlatma, boyut).
-- **FR-D7:** Veri raporu `docs/data-report.md`: sınıf, boyut ve aydınlatma dağılımı; iki etiket seti arasındaki sayı farkı; örnek hizasızlık görselleri.
+- **FR-D7:** Veri raporu `docs/data-report.md`: sınıf, boyut ve aydınlatma dağılımı; iki etiket seti arasındaki sayı farkı; **aynı nesnenin iki etiket setindeki merkez kayması dağılımı** (p50/p90/p99, histogram); örnek hizasızlık görselleri.
 - **FR-D8:** HIT-UAV dönüştürücü ve sınıf eşlemesi (§8.3).
 
 **Eğitim (FR-T)**
@@ -423,7 +423,7 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 
 ### 8.2 Bilinen sorunlar
 - Kaggle kopyasında birkaç eğitim görüntüsü bozuk veya eksik → FR-D1.
-- RGB-IR hizasızlığı yaygın (1-20 piksel) → etiket seti karşılaştırması (E5) ve hizasızlık bozulması (E6).
+- RGB-IR hizasızlığı yaygın (1-20 piksel, tahmin) → etiket seti karşılaştırması (E5) ve hizasızlık bozulması (E6). Gerçek dağılım E0 veri raporunda iki etiket setinin merkez kaymasından ölçülür (FR-D7).
 - 100 piksellik beyaz kenarlık → FR-D2.
 - IR görüntüleri 3 kanallı kopya olarak saklanmış olabilir → 1. haftada kontrol; tek kanal alınır.
 - **Disk:** 4 kanallı TIFF'ler sıkıştırılmamış halde ~28k × 640 × 512 × 4 bayt ≈ **37 GB**. Colab'ın geçici diskine sığabilir ama kalıcı değil; Drive'ın ücretsiz 15 GB'ına sığmaz → §23'teki B planları.
