@@ -21,6 +21,25 @@ def _cmd_verify(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_convert(a: argparse.Namespace) -> int:
+    from baykus.data.convert import convert_split
+
+    ok = json.loads((Path(a.meta) / "ok_stems.json").read_text(encoding="utf-8"))
+    stats = {
+        s: convert_split(split_dirs(Path(a.raw), s), s, ok.get(s, []), Path(a.out)) for s in SPLITS
+    }
+    (Path(a.meta) / "convert_stats.json").write_text(json.dumps(stats, indent=2), encoding="utf-8")
+    print(json.dumps(stats))
+    return 0
+
+
+def _cmd_activate(a: argparse.Namespace) -> int:
+    from baykus.data.convert import activate_label_set
+
+    print(activate_label_set(Path(a.out), a.modality, a.label_set))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="baykus-data")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -28,6 +47,18 @@ def build_parser() -> argparse.ArgumentParser:
     v.add_argument("--raw", required=True)
     v.add_argument("--meta", required=True)
     v.set_defaults(func=_cmd_verify)
+    c = sub.add_parser("convert", help="kenarlık kırp, etiketleri YOLO formatına çevir")
+    c.add_argument("--raw", required=True)
+    c.add_argument("--meta", required=True)
+    c.add_argument("--out", required=True)
+    c.set_defaults(func=_cmd_convert)
+    al = sub.add_parser(
+        "activate-labels", help="bir etiket setini <modality>/labels altına kopyala"
+    )
+    al.add_argument("--out", required=True)
+    al.add_argument("--modality", required=True, choices=["rgb", "ir", "rgbt4"])
+    al.add_argument("--label-set", required=True, choices=["ir", "rgb"])
+    al.set_defaults(func=_cmd_activate)
     return p
 
 
