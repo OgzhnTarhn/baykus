@@ -24,16 +24,29 @@ def code(text: str) -> tuple[str, str]:
 CLONE = code(
     f"""
     # Repo private ise Secrets'a GITHUB_TOKEN ekle (fine-grained, sadece bu repo, 'Contents: read').
+    import os
     from google.colab import userdata
     try:
         tok = userdata.get('GITHUB_TOKEN')
     except Exception:
         tok = None
     url = f'https://{{tok}}@{REPO}' if tok else 'https://{REPO}'
-    !git clone -q {{url}} /content/baykus
+    if os.path.isdir('/content/baykus/.git'):
+        !git -C /content/baykus pull -q {{url}} main
+    else:
+        !git clone -q {{url}} /content/baykus
+        !git -C /content/baykus remote set-url origin https://{REPO}
     %cd /content/baykus
-    !git remote set-url origin https://{REPO}
     !git log --oneline -3
+    """
+)
+
+KAGGLE_TOKEN = code(
+    """
+    import os
+    from google.colab import userdata
+    os.environ['KAGGLE_API_TOKEN'] = userdata.get('KAGGLE_API_TOKEN')
+    print('token yüklendi (değer yazdırılmadı)')
     """
 )
 
@@ -62,14 +75,7 @@ SETUP_CELLS = [
         !cat /content/drive/MyDrive/baykus/write_test.txt
         """
     ),
-    code(
-        """
-        import os
-        from google.colab import userdata
-        os.environ['KAGGLE_API_TOKEN'] = userdata.get('KAGGLE_API_TOKEN')
-        print('token yüklendi (değer yazdırılmadı)')
-        """
-    ),
+    KAGGLE_TOKEN,
     code(
         """
         %%time
@@ -93,17 +99,20 @@ SETUP_CELLS = [
 ]
 
 
-def build(cells: list[tuple[str, str]], path: Path) -> None:
+def build(cells: list[tuple[str, str]], path: Path, gpu: bool) -> None:
     nb = nbf.v4.new_notebook()
     nb.cells = [
         nbf.v4.new_markdown_cell(src) if kind == "md" else nbf.v4.new_code_cell(src)
         for kind, src in cells
     ]
-    nb.metadata["accelerator"] = "GPU"
+    for i, cell in enumerate(nb.cells):
+        cell.id = f"{path.stem}-{i:02d}"  # sabit kimlik: yeniden üretim gereksiz diff yaratmasın
+    if gpu:  # Colab bu alanı görünce GPU çalışma zamanı ister; veri hazırlığı kota harcamasın
+        nb.metadata["accelerator"] = "GPU"
     path.parent.mkdir(parents=True, exist_ok=True)
     nbf.write(nb, path)
 
 
 if __name__ == "__main__":
-    build(SETUP_CELLS, Path("notebooks/colab/00_setup.ipynb"))
+    build(SETUP_CELLS, Path("notebooks/colab/00_setup.ipynb"), gpu=True)
     print("ok")
