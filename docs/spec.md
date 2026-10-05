@@ -103,7 +103,7 @@ Mezuniyette (Haziran 2027) **Türk savunma sanayii** şirketlerinde (ASELSAN, HA
 - [ ] **S3 — Etiket seti etkisi:** Aynı tahminler hem IR hem RGB etiketleriyle ölçülmüş, fark raporlanmış.
 - [ ] **S4 — Sağlamlık:** En az 4 bozulma türünde doğruluk eğrileri çıkarılmış.
 - [ ] **S5 — Veri setleri arası test:** DroneVehicle'da eğitilen RGB, IR ve füzyon modelleri, görmediği M3OT verisinde (RGB-IR, araç) ölçülmüş.
-- [ ] **S6 — Edge tablosu:** En az 3 hassasiyet (FP32/FP16/INT8) × en az 2 donanım (laptop CPU, Colab T4) için doğruluk, boyut ve p50/p95 gecikme.
+- [ ] **S6 — Edge tablosu:** En az 3 hassasiyet (FP32/FP16/INT8) × en az 2 donanım (laptop CPU, Colab T4) için doğruluk, boyut ve p50/p95 gecikme. INT8'de head FP32 varyantı dahil. Laptop NPU satırı varsa eklenir (FR-X6).
 - [ ] **S7 — C++/Python eşliği:** C++ motor çıktısı Python referansıyla tolerans içinde aynı. Bu CI'da test ediliyor.
 - [ ] **S8 — Kapalı ağ:** `docker compose up` dış ağa çıkmadan çalışıyor.
 - [ ] **S9 — Sunum:** README, demo videosu ve teknik yazı yayında.
@@ -388,7 +388,8 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 
 **Export ve edge (FR-X)**
 - **FR-X1:** ONNX export (sabit boyut, batch 1, 4 kanal girdi korunur).
-- **FR-X2:** Varyantlar: ONNX FP32, ONNX FP16, ONNX INT8; TensorRT FP16 ve INT8 (Colab T4).
+- **FR-X2:** Varyantlar: ONNX FP32, ONNX FP16, ONNX INT8 (tam), **ONNX INT8 (head FP32)**; TensorRT FP16 ve INT8 (Colab T4).
+- **FR-X6 — NPU denemesi (zaman kutusu 3 saat):** Aynı ONNX modeli laptop NPU'sunda (Ryzen 7 8845HS, XDNA; Ryzen AI Software, AMD Quark ile INT8, ONNX Runtime VitisAI EP, Windows). Kaç düğümün NPU'da çalıştığı ve gecikme raporlanır. Çalışmazsa bulgu olarak yazılır; S6'yı engellemez.
 - **FR-X3:** INT8 kalibrasyonu **sadece eğitim setinden** yapılır (`fraction` ile ~500 görüntü). Test setine dokunulmaz.
 - **FR-X4:** Her varyantın doğruluğu yeniden ölçülür.
 - **FR-X5:** Benchmark: §14 protokolü; p50/p95, boyut, tepe bellek, donanım bilgisi.
@@ -646,7 +647,7 @@ tracking:
 | E6 | Sağlamlık paketi (E1-E4) | Hangi model hangi arızada dayanıyor? | H3 |
 | E7 | M3OT veri setleri arası test (E1-E4, sınıfsız `vehicle` AP) | Hangi mod başka bir drone/sensör verisinde genelleşiyor? | H5 |
 | E8 | Boyut: n / s (/ m) için en iyi mod | Doğruluk ve hız ödünleşimi | H4 |
-| E9 | Format × hassasiyet × donanım | Edge tablosu | H4 |
+| E9 | Format × hassasiyet × donanım (+ INT8 head FP32, + NPU denemesi) | Edge tablosu | H4 |
 | E10 *(ek)* | Orta füzyon (YOLOv11-RGBT) | Karmaşık füzyon farkı kapatır mı? | H3 / H7 |
 | E11 *(ek)* | YOLO26-OBB, sadece IR | OBB literatürüyle karşılaştırma | H7 |
 
@@ -661,7 +662,12 @@ model.export(format="onnx", imgsz=640, half=True)                        # ONNX 
 model.export(format="engine", imgsz=640, half=True)                      # TensorRT FP16 (T4)
 model.export(format="engine", imgsz=640, int8=True, data="data.yaml", fraction=...)  # TensorRT INT8
 ```
-ONNX INT8 için ONNX Runtime'ın `quantize_static` fonksiyonu kullanılır. Kalibrasyon eğitim setinden yapılır.
+ONNX INT8 için ONNX Runtime'ın `quantize_static` fonksiyonu kullanılır (QDQ, kanal başına ağırlık). Kalibrasyon eğitim setinden yapılır.
+
+**INT8 notları (araştırmadan):**
+- YOLO26'da INT8 kaybı detection head'in de INT8'e çevrilip çevrilmemesine çok bağlı. Bir deploy çalışmasında TensorRT'de %5,65, ORT'de %0,72 mAP kaybı raporlanmış. Bu yüzden iki ORT varyantı ölçülür: **tam INT8** ve **head FP32** (`nodes_to_exclude` ile son tespit başlığı düğümleri). Hangi düğümlerin hariç tutulduğu bench JSON'una yazılır.
+- INT8'in CPU'da hızlanması komut setine bağlı. VNNI'siz bir CPU'da INT8, FP32'den yavaş ölçülmüş. Ryzen 7 8845HS (Zen 4) AVX-512 VNNI destekliyor; CPU bayrakları bench JSON'una yazılır ve sonuç bu bağlamla raporlanır.
+- Laptop NPU denemesi FR-X6'da.
 
 **Ölçüm kuralları:**
 - batch 1, sabit 640×640 girdi
