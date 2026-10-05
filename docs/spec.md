@@ -102,7 +102,7 @@ Mezuniyette (Haziran 2027) **Türk savunma sanayii** şirketlerinde (ASELSAN, HA
 - [ ] **S2 — Füzyonun katkısı:** Sadece RGB, sadece IR ve en az iki füzyon yöntemi **Gündüz / Gece / Karanlık gece** kırılımlarıyla karşılaştırılmış.
 - [ ] **S3 — Etiket seti etkisi:** Aynı tahminler hem IR hem RGB etiketleriyle ölçülmüş, fark raporlanmış.
 - [ ] **S4 — Sağlamlık:** En az 4 bozulma türünde doğruluk eğrileri çıkarılmış.
-- [ ] **S5 — Veri setleri arası test:** DroneVehicle'da eğitilen IR modeli, görmediği HIT-UAV verisinde ölçülmüş.
+- [ ] **S5 — Veri setleri arası test:** DroneVehicle'da eğitilen RGB, IR ve füzyon modelleri, görmediği M3OT verisinde (RGB-IR, araç) ölçülmüş.
 - [ ] **S6 — Edge tablosu:** En az 3 hassasiyet (FP32/FP16/INT8) × en az 2 donanım (laptop CPU, Colab T4) için doğruluk, boyut ve p50/p95 gecikme.
 - [ ] **S7 — C++/Python eşliği:** C++ motor çıktısı Python referansıyla tolerans içinde aynı. Bu CI'da test ediliyor.
 - [ ] **S8 — Kapalı ağ:** `docker compose up` dış ağa çıkmadan çalışıyor.
@@ -278,7 +278,7 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 ### Kapsamda
 - DroneVehicle üzerinde **5 sınıf araç tespiti** (car, truck, bus, van, freight car), **yatay kutu (HBB)**
 - Modeller: sadece RGB, sadece IR, erken füzyon (4 kanal), geç füzyon (WBF)
-- Kırılımlı değerlendirme, etiket seti karşılaştırması, sağlamlık testi, veri setleri arası test (HIT-UAV)
+- Kırılımlı değerlendirme, etiket seti karşılaştırması, sağlamlık testi, veri setleri arası test (M3OT; tüm modlar)
 - ONNX / TensorRT export; FP32, FP16, INT8; laptop CPU ve Colab T4 ölçümleri
 - C++ çıkarım motoru, HTTP API, ByteTrack takibi
 - Next.js operatör ekranı
@@ -287,7 +287,7 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 ### Ek hedefler (zaman kalırsa, bu sırayla)
 1. Orta seviye füzyon (YOLOv11-RGBT ile)
 2. OBB deneyi: literatürle doğrudan karşılaştırma için YOLO26-OBB, sadece IR
-3. İnsan tespiti (HIT-UAV termal)
+3. İnsan tespiti ve IR-only ikinci veri setleri arası test (HIT-UAV termal)
 4. Gerçek bir Jetson cihazında ölçüm
 
 ### Kapsam dışı
@@ -364,7 +364,7 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 - **FR-D5:** 4 kanallı görüntü üretimi: RGB (3) + IR (1) → tek bir 4 kanallı TIFF. Biçim, Ultralytics'in beklediği kanal düzenine göre 1. haftada kesinleşir. Sıkıştırma: deflate/LZW.
 - **FR-D6:** COCO JSON üretimi (her etiket seti için) ve kırılım listeleri (aydınlatma, boyut).
 - **FR-D7:** Veri raporu `docs/data-report.md`: sınıf, boyut ve aydınlatma dağılımı; iki etiket seti arasındaki sayı farkı; **aynı nesnenin iki etiket setindeki merkez kayması dağılımı** (p50/p90/p99, histogram); örnek hizasızlık görselleri.
-- **FR-D8:** HIT-UAV dönüştürücü ve sınıf eşlemesi (§8.3).
+- **FR-D8:** M3OT dönüştürücü (COCO JSON + MOT `gt.txt` → bizim düzen; RGB, IR ve 4 kanal) ve sınıf eşlemesi (§8.3). HIT-UAV dönüştürücü ek hedef.
 
 **Eğitim (FR-T)**
 - **FR-T1:** Tek CLI: `uv run baykus-train --config configs/e3_early_fusion.yaml`
@@ -379,7 +379,7 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 - **FR-V2:** Kırılımlar: aydınlatma (3), COCO boyut sınıfları (küçük < 32², orta < 96², büyük), sınıf.
 - **FR-V3:** Aynı tahminler iki etiket setine karşı ölçülür.
 - **FR-V4:** Sağlamlık paketi (§12.3) tek komutla çalışır, eğri grafikleri üretir.
-- **FR-V5:** HIT-UAV veri setleri arası test tek komutla çalışır.
+- **FR-V5:** M3OT veri setleri arası test tek komutla, her mod (rgb, ir, early_fusion, late_fusion) için çalışır.
 - **FR-V6:** Ultralytics `val` ile pycocotools sonuçları karşılaştırılır. Fark %1'den büyükse nedeni `docs/` altında açıklanır (iki kütüphane AP'yi farklı enterpolasyonla hesaplar).
 - **FR-V7:** Geç füzyon: RGB ve IR modellerinin tahminleri ensemble-boxes WBF ile birleştirilir. Ağırlıklar ve IoU eşiği **sadece val** setinde seçilir.
 
@@ -417,7 +417,7 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 - Ultralytics **AGPL-3.0** olduğu için repo da **AGPL-3.0** olur. README'de "üretim kullanımı Ultralytics Enterprise lisansı gerektirir" notu yer alır.
 - Kullanılan kütüphanelerin lisansları: ONNX Runtime (MIT), OpenCV (Apache-2.0), ByteTrack-cpp (MIT), ensemble-boxes (MIT), cpp-httplib (MIT), nlohmann/json (MIT), YOLOs-CPP (AGPL; sadece referans).
 - **DroneVehicle'ın lisansı belirtilmemiş:** yeniden dağıtılmaz, atıf yapılır.
-- **HIT-UAV CC-BY-4.0:** küçük fikstürler atıfla repoya girebilir.
+- **M3OT ve HIT-UAV CC-BY-4.0:** küçük fikstürler atıfla repoya girebilir.
 - Model ağırlıkları GitHub Releases'ta AGPL ile yayımlanır.
 
 ---
@@ -429,8 +429,9 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 | Veri seti | İçerik | Erişim | Lisans | Rol |
 |---|---|---|---|---|
 | **DroneVehicle** | 28.439 RGB-IR çifti, 5 araç sınıfı, OBB (biz HBB'ye çeviriyoruz), modalite başına ayrı etiket, ~953 bin kutu. Gündüz 14.478 / Gece 5.468 / Karanlık gece 8.493 | **Kaggle kopyası** `brendanalvey/visdrone-dronevehicle` (Kaggle API ile Colab'a indirilir). Resmi: GitHub, BaiduYun | Belirtilmemiş, atıf | Ana eğitim ve test |
-| **HIT-UAV** | 2.898 termal görüntü, 60-130 m irtifa, Person/Car/Bicycle/OtherVehicle, hem HBB hem OBB, YOLO formatı hazır | GitHub | **CC-BY-4.0** | Veri setleri arası test, CI fikstürleri |
-| **VT-MOT** | 582 RGB-T video çifti (gözetleme / drone / el kamerası), 401 bin kare çifti, 3,99 M kutu | Makale ve GitHub | 1. haftada kontrol | Takip değerlendirmesi (sadece drone dizileri) |
+| **M3OT** (Scientific Data 2025) | 8 video dizisi, 10.790 RGB-IR çifti, 640×512, hizalı (afin + kırpma), 100-120 m irtifa, **sadece araç**, ~220 bin kutu, **modalite başına ayrı etiket**, MOT `gt.txt` + COCO JSON | figshare | **CC-BY-4.0** | **Veri setleri arası test (tüm modlar) ve takip değerlendirmesi (HOTA/MOTA/IDF1)**, CI fikstürleri |
+| **HIT-UAV** | 2.898 termal görüntü, 60-130 m irtifa, Person/Car/Bicycle/OtherVehicle, hem HBB hem OBB, YOLO formatı hazır | GitHub | **CC-BY-4.0** | Ek hedef: IR-only ikinci veri setleri arası test, insan tespiti |
+| VT-MOT | 582 RGB-T video çifti (gözetleme / drone / el kamerası); drone dizi sayısı ve sınıflar belirsiz | Makale ve GitHub (PFTrack) | Belirsiz | M3OT'a yedek |
 
 ### 8.2 Bilinen sorunlar
 - Kaggle kopyasında birkaç eğitim görüntüsü bozuk veya eksik → FR-D1.
@@ -439,8 +440,11 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 - IR görüntüleri 3 kanallı kopya olarak saklanmış olabilir → 1. haftada kontrol; tek kanal alınır.
 - **Disk:** 4 kanallı TIFF'ler sıkıştırılmamış halde ~28k × 640 × 512 × 4 bayt ≈ **37 GB**. Colab'ın geçici diskine sığabilir ama kalıcı değil; Drive'ın ücretsiz 15 GB'ına sığmaz → §23'teki B planları.
 
-### 8.3 Sınıf eşlemesi (HIT-UAV testi)
-DroneVehicle'da insan yok, bu yüzden test sadece araçlarla yapılır:
+### 8.3 Sınıf eşlemesi (veri setleri arası test)
+
+**M3OT (çekirdek):** M3OT'ta tek bir araç sınıfı var. Modelin 5 sınıfı sınıfsız **`vehicle`**'a indirgenir ve sınıfsız AP raporlanır. Her mod için ayrı satır: rgb (RGB etiketiyle), ir (IR etiketiyle), early_fusion ve late_fusion (IR etiketiyle, ana tabloyla tutarlı). M3OT'un gerçek sınıf listesi ve etiket formatı H1 Spike C'de doğrulanır; birden fazla sınıf çıkarsa eşleme ADR'ye yazılır.
+
+**HIT-UAV (ek hedef):** DroneVehicle'da insan yok, bu yüzden test sadece araçlarla yapılır:
 - HIT-UAV `Car` → `car`
 - HIT-UAV `OtherVehicle` + DroneVehicle'ın `truck/bus/van/freight_car` sınıfları → sınıfsız **`vehicle`**
 - `Person`, `Bicycle` ve `DontCare` değerlendirme dışı
@@ -629,7 +633,7 @@ tracking:
 | E4 | Geç füzyon (E1 + E2, WBF) | İki model mi, tek birleşik model mi? | H3 |
 | E5 | E1-E4 için iki etiket seti | Skor ne kadar değişiyor? | H3 |
 | E6 | Sağlamlık paketi (E1-E4) | Hangi model hangi arızada dayanıyor? | H3 |
-| E7 | HIT-UAV (E2) | Başka bir termal veride genelleşiyor mu? | H3 |
+| E7 | M3OT veri setleri arası test (E1-E4, sınıfsız `vehicle` AP) | Hangi mod başka bir drone/sensör verisinde genelleşiyor? | H5 |
 | E8 | Boyut: n / s (/ m) için en iyi mod | Doğruluk ve hız ödünleşimi | H4 |
 | E9 | Format × hassasiyet × donanım | Edge tablosu | H4 |
 | E10 *(ek)* | Orta füzyon (YOLOv11-RGBT) | Karmaşık füzyon farkı kapatır mı? | H3 / H7 |
@@ -717,10 +721,10 @@ Motor tek bir hatalı istek yüzünden çökmez.
 - **Algoritma: ByteTrack.** Düşük skorlu tespitleri de eşleştirmede kullanan, Kalman + Macar algoritması tabanlı, sektörde en yaygın hafif takipçi.
 - **Python referansı:** Ultralytics `model.track(..., tracker="bytetrack.yaml")`
 - **C++:** ByteTrack-cpp (MIT). Motorda oturum başına bir takipçi tutulur.
-- **Değerlendirme:** TrackEval ile HOTA, MOTA ve IDF1. Veri: VT-MOT drone dizileri.
-  - **B planı 1:** VT-MOT'un hazır kutularıyla ("oracle tespit") sadece takipçi ölçülür.
+- **Değerlendirme:** HOTA, MOTA ve IDF1 (TrackEval veya `roboflow/trackers eval`). Veri: **M3OT** (8 drone dizisi, araç, RGB-IR, MOT formatı, CC-BY-4.0).
+  - **B planı 1:** M3OT'un hazır kutularıyla ("oracle tespit") sadece takipçi ölçülür. Bu ölçüm modelden bağımsız olduğu için her durumda raporlanır; model tespitiyle olan ölçüm onun yanında durur.
   - **B planı 2:** Takip niceliksel değil, sadece niteliksel olarak (demo videosu) gösterilir.
-- **Not:** Bizim modelimiz araç sınıflarında eğitildi. VT-MOT drone dizilerindeki sınıf ve görüş açısı uyumu 1. haftada kontrol edilir.
+- **Not:** M3OT de araç ve 100-120 m irtifa; DroneVehicle ile görüş açısı uyumlu. Kare hızı ve dizi uzunlukları H1 Spike C'de kontrol edilir. M3OT uygunsuz çıkarsa yedek VT-MOT.
 
 ---
 
@@ -783,7 +787,7 @@ baykus/
 ├── notebooks/colab/                # 00_setup, 01_data, 02_train, 03_eval, 04_export
 ├── engine/                         # §15
 ├── ui/                             # §17
-├── fixtures/                       # HIT-UAV (CC-BY) + sentetik görüntüler, expected/*.json
+├── fixtures/                       # M3OT (CC-BY) + sentetik görüntüler, expected/*.json
 ├── results/{runs,bench,figures}/
 ├── docker/{engine,ui}.Dockerfile
 ├── docker-compose.yml
@@ -859,7 +863,7 @@ Haftada **~15 saat.** 2. hafta sonunda gerçek tempoya göre takvim güncellenir
 | 0004 | 4 kanallı TIFF biçimi ve depolama stratejisi | H1 |
 | 0005 | Aydınlatma etiketinin kaynağı | H1 |
 | 0006 | Gecikme hedefi | H4 |
-| 0007 | Takip değerlendirme stratejisi (VT-MOT / oracle / niteliksel) | H6 |
+| 0007 | Takip değerlendirme stratejisi (M3OT model tespiti / oracle / niteliksel) | H6 |
 
 ---
 
@@ -975,7 +979,7 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 | 19 | E3 erken füzyon (`rgb_mean`) + E3b (`ul_default`) | İki run JSON |
 | 20 | WBF **(S)** sarmalayıcısı + E4 geç füzyon (parametreler val'de seçilir) | Run JSON; seçilen parametreler ADR/notta |
 | 21 | Bozulma modülü (TDD) + sağlamlık CLI'ı + E6 | E1-E4 için eğriler |
-| 22 | HIT-UAV dönüştürücü + E7 | `car` ve `vehicle` AP'leri |
+| 22 | M3OT dönüştürücü + E7 | Her mod için sınıfsız `vehicle` AP |
 | 23 | E5 etiket seti tablosu | Tablo + yorum |
 | 24 | *(ek)* E10 orta füzyon, YOLOv11-RGBT | Run JSON veya "yapılmadı" notu |
 
@@ -1049,7 +1053,7 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 | Colab oturumu eğitim ortasında kopuyor | **Yüksek** | Orta | Checkpoint'ler Drive'a, `save_period=5`, `resume=True` |
 | Kaggle API ile indirme de izin vermiyor | Düşük | Yüksek | Resmi BaiduYun bağlantısı; HIT-UAV ile termal-only başla (GitHub, hesap gerekmez) |
 | TensorRT kurulumu sorunlu | Orta | Düşük | ONNX Runtime CUDA/TensorRT EP. TensorRT ek hedefe iner. |
-| VT-MOT uygunsuz | Orta | Orta | Oracle tespitle takip ölçümü veya niteliksel demo (ADR 0007) |
+| M3OT uygunsuz (format, kare hızı, erişim) | Düşük-Orta | Orta | Yedek VT-MOT; oracle tespitle takip ölçümü veya niteliksel demo (ADR 0007) |
 | Windows'ta C++ zorluğu | Yüksek | Orta | Baştan WSL2. Docker imajı tek doğru kaynak. |
 | Zaman aşımı | Yüksek | Yüksek | H4 MVP kapısı ve §20.6 kesme sırası |
 | AGPL | Düşük | Düşük | Açık portfolyo için uygun. README'de açıkça belirt. |
@@ -1070,8 +1074,8 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 - [ ] Colab disk alanı, RAM, veri indirme + işleme süresi
 - [ ] Drive'a checkpoint yazma ve `resume` ile devam etme
 - [ ] Colab'da TensorRT kurulumu (küçük deneme)
-- [ ] VT-MOT: erişim, lisans, drone dizi sayısı, sınıflar
-- [ ] HIT-UAV etiket formatı
+- [ ] M3OT: indirme, sınıf listesi, etiket formatı (MOT + COCO), kare hızı, RGB-IR hizası
+- [ ] (ek hedef) HIT-UAV etiket formatı
 
 **Açık kararlar (H1 sonunda ADR olarak kapanacak):**
 - [ ] YOLO26 (varsayılan) mı, YOLO11 mi? Spike sonucuna göre.
@@ -1147,6 +1151,7 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 - DroneVehicle — https://github.com/VisDrone/DroneVehicle · https://arxiv.org/abs/2003.02437
 - DroneVehicle Kaggle kopyası — https://www.kaggle.com/datasets/brendanalvey/visdrone-dronevehicle/data
 - HIT-UAV — https://github.com/suojiashun/HIT-UAV-Infrared-Thermal-Dataset · https://arxiv.org/abs/2204.03245
+- M3OT — https://pmc.ncbi.nlm.nih.gov/articles/PMC12686387/ · https://figshare.com/s/01fa8d1163f4e9a5a13a
 - VT-MOT — https://arxiv.org/abs/2408.00969
 - Awesome-RGBT-Fusion — https://github.com/yuanmaoxun/Awesome-RGBT-Fusion
 
