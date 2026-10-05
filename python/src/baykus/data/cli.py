@@ -124,6 +124,26 @@ def _cmd_rgbt4(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_coco(a: argparse.Namespace) -> int:
+    from baykus.data.coco import illumination_slices, yolo_to_coco
+    from baykus.data.layout import OUT_SIZE
+
+    out, meta = Path(a.out), Path(a.meta)
+    (out / "coco").mkdir(parents=True, exist_ok=True)
+    for split in SPLITS:
+        stems = sorted(p.stem for p in (out / "rgb/images" / split).glob("*.jpg"))
+        for label_set in ("ir", "rgb"):
+            coco = yolo_to_coco(out / f"labels_{label_set}" / split, stems, *OUT_SIZE)
+            (out / "coco" / f"{split}_{label_set}.json").write_text(
+                json.dumps(coco), encoding="utf-8"
+            )
+        stem_to_id = {s: i for i, s in enumerate(stems, start=1)}
+        slices = {"illumination": illumination_slices(meta / "illumination.csv", split, stem_to_id)}
+        (meta / f"slices_{split}.json").write_text(json.dumps(slices), encoding="utf-8")
+    print("coco ok")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="baykus-data")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -151,6 +171,10 @@ def build_parser() -> argparse.ArgumentParser:
     r4 = sub.add_parser("rgbt4", help="RGB+IR → 4 kanallı TIFF ve data_*.yaml")
     r4.add_argument("--out", required=True)
     r4.set_defaults(func=_cmd_rgbt4)
+    co = sub.add_parser("coco", help="COCO JSON + kırılım listeleri")
+    co.add_argument("--out", required=True)
+    co.add_argument("--meta", required=True)
+    co.set_defaults(func=_cmd_coco)
     return p
 
 
