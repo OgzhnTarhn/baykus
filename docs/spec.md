@@ -1,7 +1,7 @@
 # Baykuş — RGB + Termal Füzyonlu Hava Görüntüsü Tespiti, Edge için Optimize, Uçtan Uca Sistem
 
 > **Proje adı:** Baykuş · **Repo / paket adı:** `baykus` · **Alt başlık (EN):** *RGB-Thermal aerial vehicle detection on the edge*
-> **Sahibi:** Oğuzhan Tarhan · **Tarih:** 2026-10-04 · **Sürüm:** v2.3 (v2.2 + derin araştırma düzeltmeleri; eğitim: Colab · laptop: AMD Ryzen 7 8845HS, OpenVINO çıkarıldı) · **Süre:** 10 hafta (5 Ekim-13 Aralık 2026) · **Durum:** Onaylandı (2026-10-02)
+> **Sahibi:** Oğuzhan Tarhan · **Tarih:** 2026-10-05 · **Sürüm:** v3.0 (araştırma sonrası yol haritası; eğitim: Colab, kullanıcı çalıştırır · laptop: AMD Ryzen 7 8845HS) · **Süre:** 10 hafta (5 Ekim-13 Aralık 2026) · **Durum:** Onaylandı (2026-10-02)
 
 ---
 
@@ -39,6 +39,21 @@
 ---
 
 ## 0. v1'den bu yana ne değişti
+
+### v3.0 (2026-10-05)
+Kaynak: `docs/research/2026-10-04-derin-arastirma.md` (§1-§10). Kullanıcı kararları: süre 10 hafta; eğitim Colab'da ve kullanıcı tarafından; Claude kod, plan ve notebook hazırlar.
+
+| Konu | v2.3 | **v3.0** | Neden |
+|---|---|---|---|
+| Süre | 8 hafta | **10 hafta** (5 Eki-13 Ara), MVP H5'te | GPU bütçesi: tam eğitimler ≈ 70-90 T4 saati; haftada en fazla 2 eğitim |
+| Kamera kaybı | Sadece ölçülüyordu (E6) | **E3c modality dropout** ile eğitiliyor (FR-T7) | Literatürde standart çözüm; en güçlü mülakat hikâyesi |
+| Geç füzyon | Sabit WBF ağırlığı | + **E4b** aydınlatmaya göre ağırlık | GPU gerektirmeyen, literatürle uyumlu iyileştirme |
+| Belirsizlik | Yok | **Bootstrap %95 güven aralığı + eşleştirilmiş fark** (FR-V8) | Tek seed ile 1-2 puanlık farklar anlamsız olabilir |
+| Veri setleri arası test | HIT-UAV, sadece IR modeli | **M3OT**, tüm modlar (S5, E7) | M3OT RGB-IR, araç, CC-BY-4.0 |
+| Takip değerlendirmesi | VT-MOT (belirsiz) | **M3OT** (MOT formatı) | Drone, araç, lisansı net |
+| C++ takip | ByteTrack-cpp | **Kendi ByteTrack'imiz** + roboflow/trackers eşliği | ByteTrack-cpp'nin bakımı 2024'te durdu |
+| Edge | FP32/FP16/INT8 | + **INT8 head FP32**, + **laptop NPU denemesi** (FR-X6) | INT8 kaybı head'e çok duyarlı; laptopta NPU var |
+| Ek hedefler | E10, E11, HIT-UAV, Jetson | + **hareketli/duran araç** (ilk sırada) | TEKNOFEST görevi |
 
 ### v2.3 (2026-10-04)
 Kaynak: `docs/research/2026-10-04-derin-arastirma.md`. Sadece H1'i etkileyen düzeltmeler işlendi; sonraki haftaların önerileri (modality dropout, bootstrap güven aralığı, INT8'de head FP32, NPU spike'ı, takipçi kararı) ilgili haftanın planında ele alınacak.
