@@ -373,6 +373,8 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 - **FR-T4:** Modlar: `rgb`, `ir`, `early_fusion`. Geç füzyon eğitim değil, çıkarım zamanında yapılır (FR-V7).
 - **FR-T5:** Seed, `deterministic=True`, git commit ve config hash kaydedilir.
 - **FR-T6:** `--smoke` bayrağı: %5 veri, 1 epoch. Pipeline'ı GPU kotasını harcamadan doğrular.
+- **FR-T7:** Modality dropout (E3c): config'teki `modality_dropout` ile, Ultralytics'in belgelenmiş özel trainer API'si üzerinden (`DetectionTrainer` alt sınıfı, `preprocess_batch()`). Batch GPU'dayken örnek başına RGB (kanal 0-2) veya T (kanal 3) sıfırlanır; validasyon etkilenmez. Ultralytics'e yama yapılmaz. Sıfırlama fonksiyonu birim testli.
+- **FR-T8:** `first_conv_init=rgb_mean`, `on_pretrain_routine_end` callback'iyle model ve EMA'ya birlikte uygulanır (H1 Spike A ile doğrulanır).
 
 **Değerlendirme (FR-V)**
 - **FR-V1:** mAP50, mAP50-95, sınıf bazında AP, precision, recall.
@@ -381,7 +383,8 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 - **FR-V4:** Sağlamlık paketi (§12.3) tek komutla çalışır, eğri grafikleri üretir.
 - **FR-V5:** M3OT veri setleri arası test tek komutla, her mod (rgb, ir, early_fusion, late_fusion) için çalışır.
 - **FR-V6:** Ultralytics `val` ile pycocotools sonuçları karşılaştırılır. Fark %1'den büyükse nedeni `docs/` altında açıklanır (iki kütüphane AP'yi farklı enterpolasyonla hesaplar).
-- **FR-V7:** Geç füzyon: RGB ve IR modellerinin tahminleri ensemble-boxes WBF ile birleştirilir. Ağırlıklar ve IoU eşiği **sadece val** setinde seçilir.
+- **FR-V7:** Geç füzyon: RGB ve IR modellerinin tahminleri ensemble-boxes WBF ile birleştirilir. Ağırlıklar ve IoU eşiği **sadece val** setinde seçilir. E4b: WBF ağırlıkları aydınlatma kırılımı başına (gündüz / gece / karanlık gece) ayrı seçilir; çıkarımda görüntünün aydınlatma etiketi kullanılır (FR-D4 ile aynı türetme kuralı, sadece RGB'den).
+- **FR-V8 — belirsizlik:** Ana tablodaki her mAP50 için görüntü düzeyinde bootstrap %95 güven aralığı (1000 yeniden örnekleme). Model karşılaştırmalarında (ör. E3 − E1, karanlık gece) **eşleştirilmiş bootstrap**: iki model aynı yeniden örneklemle ölçülür, farkın aralığı raporlanır. Uygulama: pycocotools `evaluateImg` sonuçları bir kez hesaplanır, her yeniden örneklemede sadece birikim (accumulate) tekrarlanır. Oyuncak örnekte elle hesaplanan değerle test edilir.
 
 **Export ve edge (FR-X)**
 - **FR-X1:** ONNX export (sabit boyut, batch 1, 4 kanal girdi korunur).
@@ -540,6 +543,9 @@ model: yolo26s.pt
 data: data/dv_rgbt/data_rgbt4.yaml
 label_set: ir                 # eğitim etiketleri: ir | rgb
 first_conv_init: rgb_mean     # early_fusion için: ul_default | rgb_mean | random
+modality_dropout:             # sadece early_fusion; E3c. Yoksa kapalı.
+  p_rgb: 0.0                  # örnek başına RGB kanallarını sıfırlama olasılığı
+  p_ir: 0.0                   # örnek başına T kanalını sıfırlama olasılığı (aynı örnekte ikisi birden sıfırlanmaz)
 train:
   imgsz: 640
   epochs: 100
@@ -563,8 +569,9 @@ tracking:
 |---|---|---|---|---|
 | **Sadece RGB** (E1) | 3 kanal | Ultralytics | Basit | Gece çöker |
 | **Sadece IR** (E2) | Termal 1 kanal (3'e kopyalanabilir) | Ultralytics | Gece iyi | Renk ve doku bilgisi yok |
-| **Erken füzyon** (E3) | R, G, B, T → 4 kanal, tek model | Ultralytics `channels: 4` | Tek model, en hızlı füzyon | Hizasızlığa duyarlı. İlk katman yeniden başlatılıyor. |
-| **Geç füzyon** (E4) | İki ayrı model, kutular WBF ile birleşir | ensemble-boxes (Python), kendi WBF (C++) | Bir kamera giderse diğeri çalışır, sağlam | 2 kat hesaplama |
+| **Erken füzyon** (E3) | R, G, B, T → 4 kanal, tek model | Ultralytics `channels: 4` | Tek model, en hızlı füzyon | Hizasızlığa duyarlı. İlk katmanın T kanalı yeniden başlatılıyor. Bir kamera giderse çökmesi beklenir. |
+| **Erken füzyon + modality dropout** (E3c) | E3 + eğitimde olasılıkla RGB veya T'yi sıfırlama | Özel trainer (`preprocess_batch`) | Tek model kalır, kamera kaybına dayanıklı olması beklenir | Tam modalitede küçük bir doğruluk bedeli olabilir (ölçülecek) |
+| **Geç füzyon** (E4, E4b) | İki ayrı model, kutular WBF ile birleşir; E4b'de ağırlıklar aydınlatmaya göre | ensemble-boxes (Python), kendi WBF (C++) | Bir kamera giderse diğeri çalışır, sağlam | 2 kat hesaplama |
 | **Orta füzyon** (E10, ek) | İki omurga, özellik seviyesinde birleşim | YOLOv11-RGBT | Genelde en doğru | Karmaşık, export zor |
 
 ---
@@ -574,6 +581,7 @@ tracking:
 ### 12.1 Ana metrikler
 - **mAP50 (ana)** ve mAP50-95; sınıf AP; precision ve recall (conf=0.25'te)
 - Ana tablo **IR etiket setiyle**. RGB etiket seti sonucu ayrı sütunda (E5).
+- **Belirsizlik (FR-V8):** Her ana sayının yanında bootstrap %95 güven aralığı. İki model arasındaki fark, eşleştirilmiş bootstrap aralığı sıfırı içermiyorsa "anlamlı" diye yazılır; içeriyorsa "fark ölçüm belirsizliği içinde" denir. Tek seed kullanıldığı için seed varyansı bu aralığa dahil değildir; README'de bu sınırlama açıkça yazılır.
 
 ### 12.2 Kırılımlar
 - Aydınlatma: Gündüz / Gece / Karanlık gece
@@ -612,7 +620,8 @@ tracking:
     "map50": null, "map50_95": null, "precision": null, "recall": null,
     "per_class": {"car": null, "truck": null, "bus": null, "van": null, "freight_car": null},
     "per_illumination": {"day": null, "night": null, "dark_night": null},
-    "per_size": {"small": null, "medium": null, "large": null}
+    "per_size": {"small": null, "medium": null, "large": null},
+    "ci95": {"map50": [null, null], "per_illumination": {"day": [null, null], "night": [null, null], "dark_night": [null, null]}}
   },
   "created_at": "2026-10-20T14:00:00Z"
 }
@@ -630,7 +639,9 @@ tracking:
 | E2 | Sadece IR (s) | Termal tek başına ne kadar iyi? | H2 |
 | E3 | Erken füzyon 4 kanal (s), `first_conv_init=rgb_mean` | Basit birleştirme yardım ediyor mu? | H3 |
 | E3b | E3 + `first_conv_init=ul_default` (Ultralytics varsayılanı: RGB kopya + T rastgele); bütçe varsa `random` | İlk katman başlatması ne kadar fark ediyor? | H3 |
+| E3c | E3 + modality dropout (`p_rgb`, `p_ir` val'de seçilmez; sabit 0.15 / 0.15) | Kamera kaybına karşı eğitmek tam modalitede ne kadara mal oluyor, kayıpta ne kadar kurtarıyor? | H4 |
 | E4 | Geç füzyon (E1 + E2, WBF) | İki model mi, tek birleşik model mi? | H3 |
+| E4b | E4 + aydınlatmaya göre WBF ağırlıkları (val'de seçilir) | Gece RGB'ye daha az güvenmek geç füzyonu iyileştiriyor mu? GPU gerekmez. | H4 |
 | E5 | E1-E4 için iki etiket seti | Skor ne kadar değişiyor? | H3 |
 | E6 | Sağlamlık paketi (E1-E4) | Hangi model hangi arızada dayanıyor? | H3 |
 | E7 | M3OT veri setleri arası test (E1-E4, sınıfsız `vehicle` AP) | Hangi mod başka bir drone/sensör verisinde genelleşiyor? | H5 |
