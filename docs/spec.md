@@ -1,7 +1,7 @@
 # Baykuş — RGB + Termal Füzyonlu Hava Görüntüsü Tespiti, Edge için Optimize, Uçtan Uca Sistem
 
 > **Proje adı:** Baykuş · **Repo / paket adı:** `baykus` · **Alt başlık (EN):** *RGB-Thermal aerial vehicle detection on the edge*
-> **Sahibi:** Oğuzhan Tarhan · **Tarih:** 2026-10-04 · **Sürüm:** v2.3 (v2.2 + derin araştırma düzeltmeleri; eğitim: Colab · laptop: AMD Ryzen 7 8845HS, OpenVINO çıkarıldı) · **Süre:** 8 hafta · **Durum:** Onaylandı (2026-10-02)
+> **Sahibi:** Oğuzhan Tarhan · **Tarih:** 2026-10-04 · **Sürüm:** v2.3 (v2.2 + derin araştırma düzeltmeleri; eğitim: Colab · laptop: AMD Ryzen 7 8845HS, OpenVINO çıkarıldı) · **Süre:** 10 hafta (5 Ekim-13 Aralık 2026) · **Durum:** Onaylandı (2026-10-02)
 
 ---
 
@@ -29,7 +29,7 @@
 19. [Repo yapısı](#19-repo-yapısı)
 20. [Proje yönetimi](#20-proje-yönetimi)
 21. [Claude Code ile çalışma düzeni](#21-claude-code-ile-çalışma-düzeni)
-22. [8 haftalık takvim ve issue listesi](#22-8-haftalık-takvim-ve-issue-listesi)
+22. [10 haftalık takvim ve issue listesi](#22-10-haftalık-takvim-ve-issue-listesi)
 23. [Riskler ve B planları](#23-riskler-ve-b-planları)
 24. [1. hafta doğrulama listesi ve açık kararlar](#24-1-hafta-doğrulama-listesi-ve-açık-kararlar)
 25. [Stratejik not: TEKNOFEST 2027](#25-stratejik-not-teknofest-2027)
@@ -285,10 +285,11 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 - Docker Compose ile internetsiz kurulum, GitHub Actions CI
 
 ### Ek hedefler (zaman kalırsa, bu sırayla)
-1. Orta seviye füzyon (YOLOv11-RGBT ile)
-2. OBB deneyi: literatürle doğrudan karşılaştırma için YOLO26-OBB, sadece IR
-3. İnsan tespiti ve IR-only ikinci veri setleri arası test (HIT-UAV termal)
-4. Gerçek bir Jetson cihazında ölçüm
+1. Hareketli / duran araç ayrımı (kamera hareketi telafisi + iz hızı; TEKNOFEST görevi)
+2. Orta seviye füzyon (YOLOv11-RGBT ile)
+3. OBB deneyi: literatürle doğrudan karşılaştırma için YOLO26-OBB, sadece IR
+4. İnsan tespiti ve IR-only ikinci veri setleri arası test (HIT-UAV termal)
+5. Gerçek bir Jetson cihazında ölçüm
 
 ### Kapsam dışı
 - SOTA skor iddiası, makale yayını
@@ -309,8 +310,9 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 | Yerel NVIDIA GPU | Gerekmez | ❌ |
 | **Google Colab (ücretsiz)** | **Eğitim ortamı.** Tek T4 GPU (16 GB VRAM), ~12-13 GB RAM, geçici disk ~35-78 GB (oturuma göre değişir, oturum kapanınca silinir). Oturum en fazla 12 saat, ~90 dk hareketsizlikte kopar. Haftalık GPU süresi sabit değil (kabaca 15-30 saat) ve GPU her zaman garanti değil. | ✅ |
 | **Google Drive** | Checkpoint, MLflow kayıtları ve işlenmiş verinin kalıcı saklanması (ücretsiz 15 GB) | ✅ |
-| Kaggle hesabı (telefon doğrulamasız) | **Sadece veri indirmek için.** DroneVehicle kopyası Kaggle'da. API token'ı ile Colab'a indirilir. Notebook/GPU kullanılmadığı için telefon doğrulaması gerekmemesi beklenir (H1'de doğrulanır). | ✅ |
-| Colab Pro | Ücretsiz kota yetmezse isteğe bağlı | ❌ |
+| Kaggle hesabı | **Veri indirmek için.** DroneVehicle kopyası Kaggle'da (14,5 GB). API token'ı ile Colab'a indirilir. | ✅ |
+| Kaggle GPU (telefon doğrulamalı) | Yedek GPU: haftada garanti ~30 saat, arka planda çalışma, veri seti indirmeden bağlanır. Colab kotası yetmezse açılır. | ❌ (yedek) |
+| Colab Pro | Ücretsiz kota ve Kaggle yedeği yetmezse isteğe bağlı | ❌ |
 | GitHub hesabı | Repo, Projects, Actions, Releases | ✅ |
 | Jetson Orin Nano vb. | Gerçek edge ölçümü | ❌ (ek hedef) |
 
@@ -349,10 +351,11 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 | H1 | §4 YOLO 101, IoU / mAP, YOLO veri formatı | Ultralytics dokümanları |
 | H1 | Lisanslar: AGPL-3.0, MIT, CC-BY-4.0 | choosealicense.com |
 | H2 | Transfer öğrenme, overfitting, erken durdurma | Ultralytics *Train* sayfası |
-| H3 | Çok modlu füzyon: erken / orta / geç, WBF | YOLOv11-RGBT makalesi (giriş), ensemble-boxes README |
-| H4 | Quantization: PTQ, kalibrasyon, FP16 | Ultralytics *Export* ve *TensorRT* entegrasyon sayfaları |
-| H5 | ONNX Runtime C++ API, letterbox | ORT C++ örnekleri, YOLOs-CPP kaynak kodu |
-| H6 | Kalman filtresi, ByteTrack, MOTA / IDF1 / HOTA | ByteTrack makalesi, TrackEval README |
+| H2 | Bootstrap güven aralığı, eşleştirilmiş karşılaştırma | docs/research §2.6 |
+| H3 | Çok modlu füzyon: erken / orta / geç, WBF, modality dropout | YOLOv11-RGBT makalesi (giriş), ensemble-boxes README, Scarf-DETR (giriş) |
+| H5 | Quantization: PTQ, kalibrasyon, FP16, QDQ, VNNI | Ultralytics *Export* ve *TensorRT* sayfaları, ORT quantization dokümanı |
+| H6 | ONNX Runtime C++ API, letterbox | ORT C++ örnekleri, YOLOs-CPP kaynak kodu |
+| H8 | Kalman filtresi, Macar algoritması, ByteTrack, MOTA / IDF1 / HOTA | ByteTrack makalesi, roboflow/trackers kaynak kodu, TrackEval README |
 
 ### 7.4 Fonksiyonel gereksinimler (FR)
 
@@ -414,7 +417,7 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 - **NFR-2 Tekrarlanabilirlik:** config + commit + seed + donanım + `uv.lock`.
 - **NFR-3 Test:** Deterministik kod pytest ve GoogleTest ile test edilir. CI yeşil olmadan merge yok.
 - **NFR-4 Kod kalitesi:** ruff, clang-format, eslint. pre-commit kancalarıyla zorunlu.
-- **NFR-5 Gecikme hedefi:** H4'teki ilk ölçümden sonra ADR-0006 ile sabitlenir. Yön: s modeli laptop CPU'da FP32 ile gerçek zamanlıya yakın, INT8 ile daha hızlı.
+- **NFR-5 Gecikme hedefi:** H5'teki ilk ölçümden sonra ADR-0006 ile sabitlenir. Yön: s modeli laptop CPU'da FP32 ile gerçek zamanlıya yakın, INT8 ile daha hızlı.
 - **NFR-6 Bellek:** Motor, laptopta tek model için makul bir RAM sınırı içinde kalır. Ölçülür ve raporlanır.
 
 ### 7.6 Lisans ve veri gereksinimleri
@@ -637,19 +640,19 @@ tracking:
 |---|---|---|---|
 | E0 | Veri raporu | Veri ne kadar temiz? Etiket setleri ne kadar farklı? | H1 |
 | E1 | Sadece RGB (s) | Normal kamera gece ne kadar çöküyor? | H2 |
-| E2 | Sadece IR (s) | Termal tek başına ne kadar iyi? | H2 |
+| E2 | Sadece IR (s) | Termal tek başına ne kadar iyi? | H3 |
 | E3 | Erken füzyon 4 kanal (s), `first_conv_init=rgb_mean` | Basit birleştirme yardım ediyor mu? | H3 |
-| E3b | E3 + `first_conv_init=ul_default` (Ultralytics varsayılanı: RGB kopya + T rastgele); bütçe varsa `random` | İlk katman başlatması ne kadar fark ediyor? | H3 |
+| E3b | E3 + `first_conv_init=ul_default` (Ultralytics varsayılanı: RGB kopya + T rastgele); bütçe varsa `random` | İlk katman başlatması ne kadar fark ediyor? | H4 |
 | E3c | E3 + modality dropout (`p_rgb`, `p_ir` val'de seçilmez; sabit 0.15 / 0.15) | Kamera kaybına karşı eğitmek tam modalitede ne kadara mal oluyor, kayıpta ne kadar kurtarıyor? | H4 |
-| E4 | Geç füzyon (E1 + E2, WBF) | İki model mi, tek birleşik model mi? | H3 |
+| E4 | Geç füzyon (E1 + E2, WBF) | İki model mi, tek birleşik model mi? | H4 |
 | E4b | E4 + aydınlatmaya göre WBF ağırlıkları (val'de seçilir) | Gece RGB'ye daha az güvenmek geç füzyonu iyileştiriyor mu? GPU gerekmez. | H4 |
-| E5 | E1-E4 için iki etiket seti | Skor ne kadar değişiyor? | H3 |
-| E6 | Sağlamlık paketi (E1-E4) | Hangi model hangi arızada dayanıyor? | H3 |
-| E7 | M3OT veri setleri arası test (E1-E4, sınıfsız `vehicle` AP) | Hangi mod başka bir drone/sensör verisinde genelleşiyor? | H5 |
-| E8 | Boyut: n / s (/ m) için en iyi mod | Doğruluk ve hız ödünleşimi | H4 |
-| E9 | Format × hassasiyet × donanım (+ INT8 head FP32, + NPU denemesi) | Edge tablosu | H4 |
-| E10 *(ek)* | Orta füzyon (YOLOv11-RGBT) | Karmaşık füzyon farkı kapatır mı? | H3 / H7 |
-| E11 *(ek)* | YOLO26-OBB, sadece IR | OBB literatürüyle karşılaştırma | H7 |
+| E5 | E1-E4 için iki etiket seti | Skor ne kadar değişiyor? | H3-H4 |
+| E6 | Sağlamlık paketi (E1-E4b) | Hangi model hangi arızada dayanıyor? | H3-H4 |
+| E7 | M3OT veri setleri arası test (E1-E4, sınıfsız `vehicle` AP) | Hangi mod başka bir drone/sensör verisinde genelleşiyor? | H4 |
+| E8 | Boyut: n / s (/ m) için en iyi mod | Doğruluk ve hız ödünleşimi | H5 |
+| E9 | Format × hassasiyet × donanım (+ INT8 head FP32, + NPU denemesi) | Edge tablosu | H5 |
+| E10 *(ek)* | Orta füzyon (YOLOv11-RGBT) | Karmaşık füzyon farkı kapatır mı? | H4 / tampon |
+| E11 *(ek)* | YOLO26-OBB, sadece IR | OBB literatürüyle karşılaştırma | tampon |
 
 ---
 
@@ -793,7 +796,7 @@ baykus/
 ├── docs/
 │   ├── spec.md                     # bu doküman
 │   ├── yolo-101.md                 # §4'ün genişletilmiş hali, kendi notların
-│   ├── plans/H1.md … H8.md         # haftalık uygulama planları
+│   ├── plans/H1.md … H10.md        # haftalık uygulama planları
 │   ├── adr/0001-…md                # karar kayıtları
 │   ├── data-report.md
 │   ├── experiments.md              # deney günlüğü
@@ -821,7 +824,7 @@ baykus/
 
 ### 20.1 Araçlar
 - **GitHub Projects (Board):** `Backlog → Bu hafta → Devam ediyor → İncelemede → Bitti`
-- **Milestone'lar:** `H1`…`H8`
+- **Milestone'lar:** `H1`…`H10`
 - **Etiketler:** `alan/python`, `alan/engine`, `alan/ui`, `alan/altyapı`, `alan/doküman`, `tür/özellik`, `tür/deney`, `tür/hata`, `tür/spike`, `öncelik/yüksek`
 
 ### 20.2 Issue şablonları
@@ -855,7 +858,7 @@ baykus/
 - **Conventional Commits:** `feat(engine): add letterbox preprocess`
 - Küçük PR'lar (< 400 satır). Her PR bir issue kapatır.
 - Merge öncesi Claude Code ile `/code-review` yapılır.
-- Sürümler: `v0.1.0` (H4 MVP), `v0.2.0` (H6), `v1.0.0` (H7)
+- Sürümler: `v0.1.0` (H5 MVP), `v0.2.0` (H8), `v1.0.0` (H10)
 
 ### 20.4 Tamamlanma tanımı (DoD)
 - [ ] Kabul kriterleri karşılandı
@@ -871,7 +874,7 @@ baykus/
 - **Pazar (30 dk):** Değerlendirme — ne bitti, hangi sayılar çıktı, GPU bütçesi, riskler, gelecek haftanın planı
 
 ### 20.6 Zaman varsayımı
-Haftada **~15 saat.** 2. hafta sonunda gerçek tempoya göre takvim güncellenir. Kesme sırası: E10/E11 → takip niceliksel ölçümü → UI ekstraları.
+Haftada **~15 saat**, 10 hafta (~150 saat). 2. hafta sonunda gerçek tempoya ve ölçülen epoch süresine göre takvim güncellenir. Kesme sırası: ek hedefler → E3b → takip model-tespitli ölçümü (oracle kalır) → UI ekstraları → NPU denemesi.
 
 ### 20.7 Karar kayıtları (ADR)
 | No | Konu | Ne zaman |
@@ -881,8 +884,8 @@ Haftada **~15 saat.** 2. hafta sonunda gerçek tempoya göre takvim güncellenir
 | 0003 | Ana etiket seti IR | H1 |
 | 0004 | 4 kanallı TIFF biçimi ve depolama stratejisi | H1 |
 | 0005 | Aydınlatma etiketinin kaynağı | H1 |
-| 0006 | Gecikme hedefi | H4 |
-| 0007 | Takip değerlendirme stratejisi (M3OT model tespiti / oracle / niteliksel) | H6 |
+| 0006 | Gecikme hedefi | H5 |
+| 0007 | Takip değerlendirme stratejisi (M3OT model tespiti / oracle / niteliksel) | H8 |
 
 ---
 
@@ -957,10 +960,24 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 
 ---
 
-## 22. 8 haftalık takvim ve issue listesi
+## 22. 10 haftalık takvim ve issue listesi
 
 > Her haftanın bir **çıkış kriteri** var. Kriter karşılanmadan sonraki haftaya geçilmez.
-> **(S)** = önce sen yaz, Claude incelesin.
+> **(S)** = önce sen yaz, Claude incelesin. **[GPU]** = kullanıcı Colab'da çalıştırır; Claude script/notebook/config hazırlar.
+> **İş bölümü:** GPU işleri arka planda koşarken CPU tarafı (kod, test, C++) paralel ilerler. C++ motoru eğitilmiş modele ihtiyaç duymadan COCO'lu `yolo26n` ile geliştirilir; eğitilmiş model hazır olunca sadece model dosyası değişir.
+
+| Hafta | Tarih (2026) | Tema | GPU (Colab) |
+|---|---|---|---|
+| H1 | 5-11 Eki | Temel, doğrulama, veri, ölçüm | — (sadece Spike C denemesi) |
+| H2 | 12-18 Eki | Eğitim ve değerlendirme altyapısı, E1 | E1 (+ E2 smoke ve 1 epoch ölçümü) |
+| H3 | 19-25 Eki | Tek modalite + erken füzyon | E2, E3 |
+| H4 | 26 Eki-1 Kas | Füzyon tamam, sağlamlık, M3OT | E3b, E3c |
+| H5 | 2-8 Kas | Edge optimizasyonu · 🚩 MVP | E8-n, TensorRT ölçümleri |
+| H6 | 9-15 Kas | C++ motor I: ön işleme, çıkarım, eşlik | — |
+| H7 | 16-22 Kas | C++ motor II: WBF, HTTP, C++ bench | — |
+| H8 | 23-29 Kas | Takip (kendi ByteTrack) + M3OT takip ölçümü | — |
+| H9 | 30 Kas-6 Ara | Operatör ekranı + Docker / kapalı ağ | — |
+| H10 | 7-13 Ara | Sürüm, sunum ve tampon | — |
 
 ### H1 — Temel, doğrulama, ölçüm
 | # | Issue | Kabul kriteri |
@@ -980,84 +997,106 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 
 **Çıkış:** Veri hazır, ölçüm modülü testli, kritik belirsizlikler çözüldü.
 
-### H2 — Tek modalite temelleri
+### H2 — Eğitim ve değerlendirme altyapısı
 | # | Issue | Kabul kriteri |
 |---|---|---|
-| 13 | Eğitim CLI'ı + config şeması + MLflow + run JSON | `--smoke` Colab'da uçtan uca çalışıyor; yarıda kesilen eğitim `resume` ile devam ediyor |
-| 14 | Değerlendirme CLI'ı (iki etiket seti, kırılımlar) | Bir model için tam JSON üretiyor |
-| 15 | Çapraz kontrol: Ultralytics val vs pycocotools (FR-V6) | Fark ≤ %1 ya da açıklaması yazılmış |
-| 16 | E1 RGB: smoke → 1 epoch süresi → tam eğitim | Run JSON + MLflow |
-| 17 | E2 IR: smoke → 1 epoch süresi → tam eğitim | Run JSON + MLflow |
-| 18 | `baykus.report`: JSON → markdown tablo + grafik | README'ye yapıştırılabilir tablo |
+| 13 | Eğitim CLI'ı + config şeması (FR-T1-T2, T5-T6) + MLflow + run JSON | `--smoke` Colab'da uçtan uca çalışıyor; yarıda kesilen eğitim `resume` ile devam ediyor |
+| 14 | Özel trainer: modality dropout (FR-T7) + `rgb_mean` callback (FR-T8), TDD | Sıfırlama fonksiyonu ve callback birim testli; smoke koşusunda etkinleşiyor |
+| 15 | Değerlendirme CLI'ı (iki etiket seti, kırılımlar) | Bir model için tam JSON üretiyor |
+| 16 | Bootstrap güven aralığı + eşleştirilmiş fark (FR-V8), TDD | Oyuncak örnekte elle hesapla aynı; 1000 örneklem val'de makul sürede |
+| 17 | Çapraz kontrol: Ultralytics val vs pycocotools (FR-V6) | Fark ≤ %1 ya da açıklaması yazılmış |
+| 18 | `baykus.report`: JSON → markdown tablo + grafik (güven aralıklı) | README'ye yapıştırılabilir tablo |
+| 19 | [GPU] E1 RGB: smoke → 1 epoch süresi → tam eğitim; E2 smoke + 1 epoch süresi | Run JSON + MLflow; `gpu-budget.md` gerçek sürelerle güncel |
 
-**Çıkış:** E1 ve E2, üç aydınlatma kırılımıyla tabloda.
+**Çıkış:** Altyapı testli; E1 tabloda (güven aralıklı); GPU bütçesi ölçülmüş süreyle yeniden hesaplanmış.
 
-### H3 — Füzyon ve dürüst ölçüm
+### H3 — Tek modalite + erken füzyon
 | # | Issue | Kabul kriteri |
 |---|---|---|
-| 19 | E3 erken füzyon (`rgb_mean`) + E3b (`ul_default`) | İki run JSON |
-| 20 | WBF **(S)** sarmalayıcısı + E4 geç füzyon (parametreler val'de seçilir) | Run JSON; seçilen parametreler ADR/notta |
-| 21 | Bozulma modülü (TDD) + sağlamlık CLI'ı + E6 | E1-E4 için eğriler |
-| 22 | M3OT dönüştürücü + E7 | Her mod için sınıfsız `vehicle` AP |
-| 23 | E5 etiket seti tablosu | Tablo + yorum |
-| 24 | *(ek)* E10 orta füzyon, YOLOv11-RGBT | Run JSON veya "yapılmadı" notu |
+| 20 | [GPU] E2 IR tam eğitim | Run JSON + MLflow |
+| 21 | [GPU] E3 erken füzyon (`rgb_mean`) | Run JSON + MLflow |
+| 22 | E5 etiket seti tablosu (E1-E3) | Tablo + yorum |
+| 23 | Bozulma modülü (TDD) + sağlamlık CLI'ı; E6'nın E1-E3 kısmı | Eğriler; hizasızlık şiddetleri E0'daki kayma dağılımına göre yorumlanmış |
 
-**Çıkış:** Ana sonuç tablosu ve sağlamlık grafikleri hazır.
+**Çıkış:** E1, E2, E3 aydınlatma kırılımı ve güven aralığıyla tabloda.
 
-### H4 — Edge optimizasyonu · 🚩 MVP
+### H4 — Füzyon tamam, sağlamlık, veri setleri arası test
 | # | Issue | Kabul kriteri |
 |---|---|---|
-| 25 | Export script: ONNX FP32/FP16/INT8, TensorRT FP16/INT8 | Tüm dosyalar üretiliyor |
-| 26 | Her varyantın doğruluğu (FR-X4) | Varyant başına metrik JSON |
-| 27 | `baykus.bench` (§14 protokolü) | p50/p95 JSON, donanım bilgisiyle |
-| 28 | E8 n / s / (m) | Tablo |
-| 29 | README v1 + ADR 0006 + `v0.1.0` tag | README'de 4 tablo + 1 grafik |
+| 24 | [GPU] E3b (`ul_default`) + E3c (modality dropout) | İki run JSON |
+| 25 | WBF **(S)** sarmalayıcısı + E4 geç füzyon + E4b aydınlatmaya göre ağırlık (val'de seçilir) | Run JSON'lar; seçilen parametreler notta |
+| 26 | E6 tamamı (E1-E4b; kamera kaybı dahil) | E3 vs E3c vs E4 kamera kaybı karşılaştırması güven aralığıyla |
+| 27 | M3OT dönüştürücü (FR-D8) + E7 | Her mod için sınıfsız `vehicle` AP |
+| 28 | *(ek)* E10 orta füzyon, YOLOv11-RGBT | Run JSON veya "yapılmadı" notu |
+
+**Çıkış:** Ana sonuç tablosu, sağlamlık grafikleri ve M3OT tablosu hazır.
+
+### H5 — Edge optimizasyonu · 🚩 MVP
+| # | Issue | Kabul kriteri |
+|---|---|---|
+| 29 | Export script: ONNX FP32/FP16/INT8 (tam + head FP32), TensorRT FP16/INT8 | Tüm dosyalar üretiliyor |
+| 30 | Her varyantın doğruluğu (FR-X4) | Varyant başına metrik JSON |
+| 31 | `baykus.bench` (§14 protokolü; CPU bayrakları dahil) | p50/p95 JSON, donanım bilgisiyle |
+| 32 | [GPU] E8: en iyi mod için `n` modeli (+ bütçe varsa `m`) | Tablo |
+| 33 | NPU denemesi (FR-X6, zaman kutusu 3 saat) | Bulgu notu (çalıştı / çalışmadı ve neden) |
+| 34 | README v1 + ADR 0006 + `v0.1.0` tag | README'de ana tablo, aydınlatma, sağlamlık, edge tabloları + 1 grafik |
 
 **Çıkış (MVP):** Repo herkese gösterilebilir. Proje burada kalsa bile güçlü.
 
-### H5 — C++ motor
+### H6 — C++ motor I
 | # | Issue | Kabul kriteri |
 |---|---|---|
-| 30 | CMake iskeleti + bağımlılıklar + CI engine job'u | CI'da boş test yeşil |
-| 31 | Letterbox **(S)** + testler + Python ile piksel eşliği | Max piksel farkı 0 |
-| 32 | ORT oturumu + YOLO26 çıktı çözümleme (+ YOLO11 NMS **(S)**) | Tek görüntüde doğru kutular |
-| 33 | C++ WBF + testler (Python ensemble-boxes ile eşlik) | Testler yeşil |
-| 34 | Eşlik testi (FR-E6) CI'da | CI yeşil |
-| 35 | HTTP API + hata yönetimi + entegrasyon testleri | §15.3 sözleşmesi karşılanıyor |
-| 36 | `baykus_bench` C++ benchmark'ı → edge tablosuna ek satır | Python ve C++ gecikme karşılaştırması |
+| 35 | CMake iskeleti + bağımlılıklar + CI engine job'u | CI'da boş test yeşil |
+| 36 | Letterbox **(S)** + testler + Python ile piksel eşliği | Max piksel farkı 0 |
+| 37 | ORT oturumu + YOLO26 çıktı çözümleme (+ YOLO11 NMS **(S)**) | Tek görüntüde doğru kutular |
+| 38 | Eşlik testi (FR-E6) CI'da | CI yeşil |
+
+**Çıkış:** C++ motor tek görüntüde Python ile aynı kutuları veriyor; CI'da kanıtlı.
+
+### H7 — C++ motor II
+| # | Issue | Kabul kriteri |
+|---|---|---|
+| 39 | C++ WBF + testler (Python ensemble-boxes ile eşlik) | Testler yeşil |
+| 40 | HTTP API + hata yönetimi + entegrasyon testleri | §15.3 sözleşmesi karşılanıyor |
+| 41 | `baykus_bench` C++ benchmark'ı → edge tablosuna ek satır | Python ve C++ gecikme karşılaştırması |
 
 **Çıkış:** `POST /v1/detect` çalışıyor, eşlik testi yeşil.
 
-### H6 — Takip ve UI başlangıcı
+### H8 — Takip
 | # | Issue | Kabul kriteri |
 |---|---|---|
-| 37 | C++ ByteTrack (Kalman, Macar, iki aşamalı eşleşme) + oturum yönetimi + eşlik testi | Fikstür dizisinde Python referansıyla eşlik; tutarlı ID'ler |
-| 38 | Takip değerlendirmesi (TrackEval) + ADR 0007 | HOTA/MOTA/IDF1 ya da B planı notu |
-| 39 | UI iskeleti (Next.js, Tailwind, shadcn) + oynatıcı + canvas | Yerel diziyi oynatıyor |
-| 40 | UI ↔ motor bağlantısı | Kutular ve ID'ler ekranda |
+| 42 | C++ Kalman + Macar algoritması (TDD) | Birim testler yeşil |
+| 43 | C++ ByteTrack (iki aşamalı eşleşme, iz yaşam döngüsü) + oturum yönetimi + Python eşlik testi | Fikstür dizisinde roboflow/trackers ile eşlik (FR-E4) |
+| 44 | M3OT takip ölçümü (oracle + model tespiti) + ADR 0007 | HOTA/MOTA/IDF1 tablosu |
 
-**Çıkış:** Bir dizide takip numaralarıyla görselleştirme çalışıyor. `v0.2.0`.
+**Çıkış:** Takip ölçülmüş ve C++'ta eşlik testli. `v0.2.0`.
 
-### H7 — Ürünleştirme
+### H9 — Operatör ekranı ve kapalı ağ
 | # | Issue | Kabul kriteri |
 |---|---|---|
-| 41 | UI: mod seçimi, conf, gecikme grafiği, arıza simülasyonu | FR-U1-U4 |
-| 42 | Dockerfile'lar + compose (internal) + NFR-1 testi | İnternetsiz demo çalışıyor |
-| 43 | CI tamamlama + release workflow | Tag ile Release oluşuyor |
-| 44 | `v1.0.0` | Release'te model ve notlar var |
-| 45 | *(ek)* E11 OBB | Run JSON |
+| 45 | UI iskeleti (Next.js, Tailwind, shadcn) + oynatıcı + canvas | Yerel diziyi oynatıyor |
+| 46 | UI ↔ motor bağlantısı; mod seçimi, conf, gecikme grafiği, arıza simülasyonu | FR-U1-U4 |
+| 47 | Dockerfile'lar + compose (internal) + NFR-1 testi | İnternetsiz demo çalışıyor |
 
 **Çıkış:** Temiz bir makinede `docker compose up` ile internetsiz demo.
 
-### H8 — Sunum ve tampon
+### H10 — Sürüm, sunum ve tampon
 | # | Issue | Kabul kriteri |
 |---|---|---|
-| 46 | README son hali: GIF, mimari, sonuçlar, "dürüst ölçüm notları", sınırlamalar, atıflar | Gözden geçirildi |
-| 47 | 2-3 dakikalık demo videosu | Yayında |
-| 48 | Teknik yazı (TR + EN): "Gece görüşünde füzyon ve bozulan kamera" | Yayında |
-| 49 | CV ve LinkedIn güncellemesi (§26) | Güncellendi |
+| 48 | CI tamamlama + release workflow + `v1.0.0` | Tag ile Release oluşuyor; model ve notlar içinde |
+| 49 | README son hali: GIF, mimari, sonuçlar, "dürüst ölçüm notları", sınırlamalar, atıflar | Gözden geçirildi |
+| 50 | 2-3 dakikalık demo videosu | Yayında |
+| 51 | Teknik yazı (TR + EN): "Gece görüşünde füzyon ve bozulan kamera" | Yayında |
+| 52 | CV ve LinkedIn güncellemesi (§26) | Güncellendi |
 
 **Çıkış:** S1-S9'un hepsi işaretli.
+
+### Ek hedefler (zaman kalırsa, bu sırayla)
+1. **Hareketli / duran araç:** kamera hareketi telafisi (ORB + RANSAC homografi) + iz hızı. TEKNOFEST görevine doğrudan hizmet eder.
+2. E10 orta füzyon (YOLOv11-RGBT)
+3. E11 YOLO26-OBB, sadece IR
+4. HIT-UAV: IR-only ikinci veri setleri arası test + insan tespiti
+5. Gerçek bir Jetson cihazında ölçüm
 
 ---
 
@@ -1068,13 +1107,13 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 | Kaggle kopyasında ciddi eksik | Orta | Yüksek | FR-D1 ile tespit. Resmi BaiduYun'u dene. Olmazsa eksikleri çıkar ve belgele. |
 | **4 kanallı TIFF'ler disk sınırını aşar (~37 GB)** | Orta | Yüksek | (1) Sıkıştırılmış TIFF; (2) Colab'ın geçici diskinde her oturum başında yeniden üretmek (süresi H1'de ölçülür); (3) Drive'da sadece sıkıştırılmış ham veriyi (zip) tutup oturum başında açmak; (4) eğitim alt kümesi |
 | Ultralytics çok kanal + YOLO26 + detect kombinasyonunda hata | Düşük-Orta | Orta | YOLO11 ile dene. Olmazsa YOLOv11-RGBT ile erken füzyon. |
-| Colab GPU kotası yetmiyor veya GPU verilmiyor | **Yüksek** | Orta | §10.2 bütçe yöntemi; eğitimi gece/sabah erken saatlerde başlatmak; `n` modeli; gerekirse 1 ay Colab Pro |
+| Colab GPU kotası yetmiyor veya GPU verilmiyor | **Yüksek** | Orta | §10.2 bütçe yöntemi (epoch azalt → `n` → alt küme); haftada en fazla 2 tam eğitim (§22); eğitimi gece/sabah erken saatlerde başlatmak; **Kaggle GPU yedeği** (telefon doğrulaması, haftada ~30 saat garanti); gerekirse 1 ay Colab Pro |
 | Colab oturumu eğitim ortasında kopuyor | **Yüksek** | Orta | Checkpoint'ler Drive'a, `save_period=5`, `resume=True` |
-| Kaggle API ile indirme de izin vermiyor | Düşük | Yüksek | Resmi BaiduYun bağlantısı; HIT-UAV ile termal-only başla (GitHub, hesap gerekmez) |
+| Kaggle API ile indirme de izin vermiyor | Düşük | Yüksek | Resmi BaiduYun bağlantısı; M3OT (figshare, hesap gerekmez) ile RGB-IR geliştirmeye başla |
 | TensorRT kurulumu sorunlu | Orta | Düşük | ONNX Runtime CUDA/TensorRT EP. TensorRT ek hedefe iner. |
 | M3OT uygunsuz (format, kare hızı, erişim) | Düşük-Orta | Orta | Yedek VT-MOT; oracle tespitle takip ölçümü veya niteliksel demo (ADR 0007) |
 | Windows'ta C++ zorluğu | Yüksek | Orta | Baştan WSL2. Docker imajı tek doğru kaynak. |
-| Zaman aşımı | Yüksek | Yüksek | H4 MVP kapısı ve §20.6 kesme sırası |
+| Zaman aşımı | Yüksek | Yüksek | H5 MVP kapısı ve §20.6 kesme sırası |
 | AGPL | Düşük | Düşük | Açık portfolyo için uygun. README'de açıkça belirt. |
 | Kodu anlamadan ilerlemek | Orta | **Yüksek (mülakat)** | §21.1 ilkeleri ve DoD |
 

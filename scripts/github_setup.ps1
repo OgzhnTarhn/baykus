@@ -15,11 +15,11 @@ foreach ($l in $labels) {
 }
 
 $existing = @(gh api 'repos/{owner}/{repo}/milestones?state=all' --jq '.[].title')
-foreach ($i in 1..8) {
+foreach ($i in 1..10) {
   $title = "H$i"
   if ($existing -notcontains $title) {
     gh api 'repos/{owner}/{repo}/milestones' -f title=$title | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "Milestone oluşturulamadı: $title" }
   }
 }
-Write-Host "Etiketler ve H1-H8 milestone'ları hazır."
+Write-Host "Etiketler ve H1-H10 milestone'ları hazır."
