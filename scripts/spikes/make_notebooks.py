@@ -99,6 +99,64 @@ SETUP_CELLS = [
 ]
 
 
+DATA_CELLS = [
+    md(
+        """
+        # 01 — Veri hazırlama (her Colab oturumunda bir kez)
+        **CPU çalışma zamanı yeterli**; GPU kotası harcamaz. Secrets: `KAGGLE_API_TOKEN`
+        (repo private ise `GITHUB_TOKEN` da). Çıktı: `/content/dv_rgbt` ve `/content/meta`.
+        Her `%%time` hücresinin süresini ve son hücrenin disk çıktısını Claude'a getir (ADR 0004).
+        """
+    ),
+    KAGGLE_TOKEN,
+    CLONE,
+    code(
+        """
+        %%time
+        !pip -q install uv
+        !uv pip install --system -q -e /content/baykus/python
+        !baykus-data --help | head -3
+        """
+    ),
+    code(
+        """
+        %%time
+        !pip -q install kaggle
+        !kaggle datasets download brendanalvey/visdrone-dronevehicle -p /content/raw --unzip -q
+        !du -sh /content/raw
+        """
+    ),
+    code(
+        """
+        # Ham kök: içinde train/ val/ test/ olan klasör (Kaggle zip'i bir alt klasör ekleyebilir)
+        from pathlib import Path
+        cands = [p for p in [Path('/content/raw'), *Path('/content/raw').glob('*')]
+                 if (p / 'train').is_dir() and (p / 'val').is_dir()]
+        assert cands, 'train/ ve val/ içeren klasör bulunamadı; /content/raw yapısına bak'
+        RAW = cands[0].as_posix()
+        print('RAW =', RAW)
+        !ls {RAW}/train
+        """
+    ),
+    code(
+        """
+        %%time
+        !baykus-data verify --raw {RAW} --meta /content/meta
+        !baykus-data convert --raw {RAW} --meta /content/meta --out /content/dv_rgbt
+        !baykus-data illum --out /content/dv_rgbt --meta /content/meta --fig /content/figs
+        !baykus-data rgbt4 --out /content/dv_rgbt
+        !baykus-data coco --out /content/dv_rgbt --meta /content/meta
+        """
+    ),
+    code(
+        """
+        !du -sh /content/dv_rgbt/* /content/raw
+        !df -h /content
+        """
+    ),
+]
+
+
 def build(cells: list[tuple[str, str]], path: Path, gpu: bool) -> None:
     nb = nbf.v4.new_notebook()
     nb.cells = [
@@ -115,4 +173,5 @@ def build(cells: list[tuple[str, str]], path: Path, gpu: bool) -> None:
 
 if __name__ == "__main__":
     build(SETUP_CELLS, Path("notebooks/colab/00_setup.ipynb"), gpu=True)
+    build(DATA_CELLS, Path("notebooks/colab/01_data.ipynb"), gpu=False)
     print("ok")
