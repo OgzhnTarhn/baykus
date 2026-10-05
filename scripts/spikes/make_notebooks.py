@@ -1,0 +1,109 @@
+"""notebooks/colab/*.ipynb dosyalarını üretir. Notebook'lar elle düzenlenmez.
+
+Çalıştırma (repo kökünde): uvx --with nbformat python scripts/spikes/make_notebooks.py
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+from textwrap import dedent
+
+import nbformat as nbf
+
+REPO = "github.com/OgzhnTarhn/baykus.git"
+
+
+def md(text: str) -> tuple[str, str]:
+    return "md", dedent(text).strip()
+
+
+def code(text: str) -> tuple[str, str]:
+    return "code", dedent(text).strip()
+
+
+CLONE = code(
+    f"""
+    # Repo private ise Secrets'a GITHUB_TOKEN ekle (fine-grained, sadece bu repo, 'Contents: read').
+    from google.colab import userdata
+    try:
+        tok = userdata.get('GITHUB_TOKEN')
+    except Exception:
+        tok = None
+    url = f'https://{{tok}}@{REPO}' if tok else 'https://{REPO}'
+    !git clone -q {{url}} /content/baykus
+    %cd /content/baykus
+    !git remote set-url origin https://{REPO}
+    !git log --oneline -3
+    """
+)
+
+SETUP_CELLS = [
+    md(
+        """
+        # 00 — Colab ortam spike'ı
+        Çalıştırmadan önce: **Çalışma zamanı → Çalışma zamanı türünü değiştir → T4 GPU**.
+        Secrets'ta (sol menü 🔑) `KAGGLE_API_TOKEN` olmalı; repo private ise `GITHUB_TOKEN` da.
+        """
+    ),
+    code(
+        """
+        !nvidia-smi
+        !df -h /content
+        !free -h
+        !nproc
+        """
+    ),
+    code(
+        """
+        from google.colab import drive
+        drive.mount('/content/drive')
+        !mkdir -p /content/drive/MyDrive/baykus
+        !echo ok > /content/drive/MyDrive/baykus/write_test.txt
+        !cat /content/drive/MyDrive/baykus/write_test.txt
+        """
+    ),
+    code(
+        """
+        import os
+        from google.colab import userdata
+        os.environ['KAGGLE_API_TOKEN'] = userdata.get('KAGGLE_API_TOKEN')
+        print('token yüklendi (değer yazdırılmadı)')
+        """
+    ),
+    code(
+        """
+        %%time
+        !pip -q install kaggle
+        RAW = '/content/raw/dronevehicle'
+        !kaggle datasets download brendanalvey/visdrone-dronevehicle -p {RAW} --unzip -q
+        !du -sh {RAW}
+        """
+    ),
+    CLONE,
+    code(
+        """
+        %%time
+        !pip -q install 'ultralytics>=8.4' tensorrt
+        from ultralytics import YOLO
+        m = YOLO('yolo26n.pt')
+        print(m.export(format='engine', half=True, imgsz=640, nms=False))
+        """
+    ),
+    md("Sonuçları `docs/spikes/03-colab-env.md` dosyasına yazmak için çıktıları Claude'a getir."),
+]
+
+
+def build(cells: list[tuple[str, str]], path: Path) -> None:
+    nb = nbf.v4.new_notebook()
+    nb.cells = [
+        nbf.v4.new_markdown_cell(src) if kind == "md" else nbf.v4.new_code_cell(src)
+        for kind, src in cells
+    ]
+    nb.metadata["accelerator"] = "GPU"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    nbf.write(nb, path)
+
+
+if __name__ == "__main__":
+    build(SETUP_CELLS, Path("notebooks/colab/00_setup.ipynb"))
+    print("ok")
