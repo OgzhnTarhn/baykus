@@ -144,6 +144,15 @@ def _cmd_coco(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_report(a: argparse.Namespace) -> int:
+    from baykus.data.report import build_report
+
+    text = build_report(Path(a.out), Path(a.meta), Path(a.fig))
+    Path(a.md).write_text(text, encoding="utf-8")
+    print(f"yazıldı: {a.md}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="baykus-data")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -175,6 +184,12 @@ def build_parser() -> argparse.ArgumentParser:
     co.add_argument("--out", required=True)
     co.add_argument("--meta", required=True)
     co.set_defaults(func=_cmd_coco)
+    rp = sub.add_parser("report", help="E0 veri raporu")
+    rp.add_argument("--out", required=True)
+    rp.add_argument("--meta", required=True)
+    rp.add_argument("--md", default="../docs/data-report.md")
+    rp.add_argument("--fig", default="../docs/figures/data")
+    rp.set_defaults(func=_cmd_report)
     return p
 
 
