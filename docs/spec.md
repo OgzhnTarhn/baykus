@@ -63,7 +63,7 @@ Ayrıca sektör standardı araçlar plana eklendi:
 - **MLflow:** Ultralytics'e yerleşik deney takibi
 - **ensemble-boxes (WBF):** Geç füzyon için
 - **pycocotools:** Kırılımlı metrikler için
-- **ByteTrack-cpp (MIT):** C++ takip için
+- **ByteTrack:** C++ takipçi kendimiz yazılıyor; Python referansı `roboflow/trackers` (Apache-2.0). (v3.0: ByteTrack-cpp'nin bakımı 2024'te durdu)
 - **TrackEval:** Takip metrikleri için
 - **uv / ruff / pre-commit:** Python ortamı ve kod kalitesi için
 
@@ -261,10 +261,10 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 | Kod kalitesi | **ruff**, **pre-commit**, pytest | Üçü de | |
 | Export / hızlandırma | ONNX, TensorRT, OpenVINO | **ONNX + TensorRT** (Ultralytics `export`). OpenVINO Intel'e özel olduğu ve laptop AMD olduğu için çıkarıldı. | INT8 kalibrasyonu `data` ve `fraction` parametreleriyle |
 | C++ çıkarım | ONNX Runtime + OpenCV; referans repolar: **YOLOs-CPP** (YOLO26 destekli, Python eşlik testli), TensorRT-YOLO | **Kendi motorumuz:** ONNX Runtime C++ + OpenCV. Mimari ve eşlik testi yaklaşımı için YOLOs-CPP referans | Motoru kendimiz yazıyoruz, mülakat değeri burada |
-| C++ takip | ByteTrack resmi C++ sürümü, **ByteTrack-cpp** (MIT, Eigen) | **ByteTrack-cpp** | |
-| Python takip | Ultralytics `track` (ByteTrack, BoT-SORT …) | Ultralytics ByteTrack (referans) | |
+| C++ takip | ByteTrack resmi C++ sürümü, ByteTrack-cpp (MIT, Eigen; son commit 2024-04) | **Kendi ByteTrack'imiz** (C++17, Eigen; Kalman + Macar + iki aşamalı eşleşme) | Bakımı durmuş bağımlılık yerine mülakat malzemesi |
+| Python takip | Ultralytics `track`, **roboflow/trackers** (Apache-2.0; SORT, ByteTrack, OC-SORT, BoT-SORT + `trackers eval`), BoxMOT (AGPL) | **roboflow/trackers ByteTrack** (C++ eşlik referansı ve HOTA/MOTA/IDF1) | Lisansı temiz, aktif |
 | Takip metrikleri | **TrackEval** (HOTA, MOTA, IDF1) | TrackEval | |
-| C++ derleme | CMake, vcpkg / Conan, FetchContent | **CMake + FetchContent** (GoogleTest, nlohmann/json, cpp-httplib, ByteTrack-cpp); ONNX Runtime hazır paket; OpenCV ve Eigen sistem paketi | |
+| C++ derleme | CMake, vcpkg / Conan, FetchContent | **CMake + FetchContent** (GoogleTest, nlohmann/json, cpp-httplib); ONNX Runtime hazır paket; OpenCV ve Eigen sistem paketi | |
 | C++ kalite | clang-format, clang-tidy, GoogleTest | Üçü de | |
 | Web arayüzü | React / Next.js, Tailwind, shadcn/ui | **Next.js (App Router) + TypeScript + Tailwind + shadcn/ui** | Senin günlük stack'in |
 | Paketleme | Docker (multi-stage), Docker Compose | Aynısı, `internal` ağ ile | |
@@ -334,7 +334,7 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 | | CMake ≥ 3.22, Ninja | |
 | | ONNX Runtime C++ | Python tarafıyla aynı ana sürüm (hazır paket) |
 | | OpenCV 4.x, Eigen 3 | apt |
-| | GoogleTest, nlohmann/json, cpp-httplib, ByteTrack-cpp | CMake FetchContent |
+| | GoogleTest, nlohmann/json, cpp-httplib | CMake FetchContent |
 | | clang-format, clang-tidy | |
 | Web | Node.js 20 LTS veya üstü, pnpm veya npm | |
 | | Next.js, TypeScript, Tailwind, shadcn/ui | güncel |
@@ -394,7 +394,7 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 - **FR-E1:** Letterbox ön işleme (Python ile piksel düzeyinde aynı), ONNX Runtime çıkarımı, YOLO26 uçtan uca çıktı çözümleme, koordinatların orijinal görüntüye geri ölçeklenmesi.
 - **FR-E2:** Modlar: rgb, ir, early_fusion (4 kanal) ve late_fusion (iki model + C++ WBF).
 - **FR-E3:** YOLO11 yedeği için NMS'li çıktı yolu da desteklenir.
-- **FR-E4:** ByteTrack-cpp ile takip, oturum (session) bazında.
+- **FR-E4:** Kendi C++ ByteTrack'imizle takip, oturum (session) bazında. Fikstür dizisinde Python referansıyla (roboflow/trackers ByteTrack, aynı parametreler) eşlik testi: aynı tespit dizisi verildiğinde iz atamaları ID permütasyonu dışında aynı; fark varsa nedeni belgelenir.
 - **FR-E5:** HTTP API (§15.3).
 - **FR-E6 — eşlik testi:** Fikstür görüntülerde C++ çıktısı ile Python referans JSON'u karşılaştırılır. Kutu sayısı aynı, eşleşen kutularda IoU ≥ 0.99, skor farkı ≤ 1e-3. CI'da çalışır.
 - **FR-E7:** Her yanıtta aşama süreleri: pre / infer / post / track / total.
@@ -415,7 +415,7 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 
 ### 7.6 Lisans ve veri gereksinimleri
 - Ultralytics **AGPL-3.0** olduğu için repo da **AGPL-3.0** olur. README'de "üretim kullanımı Ultralytics Enterprise lisansı gerektirir" notu yer alır.
-- Kullanılan kütüphanelerin lisansları: ONNX Runtime (MIT), OpenCV (Apache-2.0), ByteTrack-cpp (MIT), ensemble-boxes (MIT), cpp-httplib (MIT), nlohmann/json (MIT), YOLOs-CPP (AGPL; sadece referans).
+- Kullanılan kütüphanelerin lisansları: ONNX Runtime (MIT), OpenCV (Apache-2.0), Eigen (MPL-2.0), roboflow/trackers (Apache-2.0; sadece Python referansı), ensemble-boxes (MIT), cpp-httplib (MIT), nlohmann/json (MIT), YOLOs-CPP (AGPL; sadece referans).
 - **DroneVehicle'ın lisansı belirtilmemiş:** yeniden dağıtılmaz, atıf yapılır.
 - **M3OT ve HIT-UAV CC-BY-4.0:** küçük fikstürler atıfla repoya girebilir.
 - Model ağırlıkları GitHub Releases'ta AGPL ile yayımlanır.
@@ -485,7 +485,7 @@ dv_rgbt/
 │  ┌──────────────────────────────────────┐  HTTP   ┌────────────────┐  │
 │  │ engine (C++17)                       │◄──────► │ ui (Next.js)   │  │
 │  │ letterbox → ONNX Runtime → çözümleme │  JSON   │ oynatıcı,      │  │
-│  │ → (WBF) → ByteTrack-cpp → JSON       │         │ kutular, mod,  │  │
+│  │ → (WBF) → ByteTrack (kendi) → JSON   │         │ kutular, mod,  │  │
 │  └──────────────────────────────────────┘         │ gecikme, arıza │  │
 │              docker compose (internal network)    └────────────────┘  │
 └───────────────────────────────────────────────────────────────────────┘
@@ -667,7 +667,7 @@ ONNX INT8 için ONNX Runtime'ın `quantize_static` fonksiyonu kullanılır. Kali
 ### 15.1 Modül yapısı
 ```
 engine/
-├── CMakeLists.txt                // FetchContent: GoogleTest, nlohmann_json, httplib, ByteTrack-cpp
+├── CMakeLists.txt                // FetchContent: GoogleTest, nlohmann_json, httplib
 ├── cmake/                        // FindONNXRuntime.cmake
 ├── include/baykus/
 │   ├── image_io.hpp              // RGB/IR okuma, 4 kanal birleştirme
@@ -675,7 +675,9 @@ engine/
 │   ├── detector.hpp              // ORT oturumu; YOLO26 uçtan uca + YOLO11 (NMS) çözümleme
 │   ├── nms.hpp                   // YOLO11 yedeği için klasik NMS
 │   ├── wbf.hpp                   // geç füzyon için Weighted Box Fusion
-│   ├── tracker.hpp               // ByteTrack-cpp sarmalayıcı, oturum yönetimi
+│   ├── kalman.hpp                // sabit hızlı Kalman filtresi (Eigen)
+│   ├── assignment.hpp            // Macar algoritması (doğrusal atama)
+│   ├── tracker.hpp               // ByteTrack: iki aşamalı eşleşme, iz yaşam döngüsü, oturum yönetimi
 │   ├── pipeline.hpp              // mod → bileşen zinciri, zamanlama
 │   └── server.hpp                // HTTP API
 ├── src/…  apps/baykus_server.cpp  apps/baykus_bench.cpp
@@ -684,7 +686,7 @@ engine/
 
 ### 15.2 Kendimiz yazacaklarımız ve hazır kullanacaklarımız
 - **Biz yazıyoruz (mülakat malzemesi):** letterbox ön işleme, çıktı çözümleme, NMS, WBF, pipeline, zamanlama, HTTP katmanı, eşlik testi.
-- **Hazır kullanıyoruz (sektör pratiği):** ONNX Runtime (çıkarım), OpenCV (görüntü), ByteTrack-cpp (takip), cpp-httplib (HTTP), nlohmann/json (JSON).
+- **Hazır kullanıyoruz (sektör pratiği):** ONNX Runtime (çıkarım), OpenCV (görüntü), Eigen (lineer cebir), cpp-httplib (HTTP), nlohmann/json (JSON).
 
 ### 15.3 HTTP API sözleşmesi
 ```
@@ -720,7 +722,7 @@ Motor tek bir hatalı istek yüzünden çökmez.
 
 - **Algoritma: ByteTrack.** Düşük skorlu tespitleri de eşleştirmede kullanan, Kalman + Macar algoritması tabanlı, sektörde en yaygın hafif takipçi.
 - **Python referansı:** Ultralytics `model.track(..., tracker="bytetrack.yaml")`
-- **C++:** ByteTrack-cpp (MIT). Motorda oturum başına bir takipçi tutulur.
+- **C++:** Kendi ByteTrack uygulamamız (Kalman + Macar + iki aşamalı eşleşme). Motorda oturum başına bir takipçi tutulur. Kalman ve atama birim testli; tam takipçi Python referansıyla eşlik testli (FR-E4).
 - **Değerlendirme:** HOTA, MOTA ve IDF1 (TrackEval veya `roboflow/trackers eval`). Veri: **M3OT** (8 drone dizisi, araç, RGB-IR, MOT formatı, CC-BY-4.0).
   - **B planı 1:** M3OT'un hazır kutularıyla ("oracle tespit") sadece takipçi ölçülür. Bu ölçüm modelden bağımsız olduğu için her durumda raporlanır; model tespitiyle olan ölçüm onun yanında durur.
   - **B planı 2:** Takip niceliksel değil, sadece niteliksel olarak (demo videosu) gösterilir.
@@ -1012,7 +1014,7 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 ### H6 — Takip ve UI başlangıcı
 | # | Issue | Kabul kriteri |
 |---|---|---|
-| 37 | ByteTrack-cpp entegrasyonu + oturum yönetimi | Bir dizide tutarlı ID'ler |
+| 37 | C++ ByteTrack (Kalman, Macar, iki aşamalı eşleşme) + oturum yönetimi + eşlik testi | Fikstür dizisinde Python referansıyla eşlik; tutarlı ID'ler |
 | 38 | Takip değerlendirmesi (TrackEval) + ADR 0007 | HOTA/MOTA/IDF1 ya da B planı notu |
 | 39 | UI iskeleti (Next.js, Tailwind, shadcn) + oynatıcı + canvas | Yerel diziyi oynatıyor |
 | 40 | UI ↔ motor bağlantısı | Kutular ve ID'ler ekranda |
@@ -1144,7 +1146,8 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 - YOLO_OBB_CPP — https://github.com/mohamedsamirx/YOLO_OBB_CPP
 - YOLOv8-TensorRT — https://github.com/triple-Mu/YOLOv8-TensorRT
 - ByteTrack — https://github.com/FoundationVision/ByteTrack
-- ByteTrack-cpp (MIT) — https://github.com/Vertical-Beach/ByteTrack-cpp
+- ByteTrack-cpp (MIT, bakımı durmuş; sadece okuma referansı) — https://github.com/Vertical-Beach/ByteTrack-cpp
+- roboflow/trackers (Apache-2.0) — https://github.com/roboflow/trackers
 - Lisans karşılaştırmaları — https://blog.roboflow.com/roboflow-vs-ultralytics/ · https://www.lightly.ai/blog/best-ultralytics-alternatives-in-2026
 
 **Veri setleri**
