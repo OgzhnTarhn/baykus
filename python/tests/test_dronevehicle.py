@@ -67,3 +67,13 @@ def test_imread_imwrite_roundtrip_non_ascii(tmp_path):
 
 def test_imread_missing_returns_none(tmp_path):
     assert imread_any(tmp_path / "yok.png") is None
+
+
+def test_parse_missing_coordinate_raises_value_error(tmp_path):
+    p = tmp_path / "x.xml"
+    p.write_text(
+        "<annotation><object><name>car</name><polygon><x1>1</x1></polygon></object></annotation>",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError):
+        parse_annotation(p)
