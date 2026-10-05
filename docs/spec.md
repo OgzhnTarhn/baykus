@@ -379,7 +379,7 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 - **FR-D2:** 100 piksellik beyaz kenarlık kırpılır: 840×712 → 640×512. Etiket koordinatları da kaydırılır.
 - **FR-D3:** OBB etiketleri yatay kutuya çevrilir. Dönüşüm: döndürülmüş kutunun 4 köşesini kapsayan en küçük eksen hizalı dikdörtgen, görüntü sınırına kırpılır. **IR ve RGB etiket setleri ayrı ayrı** üretilir.
 - **FR-D4:** Aydınlatma etiketi (Gündüz / Gece / Karanlık gece). Resmi kaynaktan alınır. Yoksa türetme yöntemi (ör. RGB ortalama parlaklık eşikleri) belgelenir ve resmi sayılarla (14.478 / 5.468 / 8.493) karşılaştırılarak doğrulanır.
-- **FR-D5:** 4 kanallı görüntü üretimi: RGB (3) + IR (1) → tek bir 4 kanallı TIFF. Biçim, Ultralytics'in beklediği kanal düzenine göre 1. haftada kesinleşir. Sıkıştırma: deflate/LZW.
+- **FR-D5:** 4 kanallı görüntü üretimi: RGB (3) + IR (1) → 4 sayfalı TIFF (her sayfa tek kanal gri, sıra R, G, B, T; deflate). Tek sayfalı RGB+alfa TIFF kullanılmaz: OpenCV renk kanallarını 4. kanalla çarpıp bozuyor (H1 Spike A).
 - **FR-D6:** COCO JSON üretimi (her etiket seti için) ve kırılım listeleri (aydınlatma, boyut).
 - **FR-D7:** Veri raporu `docs/data-report.md`: sınıf, boyut ve aydınlatma dağılımı; iki etiket seti arasındaki sayı farkı; **aynı nesnenin iki etiket setindeki merkez kayması dağılımı** (p50/p90/p99, histogram); örnek hizasızlık görselleri.
 - **FR-D8:** M3OT dönüştürücü (COCO JSON + MOT `gt.txt` → bizim düzen; RGB, IR ve 4 kanal) ve sınıf eşlemesi (§8.3). HIT-UAV dönüştürücü ek hedef.
@@ -405,7 +405,7 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 - **FR-V8 — belirsizlik:** Ana tablodaki her mAP50 için görüntü düzeyinde bootstrap %95 güven aralığı (1000 yeniden örnekleme). Model karşılaştırmalarında (ör. E3 − E1, karanlık gece) **eşleştirilmiş bootstrap**: iki model aynı yeniden örneklemle ölçülür, farkın aralığı raporlanır. Uygulama: pycocotools `evaluateImg` sonuçları bir kez hesaplanır, her yeniden örneklemede sadece birikim (accumulate) tekrarlanır. Oyuncak örnekte elle hesaplanan değerle test edilir.
 
 **Export ve edge (FR-X)**
-- **FR-X1:** ONNX export (sabit boyut, batch 1, 4 kanal girdi korunur).
+- **FR-X1:** ONNX export (sabit boyut, batch 1, 4 kanal girdi korunur). Uçtan uca (NMS'siz) model için `nms=False` **açıkça** verilir: çıktı `[1, 300, 6]`. Ultralytics'in varsayılanı (`nms=None`) ham çıktı (`[1, 4+nc, anchors]`) verir ve harici NMS gerektirir (H1 Spike A).
 - **FR-X2:** Varyantlar: ONNX FP32, ONNX FP16, ONNX INT8 (tam), **ONNX INT8 (head FP32)**; TensorRT FP16 ve INT8 (Colab T4).
 - **FR-X6 — NPU denemesi (zaman kutusu 3 saat):** Aynı ONNX modeli laptop NPU'sunda (Ryzen 7 8845HS, XDNA; Ryzen AI Software, AMD Quark ile INT8, ONNX Runtime VitisAI EP, Windows). Kaç düğümün NPU'da çalıştığı ve gecikme raporlanır. Çalışmazsa bulgu olarak yazılır; S6'yı engellemez.
 - **FR-X3:** INT8 kalibrasyonu **sadece eğitim setinden** yapılır (`fraction` ile ~500 görüntü). Test setine dokunulmaz.
@@ -415,7 +415,7 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 **C++ motor (FR-E)**
 - **FR-E1:** Letterbox ön işleme (Python ile piksel düzeyinde aynı), ONNX Runtime çıkarımı, YOLO26 uçtan uca çıktı çözümleme, koordinatların orijinal görüntüye geri ölçeklenmesi.
 - **FR-E2:** Modlar: rgb, ir, early_fusion (4 kanal) ve late_fusion (iki model + C++ WBF).
-- **FR-E3:** YOLO11 yedeği için NMS'li çıktı yolu da desteklenir.
+- **FR-E3:** Ham çıktı + NMS yolu da desteklenir: YOLO11 yedeği ve uçtan uca grafiğin INT8'de bozulması ihtimali için (Ultralytics exporter'ı statik INT8'de uçtan uca dalın sınıf indeksi çıktısını bozabildiğini not ediyor).
 - **FR-E4:** Kendi C++ ByteTrack'imizle takip, oturum (session) bazında. Fikstür dizisinde Python referansıyla (roboflow/trackers ByteTrack, aynı parametreler) eşlik testi: aynı tespit dizisi verildiğinde iz atamaları ID permütasyonu dışında aynı; fark varsa nedeni belgelenir.
 - **FR-E5:** HTTP API (§15.3).
 - **FR-E6 — eşlik testi:** Fikstür görüntülerde C++ çıktısı ile Python referans JSON'u karşılaştırılır. Kutu sayısı aynı, eşleşen kutularda IoU ≥ 0.99, skor farkı ≤ 1e-3. CI'da çalışır.
@@ -675,8 +675,9 @@ tracking:
 
 **Export komutları (Ultralytics):**
 ```python
-model.export(format="onnx", imgsz=640, half=False)                       # ONNX FP32
-model.export(format="onnx", imgsz=640, half=True)                        # ONNX FP16
+model.export(format="onnx", imgsz=640, half=False, nms=False)            # ONNX FP32, uçtan uca [1,300,6]
+model.export(format="onnx", imgsz=640, half=True, nms=False)             # ONNX FP16, uçtan uca
+model.export(format="onnx", imgsz=640)                                   # ham çıktı (INT8 yolu ve NMS testi için)
 model.export(format="engine", imgsz=640, half=True)                      # TensorRT FP16 (T4)
 model.export(format="engine", imgsz=640, int8=True, data="data.yaml", fraction=...)  # TensorRT INT8
 ```
