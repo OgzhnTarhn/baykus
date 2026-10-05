@@ -306,3 +306,41 @@ Açık kaynak takım repolarında (ör. Darülmu-AI-limin/BlackScope) yaygın ya
 - TEKNOFEST Havacılıkta Yapay Zeka — https://teknofest.org/tr/yarismalar/havacilikta-yapay-zeka-yarismasi/
 - BlackScope (TEKNOFEST 2026 takım reposu) — https://github.com/Darulmu-AI-limin/TEKNOFEST2026-HavaciliktaYZ-OTR
 - İzinli lisanslı dedektörler — https://github.com/roboflow/rf-detr · https://github.com/Peterande/D-FINE · https://github.com/lyuwenyu/RT-DETR
+
+---
+
+## 10. İkinci tur (2026-10-05): planı belirleyen kısıtlar
+
+### 10.1 GPU bütçesi — [KAYNAK] + [ÇIKARIM]
+- Colab ücretsiz katmanında sabit kota yok. Kabaca haftada 15-30 saat T4; oturum en fazla 12 saat; yaklaşık 90 dakika hareketsizlikte kopuyor; 2 vCPU var.
+- Referans ölçümler (VisDrone, 6.471 eğitim görüntüsü, Colab T4):
+  - YOLOv8n @640: 100 epoch ≈ 4,6 saat (≈ 2,5 dk/epoch) (mttrin93/aerial-edge)
+  - YOLOv8s @960, batch 8: ≈ 3,5 dk/epoch
+- **Tahmin [ÇIKARIM]:** DroneVehicle'ın 17.990 eğitim görüntüsüyle YOLO26s @640 yaklaşık 7-9 dk/epoch. 4 kanallı TIFF çözme ve 2 vCPU veri yükleyiciyi daha da yavaşlatabilir. 100 epoch ≈ 12-15 saat/koşu. Spec'teki tam eğitimler (E1, E2, E3, E3b, E8-n, önerilen E3c) toplam ≈ 70-90 GPU saati eder. Spec bunları H2-H4'e (3 hafta) koyuyor; Colab ile bu sürede ≈ 45-90 saat çıkabilir. **Takvim bu haliyle sıkışık, hatta yetersiz.** Kesin sayı H2'deki 1 epoch ölçümüyle (§10.2) netleşir.
+- **Kaggle:** Haftada **garanti 30 saat** GPU (P100 veya 2×T4), 12 saatlik oturum, **tarayıcı kapalıyken arka planda çalışma** ("Save & Run All"), 20 GB kalıcı çıktı. DroneVehicle Kaggle'da duruyor, notebook'a indirmeden bağlanabiliyor. Şart: **telefon doğrulaması.** Spec "telefon doğrulamasız Kaggle hesabı" varsaydığı için bu seçenek değerlendirilmemişti.
+
+### 10.2 Veri
+- DroneVehicle resmi bölümleri: train 17.990 / val 1.469 / test 8.980 çift.
+- Kaggle kopyası (Kaggle API'den): 14,46 GB, `test/testimg` dahil. Yükleyicinin notu: "birkaç eğitim görüntüsü bozuk ya da eksik." Kaggle'da lisans MIT görünüyor ama bunu yükleyici seçmiş; orijinal veri setinde lisans belirtilmemiş.
+- **M3OT (Scientific Data 2025) — yeni aday:** sadece araç; RGB ve IR 640×512, hizalanmış (afin + kırpma); 100-120 m irtifa; 8 dizi, 10.790 RGB-IR çifti, 220 bin kutu; **her modalite için ayrı etiket**; MOTChallenge `gt.txt` + COCO JSON; **CC BY 4.0**; figshare'den indiriliyor.
+  - Takip değerlendirmesi için VT-MOT'tan daha uygun: VT-MOT'ta drone dizi sayısı ve sınıflar belirsiz.
+  - Veri setleri arası test için HIT-UAV'den daha güçlü: HIT-UAV sadece IR modelini test edebiliyor; M3OT **RGB, IR ve füzyon modellerinin hepsini** test edebilir.
+
+### 10.3 Uygulanabilirlik
+- **Modality dropout:** Ultralytics'in belgelenmiş özel trainer API'si (`model.train(trainer=CustomTrainer)`) `preprocess_batch()` metodunu ezmeye izin veriyor. Batch GPU'dayken örnek başına RGB veya T kanalı olasılıkla sıfırlanabilir. Validator kendi ön işlemesini kullandığı için bu sadece eğitimi etkiler. Yama gerekmiyor.
+- **CPU'da INT8:** VNNI'siz bir CPU'da (i7-8550U) INT8 static, FP32'den **yavaş** çıkmış (51,8 → 73,2 ms) ve mAP50 0,338'den 0,320'ye düşmüş (aerial-edge). Ryzen 7 8845HS (Zen 4) AVX-512 VNNI destekliyor; INT8'in burada hızlanması beklenir [ÇIKARIM]. Bu, edge tablosunda anlatılabilir bir sonuç: "INT8 her CPU'da hızlı değildir."
+- **Bootstrap / hızlı değerlendirme:**
+  - `hotcoco` (MIT) pycocotools'un Rust'la yazılmış yerine geçen sürümü. Kırılımlı değerlendirme, bootstrap güven aralıklı model karşılaştırması ve ECE sunuyor. Ama çok yeni ve küçük (16★); bağımlılık olarak riskli.
+  - `faster-coco-eval` (Apache-2.0, 147★) yaklaşık 4 kat hızlı.
+  - Öneri: referans olarak pycocotools kalsın. Bootstrap'ı kendimiz yazalım: `COCOeval.evaluateImg` görüntü başına sonuçları bir kez hesaplar, yeniden örneklemede sadece `accumulate` tekrarlanır. Hem ucuz hem mülakat malzemesi.
+
+### 10.4 Kaynaklar (ikinci tur)
+- Colab ücretsiz katman sınırları — https://joshthompson.co.uk/ai/google-colab-2026-guide-free-compute-automations-pro-tips/
+- Kaggle + Ultralytics — https://docs.ultralytics.com/integrations/kaggle · kota: https://aicreditmart.com/ai-credits-providers/kaggle-free-gpu-tpu-30-hours-week-access-guide-2026/
+- aerial-edge (YOLO26n VisDrone, T4 süresi, VNNI'siz CPU'da INT8) — https://github.com/mttrin93/aerial-edge
+- VisDrone T4 epoch süreleri — https://github.com/orgs/ultralytics/discussions/10322
+- DroneVehicle bölümleri — https://pmc.ncbi.nlm.nih.gov/articles/PMC12115365/
+- Ultralytics özel trainer — https://docs.ultralytics.com/guides/custom-trainer/
+- M3OT — https://pmc.ncbi.nlm.nih.gov/articles/PMC12686387/ · veri: https://figshare.com/s/01fa8d1163f4e9a5a13a
+- VT-MOT / PFTrack — https://github.com/wqw123wqw/PFTrack
+- hotcoco — https://github.com/derekallman/hotcoco · faster-coco-eval — https://github.com/MiXaiLL76/faster_coco_eval
