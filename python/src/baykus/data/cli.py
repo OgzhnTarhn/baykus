@@ -97,6 +97,33 @@ def _cmd_illum(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_rgbt4(a: argparse.Namespace) -> int:
+    import cv2
+    from tqdm import tqdm
+
+    from baykus.classes import CLASS_NAMES
+    from baykus.data.multichannel import stack_rgbt, write_rgbt4
+    from baykus.io import imread_any
+
+    out = Path(a.out)
+    n = 0
+    for split in SPLITS:
+        for p in tqdm(sorted((out / "rgb/images" / split).glob("*.jpg")), desc=split, leave=False):
+            ir = imread_any(out / "ir/images" / split / f"{p.stem}.png", cv2.IMREAD_GRAYSCALE)
+            rgbt = stack_rgbt(imread_any(p, cv2.IMREAD_COLOR), ir)
+            write_rgbt4(out / "rgbt4/images" / split / f"{p.stem}.tif", rgbt)
+            n += 1
+    names = "".join(f"  {i}: {c}\n" for i, c in enumerate(CLASS_NAMES))
+    for modality, ch in (("rgb", 3), ("ir", 3), ("rgbt4", 4)):
+        (out / f"data_{modality}.yaml").write_text(
+            f"path: {(out / modality).as_posix()}\ntrain: images/train\nval: images/val\n"
+            f"test: images/test\nchannels: {ch}\nnames:\n{names}",
+            encoding="utf-8",
+        )
+    print(f"rgbt4 images: {n}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="baykus-data")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -121,6 +148,9 @@ def build_parser() -> argparse.ArgumentParser:
     il.add_argument("--meta", required=True)
     il.add_argument("--fig", default="../docs/figures/data")
     il.set_defaults(func=_cmd_illum)
+    r4 = sub.add_parser("rgbt4", help="RGB+IR → 4 kanallı TIFF ve data_*.yaml")
+    r4.add_argument("--out", required=True)
+    r4.set_defaults(func=_cmd_rgbt4)
     return p
 
 
