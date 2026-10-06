@@ -1142,20 +1142,20 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 - [ ] Etiket dosya formatı (XML?); iki etiket setinin gerçek sayı farkı
 - [ ] IR görüntüleri 1 kanal mı, 3 kanal kopya mı?
 - [ ] Aydınlatma etiketi dosyalarda var mı?
-- [ ] Ultralytics güncel sürümünde `channels: 4` ile **YOLO26 detect** 1 epoch eğitim + val + ONNX export sorunsuz mu? İlk katman ağırlıkları nasıl yükleniyor?
-- [ ] 4 kanallı TIFF'in Ultralytics'in beklediği biçimi (kanal sırası, çok sayfalı mı)
+- [x] Ultralytics güncel sürümünde `channels: 4` ile **YOLO26 detect** 1 epoch eğitim + val + ONNX export sorunsuz mu? İlk katman ağırlıkları nasıl yükleniyor? → Evet; RGB = COCO, T rastgele (Spike A)
+- [x] 4 kanallı TIFF'in Ultralytics'in beklediği biçimi (kanal sırası, çok sayfalı mı) → 4 gri sayfa, RGBT (Spike A, ADR 0004)
 - [ ] Kaggle API token'ı ile DroneVehicle'ın Colab'a indirilebildiği (telefon doğrulaması olmadan)
 - [ ] Colab disk alanı, RAM, veri indirme + işleme süresi
 - [ ] Drive'a checkpoint yazma ve `resume` ile devam etme
 - [ ] Colab'da TensorRT kurulumu (küçük deneme)
-- [ ] M3OT: indirme, sınıf listesi, etiket formatı (MOT + COCO), kare hızı, RGB-IR hizası
-- [ ] (ek hedef) HIT-UAV etiket formatı
+- [ ] M3OT: indirme, sınıf listesi, etiket formatı (MOT + COCO), kare hızı, RGB-IR hizası → sınıf (`vehicle`) ve format kaynaktan doğrulandı; indirme, kare hızı ve hiza bekliyor (Spike C, `04-external-datasets.md`)
+- [x] (ek hedef) HIT-UAV etiket formatı → VOC XML + COCO JSON, HBB ve OBB (Spike C)
 
 **Açık kararlar (H1 sonunda ADR olarak kapanacak):**
-- [ ] YOLO26 (varsayılan) mı, YOLO11 mi? Spike sonucuna göre.
+- [x] YOLO26 (varsayılan) mı, YOLO11 mi? Spike sonucuna göre. → YOLO26 (ADR 0001)
 - [ ] Depolama stratejisi (§23)
 - [ ] Aydınlatma etiketinin kaynağı
-- [ ] Proje adı
+- [x] Proje adı → Baykuş (repo ve paket `baykus`)
 
 ---
 
