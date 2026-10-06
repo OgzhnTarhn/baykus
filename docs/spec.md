@@ -451,7 +451,7 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 | Veri seti | İçerik | Erişim | Lisans | Rol |
 |---|---|---|---|---|
 | **DroneVehicle** | 28.439 RGB-IR çifti, 5 araç sınıfı, OBB (biz HBB'ye çeviriyoruz), modalite başına ayrı etiket, ~953 bin kutu. Gündüz 14.478 / Gece 5.468 / Karanlık gece 8.493 | **Kaggle kopyası** `brendanalvey/visdrone-dronevehicle` (Kaggle API ile Colab'a indirilir). Resmi: GitHub, BaiduYun | Belirtilmemiş, atıf | Ana eğitim ve test |
-| **M3OT** (Scientific Data 2025) | 8 video dizisi, 10.790 RGB-IR çifti, 640×512, hizalı (afin + kırpma), 100-120 m irtifa, **sadece araç**, ~220 bin kutu, **modalite başına ayrı etiket**, MOT `gt.txt` + COCO JSON | figshare | **CC-BY-4.0** | **Veri setleri arası test (tüm modlar) ve takip değerlendirmesi (HOTA/MOTA/IDF1)**, CI fikstürleri |
+| **M3OT** (Scientific Data 2025) | 8 saatlik videodan 21.580 kare (10.790 RGB-IR çifti; dizi sayısı indirmede sayılacak), 640×512, hizalı (afin + kırpma), 100-120 m irtifa, **sadece araç**, ~220 bin kutu, **modalite başına ayrı etiket**, MOT `gt.txt` + COCO JSON | figshare | **CC-BY-4.0** | **Veri setleri arası test (tüm modlar) ve takip değerlendirmesi (HOTA/MOTA/IDF1)**, CI fikstürleri |
 | **HIT-UAV** | 2.898 termal görüntü, 60-130 m irtifa, Person/Car/Bicycle/OtherVehicle, hem HBB hem OBB, YOLO formatı hazır | GitHub | **CC-BY-4.0** | Ek hedef: IR-only ikinci veri setleri arası test, insan tespiti |
 | VT-MOT | 582 RGB-T video çifti (gözetleme / drone / el kamerası); drone dizi sayısı ve sınıflar belirsiz | Makale ve GitHub (PFTrack) | Belirsiz | M3OT'a yedek |
 
@@ -464,7 +464,7 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 
 ### 8.3 Sınıf eşlemesi (veri setleri arası test)
 
-**M3OT (çekirdek):** M3OT'ta tek bir araç sınıfı var. Modelin 5 sınıfı sınıfsız **`vehicle`**'a indirgenir ve sınıfsız AP raporlanır. Her mod için ayrı satır: rgb (RGB etiketiyle), ir (IR etiketiyle), early_fusion ve late_fusion (IR etiketiyle, ana tabloyla tutarlı). M3OT'un gerçek sınıf listesi ve etiket formatı H1 Spike C'de doğrulanır; birden fazla sınıf çıkarsa eşleme ADR'ye yazılır.
+**M3OT (çekirdek):** M3OT'ta tek bir araç sınıfı var. Modelin 5 sınıfı sınıfsız **`vehicle`**'a indirgenir ve sınıfsız AP raporlanır. Her mod için ayrı satır: rgb (RGB etiketiyle), ir (IR etiketiyle), early_fusion ve late_fusion (IR etiketiyle, ana tabloyla tutarlı). Spike C (docs/spikes/04-external-datasets.md): M3OT tek sınıflı (`vehicle`), MOT `gt.txt` + COCO JSON; ek eşleme ADR'si gerekmiyor.
 
 **HIT-UAV (ek hedef):** DroneVehicle'da insan yok, bu yüzden test sadece araçlarla yapılır:
 - HIT-UAV `Car` → `car`
@@ -759,7 +759,7 @@ Motor tek bir hatalı istek yüzünden çökmez.
 - **Algoritma: ByteTrack.** Düşük skorlu tespitleri de eşleştirmede kullanan, Kalman + Macar algoritması tabanlı, sektörde en yaygın hafif takipçi.
 - **Python referansı:** Ultralytics `model.track(..., tracker="bytetrack.yaml")`
 - **C++:** Kendi ByteTrack uygulamamız (Kalman + Macar + iki aşamalı eşleşme). Motorda oturum başına bir takipçi tutulur. Kalman ve atama birim testli; tam takipçi Python referansıyla eşlik testli (FR-E4).
-- **Değerlendirme:** HOTA, MOTA ve IDF1 (TrackEval veya `roboflow/trackers eval`). Veri: **M3OT** (8 drone dizisi, araç, RGB-IR, MOT formatı, CC-BY-4.0).
+- **Değerlendirme:** HOTA, MOTA ve IDF1 (TrackEval veya `roboflow/trackers eval`). Veri: **M3OT** (8 saatlik drone videosu, tek sınıf `vehicle`, RGB-IR, MOT formatı, CC-BY-4.0).
   - **B planı 1:** M3OT'un hazır kutularıyla ("oracle tespit") sadece takipçi ölçülür. Bu ölçüm modelden bağımsız olduğu için her durumda raporlanır; model tespitiyle olan ölçüm onun yanında durur.
   - **B planı 2:** Takip niceliksel değil, sadece niteliksel olarak (demo videosu) gösterilir.
 - **Not:** M3OT de araç ve 100-120 m irtifa; DroneVehicle ile görüş açısı uyumlu. Kare hızı ve dizi uzunlukları H1 Spike C'de kontrol edilir. M3OT uygunsuz çıkarsa yedek VT-MOT.
