@@ -1,7 +1,7 @@
 # Baykuş — RGB + Termal Füzyonlu Hava Görüntüsü Tespiti, Edge için Optimize, Uçtan Uca Sistem
 
 > **Proje adı:** Baykuş · **Repo / paket adı:** `baykus` · **Alt başlık (EN):** *RGB-Thermal aerial vehicle detection on the edge*
-> **Sahibi:** Oğuzhan Tarhan · **Tarih:** 2026-10-05 · **Sürüm:** v3.0 (araştırma sonrası yol haritası; eğitim: Colab, kullanıcı çalıştırır · laptop: AMD Ryzen 7 8845HS) · **Süre:** 10 hafta (5 Ekim-13 Aralık 2026) · **Durum:** Onaylandı (2026-10-02)
+> **Sahibi:** Oğuzhan Tarhan · **Tarih:** 2026-10-07 · **Sürüm:** v4.0 (kapsam genişletme: güvenilirlik farkındalığı + hareketli hedef, ADR 0006; eğitim: Colab, kullanıcı çalıştırır · laptop: AMD Ryzen 7 8845HS) · **Süre:** 5 faz, ~7 ay (5 Ekim 2026-30 Nisan 2027) · **Durum:** v3.0 onaylandı (2026-10-02); v4.0 yol haritası onaylandı (2026-10-07)
 
 ---
 
@@ -29,7 +29,7 @@
 19. [Repo yapısı](#19-repo-yapısı)
 20. [Proje yönetimi](#20-proje-yönetimi)
 21. [Claude Code ile çalışma düzeni](#21-claude-code-ile-çalışma-düzeni)
-22. [10 haftalık takvim ve issue listesi](#22-10-haftalık-takvim-ve-issue-listesi)
+22. [Takvim ve issue listesi](#22-takvim-ve-issue-listesi)
 23. [Riskler ve B planları](#23-riskler-ve-b-planları)
 24. [1. hafta doğrulama listesi ve açık kararlar](#24-1-hafta-doğrulama-listesi-ve-açık-kararlar)
 25. [Stratejik not: TEKNOFEST 2027](#25-stratejik-not-teknofest-2027)
@@ -39,6 +39,19 @@
 ---
 
 ## 0. v1'den bu yana ne değişti
+
+### v4.0 (2026-10-07)
+Kaynak: kullanıcıyla kapsam görüşmesi, ADR 0006. Kullanıcının kaygısı projenin "herkes bunu yapmış" diye görülmesi; istediği fark hem kendi yöntemi hem operasyonel zekâ; süre uzayabilir.
+
+| Konu | v3.0 | **v4.0** | Neden |
+|---|---|---|---|
+| Süre | 10 hafta (13 Ara bitiş) | **5 faz, ~7 ay** (30 Nis 2027 bitiş). Faz 1 = v3.0 H1-H5, değişmeden | İki yeni katman; hedef Haziran 2027 mezuniyeti |
+| İddia | Dürüst ölçüm + uçtan uca sistem | + **güvenilirlik farkındalığı** (Faz 2) + **hareketli hedef** (Faz 4) | Ayırt edicilik (§3.2) |
+| Hareketli/duran araç | Ek hedef 1 | **Faz 4'ün çekirdeği** | Operasyonel zekâ, TEKNOFEST görevi |
+| Makale | Kapsam dışı | İsteğe bağlı (arXiv, Faz 5) | Faz 2 yöntemi yayınlanabilir sonuç verebilir |
+| Faz 1'e etkisi | — | Sadece kancalar (§6.1): görüntü düzeyinde sağlamlık çıktısı, bozulmaların train'de de kullanılabilmesi, eşiksiz tahminler, dışarıdan ağırlık alan WBF, M3OT'ta dizi/kare/iz bilgisinin korunması | Sonradan yeniden iş yapmamak |
+| Planlama | Haftalık plan | **Üç katman:** yol haritası (bu spec) → faz tasarımı (her faz öncesi) → haftalık plan | Faz 2-4'ün ayrıntısı Faz 1 sonuçlarına bağlı |
+| ADR numaraları | 0006 gecikme, 0007 takip | 0006 kapsam genişletme; gecikme **0007**, takip **0008** | Kronolojik sıra |
 
 ### v3.0 (2026-10-05)
 Kaynak: `docs/research/2026-10-04-derin-arastirma.md` (§1-§10). Kullanıcı kararları: süre 10 hafta; eğitim Colab'da ve kullanıcı tarafından; Claude kod, plan ve notebook hazırlar.
@@ -88,7 +101,7 @@ YOLO'yu bilmediğin için **§4'te sıfırdan bir YOLO özeti** var.
 
 ## 1. Tek cümlede proje
 
-İnsansız hava aracından çekilmiş **normal (RGB) ve termal (IR)** görüntüleri birleştirerek gece-gündüz **araçları tespit edip takip eden**, uç cihazlar için **küçültülüp hızlandırılmış**, **C++ ile çalışan**, **internetsiz kurulabilen** ve sonuçlarını **dürüst, kırılımlı metriklerle** raporlayan uçtan uca bir sistem.
+İnsansız hava aracından çekilmiş **normal (RGB) ve termal (IR)** görüntüleri birleştirerek gece-gündüz **araçları tespit edip takip eden**, bir kameranın bozulduğunu ya da kendi tahmininin güvenilmez olduğunu **kendisi fark edip buna göre davranan**, araçların **hareketli mi duran mı** olduğunu ayıran, uç cihazlar için **küçültülüp hızlandırılmış**, **C++ ile çalışan**, **internetsiz kurulabilen** ve sonuçlarını **dürüst, kırılımlı metriklerle** raporlayan uçtan uca bir sistem.
 
 **Ne değil:** Drone takip / anti-drone sistemi değil. Drone burada kameranın taşıyıcısı; tespit edilen şey yerdeki araçlar.
 
@@ -122,6 +135,8 @@ Mezuniyette (Haziran 2027) **Türk savunma sanayii** şirketlerinde (ASELSAN, HA
 - [ ] **S7 — C++/Python eşliği:** C++ motor çıktısı Python referansıyla tolerans içinde aynı. Bu CI'da test ediliyor.
 - [ ] **S8 — Kapalı ağ:** `docker compose up` dış ağa çıkmadan çalışıyor.
 - [ ] **S9 — Sunum:** README, demo videosu ve teknik yazı yayında.
+- [ ] **S10 — Güvenilirlik farkındalığı (Faz 2):** Uyarlanabilir füzyon, en iyi sabit füzyona (E3c / E4b) karşı sağlamlık paketinin bozulmaları ve kamera kaybında güven aralığıyla ölçülmüş; güven kalibrasyonu (ECE) önce/sonra raporlanmış; sensör arıza tespitinin doğruluğu ölçülmüş. Sonuç olumsuz çıkarsa o da raporlanır. Ayrıntılı ölçütler Faz 2 tasarımında.
+- [ ] **S11 — Hareketli hedef (Faz 4):** M3OT'ta hareketli/duran ayrımı ölçülmüş (etiketler iz yörüngelerinden türetilmiş, yöntemi belgelenmiş); göreli mozaik harita ve bölge olayları demoda çalışıyor. Ayrıntılı ölçütler Faz 4 tasarımında.
 
 ---
 
@@ -151,6 +166,11 @@ SSB'nin SAYZEK programında yapılan iş, bu projeyle neredeyse aynı: *"havadan
 1. **Derinlik ve dürüstlük:** Tutarlı bir protokol; kırılımlı ve tekrarlanabilir sonuçlar; etiket setinin skoru nasıl etkilediği açıkça gösterilmiş.
 2. **Operasyonel sağlamlık:** "Bir kamera bozulunca ne oluyor?" sorusu sistemin içinde ölçülüyor.
 3. **Uçtan uca, ölçülmüş, açık kaynak sistem:** Model, C++ motoru, takip, arayüz ve kapalı ağ kurulumu bir arada.
+
+v4.0'da (ADR 0006) iki ayırt edici katman eklendi:
+
+4. **Güvenilirlik farkındalığı (Faz 2):** Sistem her karede RGB ve IR'nin ne kadar güvenilir olduğunu tahmin ediyor, füzyonu buna göre ayarlıyor ve güven skorları kalibre ediliyor. Operatör "RGB körleşti, IR'ye ağırlık verildi" uyarısını görüyor. Benzer bir fikir literatürde var (LER-YOLO, 2026); fark ve katkı Faz 2 tasarımında açıkça yazılır.
+5. **Hareketli hedef (Faz 4):** Drone'un kendi hareketi telafi edilerek hareketli ve duran araçlar ayrılıyor; izler göreli bir mozaik harita üzerinde gösteriliyor, bölge olayları üretiliyor.
 
 ---
 
@@ -298,16 +318,30 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 - C++ çıkarım motoru, HTTP API, ByteTrack takibi
 - Next.js operatör ekranı
 - Docker Compose ile internetsiz kurulum, GitHub Actions CI
+- **Faz 2:** Kare başına RGB/IR güvenilirlik tahmini, uyarlanabilir füzyon, güven kalibrasyonu, sensör arıza tespiti
+- **Faz 3 ekleri:** Sensör sağlık paneli ve güven tabanlı alarmlar (motor API'si ve UI)
+- **Faz 4:** Kamera hareketi telafisi, hareketli/duran araç ayrımı, göreli mozaik harita, bölge olayları (M3OT videoları)
+
+### 6.1 Faz 1'e kancalar (sonraki fazlar için)
+Faz 1'in kapsamını değiştirmeyen, ama sonradan yeniden iş yapmayı önleyen gereksinimler. İlgili haftanın planına eklenir.
+
+| # | Kanca | Nerede (Faz 1) | Kim kullanır |
+|---|---|---|---|
+| K1 | Sağlamlık paketi sonuçları **görüntü düzeyinde** de kaydedilir (her görüntü × bozulma × şiddet için tahminler), sadece toplam mAP değil | FR-V4, H3-H4 | Faz 2: güvenilirlik tahmincisinin hedefi ve değerlendirmesi |
+| K2 | Bozulma fonksiyonları deterministik (seed'li) ve bölümden bağımsız; **train bölümünde de** uygulanabilir. Değerlendirme yine sadece val/test'te | `baykus.robustness`, H3 | Faz 2: tahminci eğitimi için bozulmuş train örnekleri |
+| K3 | Değerlendirmede tahminler **düşük eşikle** (ör. conf ≥ 0.001) dosyaya kaydedilir; sadece metrik değil | `baykus.eval`, H2 | Faz 2: kalibrasyon (ECE), çalışma noktası seçimi |
+| K4 | Geç füzyon WBF ağırlıkları **görüntü başına dışarıdan** verilebilir bir arayüzle yazılır (E4b'nin kırılım başına ağırlığı bunun özel hâli) | FR-V7, H4 | Faz 2: kare başına uyarlanabilir ağırlık |
+| K5 | M3OT dönüştürücü **dizi adı, kare numarası ve iz numarasını** korur; RGB-IR eşleşmesi dizi bazında tutulur | FR-D8, H4 | Faz 3 takip ölçümü, Faz 4 hareketli/duran etiketleri |
 
 ### Ek hedefler (zaman kalırsa, bu sırayla)
-1. Hareketli / duran araç ayrımı (kamera hareketi telafisi + iz hızı; TEKNOFEST görevi)
-2. Orta seviye füzyon (YOLOv11-RGBT ile)
-3. OBB deneyi: literatürle doğrudan karşılaştırma için YOLO26-OBB, sadece IR
-4. İnsan tespiti ve IR-only ikinci veri setleri arası test (HIT-UAV termal)
-5. Gerçek bir Jetson cihazında ölçüm
+1. Orta seviye füzyon (YOLOv11-RGBT ile)
+2. OBB deneyi: literatürle doğrudan karşılaştırma için YOLO26-OBB, sadece IR
+3. İnsan tespiti ve IR-only ikinci veri setleri arası test (HIT-UAV termal)
+4. Gerçek bir Jetson cihazında ölçüm
 
 ### Kapsam dışı
-- SOTA skor iddiası, makale yayını
+- SOTA skor iddiası (makale isteğe bağlı: Faz 5'te arXiv, Faz 2 sonucu buna değerse)
+- Gerçek coğrafi konum (piksel → GPS): veri setlerinde kamera irtifa ve poz bilgisi yok
 - Gerçek drone, kamera veya donanım entegrasyonu
 - Kubernetes, bulut deploy
 - Hedefleme ya da silah sistemi entegrasyonu
@@ -382,7 +416,7 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 - **FR-D5:** 4 kanallı görüntü üretimi: RGB (3) + IR (1) → 4 sayfalı TIFF (her sayfa tek kanal gri, sıra R, G, B, T; deflate). Tek sayfalı RGB+alfa TIFF kullanılmaz: OpenCV renk kanallarını 4. kanalla çarpıp bozuyor (H1 Spike A).
 - **FR-D6:** COCO JSON üretimi (her etiket seti için) ve kırılım listeleri (aydınlatma, boyut).
 - **FR-D7:** Veri raporu `docs/data-report.md`: sınıf, boyut ve aydınlatma dağılımı; iki etiket seti arasındaki sayı farkı; **aynı nesnenin iki etiket setindeki merkez kayması dağılımı** (p50/p90/p99, histogram); örnek hizasızlık görselleri.
-- **FR-D8:** M3OT dönüştürücü (COCO JSON + MOT `gt.txt` → bizim düzen; RGB, IR ve 4 kanal) ve sınıf eşlemesi (§8.3). HIT-UAV dönüştürücü ek hedef.
+- **FR-D8:** M3OT dönüştürücü (COCO JSON + MOT `gt.txt` → bizim düzen; RGB, IR ve 4 kanal) ve sınıf eşlemesi (§8.3). Dizi adı, kare numarası ve iz numarası korunur (kanca K5, §6.1). HIT-UAV dönüştürücü ek hedef.
 
 **Eğitim (FR-T)**
 - **FR-T1:** Tek CLI: `uv run baykus-train --config configs/e3_early_fusion.yaml`
@@ -398,11 +432,12 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 - **FR-V1:** mAP50, mAP50-95, sınıf bazında AP, precision, recall.
 - **FR-V2:** Kırılımlar: aydınlatma (3), COCO boyut sınıfları (küçük < 32², orta < 96², büyük), sınıf.
 - **FR-V3:** Aynı tahminler iki etiket setine karşı ölçülür.
-- **FR-V4:** Sağlamlık paketi (§12.3) tek komutla çalışır, eğri grafikleri üretir.
+- **FR-V4:** Sağlamlık paketi (§12.3) tek komutla çalışır, eğri grafikleri üretir. Sonuçlar görüntü düzeyinde de kaydedilir; bozulmalar seed'li ve train bölümünde de uygulanabilir (kancalar K1, K2, §6.1).
 - **FR-V5:** M3OT veri setleri arası test tek komutla, her mod (rgb, ir, early_fusion, late_fusion) için çalışır.
 - **FR-V6:** Ultralytics `val` ile pycocotools sonuçları karşılaştırılır. Fark %1'den büyükse nedeni `docs/` altında açıklanır (iki kütüphane AP'yi farklı enterpolasyonla hesaplar).
-- **FR-V7:** Geç füzyon: RGB ve IR modellerinin tahminleri ensemble-boxes WBF ile birleştirilir. Ağırlıklar ve IoU eşiği **sadece val** setinde seçilir. E4b: WBF ağırlıkları aydınlatma kırılımı başına (gündüz / gece / karanlık gece) ayrı seçilir; çıkarımda görüntünün aydınlatma etiketi kullanılır (FR-D4 ile aynı türetme kuralı, sadece RGB'den).
+- **FR-V7:** Geç füzyon: RGB ve IR modellerinin tahminleri ensemble-boxes WBF ile birleştirilir. Ağırlıklar ve IoU eşiği **sadece val** setinde seçilir. Ağırlıklar görüntü başına dışarıdan verilebilir (kanca K4, §6.1). E4b: WBF ağırlıkları aydınlatma kırılımı başına (gündüz / gece / karanlık gece) ayrı seçilir; çıkarımda görüntünün aydınlatma etiketi kullanılır (FR-D4 ile aynı türetme kuralı, sadece RGB'den).
 - **FR-V8 — belirsizlik:** Ana tablodaki her mAP50 için görüntü düzeyinde bootstrap %95 güven aralığı (1000 yeniden örnekleme). Model karşılaştırmalarında (ör. E3 − E1, karanlık gece) **eşleştirilmiş bootstrap**: iki model aynı yeniden örneklemle ölçülür, farkın aralığı raporlanır. Uygulama: pycocotools `evaluateImg` sonuçları bir kez hesaplanır, her yeniden örneklemede sadece birikim (accumulate) tekrarlanır. Oyuncak örnekte elle hesaplanan değerle test edilir.
+- **FR-V9:** Değerlendirmede tahminler düşük eşikle (conf ≥ 0.001) dosyaya kaydedilir (kanca K3, §6.1).
 
 **Export ve edge (FR-X)**
 - **FR-X1:** ONNX export (sabit boyut, batch 1, 4 kanal girdi korunur). Uçtan uca (NMS'siz) model için `nms=False` **açıkça** verilir: çıktı `[1, 300, 6]`. Ultralytics'in varsayılanı (`nms=None`) ham çıktı (`[1, 4+nc, anchors]`) verir ve harici NMS gerektirir (H1 Spike A).
@@ -432,7 +467,7 @@ Eğitim sonunda `runs/detect/train/` klasörü oluşur. İçinde `weights/best.p
 - **NFR-2 Tekrarlanabilirlik:** config + commit + seed + donanım + `uv.lock`.
 - **NFR-3 Test:** Deterministik kod pytest ve GoogleTest ile test edilir. CI yeşil olmadan merge yok.
 - **NFR-4 Kod kalitesi:** ruff, clang-format, eslint. pre-commit kancalarıyla zorunlu.
-- **NFR-5 Gecikme hedefi:** H5'teki ilk ölçümden sonra ADR-0006 ile sabitlenir. Yön: s modeli laptop CPU'da FP32 ile gerçek zamanlıya yakın, INT8 ile daha hızlı.
+- **NFR-5 Gecikme hedefi:** H5'teki ilk ölçümden sonra ADR-0007 ile sabitlenir. Yön: s modeli laptop CPU'da FP32 ile gerçek zamanlıya yakın, INT8 ile daha hızlı.
 - **NFR-6 Bellek:** Motor, laptopta tek model için makul bir RAM sınırı içinde kalır. Ölçülür ve raporlanır.
 
 ### 7.6 Lisans ve veri gereksinimleri
@@ -890,7 +925,13 @@ baykus/
 - **Pazar (30 dk):** Değerlendirme — ne bitti, hangi sayılar çıktı, GPU bütçesi, riskler, gelecek haftanın planı
 
 ### 20.6 Zaman varsayımı
-Haftada **~15 saat**, 10 hafta (~150 saat). 2. hafta sonunda gerçek tempoya ve ölçülen epoch süresine göre takvim güncellenir. Kesme sırası: ek hedefler → E3b → takip model-tespitli ölçümü (oracle kalır) → UI ekstraları → NPU denemesi.
+Haftada **~15 saat**. Faz 1 (5 hafta, ~75 saat) için 2. hafta sonunda gerçek tempoya ve ölçülen epoch süresine göre takvim güncellenir. Faz 1 içi kesme sırası: ek hedefler → E3b → NPU denemesi.
+
+**v4.0 fazlar arası kurallar (ADR 0006):**
+- Bir fazın çıkış kriteri karşılanmadan sonraki faza geçilmez.
+- Faz 2-4'ün kesme sırası her fazın tasarımında yazılır.
+- Zaman yetmezse kesme sırası: ek hedefler → Faz 4'te mozaik harita → Faz 4'te bölge olayları → takip model-tespitli ölçümü (oracle kalır) → UI ekstraları. Faz 4 tamamen kesilse bile Faz 1-3 eksiksiz bir projedir.
+- Ocak 2027'de final dönemi nedeniyle tempo düşük varsayılır (Faz 3'e 8 hafta ayrılmasının nedeni).
 
 ### 20.7 Karar kayıtları (ADR)
 | No | Konu | Ne zaman |
@@ -900,8 +941,9 @@ Haftada **~15 saat**, 10 hafta (~150 saat). 2. hafta sonunda gerçek tempoya ve 
 | 0003 | Ana etiket seti IR | H1 |
 | 0004 | 4 kanallı TIFF biçimi ve depolama stratejisi | H1 |
 | 0005 | Aydınlatma etiketinin kaynağı | H1 |
-| 0006 | Gecikme hedefi | H5 |
-| 0007 | Takip değerlendirme stratejisi (M3OT model tespiti / oracle / niteliksel) | H8 |
+| 0006 | Kapsam genişletme: güvenilirlik farkındalığı + hareketli hedef (v4.0) | H1 (2026-10-07) |
+| 0007 | Gecikme hedefi | H5 |
+| 0008 | Takip değerlendirme stratejisi (M3OT model tespiti / oracle / niteliksel) | Faz 3 |
 
 ---
 
@@ -976,7 +1018,21 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 
 ---
 
-## 22. 10 haftalık takvim ve issue listesi
+## 22. Takvim ve issue listesi
+
+### Fazlar (v4.0, ADR 0006)
+
+| Faz | Tarih | İçerik | Çıkış | Ayrıntılı tasarım |
+|---|---|---|---|---|
+| **1. Çekirdek** | 5 Eki - 8 Kas 2026 | Aşağıdaki H1-H5 (değişmedi) + kancalar K1-K5 (§6.1) | 🚩 MVP, `v0.1.0` | Bu spec |
+| **2. Güvenilirlik farkındalığı** | 9 Kas - 6 Ara 2026 | Kare başına RGB/IR güvenilirlik tahmini, uyarlanabilir füzyon, güven kalibrasyonu, sensör arıza tespiti | S10 | Faz 2 tasarımı, ~2 Kasım'da (E1-E3 sonuçlarıyla) |
+| **3. Sistem** | 7 Ara 2026 - 31 Oca 2027 | Aşağıdaki H6-H9 içeriği (C++ motor, takip, UI, Docker) + sensör sağlık paneli, güven tabanlı alarmlar | S7, S8; `v0.2.0` | Faz 3 tasarımı, Faz 2 sonunda |
+| **4. Hareketli hedef** | 1 Şub - 28 Mar 2027 | Kamera hareketi telafisi, hareketli/duran ayrımı, göreli mozaik harita, bölge olayları (M3OT) | S11; `v0.3.0` | Faz 4 tasarımı, Faz 3 sonunda |
+| **5. Sunum** | 1-30 Nis 2027 | Aşağıdaki H10 içeriği: README, demo videosu, teknik yazı, CV; isteğe bağlı arXiv | S1-S11; `v1.0.0` | Faz 5 başında |
+
+Aşağıdaki haftalık tablolar v3.0'dan. **H1-H5 = Faz 1** ve geçerli. **H6-H9 içeriği Faz 3'e, H10 içeriği Faz 5'e taşındı**; bu haftaların tarihleri ve sırası ilgili fazın tasarımında yeniden yazılır. Faz 2 ve Faz 4'ün GPU ihtiyacı kendi tasarımlarında tahmin edilip `docs/gpu-budget.md`'ye eklenir; Faz 1'in bütçesi değişmez.
+
+### v3.0 haftalık takvim
 
 > Her haftanın bir **çıkış kriteri** var. Kriter karşılanmadan sonraki haftaya geçilmez.
 > **(S)** = önce sen yaz, Claude incelesin. **[GPU]** = kullanıcı Colab'da çalıştırır; Claude script/notebook/config hazırlar.
@@ -989,11 +1045,11 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 | H3 | 19-25 Eki | Tek modalite + erken füzyon | E2, E3 |
 | H4 | 26 Eki-1 Kas | Füzyon tamam, sağlamlık, M3OT | E3b, E3c |
 | H5 | 2-8 Kas | Edge optimizasyonu · 🚩 MVP | E8-n, TensorRT ölçümleri |
-| H6 | 9-15 Kas | C++ motor I: ön işleme, çıkarım, eşlik | — |
-| H7 | 16-22 Kas | C++ motor II: WBF, HTTP, C++ bench | — |
-| H8 | 23-29 Kas | Takip (kendi ByteTrack) + M3OT takip ölçümü | — |
-| H9 | 30 Kas-6 Ara | Operatör ekranı + Docker / kapalı ağ | — |
-| H10 | 7-13 Ara | Sürüm, sunum ve tampon | — |
+| H6 | *Faz 3* | C++ motor I: ön işleme, çıkarım, eşlik | — |
+| H7 | *Faz 3* | C++ motor II: WBF, HTTP, C++ bench | — |
+| H8 | *Faz 3* | Takip (kendi ByteTrack) + M3OT takip ölçümü | — |
+| H9 | *Faz 3* | Operatör ekranı + Docker / kapalı ağ | — |
+| H10 | *Faz 5* | Sürüm, sunum ve tampon | — |
 
 ### H1 — Temel, doğrulama, ölçüm
 | # | Issue | Kabul kriteri |
@@ -1055,7 +1111,7 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 | 31 | `baykus.bench` (§14 protokolü; CPU bayrakları dahil) | p50/p95 JSON, donanım bilgisiyle |
 | 32 | [GPU] E8: en iyi mod için `n` modeli (+ bütçe varsa `m`) | Tablo |
 | 33 | NPU denemesi (FR-X6, zaman kutusu 3 saat) | Bulgu notu (çalıştı / çalışmadı ve neden) |
-| 34 | README v1 + ADR 0006 + `v0.1.0` tag | README'de ana tablo, aydınlatma, sağlamlık, edge tabloları + 1 grafik |
+| 34 | README v1 + ADR 0007 + `v0.1.0` tag | README'de ana tablo, aydınlatma, sağlamlık, edge tabloları + 1 grafik |
 
 **Çıkış (MVP):** Repo herkese gösterilebilir. Proje burada kalsa bile güçlü.
 
@@ -1083,7 +1139,7 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 |---|---|---|
 | 42 | C++ Kalman + Macar algoritması (TDD) | Birim testler yeşil |
 | 43 | C++ ByteTrack (iki aşamalı eşleşme, iz yaşam döngüsü) + oturum yönetimi + Python eşlik testi | Fikstür dizisinde roboflow/trackers ile eşlik (FR-E4) |
-| 44 | M3OT takip ölçümü (oracle + model tespiti) + ADR 0007 | HOTA/MOTA/IDF1 tablosu |
+| 44 | M3OT takip ölçümü (oracle + model tespiti) + ADR 0008 | HOTA/MOTA/IDF1 tablosu |
 
 **Çıkış:** Takip ölçülmüş ve C++'ta eşlik testli. `v0.2.0`.
 
@@ -1108,11 +1164,11 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 **Çıkış:** S1-S9'un hepsi işaretli.
 
 ### Ek hedefler (zaman kalırsa, bu sırayla)
-1. **Hareketli / duran araç:** kamera hareketi telafisi (ORB + RANSAC homografi) + iz hızı. TEKNOFEST görevine doğrudan hizmet eder.
-2. E10 orta füzyon (YOLOv11-RGBT)
-3. E11 YOLO26-OBB, sadece IR
-4. HIT-UAV: IR-only ikinci veri setleri arası test + insan tespiti
-5. Gerçek bir Jetson cihazında ölçüm
+Hareketli / duran araç v4.0'da ek hedef olmaktan çıktı, Faz 4'ün çekirdeği oldu.
+1. E10 orta füzyon (YOLOv11-RGBT)
+2. E11 YOLO26-OBB, sadece IR
+3. HIT-UAV: IR-only ikinci veri setleri arası test + insan tespiti
+4. Gerçek bir Jetson cihazında ölçüm
 
 ---
 
@@ -1127,11 +1183,14 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 | Colab oturumu eğitim ortasında kopuyor | **Yüksek** | Orta | Checkpoint'ler Drive'a, `save_period=5`, `resume=True` |
 | Kaggle API ile indirme de izin vermiyor | Düşük | Yüksek | Resmi BaiduYun bağlantısı; M3OT (figshare, hesap gerekmez) ile RGB-IR geliştirmeye başla |
 | TensorRT kurulumu sorunlu | Orta | Düşük | ONNX Runtime CUDA/TensorRT EP. TensorRT ek hedefe iner. |
-| M3OT uygunsuz (format, kare hızı, erişim) | Düşük-Orta | Orta | Yedek VT-MOT; oracle tespitle takip ölçümü veya niteliksel demo (ADR 0007) |
+| M3OT uygunsuz (format, kare hızı, erişim) | Düşük-Orta | Orta | Yedek VT-MOT; oracle tespitle takip ölçümü veya niteliksel demo (ADR 0008) |
 | Windows'ta C++ zorluğu | Yüksek | Orta | Baştan WSL2. Docker imajı tek doğru kaynak. |
 | Zaman aşımı | Yüksek | Yüksek | H5 MVP kapısı ve §20.6 kesme sırası |
 | AGPL | Düşük | Düşük | Açık portfolyo için uygun. README'de açıkça belirt. |
 | Kodu anlamadan ilerlemek | Orta | **Yüksek (mülakat)** | §21.1 ilkeleri ve DoD |
+| Faz 2 yöntemi sabit füzyona (E3c/E4b) göre anlamlı kazanç sağlamıyor | Orta | Orta | Olumsuz sonuç da raporlanır; yöntem "yenilik" diye değil ölçülmüş deneme olarak sunulur. Kalibrasyon ve arıza tespiti füzyon kazancından bağımsız değer taşır. |
+| Uzun süre (~7 ay), dönem içi ders yükü, motivasyon kaybı | Orta | Yüksek | Her faz kendi sürümüyle biter (`v0.1.0` → `v1.0.0`); Ocak için Faz 3'e geniş süre; §20.6 kesme sırası |
+| M3OT'tan hareketli/duran etiketi türetilemiyor (iz sayısı az, kamera hareketi telafisi kötü) | Orta | Orta | Faz 4 tasarımında küçük bir alt kümede elle doğrulama; olmazsa niteliksel demo |
 
 ---
 
@@ -1168,7 +1227,7 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 - 2026 takvimi örnek olarak: başvuru Şubat, rapor Nisan, simülasyon Temmuz, final Eylül
 - Ödüller 200-250 bin ₺ aralığında
 
-**Öneri:** Bu proje bittiğinde (Aralık 2026) elinde hazır bir RGB-T tespit, takip ve internetsiz çalışma altyapısı olacak. **Şubat 2027'de GDSC çevrenden bir takımla TEKNOFEST 2027'ye başvurmak** doğal bir sonraki adım. Savunma şirketleri TEKNOFEST derecelerini çok yakından takip eder, Baykar başta olmak üzere. Bu projenin kapsamı değil, ama 1. haftada yarışmanın şartnamesini okuyup sınıf ve format seçimlerini uyumlu tutmak az maliyetli bir yatırım.
+**Öneri:** Faz 3 bittiğinde (Ocak 2027) elinde hazır bir RGB-T tespit, takip ve internetsiz çalışma altyapısı olacak. **Şubat 2027'de GDSC çevrenden bir takımla TEKNOFEST 2027'ye başvurmak** doğal bir sonraki adım. v4.0'da Faz 4 (hareketli/duran araç, Şubat-Mart) başvuru dönemiyle çakışıyor ve yarışmanın taşıt görevine doğrudan hazırlık oluyor. Savunma şirketleri TEKNOFEST derecelerini çok yakından takip eder, Baykar başta olmak üzere. Bu projenin kapsamı değil, ama 1. haftada yarışmanın şartnamesini okuyup sınıf ve format seçimlerini uyumlu tutmak az maliyetli bir yatırım.
 
 ---
 
