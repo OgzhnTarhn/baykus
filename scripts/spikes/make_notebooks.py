@@ -128,6 +128,24 @@ DATA_CELLS = [
     ),
     code(
         """
+        %%time
+        # Spike B (H1 Görev 4): ham verinin gerçek yapısı. Bu hücrenin çıktısının TAMAMINI Claude'a getir.
+        import json
+        !python /content/baykus/scripts/spikes/inspect_dronevehicle.py /content/raw /content/meta/dv_inspect.json
+        for s in json.load(open('/content/meta/dv_inspect.json', encoding='utf-8'))['xml_samples']:
+            print('=====', s['path'])
+            print(s['head'])
+        """
+    ),
+    md(
+        """
+        🚧 **KAPI B — burada dur.** Aşağıdaki hücreler verinin beklenen düzende olduğunu varsayıyor
+        (`<split>/<split>img`, `<split>imgr`, `<split>label`, `<split>labelr`). Önce yukarıdaki çıktıyı
+        Claude'a getir; düzen farklıysa kod güncellenir. Claude "devam" deyince aşağıdan sürdür.
+        """
+    ),
+    code(
+        """
         # Ham kök: içinde train/ val/ test/ olan klasör (Kaggle zip'i bir alt klasör ekleyebilir)
         from pathlib import Path
         cands = [p for p in [Path('/content/raw'), *Path('/content/raw').glob('*')]
