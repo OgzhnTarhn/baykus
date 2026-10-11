@@ -1,0 +1,19 @@
+experiment: e1_rgb
+mode: rgb
+model: yolo26s.pt
+data: data/dv_rgbt/data_rgb.yaml
+label_set: ir
+train:
+  imgsz: 640
+  epochs: 100
+  patience: 20
+  batch: 16
+  seed: 42
+  close_mosaic: 10
+eval:
+  splits: [val]
+  label_sets: [ir, rgb]
+  slices: [illumination, size, class]
+  n_boot: 1000
+tracking:
+  mlflow_experiment: baykus

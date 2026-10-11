@@ -1,0 +1,23 @@
+experiment: e3c_modality_dropout
+mode: early_fusion
+model: yolo26s.pt
+data: data/dv_rgbt/data_rgbt4.yaml
+label_set: ir
+first_conv_init: rgb_mean
+modality_dropout:
+  p_rgb: 0.15
+  p_ir: 0.15
+train:
+  imgsz: 640
+  epochs: 100
+  patience: 20
+  batch: 16
+  seed: 42
+  close_mosaic: 10
+eval:
+  splits: [val]
+  label_sets: [ir, rgb]
+  slices: [illumination, size, class]
+  n_boot: 1000
+tracking:
+  mlflow_experiment: baykus
