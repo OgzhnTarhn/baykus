@@ -136,8 +136,8 @@ def _cmd_rgbt4(a: argparse.Namespace) -> int:
     import cv2
     from tqdm import tqdm
 
-    from baykus.classes import CLASS_NAMES
     from baykus.data.multichannel import stack_rgbt, write_rgbt4
+    from baykus.data.yamls import write_data_yamls
     from baykus.io import imread_any
 
     out = Path(a.out)
@@ -148,14 +148,16 @@ def _cmd_rgbt4(a: argparse.Namespace) -> int:
             rgbt = stack_rgbt(imread_any(p, cv2.IMREAD_COLOR), ir)
             write_rgbt4(out / "rgbt4/images" / split / f"{p.stem}.tif", rgbt)
             n += 1
-    names = "".join(f"  {i}: {c}\n" for i, c in enumerate(CLASS_NAMES))
-    for modality, ch in (("rgb", 3), ("ir", 3), ("rgbt4", 4)):
-        (out / f"data_{modality}.yaml").write_text(
-            f"path: {(out / modality).as_posix()}\ntrain: images/train\nval: images/val\n"
-            f"test: images/test\nchannels: {ch}\nnames:\n{names}",
-            encoding="utf-8",
-        )
+    write_data_yamls(out)
     print(f"rgbt4 images: {n}")
+    return 0
+
+
+def _cmd_yaml(a: argparse.Namespace) -> int:
+    from baykus.data.yamls import write_data_yamls
+
+    for p in write_data_yamls(Path(a.out)):
+        print(p)
     return 0
 
 
@@ -220,6 +222,9 @@ def build_parser() -> argparse.ArgumentParser:
     r4 = sub.add_parser("rgbt4", help="RGB+IR → 4 kanallı TIFF ve data_*.yaml")
     r4.add_argument("--out", required=True)
     r4.set_defaults(func=_cmd_rgbt4)
+    ym = sub.add_parser("yaml", help="data_*.yaml dosyalarını yaz (rgbt4 beklemeden)")
+    ym.add_argument("--out", required=True)
+    ym.set_defaults(func=_cmd_yaml)
     co = sub.add_parser("coco", help="COCO JSON + kırılım listeleri")
     co.add_argument("--out", required=True)
     co.add_argument("--meta", required=True)
