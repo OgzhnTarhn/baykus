@@ -1,7 +1,7 @@
 # Baykuş — RGB + Termal Füzyonlu Hava Görüntüsü Tespiti, Edge için Optimize, Uçtan Uca Sistem
 
 > **Proje adı:** Baykuş · **Repo / paket adı:** `baykus` · **Alt başlık (EN):** *RGB-Thermal aerial vehicle detection on the edge*
-> **Sahibi:** Oğuzhan Tarhan · **Tarih:** 2026-10-07 · **Sürüm:** v4.0 (kapsam genişletme: güvenilirlik farkındalığı + hareketli hedef, ADR 0006; eğitim: Colab, kullanıcı çalıştırır · laptop: AMD Ryzen 7 8845HS) · **Süre:** 5 faz, ~7 ay (5 Ekim 2026-30 Nisan 2027) · **Durum:** v3.0 onaylandı (2026-10-02); v4.0 yol haritası onaylandı (2026-10-07)
+> **Sahibi:** Oğuzhan Tarhan · **Tarih:** 2026-10-07 · **Sürüm:** v4.1 (H1 kapanışı; v4.0: kapsam genişletme: güvenilirlik farkındalığı + hareketli hedef, ADR 0006; eğitim: Colab, kullanıcı çalıştırır · laptop: AMD Ryzen 7 8845HS) · **Süre:** 5 faz, ~7 ay (5 Ekim 2026-30 Nisan 2027) · **Durum:** v3.0 onaylandı (2026-10-02); v4.0 yol haritası onaylandı (2026-10-07)
 
 ---
 
@@ -39,6 +39,9 @@
 ---
 
 ## 0. v1'den bu yana ne değişti
+
+### v4.1 (2026-10-11) — H1 kapanışı
+H1 doğrulamalarıyla değişenler: §8.2 ölçülmüş hâle getirildi; §24 maddeleri kapandı; depolama (ADR 0004: işlenmiş veri private Kaggle veri setinde) ve aydınlatma (ADR 0005: gündüz eşiği elle etiketli örnekle) kesinleşti. Colab T4 oturumu Python 3.13 ile geliyor (Spike C) → paket aralığı H2'de genişletilir.
 
 ### v4.0 (2026-10-07)
 Kaynak: kullanıcıyla kapsam görüşmesi, ADR 0006. Kullanıcının kaygısı projenin "herkes bunu yapmış" diye görülmesi; istediği fark hem kendi yöntemi hem operasyonel zekâ; süre uzayabilir.
@@ -491,11 +494,15 @@ Faz 1'in kapsamını değiştirmeyen, ama sonradan yeniden iş yapmayı önleyen
 | VT-MOT | 582 RGB-T video çifti (gözetleme / drone / el kamerası); drone dizi sayısı ve sınıflar belirsiz | Makale ve GitHub (PFTrack) | Belirsiz | M3OT'a yedek |
 
 ### 8.2 Bilinen sorunlar
-- Kaggle kopyasında birkaç eğitim görüntüsü bozuk veya eksik → FR-D1.
-- RGB-IR hizasızlığı yaygın (1-20 piksel, tahmin) → etiket seti karşılaştırması (E5) ve hizasızlık bozulması (E6). Gerçek dağılım E0 veri raporunda iki etiket setinin merkez kaymasından ölçülür (FR-D7).
+*(H1 sonunda ölçülmüş hâli, 2026-10-11; ayrıntı `docs/data-report.md`, Spike B/C, ADR 0004/0005.)*
+- **Bozuk dosyalar:** Kaggle kopyasında 36 çift okunamıyor (14 RGB, 22 IR; hepsi train, ardışık numaralar halinde, bir kısmı 0 bayt) → FR-D1 ile dışlandı. Kalan **28.403** çift (train 17.954 · val 1.469 · test 8.980).
+- **Etiket sorunları:** 75 `point` şekli (kutu üretmez), 2 `*` sınıfı, yazım varyantları (`feright car`, `truvk` …; alias tablosunda). Kaybolan nesne 953.164'te 77.
+- **RGB-IR etiket kayması (ölçüldü, train):** eşleşen nesnelerde merkez farkı p50 **0** px, p90 **7,2** px, p99 **16,6** px; %4,8'i 10 px'ten fazla. E6 şiddetleri (5/10/20/40 px) bu dağılımı kapsıyor.
+- **İki etiket seti farklı:** IR setinde 499.797, RGB setinde 451.862 kutu (RGB %9-10 az); ~33 bin IR nesnesinin RGB karşılığı yok (büyük olasılıkla karanlıkta görünmeyen araçlar) → E5.
 - 100 piksellik beyaz kenarlık → FR-D2.
-- IR görüntüleri 3 kanallı kopya olarak saklanmış olabilir → 1. haftada kontrol; tek kanal alınır.
-- **Disk:** 4 kanallı TIFF'ler sıkıştırılmamış halde ~28k × 640 × 512 × 4 bayt ≈ **37 GB**. Colab'ın geçici diskine sığabilir ama kalıcı değil; Drive'ın ücretsiz 15 GB'ına sığmaz → §23'teki B planları.
+- **IR kanal:** karışık; çoğu 3 kanal kopya, bir kısmı tek kanal. İkisi de tek kanala indiriliyor.
+- **Aydınlatma etiketi yok:** RGB parlaklığından türetilir; gündüz eşiği 160 elle etiketli örnekle (ADR 0005). Sayılar resmi orandan farklı: 11.050 / 8.871 / 8.482.
+- **Disk:** işlenmiş rgb 3,6 GB, ir 5,7 GB, 4 kanallı TIFF **27 GB**; Colab'da hazırlık ~1 saat → işlenmiş veri private Kaggle veri setinde, rgbt4 H3'e (ADR 0004).
 
 ### 8.3 Sınıf eşlemesi (veri setleri arası test)
 
@@ -1213,7 +1220,7 @@ Hareketli / duran araç v4.0'da ek hedef olmaktan çıktı, Faz 4'ün çekirdeğ
 **Açık kararlar (H1 sonunda ADR olarak kapanacak):**
 - [x] YOLO26 (varsayılan) mı, YOLO11 mi? Spike sonucuna göre. → YOLO26 (ADR 0001)
 - [x] Depolama stratejisi (§23) → işlenmiş veri private Kaggle veri setinde, rgbt4 H3'e (ADR 0004)
-- [ ] Aydınlatma etiketinin kaynağı
+- [x] Aydınlatma etiketinin kaynağı → RGB parlaklığı; gündüz eşiği 160 elle etiketli örnekle (ADR 0005)
 - [x] Proje adı → Baykuş (repo ve paket `baykus`)
 
 ---
