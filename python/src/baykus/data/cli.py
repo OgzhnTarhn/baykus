@@ -41,18 +41,10 @@ def _cmd_activate(a: argparse.Namespace) -> int:
 
 
 def _cmd_illum(a: argparse.Namespace) -> int:
-    import csv
-
     import cv2
     import numpy as np
 
-    from baykus.data.illumination import (
-        LEVELS,
-        OFFICIAL_COUNTS,
-        assign,
-        fit_thresholds,
-        mean_brightness,
-    )
+    from baykus.data.illumination import LEVELS, assign, mean_brightness, thresholds
     from baykus.io import imread_any, imwrite_any
 
     out, meta, fig = Path(a.out), Path(a.meta), Path(a.fig)
@@ -61,18 +53,9 @@ def _cmd_illum(a: argparse.Namespace) -> int:
         for p in sorted((out / "rgb/images" / split).glob("*.jpg")):
             rows.append((split, p.stem, mean_brightness(imread_any(p))))
     values = np.array([r[2] for r in rows])
-    th = fit_thresholds(values, OFFICIAL_COUNTS)
+    th = thresholds(values)
     labels = assign(values, th)
-
-    meta.mkdir(parents=True, exist_ok=True)
-    with (meta / "illumination.csv").open("w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
-        w.writerow(["split", "stem", "brightness", "illumination"])
-        for (s, st, b), lab in zip(rows, labels, strict=True):
-            w.writerow([s, st, f"{b:.2f}", lab])
-    (meta / "illumination_thresholds.json").write_text(
-        json.dumps({"t_dark": th[0], "t_night": th[1]}), encoding="utf-8"
-    )
+    _write_illumination(meta, rows, labels, th)
 
     # her seviyeden 16 örneklik mozaik (gözle doğrulama için)
     rng = np.random.default_rng(0)
@@ -94,6 +77,58 @@ def _cmd_illum(a: argparse.Namespace) -> int:
 
     counts = {lv: labels.count(lv) for lv in LEVELS}
     print(json.dumps({"thresholds": th, "counts": counts}))
+    return 0
+
+
+def _write_illumination(meta: Path, rows: list, labels: list[str], th: tuple) -> None:
+    import csv
+
+    from baykus.data.illumination import METHOD
+
+    meta.mkdir(parents=True, exist_ok=True)
+    with (meta / "illumination.csv").open("w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["split", "stem", "brightness", "illumination"])
+        for (s, st, b), lab in zip(rows, labels, strict=True):
+            w.writerow([s, st, f"{b:.2f}", lab])
+    (meta / "illumination_thresholds.json").write_text(
+        json.dumps({"t_dark": th[0], "t_day": th[1], "method": METHOD}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+
+def _cmd_illum_relabel(a: argparse.Namespace) -> int:
+    """Görüntü okumadan: illumination.csv'deki parlaklıkla etiketleri yeniden yazar."""
+    import csv
+
+    import numpy as np
+
+    from baykus.data.illumination import LEVELS, assign, thresholds
+
+    meta = Path(a.meta)
+    with (meta / "illumination.csv").open(encoding="utf-8") as f:
+        rows = [(r["split"], r["stem"], float(r["brightness"])) for r in csv.DictReader(f)]
+    th = thresholds(np.array([r[2] for r in rows]))
+    labels = assign(np.array([r[2] for r in rows]), th)
+    _write_illumination(meta, rows, labels, th)
+    print(json.dumps({"thresholds": th, "counts": {lv: labels.count(lv) for lv in LEVELS}}))
+    return 0
+
+
+def _write_slices(out: Path, meta: Path) -> None:
+    """slices_<split>.json. Kimlikler COCO JSON'daki dosya adından okunur (dışlananlar kaydırır)."""
+    from baykus.data.coco import illumination_slices
+
+    for split in SPLITS:
+        coco = json.loads((out / "coco" / f"{split}_ir.json").read_text(encoding="utf-8"))
+        stem_to_id = {im["file_name"]: im["id"] for im in coco["images"]}
+        slices = {"illumination": illumination_slices(meta / "illumination.csv", split, stem_to_id)}
+        (meta / f"slices_{split}.json").write_text(json.dumps(slices), encoding="utf-8")
+
+
+def _cmd_slices(a: argparse.Namespace) -> int:
+    _write_slices(Path(a.out), Path(a.meta))
+    print("slices ok")
     return 0
 
 
@@ -125,7 +160,7 @@ def _cmd_rgbt4(a: argparse.Namespace) -> int:
 
 
 def _cmd_coco(a: argparse.Namespace) -> int:
-    from baykus.data.coco import illumination_slices, yolo_to_coco
+    from baykus.data.coco import yolo_to_coco
     from baykus.data.layout import OUT_SIZE
 
     out, meta = Path(a.out), Path(a.meta)
@@ -137,9 +172,7 @@ def _cmd_coco(a: argparse.Namespace) -> int:
             (out / "coco" / f"{split}_{label_set}.json").write_text(
                 json.dumps(coco), encoding="utf-8"
             )
-        stem_to_id = {s: i for i, s in enumerate(stems, start=1)}
-        slices = {"illumination": illumination_slices(meta / "illumination.csv", split, stem_to_id)}
-        (meta / f"slices_{split}.json").write_text(json.dumps(slices), encoding="utf-8")
+    _write_slices(out, meta)
     print("coco ok")
     return 0
 
@@ -177,6 +210,13 @@ def build_parser() -> argparse.ArgumentParser:
     il.add_argument("--meta", required=True)
     il.add_argument("--fig", default="../docs/figures/data")
     il.set_defaults(func=_cmd_illum)
+    ir_ = sub.add_parser("illum-relabel", help="illumination.csv'yi görüntüsüz yeniden etiketle")
+    ir_.add_argument("--meta", required=True)
+    ir_.set_defaults(func=_cmd_illum_relabel)
+    sl = sub.add_parser("slices", help="COCO JSON + illumination.csv → slices_<split>.json")
+    sl.add_argument("--out", required=True)
+    sl.add_argument("--meta", required=True)
+    sl.set_defaults(func=_cmd_slices)
     r4 = sub.add_parser("rgbt4", help="RGB+IR → 4 kanallı TIFF ve data_*.yaml")
     r4.add_argument("--out", required=True)
     r4.set_defaults(func=_cmd_rgbt4)
