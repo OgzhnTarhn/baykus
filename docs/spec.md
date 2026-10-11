@@ -1203,16 +1203,16 @@ Hareketli / duran araç v4.0'da ek hedef olmaktan çıktı, Faz 4'ün çekirdeğ
 - [x] Aydınlatma etiketi dosyalarda var mı? → yok; ADR 0005 parlaklık yöntemi (Spike B)
 - [x] Ultralytics güncel sürümünde `channels: 4` ile **YOLO26 detect** 1 epoch eğitim + val + ONNX export sorunsuz mu? İlk katman ağırlıkları nasıl yükleniyor? → Evet; RGB = COCO, T rastgele (Spike A)
 - [x] 4 kanallı TIFF'in Ultralytics'in beklediği biçimi (kanal sırası, çok sayfalı mı) → 4 gri sayfa, RGBT (Spike A, ADR 0004)
-- [ ] Kaggle API token'ı ile DroneVehicle'ın Colab'a indirilebildiği (telefon doğrulaması olmadan)
-- [ ] Colab disk alanı, RAM, veri indirme + işleme süresi
-- [ ] Drive'a checkpoint yazma ve `resume` ile devam etme
-- [ ] Colab'da TensorRT kurulumu (küçük deneme)
+- [x] Kaggle API token'ı ile DroneVehicle'ın Colab'a indirilebildiği (telefon doğrulaması olmadan) → 5 dk 14 sn, 14 GB (Spike C)
+- [x] Colab disk alanı, RAM, veri indirme + işleme süresi → T4: 113 GB disk, 12 GiB RAM, 2 çekirdek; işleme 54 dk → işlenmiş veri private Kaggle veri setinde (ADR 0004, Spike C)
+- [ ] Drive'a checkpoint yazma ve `resume` ile devam etme → Drive yazma ok (Spike C); `resume` H2 Görev 9'da ilk eğitimde denenir
+- [x] Colab'da TensorRT kurulumu (küçük deneme) → TensorRT 11.4, yolo26n FP16 engine 190 sn, çıkış (1, 300, 6) (Spike C)
 - [ ] M3OT: indirme, sınıf listesi, etiket formatı (MOT + COCO), kare hızı, RGB-IR hizası → sınıf (`vehicle`) ve format kaynaktan doğrulandı; indirme, kare hızı ve hiza bekliyor (Spike C, `04-external-datasets.md`)
 - [x] (ek hedef) HIT-UAV etiket formatı → VOC XML + COCO JSON, HBB ve OBB (Spike C)
 
 **Açık kararlar (H1 sonunda ADR olarak kapanacak):**
 - [x] YOLO26 (varsayılan) mı, YOLO11 mi? Spike sonucuna göre. → YOLO26 (ADR 0001)
-- [ ] Depolama stratejisi (§23)
+- [x] Depolama stratejisi (§23) → işlenmiş veri private Kaggle veri setinde, rgbt4 H3'e (ADR 0004)
 - [ ] Aydınlatma etiketinin kaynağı
 - [x] Proje adı → Baykuş (repo ve paket `baykus`)
 
