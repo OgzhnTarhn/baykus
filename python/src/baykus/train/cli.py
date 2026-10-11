@@ -81,6 +81,9 @@ def _start_mlflow(
         print("uyarı: mlflow kurulu değil, MLflow kaydı atlandı", file=sys.stderr)
         return None
     uri = (Path(project).resolve() / "mlruns").as_uri()
+    # MLflow 3.x dosya deposunu varsayılan olarak reddeder; sqlite Drive (FUSE) üzerinde
+    # kilitlenme sorunlu olduğu için dosya deposunda kalınır.
+    os.environ.setdefault("MLFLOW_ALLOW_FILE_STORE", "true")
     os.environ.update(
         MLFLOW_TRACKING_URI=uri, MLFLOW_EXPERIMENT_NAME=cfg.mlflow_experiment, MLFLOW_RUN=run_name
     )
