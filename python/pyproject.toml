@@ -3,7 +3,7 @@ name = "baykus"
 version = "0.1.0"
 description = "RGB-Thermal aerial vehicle detection on the edge"
 license = "AGPL-3.0-only"
-requires-python = ">=3.11,<3.13"
+requires-python = ">=3.11,<3.14"  # Colab T4 oturumu Python 3.13 (Spike C)
 dependencies = [
   "numpy>=1.26",
   "opencv-python>=4.9",
@@ -16,9 +16,13 @@ dependencies = [
 
 [project.optional-dependencies]
 spike = ["ultralytics>=8.4", "onnx>=1.16", "onnxruntime>=1.18"]
+train = ["ultralytics>=8.4", "mlflow>=2.14"]
 
 [project.scripts]
 baykus-data = "baykus.data.cli:main"
+baykus-train = "baykus.train.cli:main"
+baykus-eval = "baykus.eval.cli:main"
+baykus-report = "baykus.report.cli:main"
 
 [dependency-groups]
 dev = ["pytest>=8.0", "ruff>=0.6", "pre-commit>=3.7"]
