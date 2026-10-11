@@ -231,11 +231,11 @@ def build_report(out: Path, meta: Path, fig_dir: Path) -> str:
     md += [
         "![sınıf dağılımı](figures/data/class_counts_train.png)",
         "",
-        "![gündüz örnekleri](figures/data/illum_samples_day.jpg)",
+        "## Aydınlatma etiketi doğrulaması",
         "",
-        "![gece örnekleri](figures/data/illum_samples_night.jpg)",
+        "Gece/gündüz sınırı, gündüz-gece geçiş bölgesinden seçilen 160 elle etiketli örnekle "
+        "belirlendi (ADR 0005; etiketler `docs/data/illum_check_labels.csv`). Numaralı sayfalar:",
         "",
-        "![karanlık gece örnekleri](figures/data/illum_samples_dark_night.jpg)",
-        "",
+        *(f"![etiketli örnekler {i}](figures/data/illum_check_{i:02d}.jpg)\n" for i in range(4)),
     ]
     return "\n".join(md)
