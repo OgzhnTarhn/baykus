@@ -55,7 +55,8 @@ SETUP_CELLS = [
         """
         # 00 — Colab ortam spike'ı
         Çalıştırmadan önce: **Çalışma zamanı → Çalışma zamanı türünü değiştir → T4 GPU**.
-        Secrets'ta (sol menü 🔑) `KAGGLE_API_TOKEN` olmalı; repo private ise `GITHUB_TOKEN` da.
+        Secrets'ta (sol menü 🔑) repo private ise `GITHUB_TOKEN` olmalı.
+        Ham veri indirme süresi `01_data`'da ölçüldü (CPU); burada GPU kotası harcanmasın diye yok.
         """
     ),
     code(
@@ -73,16 +74,6 @@ SETUP_CELLS = [
         !mkdir -p /content/drive/MyDrive/baykus
         !echo ok > /content/drive/MyDrive/baykus/write_test.txt
         !cat /content/drive/MyDrive/baykus/write_test.txt
-        """
-    ),
-    KAGGLE_TOKEN,
-    code(
-        """
-        %%time
-        !pip -q install kaggle
-        RAW = '/content/raw/dronevehicle'
-        !kaggle datasets download brendanalvey/visdrone-dronevehicle -p {RAW} --unzip -q
-        !du -sh {RAW}
         """
     ),
     CLONE,
