@@ -1197,10 +1197,10 @@ Hareketli / duran araç v4.0'da ek hedef olmaktan çıktı, Faz 4'ün çekirdeğ
 ## 24. 1. hafta doğrulama listesi ve açık kararlar
 
 **Doğrulanacaklar (Issue #6 — spike):**
-- [ ] DroneVehicle Kaggle kopyası: train/val/test dosya sayıları, bozuk dosya sayısı
-- [ ] Etiket dosya formatı (XML?); iki etiket setinin gerçek sayı farkı
-- [ ] IR görüntüleri 1 kanal mı, 3 kanal kopya mı?
-- [ ] Aydınlatma etiketi dosyalarda var mı?
+- [x] DroneVehicle Kaggle kopyası: train/val/test dosya sayıları, bozuk dosya sayısı → 17.990 / 1.469 / 8.980 (toplam 28.439, resmiyle aynı); bozuk XML 0, örneklemde okunamayan görüntü 0 (Spike B, `02-dronevehicle-format.md`). Tam bütünlük kontrolü `verify` ile.
+- [ ] Etiket dosya formatı (XML?); iki etiket setinin gerçek sayı farkı → format: VOC benzeri XML, polygon + bndbox (+75 point) (Spike B); set farkı E0 raporunda
+- [x] IR görüntüleri 1 kanal mı, 3 kanal kopya mı? → karışık; çoğu 3 kanal kopya, bir kısmı tek kanal. `convert` ikisini de işliyor (Spike B)
+- [x] Aydınlatma etiketi dosyalarda var mı? → yok; ADR 0005 parlaklık yöntemi (Spike B)
 - [x] Ultralytics güncel sürümünde `channels: 4` ile **YOLO26 detect** 1 epoch eğitim + val + ONNX export sorunsuz mu? İlk katman ağırlıkları nasıl yükleniyor? → Evet; RGB = COCO, T rastgele (Spike A)
 - [x] 4 kanallı TIFF'in Ultralytics'in beklediği biçimi (kanal sırası, çok sayfalı mı) → 4 gri sayfa, RGBT (Spike A, ADR 0004)
 - [ ] Kaggle API token'ı ile DroneVehicle'ın Colab'a indirilebildiği (telefon doğrulaması olmadan)
