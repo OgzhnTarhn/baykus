@@ -9,7 +9,7 @@ modality_dropout:
   p_ir: 0.15
 train:
   imgsz: 640
-  epochs: 100
+  epochs: 50
   patience: 20
   batch: 16
   seed: 42

@@ -5,7 +5,7 @@ data: data/dv_rgbt/data_ir.yaml
 label_set: ir
 train:
   imgsz: 640
-  epochs: 100
+  epochs: 50
   patience: 20
   batch: 16
   seed: 42

@@ -102,3 +102,11 @@ def test_repo_configs_load():
         load_config(f)
     e3c = load_config(root / "e3c_modality_dropout.yaml")
     assert e3c.first_conv_init == "rgb_mean" and e3c.modality_dropout.p_rgb == 0.15
+
+
+def test_repo_configs_share_training_recipe():
+    # Deneyler karşılaştırılabilir olsun: hepsi aynı eğitim ayarıyla (gpu-budget.md: 50 epoch)
+    root = Path(__file__).resolve().parents[2] / "configs"
+    trains = {f.stem: load_config(f).train for f in root.glob("*.yaml")}
+    assert len(set(trains.values())) == 1, trains
+    assert next(iter(trains.values())).epochs == 50

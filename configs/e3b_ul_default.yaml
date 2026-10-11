@@ -6,7 +6,7 @@ label_set: ir
 first_conv_init: ul_default
 train:
   imgsz: 640
-  epochs: 100
+  epochs: 50
   patience: 20
   batch: 16
   seed: 42
