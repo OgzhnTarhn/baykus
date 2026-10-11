@@ -31,7 +31,13 @@ THUMB = (192, 154)
 
 
 def load(path: Path) -> np.ndarray | None:
-    a = cv2.imdecode(np.fromfile(str(path), np.uint8), cv2.IMREAD_REDUCED_COLOR_4)
+    buf = np.fromfile(str(path), np.uint8)
+    if buf.size == 0:  # bozuk dosyaların bir kısmı 0 bayt (verify: unreadable_*)
+        return None
+    try:
+        a = cv2.imdecode(buf, cv2.IMREAD_REDUCED_COLOR_4)
+    except cv2.error:
+        return None
     return None if a is None else a[CROP:-CROP, CROP:-CROP]
 
 
