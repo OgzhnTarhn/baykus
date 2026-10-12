@@ -9,15 +9,110 @@ import sys
 import time
 from pathlib import Path
 
-from baykus.runinfo import git_info, iso, make_run_id, software_versions, utc_now, write_json
+from baykus.runinfo import (
+    git_info,
+    hardware_info,
+    iso,
+    make_run_id,
+    software_versions,
+    utc_now,
+    write_json,
+)
 from baykus.train.config import ExperimentConfig, load_config
 
 SMOKE_FRACTION = 0.05
 RECORD = "baykus_train.json"
 
 
+class ResumeError(ValueError):
+    pass
+
+
 def resolve_data(cfg: ExperimentConfig, data_root: Path | None) -> Path:
     return Path(data_root) / Path(cfg.data).name if data_root else Path(cfg.data)
+
+
+def make_record(
+    cfg: ExperimentConfig,
+    *,
+    config: str,
+    run_id: str,
+    git: dict,
+    mlflow_run_id: str | None,
+    smoke: bool,
+    epochs: int,
+    run_dir: Path,
+    start,
+) -> dict:
+    """Eğitim kaydı eğitim BAŞINDA yazılır (status=running); oturum koparsa devam bunu kullanır."""
+    run_dir = Path(run_dir)
+    return {
+        "run_id": run_id,
+        "experiment": cfg.experiment,
+        "config": config,
+        "config_hash": cfg.config_hash,
+        "git_commit": git["git_commit"],
+        "git_dirty": git["git_dirty"],
+        "mlflow_run_id": mlflow_run_id,
+        "seed": cfg.train.seed,
+        "mode": cfg.mode,
+        "model": cfg.model,
+        "label_set": cfg.label_set,
+        "smoke": smoke,
+        "epochs_requested": epochs,
+        "status": "running",
+        "train_seconds": None,
+        "run_dir": str(run_dir),
+        "weights": str(run_dir / "weights" / "best.pt"),
+        "hardware": hardware_info(),
+        "software": software_versions(),
+        "created_at": iso(start),
+        "finished_at": None,
+    }
+
+
+def finish_record(record: dict, seconds: float, when) -> dict:
+    record["train_seconds"] = round((record.get("train_seconds") or 0) + seconds, 1)
+    record["status"] = "finished"
+    record["finished_at"] = iso(when)
+    return record
+
+
+def prepare_resume(
+    cfg: ExperimentConfig, run_dir: Path, data_root: Path | None, config: str
+) -> tuple[dict, Path]:
+    """Yeni oturumda devam: last.pt ve veri kontrolü, etiket seti kurulumu, kayıt yükleme."""
+    from baykus.data.convert import activate_label_set
+
+    run_dir = Path(run_dir)
+    last = run_dir / "weights" / "last.pt"
+    if not last.exists():
+        raise ResumeError(f"devam için {last} gerekli")
+    data = resolve_data(cfg, data_root)
+    if not data.exists():
+        raise ResumeError(f"{data} yok (veri indirme hücresi ve baykus-data yaml çalıştı mı?)")
+    n_labels = activate_label_set(data.parent, cfg.modality, cfg.label_set)
+    print(f"etiket seti {cfg.label_set} → {cfg.modality}/labels ({n_labels} dosya)")
+    rec_path = run_dir / RECORD
+    if rec_path.exists():
+        return json.loads(rec_path.read_text(encoding="utf-8")), data
+    # Eski sürüm kaydı sadece eğitim sonunda yazıyordu: kopan çalıştırmanın kaydı yeniden kurulur.
+    # Başlangıç commit'i run_id'nin son parçasında (kısa hash).
+    git = {"git_commit": run_dir.name.rsplit("_", 1)[-1], "git_dirty": None}
+    record = make_record(
+        cfg,
+        config=config,
+        run_id=run_dir.name,
+        git=git,
+        mlflow_run_id=None,
+        smoke=False,
+        epochs=cfg.train.epochs,
+        run_dir=run_dir,
+        start=utc_now(),
+    )
+    record["record_reconstructed"] = True
+    write_json(rec_path, record)
+    return record, data
 
 
 def ultralytics_train_args(
@@ -104,6 +199,12 @@ def _end_mlflow() -> None:
         mlflow.end_run()
 
 
+def _save_record(record: dict, results: Path) -> None:
+    write_json(Path(record["run_dir"]) / RECORD, record)
+    if not record["smoke"]:
+        write_json(Path(results) / "train" / f"{record['run_id']}.json", record)
+
+
 def main(argv: list[str] | None = None) -> int:
     a = build_parser().parse_args(argv)
     cfg = load_config(Path(a.config))
@@ -114,21 +215,24 @@ def main(argv: list[str] | None = None) -> int:
 
     start = utc_now()
     if a.resume:
-        run_dir = Path(a.resume)
-        last, rec_path = run_dir / "weights" / "last.pt", run_dir / RECORD
-        if not last.exists() or not rec_path.exists():
-            print(f"hata: devam için {last} ve {rec_path} gerekli", file=sys.stderr)
+        try:
+            record, _ = prepare_resume(cfg, Path(a.resume), a.data_root, a.config)
+        except ResumeError as e:
+            print(f"hata: {e}", file=sys.stderr)
             return 2
-        record = json.loads(rec_path.read_text(encoding="utf-8"))
+        run_dir = Path(a.resume)
         _start_mlflow(cfg, run_dir.parent, record["run_id"], {}, record.get("mlflow_run_id"))
         t0 = time.monotonic()
         try:
-            YOLO(str(last)).train(resume=True, trainer=make_trainer_class(cfg))
+            YOLO(str(run_dir / "weights" / "last.pt")).train(
+                resume=True, trainer=make_trainer_class(cfg)
+            )
         finally:
             _end_mlflow()
-        record["train_seconds"] = round(record.get("train_seconds", 0) + time.monotonic() - t0, 1)
-        record["resumed_at"] = iso(utc_now())
-        write_json(rec_path, record)
+        record.setdefault("resumed_at", []).append(iso(start))
+        record["hardware_resumed"] = hardware_info()
+        _save_record(finish_record(record, time.monotonic() - t0, utc_now()), a.results)
+        print(json.dumps(record, ensure_ascii=False))
         return 0
 
     data = resolve_data(cfg, a.data_root)
@@ -152,8 +256,27 @@ def main(argv: list[str] | None = None) -> int:
     )
     tags = {"config": a.config, "config_hash": cfg.config_hash, **git, "smoke": a.smoke}
     mlflow_id = _start_mlflow(cfg, a.project, name, tags, None)
+    record: dict = {}
+
+    def write_start_record(trainer) -> None:
+        # save_dir Ultralytics'te belli olur (ad çakışırsa sonuna sayı ekler)
+        record.update(
+            make_record(
+                cfg,
+                config=a.config,
+                run_id=name,
+                git=git,
+                mlflow_run_id=mlflow_id,
+                smoke=a.smoke,
+                epochs=args["epochs"],
+                run_dir=Path(trainer.save_dir),
+                start=start,
+            )
+        )
+        write_json(Path(trainer.save_dir) / RECORD, record)
 
     model = YOLO(cfg.model)
+    model.add_callback("on_pretrain_routine_start", write_start_record)
     for event, fn in callbacks_for(cfg, resume=False):
         model.add_callback(event, fn)
     t0 = time.monotonic()
@@ -161,28 +284,6 @@ def main(argv: list[str] | None = None) -> int:
         model.train(trainer=make_trainer_class(cfg), **args)
     finally:
         _end_mlflow()
-    run_dir = Path(model.trainer.save_dir)
-    record = {
-        "run_id": name,
-        "experiment": cfg.experiment,
-        "config": a.config,
-        "config_hash": cfg.config_hash,
-        **git,
-        "mlflow_run_id": mlflow_id,
-        "seed": cfg.train.seed,
-        "mode": cfg.mode,
-        "model": cfg.model,
-        "label_set": cfg.label_set,
-        "smoke": a.smoke,
-        "epochs_requested": args["epochs"],
-        "train_seconds": round(time.monotonic() - t0, 1),
-        "run_dir": str(run_dir),
-        "weights": str(run_dir / "weights" / "best.pt"),
-        "software": software_versions(),
-        "created_at": iso(start),
-    }
-    write_json(run_dir / RECORD, record)
-    if not a.smoke:
-        write_json(Path(a.results) / "train" / f"{name}.json", record)
+    _save_record(finish_record(record, time.monotonic() - t0, utc_now()), a.results)
     print(json.dumps(record, ensure_ascii=False))
     return 0
