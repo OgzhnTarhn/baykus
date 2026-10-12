@@ -206,21 +206,6 @@ TRAIN_CELLS = [
         from google.colab import drive
         drive.mount('/content/drive')
 
-        import glob, json, os
-        from pathlib import Path
-
-        def runs(finished: bool) -> list[str]:
-            # Bu config'in tam eğitim klasörleri (smoke ve 1 epoch hariç), eskiden yeniye
-            slug = Path(CONFIG).stem.replace('_', '-')
-            out = []
-            for d in sorted(glob.glob(f'{DRIVE}/runs/*_{slug}_*')):
-                if d.endswith(('_smoke', '_ep1')) or not os.path.exists(f'{d}/weights/last.pt'):
-                    continue
-                rec = f'{d}/baykus_train.json'
-                status = json.load(open(rec, encoding='utf-8')).get('status') if os.path.exists(rec) else None
-                if (status == 'finished') == finished:
-                    out.append(d)
-            return out
         """
     ),
     KAGGLE_TOKEN,
@@ -233,9 +218,12 @@ TRAIN_CELLS = [
         !nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
         !nproc              # CPU çekirdeği: veri yükleme hızını belirler (gpu-budget.md)
         !uv pip install --system -q -e '/content/baykus/python[train]'
+        import sys  # editable kurulumun .pth'si çalışan çekirdekte okunmaz; checkpoint hücreleri için
+        sys.path.insert(0, '/content/baykus/python/src')
         import yaml
-        MODE = yaml.safe_load(open(f'/content/baykus/{CONFIG}', encoding='utf-8'))['mode']
-        print('MODE =', MODE)
+        _cfg = yaml.safe_load(open(f'/content/baykus/{CONFIG}', encoding='utf-8'))
+        MODE, EXP = _cfg['mode'], _cfg['experiment']
+        print('MODE =', MODE, '· EXP =', EXP)
         """
     ),
     code(
@@ -304,15 +292,25 @@ TRAIN_CELLS = [
     md("🚧 **KAPI: Burada dur.** Yukarıdaki iki hücrenin süresini Claude'a getir; bütçe onaylanınca devam."),
     code(
         """
-        # 3) tam eğitim (config'teki epoch sayısı)
+        # 3) tam eğitim (config'teki epoch sayısı). Checkpoint: her epoch sonunda
+        # {DRIVE}/runs/<run>/weights/last.pt (devam için) ve 5 epoch'ta bir epochN.pt Drive'a yazılır.
         !cd /content/baykus/python && baykus-train --config ../{CONFIG} --data-root /content/dv_rgbt --project {DRIVE}/runs --results {DRIVE}/results
+        """
+    ),
+    code(
+        """
+        # 📌 Checkpoint durumu: Drive'da bu deneyin hangi epoch'a kadar kaydedildiği.
+        # Oturum koptuğunda kurulum hücrelerinden sonra önce buna bak, sonra 3b) devam.
+        from baykus.train.checkpoints import status_report
+        print(status_report(f'{DRIVE}/runs', EXP))
         """
     ),
     code(
         """
         # 3b) devam: oturum koptuysa önce Drive → token → klonlama → kurulum → veri hücrelerini
         # çalıştır, sonra bunu. Bu config'in yarım kalan en son eğitimi kaldığı epoch'tan sürer.
-        todo = runs(finished=False)
+        from baykus.train.checkpoints import find_runs
+        todo = [str(p) for p in find_runs(f'{DRIVE}/runs', EXP, finished=False)]
         print('devam edilecek:', todo[-1] if todo else 'yok')
         if todo:
             RUN_DIR = todo[-1]
@@ -322,7 +320,8 @@ TRAIN_CELLS = [
     code(
         """
         # 4) değerlendirme (val): bu config'in biten en son tam eğitiminin best.pt'si
-        done = runs(finished=True)
+        from baykus.train.checkpoints import find_runs
+        done = [str(p) for p in find_runs(f'{DRIVE}/runs', EXP, finished=True)]
         assert done, 'biten tam eğitim yok; önce 3) veya 3b) bitmeli'
         W = f'{done[-1]}/weights/best.pt'
         print(W)
