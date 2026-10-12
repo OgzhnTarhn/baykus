@@ -69,6 +69,16 @@ def test_software_versions():
     assert v["numpy"] == version("numpy")
 
 
+def test_hardware_info():
+    import os
+
+    from baykus.runinfo import hardware_info
+
+    h = hardware_info()
+    assert set(h) == {"device", "driver", "cpu_count"}
+    assert h["device"] and h["cpu_count"] == os.cpu_count()
+
+
 def test_software_versions_missing_package(monkeypatch):
     import baykus.runinfo as ri
 

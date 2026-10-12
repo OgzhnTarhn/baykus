@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
 import platform
 import re
 import subprocess
@@ -61,6 +62,23 @@ def write_json(path: Path, data: dict) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return path
+
+
+def hardware_info() -> dict:
+    """GPU adı ve CPU çekirdek sayısı: aynı deney T4/L4/A100'de farklı sürer (gpu-budget.md)."""
+    out: dict = {
+        "device": platform.processor() or platform.machine() or "cpu",
+        "driver": None,
+        "cpu_count": os.cpu_count(),
+    }
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            out.update(device=torch.cuda.get_device_name(0), driver=torch.version.cuda)
+    except ImportError:
+        pass
+    return out
 
 
 def software_versions() -> dict:

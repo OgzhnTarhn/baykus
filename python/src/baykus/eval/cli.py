@@ -6,7 +6,6 @@ import argparse
 import contextlib
 import io
 import json
-import platform
 import sys
 from pathlib import Path
 
@@ -16,6 +15,7 @@ from baykus.eval.metrics import build_metrics
 from baykus.eval.predictions import load_predictions, remap_to_gt, save_predictions
 from baykus.runinfo import (
     git_info,
+    hardware_info,
     iso,
     make_run_id,
     model_family,
@@ -29,17 +29,6 @@ from baykus.runinfo import (
 def _load_coco(path: Path) -> COCO:
     with contextlib.redirect_stdout(io.StringIO()):
         return COCO(str(path))
-
-
-def _hardware() -> dict:
-    try:
-        import torch
-
-        if torch.cuda.is_available():
-            return {"device": torch.cuda.get_device_name(0), "driver": torch.version.cuda}
-    except ImportError:
-        pass
-    return {"device": platform.processor() or platform.machine() or "cpu", "driver": None}
 
 
 def _slices(meta: Path, split: str) -> dict | None:
@@ -119,7 +108,7 @@ def _cmd_run(a: argparse.Namespace) -> int:
             },
             "format": "pytorch",
             "precision": "fp32",
-            "hardware": _hardware(),
+            "hardware": hardware_info(),
             "software": software_versions(),
             "weights": str(weights),
             "n_boot": n_boot,
