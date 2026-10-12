@@ -189,20 +189,38 @@ CLONE_BRANCH = code(
 TRAIN_CELLS = [
     md(
         """
-        # 02 — Eğitim ve değerlendirme (T4 GPU)
-        **Çalışma zamanı → T4 GPU.** Secrets: `KAGGLE_API_TOKEN`, `GITHUB_TOKEN`.
+        # 02 — Eğitim ve değerlendirme (GPU)
+        **Çalışma zamanı → GPU** (T4, L4 veya A100; hangisi olduğu kurulum hücresinde yazar).
+        Secrets: `KAGGLE_API_TOKEN`, `GITHUB_TOKEN`.
         Sıra: smoke → 1 epoch (süre ölç) → Claude'a getir → tam eğitim → değerlendirme.
         Veri: private Kaggle veri seti `ouzhantarhan/baykus-dv-rgbt` (ADR 0004), birkaç dakikada iner.
-        Çıktılar Drive'da `MyDrive/baykus/{runs,eval,results}`; oturum koparsa en alttaki devam hücresi.
+        Çıktılar Drive'da `MyDrive/baykus/{runs,eval,results}`. Her epoch `weights/last.pt` olarak
+        Drive'a yazılır; oturum koparsa kurulum hücrelerinden sonra "3b) devam" hücresi.
         """
     ),
     code(
         """
         CONFIG = 'configs/e1_rgb.yaml'   # e2_ir.yaml, e3_early_fusion.yaml ...
-        BRANCH = 'h2'                    # haftalık dal; main'e birleşince 'main'
+        BRANCH = 'main'                  # haftalık dalı denemek için ör. 'h3'
         DRIVE = '/content/drive/MyDrive/baykus'
         from google.colab import drive
         drive.mount('/content/drive')
+
+        import glob, json, os
+        from pathlib import Path
+
+        def runs(finished: bool) -> list[str]:
+            # Bu config'in tam eğitim klasörleri (smoke ve 1 epoch hariç), eskiden yeniye
+            slug = Path(CONFIG).stem.replace('_', '-')
+            out = []
+            for d in sorted(glob.glob(f'{DRIVE}/runs/*_{slug}_*')):
+                if d.endswith(('_smoke', '_ep1')) or not os.path.exists(f'{d}/weights/last.pt'):
+                    continue
+                rec = f'{d}/baykus_train.json'
+                status = json.load(open(rec, encoding='utf-8')).get('status') if os.path.exists(rec) else None
+                if (status == 'finished') == finished:
+                    out.append(d)
+            return out
         """
     ),
     KAGGLE_TOKEN,
@@ -212,6 +230,8 @@ TRAIN_CELLS = [
         %%time
         !pip -q install uv kaggle
         !python --version   # Spike C: Colab görüntüsü zamanla değişir
+        !nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
+        !nproc              # CPU çekirdeği: veri yükleme hızını belirler (gpu-budget.md)
         !uv pip install --system -q -e '/content/baykus/python[train]'
         import yaml
         MODE = yaml.safe_load(open(f'/content/baykus/{CONFIG}', encoding='utf-8'))['mode']
@@ -290,21 +310,23 @@ TRAIN_CELLS = [
     ),
     code(
         """
-        # 4) değerlendirme (val): en son tam eğitimin best.pt'si (smoke ve 1 epoch hariç)
-        import glob
-        cands = sorted(p for p in glob.glob(f'{DRIVE}/runs/*/weights/best.pt')
-                       if '_smoke/' not in p and '_ep1/' not in p)
-        W = cands[-1]
-        print(W)
-        !cd /content/baykus/python && baykus-eval run --config ../{CONFIG} --weights {W} --data-root /content/dv_rgbt --meta /content/meta --project {DRIVE}/eval --results {DRIVE}/results
+        # 3b) devam: oturum koptuysa önce Drive → token → klonlama → kurulum → veri hücrelerini
+        # çalıştır, sonra bunu. Bu config'in yarım kalan en son eğitimi kaldığı epoch'tan sürer.
+        todo = runs(finished=False)
+        print('devam edilecek:', todo[-1] if todo else 'yok')
+        if todo:
+            RUN_DIR = todo[-1]
+            !cd /content/baykus/python && baykus-train --config ../{CONFIG} --resume "{RUN_DIR}" --data-root /content/dv_rgbt --results {DRIVE}/results
         """
     ),
     code(
         """
-        # Oturum koptuysa: kurulum ve veri indirme hücrelerini tekrar çalıştır, sonra RUN_DIR'i yazıp devam et
-        RUN_DIR = ''  # ör. f'{DRIVE}/runs/2026-10-14_e1-rgb_s_abc1234'
-        if RUN_DIR:
-            !cd /content/baykus/python && baykus-train --config ../{CONFIG} --resume {RUN_DIR}
+        # 4) değerlendirme (val): bu config'in biten en son tam eğitiminin best.pt'si
+        done = runs(finished=True)
+        assert done, 'biten tam eğitim yok; önce 3) veya 3b) bitmeli'
+        W = f'{done[-1]}/weights/best.pt'
+        print(W)
+        !cd /content/baykus/python && baykus-eval run --config ../{CONFIG} --weights "{W}" --data-root /content/dv_rgbt --meta /content/meta --project {DRIVE}/eval --results {DRIVE}/results
         """
     ),
 ]
