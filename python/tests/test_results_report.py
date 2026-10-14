@@ -3,7 +3,14 @@ from pathlib import Path
 
 from baykus.report.cli import main
 from baykus.report.plots import illumination_plot
-from baykus.report.tables import fmt, load_runs, main_table
+from baykus.report.tables import (
+    compare_table,
+    fmt,
+    label_set_table,
+    load_compares,
+    load_runs,
+    main_table,
+)
 
 
 def _run(run_id, mode, map50, ci, ill, split="val", ls="ir"):
@@ -75,3 +82,64 @@ def test_plot_and_cli(tmp_path: Path):
     assert main(["--runs", str(runs), "--out", str(out), "--fig", str(fig)]) == 0
     text = out.read_text(encoding="utf-8")
     assert "62.3 [60.1, 64.0]" in text and "results/runs" in text and fig.exists()
+
+
+def _rec(run_id, ls, map50, ill=None):
+    return {
+        "run_id": run_id,
+        "split": "val",
+        "label_set": ls,
+        "model": {"mode": "rgb"},
+        "metrics": {
+            "map50": map50,
+            "ci95": {"map50": [map50 - 0.01, map50 + 0.01]},
+            "per_illumination": ill or {"day": 0.80, "night": 0.70, "dark_night": None},
+        },
+    }
+
+
+def test_label_set_table_delta_and_missing_pair():
+    runs = [
+        _rec("a", "ir", 0.761),
+        _rec("a", "rgb", 0.780, {"day": 0.83, "night": 0.70, "dark_night": None}),
+        _rec("b", "ir", 0.5),  # rgb kaydı yok → satır yok
+    ]
+    table = label_set_table(runs)
+    rows = [r for r in table.splitlines() if r.startswith("| a") or r.startswith("| b")]
+    assert rows == ["| a | rgb | 76.1 [75.1, 77.1] | 78.0 [77.0, 79.0] | +1.9 | +3.0 | +0.0 | — |"]
+
+
+def test_compare_table_marks_significance():
+    c = {
+        "name": "e3-vs-e1_val_ir",
+        "overall": {"diff": 0.05, "ci95": [0.02, 0.08], "significant": True},
+        "per_illumination": {
+            "day": {"diff": -0.01, "ci95": [-0.03, 0.01], "significant": False},
+            "night": None,
+            "dark_night": {"diff": 0.1, "ci95": [0.05, 0.15], "significant": True},
+        },
+    }
+    row = compare_table([c]).splitlines()[-1]
+    assert row == (
+        "| e3-vs-e1_val_ir | +5.0 [+2.0, +8.0] * | -1.0 [-3.0, +1.0] | — | +10.0 [+5.0, +15.0] * |"
+    )
+
+
+def test_load_compares_missing_folder(tmp_path: Path):
+    assert load_compares(tmp_path / "yok") == []
+
+
+def test_cli_adds_e5_and_compare_sections(tmp_path: Path):
+    runs, comp = tmp_path / "runs", tmp_path / "compare"
+    runs.mkdir()
+    comp.mkdir()
+    for r in (_rec("a", "ir", 0.761), _rec("a", "rgb", 0.78)):
+        (runs / f"a_{r['label_set']}.json").write_text(json.dumps(r), encoding="utf-8")
+    c = {"name": "e3-vs-e1_val_ir", "overall": None, "per_illumination": {}}
+    (comp / "x.json").write_text(json.dumps(c), encoding="utf-8")
+    out = tmp_path / "results.md"
+    argv = ["--runs", str(runs), "--compare", str(comp), "--out", str(out)]
+    assert main([*argv, "--fig", str(tmp_path / "f.png")]) == 0
+    text = out.read_text(encoding="utf-8")
+    assert "## Etiket seti karşılaştırması (E5)" in text and "+1.9" in text
+    assert "## Eşleştirilmiş farklar" in text and "e3-vs-e1_val_ir" in text
