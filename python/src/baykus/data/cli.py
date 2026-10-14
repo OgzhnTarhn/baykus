@@ -133,23 +133,16 @@ def _cmd_slices(a: argparse.Namespace) -> int:
 
 
 def _cmd_rgbt4(a: argparse.Namespace) -> int:
-    import cv2
-    from tqdm import tqdm
+    import time
 
-    from baykus.data.multichannel import stack_rgbt, write_rgbt4
+    from baykus.data.multichannel import build_rgbt4
     from baykus.data.yamls import write_data_yamls
-    from baykus.io import imread_any
 
     out = Path(a.out)
-    n = 0
-    for split in SPLITS:
-        for p in tqdm(sorted((out / "rgb/images" / split).glob("*.jpg")), desc=split, leave=False):
-            ir = imread_any(out / "ir/images" / split / f"{p.stem}.png", cv2.IMREAD_GRAYSCALE)
-            rgbt = stack_rgbt(imread_any(p, cv2.IMREAD_COLOR), ir)
-            write_rgbt4(out / "rgbt4/images" / split / f"{p.stem}.tif", rgbt)
-            n += 1
+    t0 = time.monotonic()
+    n = build_rgbt4(out, splits=a.splits, workers=a.workers)
     write_data_yamls(out)
-    print(f"rgbt4 images: {n}")
+    print(f"rgbt4 images: {n} ({time.monotonic() - t0:.0f} sn, {a.workers} işçi, {a.splits})")
     return 0
 
 
@@ -221,6 +214,8 @@ def build_parser() -> argparse.ArgumentParser:
     sl.set_defaults(func=_cmd_slices)
     r4 = sub.add_parser("rgbt4", help="RGB+IR → 4 kanallı TIFF ve data_*.yaml")
     r4.add_argument("--out", required=True)
+    r4.add_argument("--splits", nargs="+", choices=list(SPLITS), default=list(SPLITS))
+    r4.add_argument("--workers", type=int, default=1, help="paralel işçi (Colab: os.cpu_count())")
     r4.set_defaults(func=_cmd_rgbt4)
     ym = sub.add_parser("yaml", help="data_*.yaml dosyalarını yaz (rgbt4 beklemeden)")
     ym.add_argument("--out", required=True)
