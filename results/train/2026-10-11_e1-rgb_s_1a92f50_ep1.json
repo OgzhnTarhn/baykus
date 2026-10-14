@@ -1,0 +1,26 @@
+{
+  "run_id": "2026-10-11_e1-rgb_s_1a92f50_ep1",
+  "experiment": "e1_rgb",
+  "config": "../configs/e1_rgb.yaml",
+  "config_hash": "sha256:a2a0c61a799002d4d9bd92937777190d5fb900714df1f9d639180163841f95d0",
+  "git_commit": "1a92f506d7c8b88bd1c9c594969e1d69fd0f820f",
+  "git_dirty": false,
+  "mlflow_run_id": "436f80ef5ebd4b3c98ed2574811ad433",
+  "seed": 42,
+  "mode": "rgb",
+  "model": "yolo26s.pt",
+  "label_set": "ir",
+  "smoke": false,
+  "epochs_requested": 1,
+  "train_seconds": 413.2,
+  "run_dir": "/content/drive/MyDrive/baykus/runs/2026-10-11_e1-rgb_s_1a92f50_ep1",
+  "weights": "/content/drive/MyDrive/baykus/runs/2026-10-11_e1-rgb_s_1a92f50_ep1/weights/best.pt",
+  "software": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu130",
+    "ultralytics": "8.4.175",
+    "numpy": "2.1.3",
+    "pycocotools": "2.0.11"
+  },
+  "created_at": "2026-10-11T21:18:52Z"
+}
