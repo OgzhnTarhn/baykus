@@ -14,9 +14,12 @@ from baykus.io import imwrite_any
 SIZE = 64
 
 
-def make_synthetic_dataset(root: Path, n_train: int = 8, n_val: int = 4) -> Path:
+def make_synthetic_dataset(
+    root: Path, n_train: int = 8, n_val: int = 4, with_ir: bool = False
+) -> Path:
     """rgb/images/{train,val}, labels_{ir,rgb}/{train,val}, data_*.yaml, coco/, meta/ üretir.
-    Görüntü adları 00001.. biçiminde; val'de bir numara bilerek atlanır (dışlanmış dosya)."""
+    Görüntü adları 00001.. biçiminde; val'de bir numara bilerek atlanır (dışlanmış dosya).
+    with_ir=True: ir/images/{train,val}/*.png (gri) de yazılır."""
     root = Path(root)
     rng = np.random.default_rng(0)
     stems = {
@@ -28,6 +31,10 @@ def make_synthetic_dataset(root: Path, n_train: int = 8, n_val: int = 4) -> Path
             img = rng.integers(0, 60, (SIZE, SIZE, 3), dtype=np.uint8)
             img[20:40, 16:48] = 255
             imwrite_any(root / "rgb/images" / split / f"{s}.jpg", img)
+            if with_ir:
+                ir = rng.integers(0, 60, (SIZE, SIZE), dtype=np.uint8)
+                ir[20:40, 16:48] = 200
+                imwrite_any(root / "ir/images" / split / f"{s}.png", ir)
             for ls in ("ir", "rgb"):
                 p = root / f"labels_{ls}" / split / f"{s}.txt"
                 p.parent.mkdir(parents=True, exist_ok=True)
