@@ -192,16 +192,24 @@ TRAIN_CELLS = [
         # 02 — Eğitim ve değerlendirme (GPU)
         **Çalışma zamanı → GPU** (T4, L4 veya A100; hangisi olduğu kurulum hücresinde yazar).
         Secrets: `KAGGLE_API_TOKEN`, `GITHUB_TOKEN`.
-        Sıra: smoke → 1 epoch (süre ölç) → Claude'a getir → tam eğitim → değerlendirme.
+        **Kullanım:** ilk kod hücresinde `CONFIG` ve adım anahtarlarını ayarla, sonra
+        **Çalışma zamanı → Tümünü çalıştır**. Kapalı adımlar kendiliğinden atlanır.
+        Yeni deneyde sıra: smoke + 1 epoch (süre ölç) → Claude'a getir → `TRAIN` + `EVAL`.
         Veri: private Kaggle veri seti `ouzhantarhan/baykus-dv-rgbt` (ADR 0004), birkaç dakikada iner.
         Çıktılar Drive'da `MyDrive/baykus/{runs,eval,results}`. Her epoch `weights/last.pt` olarak
-        Drive'a yazılır; oturum koparsa kurulum hücrelerinden sonra "3b) devam" hücresi.
+        Drive'a yazılır. Oturum koparsa ayarlara dokunmadan yeniden **Tümünü çalıştır**: eğitim
+        hücresi yarım kalan eğitimi bulup kaldığı epoch'tan sürdürür.
         """
     ),
     code(
         """
         CONFIG = 'configs/e1_rgb.yaml'   # e2_ir.yaml, e3_early_fusion.yaml ...
         BRANCH = 'main'                  # haftalık dalı denemek için ör. 'h3'
+        # Adım anahtarları (True = çalışır, False = atlanır):
+        SMOKE = True    # 1) %5 veri, 1 epoch: hattın çalıştığını doğrular (yeni deneyde ilk iş)
+        EPOCH1 = True   # 2) 1 tam epoch: süre ölçümü (GPU bütçesi)
+        TRAIN = False   # 3) tam eğitim; yarım kalan varsa devam eder, biten varsa atlar
+        EVAL = False    # 4) değerlendirme (val): biten tam eğitimin best.pt'si
         DRIVE = '/content/drive/MyDrive/baykus'
         from google.colab import drive
         drive.mount('/content/drive')
@@ -279,53 +287,61 @@ TRAIN_CELLS = [
         """
         %%time
         # 1) smoke: %5 veri, 1 epoch — hattın uçtan uca çalıştığını doğrular
-        !cd /content/baykus/python && baykus-train --config ../{CONFIG} --data-root /content/dv_rgbt --project {DRIVE}/runs --results {DRIVE}/results --smoke
+        if SMOKE:
+            !cd /content/baykus/python && baykus-train --config ../{CONFIG} --data-root /content/dv_rgbt --project {DRIVE}/runs --results {DRIVE}/results --smoke
+        else:
+            print('SMOKE = False → atlandı')
         """
     ),
     code(
         """
         %%time
         # 2) 1 tam epoch — süresi GPU bütçesine yazılır (spec §10.2)
-        !cd /content/baykus/python && baykus-train --config ../{CONFIG} --data-root /content/dv_rgbt --project {DRIVE}/runs --results {DRIVE}/results --epochs 1
+        if EPOCH1:
+            !cd /content/baykus/python && baykus-train --config ../{CONFIG} --data-root /content/dv_rgbt --project {DRIVE}/runs --results {DRIVE}/results --epochs 1
+        else:
+            print('EPOCH1 = False → atlandı')
         """
     ),
-    md("🚧 **KAPI: Burada dur.** Yukarıdaki iki hücrenin süresini Claude'a getir; bütçe onaylanınca devam."),
+    md(
+        "🚧 **KAPI:** Yeni bir deneyde 1) ve 2) bitince süreleri Claude'a getir; bütçe "
+        "onaylanınca ilk hücrede `TRAIN = True`, `EVAL = True` yapıp yeniden Tümünü çalıştır."
+    ),
     code(
         """
+        %%time
         # 3) tam eğitim (config'teki epoch sayısı). Checkpoint: her epoch sonunda
-        # {DRIVE}/runs/<run>/weights/last.pt (devam için) ve 5 epoch'ta bir epochN.pt Drive'a yazılır.
-        !cd /content/baykus/python && baykus-train --config ../{CONFIG} --data-root /content/dv_rgbt --project {DRIVE}/runs --results {DRIVE}/results
-        """
-    ),
-    code(
-        """
-        # 📌 Checkpoint durumu: Drive'da bu deneyin hangi epoch'a kadar kaydedildiği.
-        # Oturum koptuğunda kurulum hücrelerinden sonra önce buna bak, sonra 3b) devam.
-        from baykus.train.checkpoints import status_report
-        print(status_report(f'{DRIVE}/runs', EXP))
-        """
-    ),
-    code(
-        """
-        # 3b) devam: oturum koptuysa önce Drive → token → klonlama → kurulum → veri hücrelerini
-        # çalıştır, sonra bunu. Bu config'in yarım kalan en son eğitimi kaldığı epoch'tan sürer.
-        from baykus.train.checkpoints import find_runs
-        todo = [str(p) for p in find_runs(f'{DRIVE}/runs', EXP, finished=False)]
-        print('devam edilecek:', todo[-1] if todo else 'yok')
-        if todo:
-            RUN_DIR = todo[-1]
-            !cd /content/baykus/python && baykus-train --config ../{CONFIG} --resume "{RUN_DIR}" --data-root /content/dv_rgbt --results {DRIVE}/results
+        # {DRIVE}/runs/<run>/weights/last.pt ve 5 epoch'ta bir epochN.pt Drive'a yazılır.
+        # Yarım kalan eğitim varsa kaldığı epoch'tan sürer; biten varsa yeniden eğitmez.
+        from baykus.train.checkpoints import find_runs, status_report
+        if TRAIN:
+            todo = find_runs(f'{DRIVE}/runs', EXP, finished=False)
+            done = find_runs(f'{DRIVE}/runs', EXP, finished=True)
+            if todo:
+                RUN_DIR = str(todo[-1])
+                print('yarım kalan eğitim, devam:', RUN_DIR)
+                !cd /content/baykus/python && baykus-train --config ../{CONFIG} --resume "{RUN_DIR}" --data-root /content/dv_rgbt --results {DRIVE}/results
+            elif done:
+                print('bu deneyin biten tam eğitimi var, yeniden eğitilmedi:', done[-1])
+            else:
+                !cd /content/baykus/python && baykus-train --config ../{CONFIG} --data-root /content/dv_rgbt --project {DRIVE}/runs --results {DRIVE}/results
+        else:
+            print('TRAIN = False → atlandı')
+        print(status_report(f'{DRIVE}/runs', EXP))  # 📌 Drive'da hangi epoch'a kadar kayıtlı
         """
     ),
     code(
         """
         # 4) değerlendirme (val): bu config'in biten en son tam eğitiminin best.pt'si
         from baykus.train.checkpoints import find_runs
-        done = [str(p) for p in find_runs(f'{DRIVE}/runs', EXP, finished=True)]
-        assert done, 'biten tam eğitim yok; önce 3) veya 3b) bitmeli'
-        W = f'{done[-1]}/weights/best.pt'
-        print(W)
-        !cd /content/baykus/python && baykus-eval run --config ../{CONFIG} --weights "{W}" --data-root /content/dv_rgbt --meta /content/meta --project {DRIVE}/eval --results {DRIVE}/results
+        if EVAL:
+            done = [str(p) for p in find_runs(f'{DRIVE}/runs', EXP, finished=True)]
+            assert done, 'biten tam eğitim yok; önce 3) bitmeli'
+            W = f'{done[-1]}/weights/best.pt'
+            print(W)
+            !cd /content/baykus/python && baykus-eval run --config ../{CONFIG} --weights "{W}" --data-root /content/dv_rgbt --meta /content/meta --project {DRIVE}/eval --results {DRIVE}/results
+        else:
+            print('EVAL = False → atlandı')
         """
     ),
 ]
