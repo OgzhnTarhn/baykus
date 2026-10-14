@@ -2,6 +2,7 @@
 /data/
 datasets/
 runs/
+!/results/runs/
 mlruns/
 *.pt
 *.onnx
