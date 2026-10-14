@@ -148,9 +148,9 @@ def _cmd_compare(a: argparse.Namespace) -> int:
     }
     slices = json.loads(Path(a.slices).read_text(encoding="utf-8")).get("illumination", {})
     for name, ids in slices.items():
-        out["per_illumination"][name] = (
-            paired_diff_ci(subset(ma, ids), subset(mb, ids), a.n_boot) if ids else None
-        )
+        sa, sb = subset(ma, ids), subset(mb, ids)
+        # GT'de görüntüsü olmayan dilim ölçülmemiştir: 0 değil null
+        out["per_illumination"][name] = paired_diff_ci(sa, sb, a.n_boot) if sa.img_ids else None
     out["created_at"] = iso(utc_now())
     print(write_json(Path(a.results) / "compare" / f"{a.name}.json", out))
     return 0
