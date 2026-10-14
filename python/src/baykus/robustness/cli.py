@@ -8,6 +8,7 @@ yerden sürer. Bütün modeller aynı seed'le bozulmuş aynı pikselleri görür
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import sys
 from collections.abc import Callable
@@ -151,6 +152,22 @@ def _cmd_run(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_report(a: argparse.Namespace) -> int:
+    from baykus.report.robust import load_robust, robust_markdown, robust_plot
+
+    recs = load_robust(Path(a.robust))
+    if not recs:
+        print(f"hata: {a.robust} altında sağlamlık sonucu yok", file=sys.stderr)
+        return 2
+    out, fig = Path(a.out), Path(a.fig)
+    robust_plot(recs, fig)
+    rel = Path(os.path.relpath(fig, out.parent)).as_posix()
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(robust_markdown(recs, rel), encoding="utf-8")
+    print(out)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="baykus-robust")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -168,6 +185,11 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--device", default=None)
     r.add_argument("--workers", type=int, default=1)
     r.set_defaults(func=_cmd_run)
+    rp = sub.add_parser("report", help="results/robust → docs/robustness.md + eğriler")
+    rp.add_argument("--robust", default="../results/robust")
+    rp.add_argument("--out", default="../docs/robustness.md")
+    rp.add_argument("--fig", default="../docs/figures/results/robustness.png")
+    rp.set_defaults(func=_cmd_report)
     return p
 
 
