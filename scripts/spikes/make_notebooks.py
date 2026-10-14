@@ -186,6 +186,21 @@ CLONE_BRANCH = code(
     """
 )
 
+DATA_DOWNLOAD = code(
+    """
+    %%time
+    # İşlenmiş veri: private Kaggle veri seti (ADR 0004). Kaggle yüklenen tar'ları klasöre açtı;
+    # CLI klasör seçerek indiremediği için veri setinin tamamı iner (~9,8 GB).
+    DS = 'ouzhantarhan/baykus-dv-rgbt'
+    !kaggle datasets download {DS} -p /content/dv_rgbt --unzip -q
+    !mv /content/dv_rgbt/meta /content/meta
+    !baykus-data illum-relabel --meta /content/meta   # ADR 0005: Kaggle'daki etiketler eski eşikle
+    !baykus-data slices --out /content/dv_rgbt --meta /content/meta
+    !baykus-data yaml --out /content/dv_rgbt
+    !du -sh /content/dv_rgbt/* /content/meta
+    """
+)
+
 TRAIN_CELLS = [
     md(
         """
@@ -210,6 +225,7 @@ TRAIN_CELLS = [
         EPOCH1 = True   # 2) 1 tam epoch: süre ölçümü (GPU bütçesi)
         TRAIN = False   # 3) tam eğitim; yarım kalan varsa devam eder, biten varsa atlar
         EVAL = False    # 4) değerlendirme (val): biten tam eğitimin best.pt'si
+        COMPARE = False # 5) E3 − E1, E3 − E2, E2 − E1 farkları (üç modelin de 4. adımı bitmiş olmalı)
         DRIVE = '/content/drive/MyDrive/baykus'
         from google.colab import drive
         drive.mount('/content/drive')
@@ -234,18 +250,9 @@ TRAIN_CELLS = [
         print('MODE =', MODE, '· EXP =', EXP)
         """
     ),
+    DATA_DOWNLOAD,
     code(
         """
-        %%time
-        # İşlenmiş veri: private Kaggle veri seti (ADR 0004). Kaggle yüklenen tar'ları klasöre açtı;
-        # CLI klasör seçerek indiremediği için veri setinin tamamı iner (~9,8 GB).
-        DS = 'ouzhantarhan/baykus-dv-rgbt'
-        !kaggle datasets download {DS} -p /content/dv_rgbt --unzip -q
-        !mv /content/dv_rgbt/meta /content/meta
-        !baykus-data illum-relabel --meta /content/meta   # ADR 0005: Kaggle'daki etiketler eski eşikle
-        !baykus-data slices --out /content/dv_rgbt --meta /content/meta
-        !baykus-data yaml --out /content/dv_rgbt
-        !du -sh /content/dv_rgbt/* /content/meta
         from pathlib import Path
         NEED = {'rgb': ['rgb'], 'ir': ['ir'], 'early_fusion': ['rgb', 'ir']}[MODE]
         # H1 Görev 10'dan taşındı: kutular araçların üstüne oturuyor mu? (gözle)
@@ -279,8 +286,14 @@ TRAIN_CELLS = [
     code(
         """
         %%time
-        if MODE == 'early_fusion':  # rgbt4 yüklenmedi (ADR 0004); H3'te bu hücre yeniden ele alınır
-            !baykus-data rgbt4 --out /content/dv_rgbt
+        # ADR 0004: rgbt4 Kaggle'da yok; her E3 oturumunda rgb + ir'den üretilir (sadece train + val).
+        # Süreyi Claude'a getir (ADR 0004'e yazılır).
+        import os
+        if MODE == 'early_fusion':
+            NPROC = os.cpu_count()
+            !baykus-data rgbt4 --out /content/dv_rgbt --splits train val --workers {NPROC}
+            !du -sh /content/dv_rgbt/rgbt4
+            !df -h /content
         """
     ),
     code(
@@ -344,6 +357,90 @@ TRAIN_CELLS = [
             print('EVAL = False → atlandı')
         """
     ),
+    code(
+        """
+        # 5) eşleştirilmiş karşılaştırma (val, IR etiketleri; FR-V8): A − B, aydınlatma kırılımıyla.
+        # Sonuç: {DRIVE}/results/compare/*.json
+        import json
+        from pathlib import Path
+        from baykus.train.checkpoints import find_runs
+
+        def preds(exp):
+            d = find_runs(f'{DRIVE}/runs', exp, finished=True)[-1]
+            run_id = json.loads((d / 'baykus_train.json').read_text(encoding='utf-8'))['run_id']
+            p = Path(f'{DRIVE}/eval/{run_id}_val/predictions_coco.json.gz')
+            assert p.exists(), f'{p} yok: önce {exp} için 4) değerlendirme'
+            return p
+
+        if COMPARE:
+            for A, B in [('e3_early_fusion', 'e1_rgb'), ('e3_early_fusion', 'e2_ir'), ('e2_ir', 'e1_rgb')]:
+                PA, PB = preds(A), preds(B)
+                !cd /content/baykus/python && baykus-eval compare --gt /content/dv_rgbt/coco/val_ir.json --a "{PA}" --b "{PB}" --slices /content/meta/slices_val.json --name {A}-vs-{B}_val_ir --results {DRIVE}/results
+        else:
+            print('COMPARE = False → atlandı')
+        """
+    ),
+]
+
+ROBUST_CELLS = [
+    md(
+        """
+        # 03 — Sağlamlık paketi (E6, GPU)
+        **Çalışma zamanı → GPU.** Secrets: `KAGGLE_API_TOKEN`, `GITHUB_TOKEN`.
+        **Kullanım:** ilk kod hücresini kontrol et, sonra **Çalışma zamanı → Tümünü çalıştır**.
+        Her bozulma koşulu için val'in bozulmuş kopyası üretilir, uygun her model değerlendirilir,
+        kopya silinir. Oturum koparsa yeniden **Tümünü çalıştır**: biten (model, koşul) çiftleri atlanır.
+        Çıktılar: `MyDrive/baykus/results/robust/*.json`, tahminler `MyDrive/baykus/robust/`.
+        """
+    ),
+    code(
+        """
+        CONFIGS = ['configs/e1_rgb.yaml', 'configs/e2_ir.yaml', 'configs/e3_early_fusion.yaml']
+        BRANCH = 'main'                  # haftalık dalı denemek için ör. 'h3'
+        DRIVE = '/content/drive/MyDrive/baykus'
+        from google.colab import drive
+        drive.mount('/content/drive')
+        """
+    ),
+    KAGGLE_TOKEN,
+    CLONE_BRANCH,
+    code(
+        """
+        %%time
+        !pip -q install uv kaggle
+        !python --version
+        !nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
+        !nproc
+        !uv pip install --system -q -e '/content/baykus/python[train]'
+        import sys
+        sys.path.insert(0, '/content/baykus/python/src')
+        """
+    ),
+    DATA_DOWNLOAD,
+    code(
+        """
+        # Modeller: her config'in biten en son tam eğitiminin best.pt'si
+        import os, yaml
+        from baykus.train.checkpoints import find_runs
+        MODEL_ARGS = []
+        for c in CONFIGS:
+            exp = yaml.safe_load(open(f'/content/baykus/{c}', encoding='utf-8'))['experiment']
+            done = find_runs(f'{DRIVE}/runs', exp, finished=True)
+            assert done, f'{exp}: biten tam eğitim yok'
+            MODEL_ARGS.append(f'--model ../{c}={done[-1]}/weights/best.pt')
+            print(exp, '→', done[-1])
+        NPROC = os.cpu_count()
+        !du -sh {DRIVE}/eval {DRIVE}/robust 2>/dev/null   # Drive'da yer: tahmin dosyaları büyük olabilir
+        """
+    ),
+    code(
+        """
+        %%time
+        # E6: sağlamlık paketi (val, IR etiketleri). Süreyi ve son 20 satırı Claude'a getir.
+        ARGS = ' '.join(MODEL_ARGS)
+        !cd /content/baykus/python && baykus-robust run {ARGS} --data-root /content/dv_rgbt --meta /content/meta --work /content/robust_work --project {DRIVE}/robust --results {DRIVE}/results --workers {NPROC}
+        """
+    ),
 ]
 
 
@@ -365,4 +462,5 @@ if __name__ == "__main__":
     build(SETUP_CELLS, Path("notebooks/colab/00_setup.ipynb"), gpu=True)
     build(DATA_CELLS, Path("notebooks/colab/01_data.ipynb"), gpu=False)
     build(TRAIN_CELLS, Path("notebooks/colab/02_train.ipynb"), gpu=True)
+    build(ROBUST_CELLS, Path("notebooks/colab/03_robust.ipynb"), gpu=True)
     print("ok")
