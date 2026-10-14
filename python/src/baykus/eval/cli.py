@@ -24,6 +24,7 @@ from baykus.runinfo import (
     utc_now,
     write_json,
 )
+from baykus.train.config import ExperimentConfig
 
 
 def _load_coco(path: Path) -> COCO:
@@ -36,68 +37,85 @@ def _slices(meta: Path, split: str) -> dict | None:
     return json.loads(p.read_text(encoding="utf-8")).get("illumination") if p.exists() else None
 
 
-def _cmd_run(a: argparse.Namespace) -> int:
+def train_record(weights: Path) -> dict:
+    """<run>/weights/best.pt → <run>/baykus_train.json (yoksa {})."""
+    from baykus.train.cli import RECORD
+
+    p = Path(weights).parent.parent / RECORD
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+
+
+def evaluate_weights(
+    cfg: ExperimentConfig,
+    *,
+    config: str,
+    weights: Path,
+    data: Path,
+    split: str,
+    meta: Path,
+    project: Path,
+    results: Path,
+    n_boot: int,
+    device: str | None = None,
+    label_sets: tuple[str, ...] | None = None,
+    condition: dict | None = None,
+    results_subdir: str = "runs",
+) -> list[Path]:
+    """Ultralytics val → etiket seti başına run JSON. condition verilirse (sağlamlık paketi)
+    ada koşul kimliği eklenir ve kayda `robustness` alanı yazılır."""
     from ultralytics import YOLO
 
     from baykus.data.convert import activate_label_set
     from baykus.eval.coco_eval import MAX_DETS
-    from baykus.train.cli import RECORD, resolve_data
-    from baykus.train.config import load_config
 
-    cfg = load_config(Path(a.config))
-    weights = Path(a.weights)
-    data = resolve_data(cfg, a.data_root)
+    weights, data, meta = Path(weights), Path(data), Path(meta)
     root = data.parent
-    meta = Path(a.meta) if a.meta else root / "meta"
-    rec_path = weights.parent.parent / RECORD
-    train_rec = json.loads(rec_path.read_text(encoding="utf-8")) if rec_path.exists() else {}
+    train_rec = train_record(weights)
     git = git_info()
     run_id = train_rec.get("run_id") or make_run_id(
         cfg.experiment, cfg.model, git["git_commit"], utc_now()
     )
 
     activate_label_set(root, cfg.modality, "ir")  # çapraz kontrol IR etiketleriyle (FR-V6)
-    name = f"{run_id}_{a.split}"
+    name = f"{run_id}_{split}" + (f"_{condition['id']}" if condition else "")
     kwargs = dict(
         data=str(data),
-        split=a.split,
+        split=split,
         conf=0.001,
         max_det=MAX_DETS,
         save_json=True,
         imgsz=cfg.train.imgsz,
         batch=cfg.train.batch,
         plots=False,
-        project=str(a.project),
+        project=str(project),
         name=name,
         exist_ok=True,
     )
-    if a.device:
-        kwargs["device"] = a.device
+    if device:
+        kwargs["device"] = device
     ul = YOLO(str(weights)).val(**kwargs)
-    save_dir = Path(a.project) / name
+    save_dir = Path(project) / name
     pred_file = save_dir / "predictions.json"  # Ultralytics tahmin yoksa dosyayı hiç yazmaz
     ul_preds = json.loads(pred_file.read_text(encoding="utf-8")) if pred_file.exists() else []
-    n_boot = a.n_boot if a.n_boot is not None else cfg.eval.n_boot
 
-    for i, ls in enumerate(cfg.eval.label_sets):
-        gt = _load_coco(root / "coco" / f"{a.split}_{ls}.json")
+    outs = []
+    for i, ls in enumerate(label_sets or cfg.eval.label_sets):
+        gt = _load_coco(root / "coco" / f"{split}_{ls}.json")
         dets, dropped = remap_to_gt(ul_preds, gt)
         if i == 0:
             save_predictions(save_dir / "predictions_coco.json.gz", dets)
-        metrics = build_metrics(
-            gt, dets, _slices(meta, a.split), n_boot=n_boot, seed=cfg.train.seed
-        )
+        metrics = build_metrics(gt, dets, _slices(meta, split), n_boot=n_boot, seed=cfg.train.seed)
         record = {
             "run_id": run_id,
             "git_commit": git["git_commit"],
             "git_dirty": git["git_dirty"],
-            "config": a.config,
+            "config": config,
             "config_hash": cfg.config_hash,
             "mlflow_run_id": train_rec.get("mlflow_run_id"),
             "train_run_id": train_rec.get("run_id"),
             "seed": cfg.train.seed,
             "dataset": "dronevehicle",
-            "split": a.split,
+            "split": split,
             "label_set": ls,
             "model": {
                 "family": model_family(cfg.model),
@@ -116,6 +134,8 @@ def _cmd_run(a: argparse.Namespace) -> int:
             "metrics": metrics,
             "created_at": iso(utc_now()),
         }
+        if condition is not None:
+            record["robustness"] = condition
         if ls == "ir":
             ul_map50 = float(ul.box.map50)
             record["crosscheck"] = {
@@ -124,10 +144,32 @@ def _cmd_run(a: argparse.Namespace) -> int:
                 "pycocotools_map50": metrics["map50"],
                 "abs_diff": abs(ul_map50 - metrics["map50"]),
             }
-        out = write_json(Path(a.results) / "runs" / f"{name}_{ls}.json", record)
+        out = write_json(Path(results) / results_subdir / f"{name}_{ls}.json", record)
         print(out, f"map50={metrics['map50']:.4f}", f"dropped={dropped}")
         if dropped:
             print(f"uyarı: {dropped} tahmin eşlenemedi", file=sys.stderr)
+        outs.append(out)
+    return outs
+
+
+def _cmd_run(a: argparse.Namespace) -> int:
+    from baykus.train.cli import resolve_data
+    from baykus.train.config import load_config
+
+    cfg = load_config(Path(a.config))
+    data = resolve_data(cfg, a.data_root)
+    evaluate_weights(
+        cfg,
+        config=a.config,
+        weights=Path(a.weights),
+        data=data,
+        split=a.split,
+        meta=Path(a.meta) if a.meta else data.parent / "meta",
+        project=a.project,
+        results=a.results,
+        n_boot=a.n_boot if a.n_boot is not None else cfg.eval.n_boot,
+        device=a.device,
+    )
     return 0
 
 
