@@ -56,6 +56,9 @@ ayrıca üretilir.
   kümeleri) ve C++ eşlik testleri zaten diskteki 4 kanallı dosyayı kullanıyor.
 - Süre H3 Görev 10'da ölçülür ve buraya yazılır. A100'de 20 dakikayı geçerse seçenek 2 H4'te
   yeniden değerlendirilir.
+- **Ölçüm (2026-10-14, Colab Pro A100, 12 çekirdek, `--workers 12`):** train + val 19.423 TIFF
+  188 sn (hücre 3 dk 9 sn), 19 GB; `/content` 236 GB'ın 71 GB'ı dolu. 20 dakika sınırının çok altında:
+  seçenek 1 kalıcı, seçenek 2 gerekmiyor.
 
 ## Değerlendirilen alternatifler
 - **Tek sayfalı RGB+alfa TIFF:** Sessizce bozuk veri (yukarıda). Reddedildi.
