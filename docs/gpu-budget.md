@@ -3,7 +3,7 @@
 | Tarih | Deney | Smoke süresi | 1 epoch süresi | Planlanan epoch | Gerçek süre | Not |
 |---|---|---|---|---|---|---|
 | 2026-10-11 | E1 (rgb, s) | 1 dk 50 sn (eğitim 79 sn) | 7 dk 8 sn (eğitim 5 dk 29 sn + val 21 sn ≈ 5,8 dk/epoch) | 50 | T4 38 epoch (süre kaydı yok, kesildi) + A100 12 epoch 29,7 dk | 100 epoch tahmini 9,7 saat → karar: epoch 100 → 50, tahmini 4,9 saat (spec §10.2 adım 1); bütün deneyler 50 epoch |
-| 2026-10-14 | E2 (ir, s) | 55,6 sn (eğitim 45 sn), A100 | 3 dk 22 sn (eğitim 2 dk 3 sn + val 11 sn ≈ 2,25 dk/epoch), A100 | 50 | — | tahmini ≈ 1,9 saat (A100); tam eğitim H3 |
+| 2026-10-14 | E2 (ir, s) | 55,6 sn (eğitim 45 sn), A100 | 3 dk 22 sn (eğitim 2 dk 3 sn + val 11 sn ≈ 2,25 dk/epoch), A100 | 50 | 1,967 saat (Ultralytics), `train_seconds` 7147,4; hücre 1 sa 59 dk 27 sn, A100 | tahmini ≈ 1,9 saat (A100); tam eğitim 2026-10-14, commit `02c4098` |
 
 ## Notlar
 
@@ -15,3 +15,6 @@
 - **E1 val mAP50 gidişi (Ultralytics, max_det 300):** 39-50. epoch arası 0,756-0,762; en iyi 41-42. epoch (0,762). Son epoch'lar düzlükte.
 - **2026-10-14 E2 ölçümü** (A100, commit `d99411b`): smoke 5,3 it/s, 1 epoch 9,1 it/s; ilk etiket taraması 29 sn (IR PNG, sonraki oturumlarda da bir kez). Run'lar: `2026-10-14_e2-ir_s_d99411b_smoke`, `..._ep1`. T4'te E2 ölçülmedi.
 - **İşlem birimi (2026-10-14, Colab Pro, A100 oturumu açıkken):** kullanılabilir 355,66 birim, kullanım oranı saatte yaklaşık 5,3 (Colab ekranı). A100'de 50 epoch ≈ 2 saat ≈ 11 birim; kalan 4 tam eğitim (E2, E3, E3b, E3c) ≈ 42 birim (E3'ün 4 kanallı veride süresi ayrıca ölçülecek). T4 oranı görülmedi. Karar: sonraki tam eğitimler A100'de.
+- **2026-10-14 E2 tam eğitim** (`2026-10-14_e2-ir_s_02c4098`, A100-SXM4-40GB, 12 CPU çekirdeği, Ultralytics 8.4.177, `02_train` anahtarlı sürüm, `BRANCH=main`): 50/50 epoch, kesinti yok. Hız 8,3-8,6 it/s, epoch ≈ 2 dk 14 sn + val ≈ 6 sn; ilk epoch 2 dk 47 sn (6,7 it/s). Optimizer `auto` → MuSGD (lr 0,01). İşlem birimi ölçülmedi; saatte 5,3 oranıyla hesap ≈ 10,4 birim (ölçüm değil).
+- **E2 val mAP50 gidişi (Ultralytics, max_det 300):** 1. epoch 0,625; 20. epoch 0,837; en yüksek 0,840 (37-38. epoch). Mozaik kapandıktan sonra (41-50) 0,834'ten 0,821'e düştü. `best.pt` (Ultralytics fitness) son doğrulamada mAP50 0,840, mAP50-95 0,622; sınıf: car 0,984, bus 0,974, truck 0,783, freight_car 0,782, van 0,677. Rapordaki sayılar `baykus-eval` (pycocotools, max_det 1000) ile ayrıca ölçülür.
+- **Açık nokta:** E2 logunda `Remapped 3/5 cls head rows from pretrained weights by class name` satırı var (8.4.177; car/truck/bus COCO başlığından). E1'in ilk 38 epoch'u 8.4.175'te başladı; bu satırın E1 logunda olup olmadığı kontrol edilmedi. Başlangıç farkı E1-E2 karşılaştırmasını etkileyebilir; E1 logu (Drive `runs/2026-10-11_e1-rgb_s_49da0cb`) ya da Colab çıktısı ile kontrol edilmeli.
