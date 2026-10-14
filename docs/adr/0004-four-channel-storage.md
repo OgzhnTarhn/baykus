@@ -1,7 +1,7 @@
 # 0004 — 4 kanallı girdi: biçim, ilk katman ve depolama
 
-- Durum: Kabul edildi (biçim, ilk katman, depolama). 4 kanallı dosyaların saklanması H3'e ertelendi.
-- Tarih: 2026-10-06 · Güncelleme: 2026-10-11 (Colab ölçümleri)
+- Durum: Kabul edildi (biçim, ilk katman, depolama, 4 kanalın beslenmesi).
+- Tarih: 2026-10-06 · Güncelleme: 2026-10-11 (Colab ölçümleri) · 2026-10-14 (H3: 4 kanalın beslenmesi)
 
 ## Bağlam
 Erken füzyon (E3) RGB ve IR'yi tek bir 4 kanallı görüntü olarak modele veriyor. Ultralytics çok kanallı girdiyi TIFF'ten okuyor. Spike A (`docs/spikes/01-ultralytics-4ch.md`) üç şeyi gösterdi:
@@ -48,7 +48,14 @@ Karar:
 **H3'e açık soru: 4 kanal nasıl beslenecek?**
 1. E3 oturumunda `baykus-data rgbt4` ile TIFF'leri yeniden üretmek (kesin çalışır; süresi ayrıca ölçülmeli, toplam 54 dakikanın büyük kısmı olabilir).
 2. Eğitim sırasında `rgb` + `ir`'yi okuyup bellekte 4 kanala çevirmek. Bu ADR'nin ilk hâlinde reddedilmişti (aşağıda). 27 GB ve uzun üretim süresi bu kararı yeniden değerlendirmek için yeterli sebep. Yama değil, Ultralytics'in belgelenmiş genişletme noktası üzerinden (özel trainer'ın `build_dataset`'i ve `YOLODataset.load_image` alt sınıfı) yapılabilir mi, H3 planında kısa bir spike ile ölçülür. Kanal sırası ve piksel eşliği, TIFF yoluyla birebir aynı olmalı (test).
-Seçim H3 planında bu ADR'ye eklenir.
+**Karar (2026-10-14, H3 planı): seçenek 1.** E3 oturumu `rgbt4`'ü `rgb` + `ir`'den yeniden üretir:
+`baykus-data rgbt4 --splits train val --workers <çekirdek sayısı>`. Test bölümü final ölçümde
+ayrıca üretilir.
+- Seçenek 2 reddedildi: eğitim (`build_dataset`), doğrulama (`DetectionValidator`) ve tahmin
+  (`predict`) yollarının üçünün de alt sınıflanması gerekir; sağlamlık paketi (bozulmuş val
+  kümeleri) ve C++ eşlik testleri zaten diskteki 4 kanallı dosyayı kullanıyor.
+- Süre H3 Görev 10'da ölçülür ve buraya yazılır. A100'de 20 dakikayı geçerse seçenek 2 H4'te
+  yeniden değerlendirilir.
 
 ## Değerlendirilen alternatifler
 - **Tek sayfalı RGB+alfa TIFF:** Sessizce bozuk veri (yukarıda). Reddedildi.
