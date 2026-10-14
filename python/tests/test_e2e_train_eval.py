@@ -59,7 +59,10 @@ class _Interrupt(Exception):
     pass
 
 
-def test_interrupted_training_resumes_in_new_session(tmp_path: Path, monkeypatch):
+@pytest.mark.parametrize("old_record_missing", [False, True])
+def test_interrupted_training_resumes_in_new_session(
+    tmp_path: Path, monkeypatch, old_record_missing: bool
+):
     pytest.importorskip("ultralytics")
     import shutil
 
@@ -98,8 +101,11 @@ def test_interrupted_training_resumes_in_new_session(tmp_path: Path, monkeypatch
 
     monkeypatch.setitem(default_callbacks, "on_fit_epoch_end", hooks[:-1])
     shutil.rmtree(root / "rgb" / "labels")  # yeni Colab oturumu: etiketler kurulmamış
+    if old_record_missing:  # eski sürümle kopan E1 (2026-10-12): kayıt hiç yazılmamıştı
+        (run_dir / "baykus_train.json").unlink()
     assert train_main([*common, "--resume", str(run_dir)]) == 0
     rec = json.loads((run_dir / "baykus_train.json").read_text(encoding="utf-8"))
     assert rec["status"] == "finished" and rec["resumed_at"]
+    assert rec["mlflow_run_id"]  # yeniden kurulan kayıt devamın MLflow kimliğini almalı
     assert (tmp_path / "results" / "train" / f"{rec['run_id']}.json").exists()
     assert len(list((root / "rgb" / "labels" / "train").glob("*.txt"))) == 8

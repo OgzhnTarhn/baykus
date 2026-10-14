@@ -221,7 +221,11 @@ def main(argv: list[str] | None = None) -> int:
             print(f"hata: {e}", file=sys.stderr)
             return 2
         run_dir = Path(a.resume)
-        _start_mlflow(cfg, run_dir.parent, record["run_id"], {}, record.get("mlflow_run_id"))
+        mlflow_id = _start_mlflow(
+            cfg, run_dir.parent, record["run_id"], {}, record.get("mlflow_run_id")
+        )
+        if record.get("mlflow_run_id") is None:  # yeniden kurulan kayıt: devamın MLflow kaydı
+            record["mlflow_run_id"] = mlflow_id
         t0 = time.monotonic()
         try:
             YOLO(str(run_dir / "weights" / "last.pt")).train(
