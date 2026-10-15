@@ -12,6 +12,7 @@ dependencies = [
   "pyyaml>=6.0",
   "matplotlib>=3.8",
   "tqdm>=4.66",
+  "ensemble-boxes==1.0.9",
 ]
 
 [project.optional-dependencies]
