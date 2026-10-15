@@ -8,11 +8,13 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import re
 from pathlib import Path
 
 from baykus.runinfo import iso
 
-_NOT_FULL = ("_smoke", "_ep1")
+# Smoke ve epoch ölçümleri; aynı gün yeniden çalıştırılınca Ultralytics ada -2 / 2 ekler
+_TRIAL = re.compile(r"_(smoke|ep\d+)(-?\d+)?$")
 
 
 def _record(run_dir: Path) -> dict:
@@ -28,11 +30,26 @@ def find_runs(runs_root: Path, experiment: str, finished: bool) -> list[Path]:
     slug = experiment.replace("_", "-")
     out = []
     for d in sorted(root.glob(f"*_{slug}_*")):
-        if d.name.endswith(_NOT_FULL) or not (d / "weights" / "last.pt").exists():
+        if _TRIAL.search(d.name) or not (d / "weights" / "last.pt").exists():
             continue
         if (_record(d).get("status") == "finished") == finished:
             out.append(d)
     return out
+
+
+def find_trial_runs(runs_root: Path, experiment: str, kind: str) -> list[Path]:
+    """Bu deneyin biten smoke ya da epoch ölçümleri (kind: "smoke", "ep1"); yeniden
+    "Tümünü çalıştır" denince tekrar koşmamak için."""
+    root = Path(runs_root)
+    if not root.is_dir():
+        return []
+    slug = experiment.replace("_", "-")
+    pat = re.compile(rf"_{re.escape(kind)}(-?\d+)?$")
+    return [
+        d
+        for d in sorted(root.glob(f"*_{slug}_*"))
+        if pat.search(d.name) and _record(d).get("status") == "finished"
+    ]
 
 
 def checkpoint_status(run_dir: Path) -> dict:

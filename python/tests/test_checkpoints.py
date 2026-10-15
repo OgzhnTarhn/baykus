@@ -42,6 +42,28 @@ def test_find_runs_skips_smoke_and_epoch_timing(tmp_path: Path):
     ]
 
 
+def test_find_runs_skips_incremented_trial_runs(tmp_path: Path):
+    # Aynı gün ikinci "Tümünü çalıştır": Ultralytics adın sonuna -2 / 2 ekler (exist_ok=False)
+    _mk(tmp_path, "2026-10-14_e3-early-fusion_s_67ace37", "finished", 50)
+    for name in ("_smoke-2", "_ep1-2", "_smoke2", "_ep13"):
+        _mk(tmp_path, "2026-10-14_e3-early-fusion_s_67ace37" + name, "finished", 1)
+    assert [p.name for p in find_runs(tmp_path, "e3_early_fusion", finished=True)] == [
+        "2026-10-14_e3-early-fusion_s_67ace37"
+    ]
+
+
+def test_find_trial_runs(tmp_path: Path):
+    from baykus.train.checkpoints import find_trial_runs
+
+    _layout(tmp_path)
+    _mk(tmp_path, "2026-10-11_e1-rgb_s_1a92f50_smoke-2", "finished", 1)
+    smoke = [p.name for p in find_trial_runs(tmp_path, "e1_rgb", "smoke")]
+    assert smoke == ["2026-10-11_e1-rgb_s_1a92f50_smoke", "2026-10-11_e1-rgb_s_1a92f50_smoke-2"]
+    # ep1 kaydı yok (yarıda kalmış) → bitmiş sayılmaz
+    assert find_trial_runs(tmp_path, "e1_rgb", "ep1") == []
+    assert find_trial_runs(tmp_path, "e2_ir", "smoke") == []
+
+
 def test_find_runs_missing_folder(tmp_path: Path):
     assert find_runs(tmp_path / "yok", "e1_rgb", finished=False) == []
 
