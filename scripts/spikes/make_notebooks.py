@@ -299,8 +299,13 @@ TRAIN_CELLS = [
     code(
         """
         %%time
-        # 1) smoke: %5 veri, 1 epoch — hattın uçtan uca çalıştığını doğrular
-        if SMOKE:
+        # 1) smoke: %5 veri, 1 epoch — hattın uçtan uca çalıştığını doğrular.
+        # Bu deneyin biten smoke'u varsa tekrar koşmaz (yeniden ölçmek için Drive'daki klasörü sil).
+        from baykus.train.checkpoints import find_trial_runs
+        _prev = find_trial_runs(f'{DRIVE}/runs', EXP, 'smoke')
+        if SMOKE and _prev:
+            print('smoke zaten var, atlandı:', _prev[-1].name)
+        elif SMOKE:
             !cd /content/baykus/python && baykus-train --config ../{CONFIG} --data-root /content/dv_rgbt --project {DRIVE}/runs --results {DRIVE}/results --smoke
         else:
             print('SMOKE = False → atlandı')
@@ -309,8 +314,12 @@ TRAIN_CELLS = [
     code(
         """
         %%time
-        # 2) 1 tam epoch — süresi GPU bütçesine yazılır (spec §10.2)
-        if EPOCH1:
+        # 2) 1 tam epoch — süresi GPU bütçesine yazılır (spec §10.2). Biten varsa tekrar koşmaz.
+        from baykus.train.checkpoints import find_trial_runs
+        _prev = find_trial_runs(f'{DRIVE}/runs', EXP, 'ep1')
+        if EPOCH1 and _prev:
+            print('1 epoch ölçümü zaten var, atlandı:', _prev[-1].name)
+        elif EPOCH1:
             !cd /content/baykus/python && baykus-train --config ../{CONFIG} --data-root /content/dv_rgbt --project {DRIVE}/runs --results {DRIVE}/results --epochs 1
         else:
             print('EPOCH1 = False → atlandı')
@@ -318,7 +327,8 @@ TRAIN_CELLS = [
     ),
     md(
         "🚧 **KAPI:** Yeni bir deneyde 1) ve 2) bitince süreleri Claude'a getir; bütçe "
-        "onaylanınca ilk hücrede `TRAIN = True`, `EVAL = True` yapıp yeniden Tümünü çalıştır."
+        "onaylanınca ilk hücrede `SMOKE = False`, `EPOCH1 = False`, `TRAIN = True`, `EVAL = True` "
+        "yapıp yeniden Tümünü çalıştır."
     ),
     code(
         """
