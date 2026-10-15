@@ -454,6 +454,126 @@ ROBUST_CELLS = [
 ]
 
 
+M3OT_CELLS = [
+    md(
+        """
+        # 05 — M3OT veri setleri arası test (E7)
+        Ham veri Drive'da `MyDrive/baykus/m3ot_raw/` altında (zip ya da açılmış klasör).
+        **İlk çalıştırma (inceleme, KAPI M):** Çalışma zamanı → **CPU**; ilk hücrede `INSPECT = True`,
+        diğerleri `False` → Tümünü çalıştır → inceleme çıktısının tamamını Claude'a getir.
+        **Ölçüm:** Çalışma zamanı → **GPU** (T4 yeterli); `INSPECT = False`, `CONVERT = EVAL = FUSION = True`.
+        Secrets: `GITHUB_TOKEN`. Kaggle gerekmez (DroneVehicle inmez).
+        """
+    ),
+    code(
+        """
+        BRANCH = 'h4'
+        INSPECT = True   # 0) ham düzeni incele (KAPI M)
+        CONVERT = False  # 1) M3OT → bizim düzen (test bölümü) + 4 kanal
+        EVAL = False     # 2) her modeli M3OT test'te sınıfsız değerlendir (GPU)
+        FUSION = False   # 3) geç füzyon (E4'ün val'de seçilen parametreleriyle)
+        CONFIGS = ['configs/e1_rgb.yaml', 'configs/e2_ir.yaml', 'configs/e3_early_fusion.yaml',
+                   'configs/e3c_modality_dropout.yaml']
+        DRIVE = '/content/drive/MyDrive/baykus'
+        from google.colab import drive
+        drive.mount('/content/drive')
+        """
+    ),
+    CLONE_BRANCH,
+    code(
+        """
+        %%time
+        !pip -q install uv
+        !nproc
+        !nvidia-smi --query-gpu=name,memory.total --format=csv,noheader || echo 'GPU yok (CPU çalışma zamanı)'
+        EXTRA = '[train]' if EVAL else ''
+        !uv pip install --system -q -e "/content/baykus/python{EXTRA}"
+        import sys
+        sys.path.insert(0, '/content/baykus/python/src')
+        """
+    ),
+    code(
+        """
+        %%time
+        # Ham veri: Drive'dan yerel diske (Drive'dan doğrudan okumak yavaş)
+        import glob, os
+        RAW = '/content/m3ot_raw'
+        os.makedirs(RAW, exist_ok=True)
+        zips = sorted(glob.glob(f'{DRIVE}/m3ot_raw/*.zip'))
+        print('zip:', [os.path.basename(z) for z in zips])
+        for z in zips:
+            !unzip -q -n "{z}" -d {RAW}
+        if not zips:
+            !cp -r {DRIVE}/m3ot_raw/. {RAW}/
+        !du -sh {RAW}
+        !df -h /content
+        """
+    ),
+    code(
+        """
+        # 0) KAPI M: bu hücrenin çıktısının TAMAMINI Claude'a getir; çizimler Drive'da baykus/m3ot_figs/
+        if INSPECT:
+            !python /content/baykus/scripts/spikes/inspect_m3ot.py {RAW} {DRIVE}/m3ot_inspect.json --figs {DRIVE}/m3ot_figs
+        else:
+            print('INSPECT = False → atlandı')
+        """
+    ),
+    md(
+        "🚧 **KAPI M:** İlk çalıştırmada burada dur, inceleme çıktısını Claude'a getir. Dönüştürücü "
+        "bu çıktıya göre kesinleşir; Claude 'devam' deyince GPU çalışma zamanıyla ölçüme geç."
+    ),
+    code(
+        """
+        %%time
+        # 1) Dönüştürme (sadece test bölümü) + 4 kanal. İstatistik satırını Claude'a getir.
+        if CONVERT:
+            NPROC = os.cpu_count()
+            !baykus-data m3ot --raw {RAW} --out /content/m3ot --splits test --workers {NPROC}
+            !baykus-data rgbt4 --out /content/m3ot --splits test --workers {NPROC}
+            !cp /content/m3ot/meta/m3ot_stats.json {DRIVE}/results/m3ot_stats.json
+            !du -sh /content/m3ot/*
+        else:
+            print('CONVERT = False → atlandı')
+        """
+    ),
+    code(
+        """
+        %%time
+        # 2) E7: her model M3OT test'te, sınıfsız 'vehicle' AP (spec §8.3). 'map50' satırlarını getir.
+        import json, yaml
+        from pathlib import Path
+        from baykus.train.checkpoints import find_runs
+        if EVAL:
+            for c in CONFIGS:
+                exp = yaml.safe_load(open(f'/content/baykus/{c}', encoding='utf-8'))['experiment']
+                done = find_runs(f'{DRIVE}/runs', exp, finished=True)
+                if not done:
+                    print('atlandı (biten eğitim yok):', exp)
+                    continue
+                W = f'{done[-1]}/weights/best.pt'
+                !cd /content/baykus/python && baykus-eval run --config ../{c} --weights "{W}" --data-root /content/m3ot --meta /content/m3ot/meta --split test --dataset m3ot --class-agnostic --project {DRIVE}/m3ot --results {DRIVE}/results
+        else:
+            print('EVAL = False → atlandı')
+        """
+    ),
+    code(
+        """
+        # 3) Geç füzyon: E1 ve E2'nin M3OT tahminleri, E4'ün val'de seçilen parametreleriyle.
+        # E4b uygulanmaz (M3OT'ta aydınlatma etiketi yok).
+        if FUSION:
+            def rid(exp):
+                d = find_runs(f'{DRIVE}/runs', exp, finished=True)[-1]
+                return json.loads((d / 'baykus_train.json').read_text(encoding='utf-8'))['run_id']
+            P = lambda r: f'{DRIVE}/m3ot/{r}_m3ot_test/predictions_coco.json.gz'
+            PR, PI = P(rid('e1_rgb')), P(rid('e2_ir'))
+            !cd /content/baykus/python && baykus-fusion apply --config ../configs/fusion/e4_late_fusion.yaml --selection {DRIVE}/results/fusion/e4_late_fusion_val_selection.json --rgb-preds "{PR}" --ir-preds "{PI}" --data-root /content/m3ot --meta /content/m3ot/meta --split test --dataset m3ot --class-agnostic --project {DRIVE}/m3ot --results {DRIVE}/results
+        else:
+            print('FUSION = False → atlandı')
+        """
+    ),
+]
+
+
 def build(cells: list[tuple[str, str]], path: Path, gpu: bool) -> None:
     nb = nbf.v4.new_notebook()
     nb.cells = [
@@ -473,4 +593,5 @@ if __name__ == "__main__":
     build(DATA_CELLS, Path("notebooks/colab/01_data.ipynb"), gpu=False)
     build(TRAIN_CELLS, Path("notebooks/colab/02_train.ipynb"), gpu=True)
     build(ROBUST_CELLS, Path("notebooks/colab/03_robust.ipynb"), gpu=True)
+    build(M3OT_CELLS, Path("notebooks/colab/05_m3ot.ipynb"), gpu=False)  # ilk açılış CPU (inceleme)
     print("ok")
