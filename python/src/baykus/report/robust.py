@@ -90,8 +90,11 @@ def robust_markdown(recs: list[dict], fig_rel: str) -> str:
         for s in SUITE[c][1]:
             label = f"{s:g} (temiz)" if s == IDENTITY[c] else f"{s:g}"
             cells = [
-                _cell(idx.get((mk, _cond_id(c, s)))) if _applies_any(c, modes[mk]) else NA
+                _cell(idx.get((mk, _cond_id(c, s))))
+                if cid == "clean" or _applies_any(c, modes[mk])  # temiz skor her modelde var
+                else NA
                 for mk in models
+                for cid in [_cond_id(c, s)]
             ]
             out.append(f"| {label} | " + " | ".join(cells) + " |")
         out.append("")

@@ -40,13 +40,15 @@ def _rows(md: str, title: str) -> list[str]:
 def test_markdown_cells_applicability_and_missing():
     md = robust_markdown(RECS, "figures/results/robustness.png")
     dark = _rows(md, "Karartma")
-    assert dark[0] == "| 1 (temiz) | 76.0 [10.0, 90.0] | uygulanmaz |"
+    assert dark[0] == "| 1 (temiz) | 76.0 [10.0, 90.0] | 80.0 [10.0, 90.0] |"
     assert dark[1] == "| 0.5 | 60.0 [10.0, 90.0] | uygulanmaz |"
     assert dark[2] == "| 0.25 | — | uygulanmaz |"  # ölçülmedi ≠ uygulanmaz
     noise = _rows(md, "Gauss gürültüsü")
-    assert noise[0] == "| 0 (temiz) | uygulanmaz | 80.0 [10.0, 90.0] |"
+    assert noise[0] == "| 0 (temiz) | 76.0 [10.0, 90.0] | 80.0 [10.0, 90.0] |"
+    assert noise[1] == "| 5 | uygulanmaz | 70.0 [10.0, 90.0] |"
     mis = _rows(md, "Hizasızlık")
-    assert mis and all(r.endswith("| uygulanmaz | uygulanmaz |") for r in mis)
+    assert mis[0] == "| 0 (temiz) | 76.0 [10.0, 90.0] | 80.0 [10.0, 90.0] |"
+    assert all(r.endswith("| uygulanmaz | uygulanmaz |") for r in mis[1:])
     loss = _rows(md, "Kamera kaybı")
     assert loss == [
         "| Temiz | 76.0 [10.0, 90.0] | 80.0 [10.0, 90.0] |",
