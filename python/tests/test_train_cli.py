@@ -52,3 +52,26 @@ def test_resolve_data():
 def test_parser():
     a = build_parser().parse_args(["--config", "c.yaml", "--smoke"])
     assert a.smoke and a.resume is None and a.epochs is None
+
+
+def test_start_record_uses_real_folder_name(tmp_path: Path):
+    # Ultralytics ad çakışınca klasöre sayı ekler (…_smoke2); kayıt klasörle aynı adı taşır
+    from baykus.runinfo import utc_now
+    from baykus.train.cli import start_record
+    from baykus.train.config import parse_config
+
+    cfg = parse_config(
+        {"experiment": "e1_rgb", "mode": "rgb", "model": "yolo26n.pt", "data": "data_rgb.yaml"}
+    )
+    save_dir = tmp_path / "2026-10-20_e1-rgb_n_abc1234_smoke2"
+    rec = start_record(
+        cfg,
+        config="configs/e1_rgb.yaml",
+        git={"git_commit": "abc1234def", "git_dirty": False},
+        mlflow_run_id=None,
+        smoke=True,
+        epochs=1,
+        save_dir=save_dir,
+        start=utc_now(),
+    )
+    assert rec["run_id"] == save_dir.name and rec["run_dir"] == str(save_dir)

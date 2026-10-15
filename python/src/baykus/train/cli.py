@@ -71,6 +71,33 @@ def make_record(
     }
 
 
+def start_record(
+    cfg: ExperimentConfig,
+    *,
+    config: str,
+    git: dict,
+    mlflow_run_id: str | None,
+    smoke: bool,
+    epochs: int,
+    save_dir: Path,
+    start,
+) -> dict:
+    """Eğitim başı kaydı. run_id = Ultralytics'in gerçek klasör adı: ad çakışınca sonuna sayı
+    eklenir (ör. …_smoke2); kayıt başka ad taşırsa iki çalıştırmanın sonuçları karışır."""
+    save_dir = Path(save_dir)
+    return make_record(
+        cfg,
+        config=config,
+        run_id=save_dir.name,
+        git=git,
+        mlflow_run_id=mlflow_run_id,
+        smoke=smoke,
+        epochs=epochs,
+        run_dir=save_dir,
+        start=start,
+    )
+
+
 def finish_record(record: dict, seconds: float, when) -> dict:
     record["train_seconds"] = round((record.get("train_seconds") or 0) + seconds, 1)
     record["status"] = "finished"
@@ -263,17 +290,15 @@ def main(argv: list[str] | None = None) -> int:
     record: dict = {}
 
     def write_start_record(trainer) -> None:
-        # save_dir Ultralytics'te belli olur (ad çakışırsa sonuna sayı ekler)
         record.update(
-            make_record(
+            start_record(
                 cfg,
                 config=a.config,
-                run_id=name,
                 git=git,
                 mlflow_run_id=mlflow_id,
                 smoke=a.smoke,
                 epochs=args["epochs"],
-                run_dir=Path(trainer.save_dir),
+                save_dir=Path(trainer.save_dir),
                 start=start,
             )
         )
