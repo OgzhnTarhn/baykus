@@ -7,22 +7,42 @@ Bozulmuş RGB PNG yazılır: JPEG yeniden sıkıştırması kendi bozulmasını 
 
 from __future__ import annotations
 
+import multiprocessing
 import shutil
 from collections.abc import Iterable
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
-from baykus.data.multichannel import read_pair, stack_rgbt, write_rgbt4
+import cv2
+import numpy as np
+
+from baykus.data.multichannel import stack_rgbt, write_rgbt4
 from baykus.data.yamls import write_data_yamls
-from baykus.io import imwrite_any
+from baykus.io import imread_any, imwrite_any
 from baykus.robustness.corruptions import Condition, apply_condition
 
 MODALITIES = ("rgb", "ir", "rgbt4")
 
 
+def _read(path: Path, flag: int) -> np.ndarray:
+    img = imread_any(path, flag)
+    if img is None:
+        raise OSError(f"okunamadı: {path}")
+    return img
+
+
 def _write_one(job: tuple) -> None:
     rgb_path, ir_path, out, split, stem, cond, seed, mods = job
-    bgr, ir = apply_condition(*read_pair(rgb_path, ir_path), cond, seed=seed, stem=stem)
+    need_rgb = bool({"rgb", "rgbt4"} & set(mods))
+    need_ir = bool({"ir", "rgbt4"} & set(mods))
+    bgr = _read(rgb_path, cv2.IMREAD_COLOR) if need_rgb else None
+    ir = _read(ir_path, cv2.IMREAD_GRAYSCALE) if need_ir else None
+    # apply_condition iki modaliteyi de ister; okunmayan tarafın yerine boş görüntü (yazılmaz)
+    if bgr is None:
+        bgr = np.zeros((*ir.shape, 3), np.uint8)
+    if ir is None:
+        ir = np.zeros(bgr.shape[:2], np.uint8)
+    bgr, ir = apply_condition(bgr, ir, cond, seed=seed, stem=stem)
     if "rgb" in mods:
         imwrite_any(out / "rgb/images" / split / f"{stem}.png", bgr)
     if "ir" in mods:
@@ -64,7 +84,9 @@ def make_condition(
         for job in jobs:
             _write_one(job)
     else:
-        with ProcessPoolExecutor(max_workers=workers) as ex:
+        # torch/CUDA başlamış süreçte (sağlamlık paketi) fork güvensiz
+        ctx = multiprocessing.get_context("spawn")
+        with ProcessPoolExecutor(max_workers=workers, mp_context=ctx) as ex:
             list(ex.map(_write_one, jobs, chunksize=32))
     labels = src / f"labels_{label_set}" / split
     if labels.is_dir():

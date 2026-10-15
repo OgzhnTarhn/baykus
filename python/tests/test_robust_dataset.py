@@ -96,3 +96,26 @@ def test_unknown_modality_and_missing_ir(src: Path, tmp_path: Path):
     (src / "ir/images/val/00101.png").unlink()
     with pytest.raises(OSError, match="00101.png"):
         make_condition(src, tmp_path / "y", "val", CLEAN, {"ir"}, seed=42)
+
+
+def test_rgb_only_condition_does_not_need_ir(src: Path, tmp_path: Path):
+    (src / "ir/images/val/00101.png").unlink()  # RGB modeli için IR okunmamalı
+    assert make_condition(src, tmp_path / "r", "val", Condition("darken", 0.5, "rgb"),
+                          {"rgb"}, seed=42) == 4  # fmt: skip
+
+
+def test_parallel_pool_uses_spawn(src: Path, tmp_path: Path, monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+
+    import baykus.robustness.dataset as ds
+
+    seen = {}
+
+    class Spy(ThreadPoolExecutor):  # bağlamı kaydet, işi iş parçacığında yap
+        def __init__(self, max_workers=None, mp_context=None):
+            seen["ctx"] = mp_context.get_start_method() if mp_context else None
+            super().__init__(max_workers)
+
+    monkeypatch.setattr(ds, "ProcessPoolExecutor", Spy)
+    make_condition(src, tmp_path / "p", "val", CLEAN, {"ir"}, seed=42, workers=2)
+    assert seen["ctx"] == "spawn"

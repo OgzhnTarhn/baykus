@@ -8,6 +8,7 @@ yerden sürer. Bütün modeller aynı seed'le bozulmuş aynı pikselleri görür
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import shutil
 import sys
@@ -17,7 +18,7 @@ from pathlib import Path
 
 from baykus.robustness.corruptions import SUITE, Condition, applies, suite_conditions
 from baykus.robustness.dataset import make_condition
-from baykus.train.config import MODALITY_DIR, ExperimentConfig, load_config
+from baykus.train.config import MODALITY_DIR, ConfigError, ExperimentConfig, load_config
 
 ROBUST_DIR = "robust"
 LABEL_SET = "ir"  # ana etiket seti (ADR 0003); sağlamlık sadece onunla ölçülür
@@ -52,16 +53,43 @@ def result_path(results: Path, m: ModelSpec, split: str, cond: Condition) -> Pat
     return Path(results) / ROBUST_DIR / f"{m.run_id}_{split}_{cond.id}_{LABEL_SET}.json"
 
 
+def _mismatch(p: Path, seed: int | None, n_boot: int | None) -> str | None:
+    rec = json.loads(p.read_text(encoding="utf-8"))
+    got = (rec.get("robustness") or {}).get("seed")
+    if seed is not None and got != seed:
+        return f"seed {got} ≠ {seed}"
+    if n_boot is not None and rec.get("n_boot") != n_boot:
+        return f"n_boot {rec.get('n_boot')} ≠ {n_boot}"
+    return None
+
+
 def plan(
-    models: list[ModelSpec], conds: list[Condition], results: Path, split: str
+    models: list[ModelSpec],
+    conds: list[Condition],
+    results: Path,
+    split: str,
+    *,
+    seed: int | None = None,
+    n_boot: int | None = None,
 ) -> list[tuple[Condition, list[ModelSpec]]]:
+    """Koşulun uygulandığı ve sonucu olmayan modeller. Var olan sonuç başka seed/n_boot ile
+    yazılmışsa hata: iki ayar aynı tabloda sessizce karışmasın."""
     out = []
     for c in conds:
-        todo = [
-            m
-            for m in models
-            if applies(c, m.cfg.mode) and not result_path(results, m, split, c).exists()
-        ]
+        todo = []
+        for m in models:
+            if not applies(c, m.cfg.mode):
+                continue
+            p = result_path(results, m, split, c)
+            if p.exists():
+                why = _mismatch(p, seed, n_boot)
+                if why:
+                    raise RobustError(
+                        f"{p.name}: önceki sonuç başka ayarla ({why}); aynı ayarı kullan "
+                        "ya da dosyayı sil"
+                    )
+                continue
+            todo.append(m)
         if todo:
             out.append((c, todo))
     return out
@@ -88,11 +116,10 @@ def run_suite(
 
         evaluate = evaluate_weights
     n = 0
-    for cond, todo in plan(models, conds, results, split):
+    for cond, todo in plan(models, conds, results, split, seed=seed, n_boot=n_boot):
         cdir = Path(work) / cond.id
         shutil.rmtree(cdir, ignore_errors=True)  # önceki oturumdan yarım kalmış olabilir
         mods = {MODALITY_DIR[m.cfg.mode] for m in todo}
-        make_condition(src, cdir, split, cond, mods, seed, workers)
         info = {
             "id": cond.id,
             "corruption": cond.corruption,
@@ -101,6 +128,7 @@ def run_suite(
             "seed": seed,
         }
         try:
+            make_condition(src, cdir, split, cond, mods, seed, workers, label_set=LABEL_SET)
             for m in todo:
                 evaluate(
                     m.cfg,
@@ -131,23 +159,23 @@ def run_suite(
 def _cmd_run(a: argparse.Namespace) -> int:
     try:
         models = [load_model_spec(s) for s in a.model]
-    except (RobustError, FileNotFoundError) as e:
+        n = run_suite(
+            models,
+            suite_conditions(a.only),
+            src=Path(a.data_root),
+            work=Path(a.work),
+            meta=Path(a.meta),
+            split=a.split,
+            project=Path(a.project),
+            results=Path(a.results),
+            seed=a.seed,
+            n_boot=a.n_boot if a.n_boot is not None else models[0].cfg.eval.n_boot,
+            device=a.device,
+            workers=a.workers,
+        )
+    except (RobustError, ConfigError, FileNotFoundError) as e:
         print(f"hata: {e}", file=sys.stderr)
         return 2
-    n = run_suite(
-        models,
-        suite_conditions(a.only),
-        src=Path(a.data_root),
-        work=Path(a.work),
-        meta=Path(a.meta),
-        split=a.split,
-        project=Path(a.project),
-        results=Path(a.results),
-        seed=a.seed,
-        n_boot=a.n_boot if a.n_boot is not None else models[0].cfg.eval.n_boot,
-        device=a.device,
-        workers=a.workers,
-    )
     print(f"değerlendirilen (model, koşul): {n}")
     return 0
 
