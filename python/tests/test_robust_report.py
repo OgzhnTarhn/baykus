@@ -92,3 +92,29 @@ def test_each_model_keeps_one_color_across_panels():
     assert set(colors) == {"e1_rgb", "e2_ir", "e3_early_fusion"}
     assert all(len(c) == 1 for c in colors.values()), colors
     assert len({next(iter(c)) for c in colors.values()}) == 3
+
+
+def test_load_robust_filters_split(tmp_path: Path):
+    test_rec = dict(RECS[0], split="test")
+    (tmp_path / "a.json").write_text(json.dumps(RECS[0]), encoding="utf-8")
+    (tmp_path / "b.json").write_text(json.dumps(test_rec), encoding="utf-8")
+    assert [r["split"] for r in load_robust(tmp_path)] == ["val"]
+    assert [r["split"] for r in load_robust(tmp_path, split="test")] == ["test"]
+
+
+def test_duplicate_model_condition_is_an_error():
+    import pytest
+
+    dup = dict(RECS[0], run_id="r2")
+    with pytest.raises(ValueError, match="r2"):
+        robust_markdown([*RECS, dup], "f.png")
+
+
+def test_cli_report_split(tmp_path: Path):
+    rob = tmp_path / "robust"
+    rob.mkdir()
+    (rob / "a.json").write_text(json.dumps(RECS[0]), encoding="utf-8")
+    out = tmp_path / "r.md"
+    args = ["report", "--robust", str(rob), "--out", str(out), "--fig", str(tmp_path / "f.png")]
+    assert main([*args, "--split", "test"]) == 2
+    assert main(args) == 0 and "(val, IR etiketleri)" in out.read_text(encoding="utf-8")

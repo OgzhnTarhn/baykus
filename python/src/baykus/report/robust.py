@@ -26,9 +26,10 @@ TITLES = {
 NA = "uygulanmaz"
 
 
-def load_robust(folder: Path) -> list[dict]:
+def load_robust(folder: Path, split: str = "val") -> list[dict]:
+    """Sadece istenen bölümün sağlamlık kayıtları (val ile test karışmasın)."""
     recs = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(Path(folder).glob("*.json"))]
-    return [r for r in recs if "robustness" in r]
+    return [r for r in recs if "robustness" in r and r.get("split") == split]
 
 
 def model_key(r: dict) -> str:
@@ -36,7 +37,18 @@ def model_key(r: dict) -> str:
 
 
 def _index(recs: list[dict]) -> dict[tuple[str, str], dict]:
-    return {(model_key(r), r["robustness"]["id"]): r for r in recs}
+    """(config adı, koşul) → kayıt. Aynı config'in iki eğitimi aynı hücreye düşerse hata:
+    hangisinin gösterildiği belirsiz kalmasın."""
+    idx: dict[tuple[str, str], dict] = {}
+    for r in recs:
+        key = (model_key(r), r["robustness"]["id"])
+        if key in idx:
+            raise ValueError(
+                f"{key}: iki kayıt var ({idx[key]['run_id']}, {r['run_id']}); "
+                "eski çalıştırmanın dosyalarını results/robust'tan çıkar"
+            )
+        idx[key] = r
+    return idx
 
 
 def _cell(r: dict | None) -> str:

@@ -155,15 +155,20 @@ def _cmd_run(a: argparse.Namespace) -> int:
 def _cmd_report(a: argparse.Namespace) -> int:
     from baykus.report.robust import load_robust, robust_markdown, robust_plot
 
-    recs = load_robust(Path(a.robust))
+    recs = load_robust(Path(a.robust), split=a.split)
     if not recs:
-        print(f"hata: {a.robust} altında sağlamlık sonucu yok", file=sys.stderr)
+        print(f"hata: {a.robust} altında {a.split} sağlamlık sonucu yok", file=sys.stderr)
         return 2
     out, fig = Path(a.out), Path(a.fig)
-    robust_plot(recs, fig)
     rel = Path(os.path.relpath(fig, out.parent)).as_posix()
+    try:
+        text = robust_markdown(recs, rel)
+    except ValueError as e:
+        print(f"hata: {e}", file=sys.stderr)
+        return 2
+    robust_plot(recs, fig)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(robust_markdown(recs, rel), encoding="utf-8")
+    out.write_text(text, encoding="utf-8")
     print(out)
     return 0
 
@@ -189,6 +194,7 @@ def build_parser() -> argparse.ArgumentParser:
     rp.add_argument("--robust", default="../results/robust")
     rp.add_argument("--out", default="../docs/robustness.md")
     rp.add_argument("--fig", default="../docs/figures/results/robustness.png")
+    rp.add_argument("--split", default="val", choices=["val", "test"])
     rp.set_defaults(func=_cmd_report)
     return p
 
