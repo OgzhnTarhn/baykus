@@ -12,6 +12,7 @@ from baykus.report.tables import (
     label_set_table,
     load_compares,
     load_runs,
+    m3ot_table,
     main_table,
 )
 
@@ -24,6 +25,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--fig", type=Path, default=Path("../docs/figures/results/illumination.png"))
     p.add_argument("--split", default="val")
     p.add_argument("--label-set", default="ir")
+    p.add_argument("--m3ot", type=Path, default=Path("../results/m3ot"))
+    p.add_argument("--m3ot-split", default="test")
     a = p.parse_args(argv)
     runs = load_runs(a.runs, split=a.split, label_set=a.label_set)
     illumination_plot(runs, a.fig)
@@ -44,6 +47,15 @@ def main(argv: list[str] | None = None) -> int:
             "> `baykus-eval compare`: aynı bootstrap örnekleriyle A − B, mAP50 puanı "
             "[%95 GA]; `*` aralık 0'ı içermiyor (anlamlı). Tek seed: seed varyansı dahil değil.\n\n"
             f"{compare_table(compares)}\n"
+        )
+    m3 = load_runs(a.m3ot, split=a.m3ot_split) if a.m3ot.is_dir() else []
+    if m3:
+        text += (
+            "\n## Veri setleri arası test (E7, M3OT)\n\n"
+            "> DroneVehicle'da eğitilen modeller M3OT test bölümünde, sınıfsız `vehicle` AP "
+            "(spec §8.3): rgb RGB etiketiyle, diğer modlar IR etiketiyle. M3OT kutuları çok küçük "
+            "(< 1024 px²): mutlak değer değil modlar arası sıra yorumlanır.\n\n"
+            f"{m3ot_table(m3)}\n"
         )
     a.out.parent.mkdir(parents=True, exist_ok=True)
     a.out.write_text(text, encoding="utf-8")

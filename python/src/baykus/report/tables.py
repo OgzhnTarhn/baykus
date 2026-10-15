@@ -110,3 +110,28 @@ def load_compares(folder: Path, split: str | None = None) -> list[dict]:
         return []
     out = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(folder.glob("*.json"))]
     return [c for c in out if split is None or c.get("split") == split]
+
+
+M3OT_HEADER = (
+    "| Çalıştırma | Mod | Etiket seti | vehicle AP50 [%95 GA] | AP50-95 |\n|---|---|---|---|---|"
+)
+M3OT_LABEL_SET = {"rgb": "rgb"}  # diğer modlar IR etiketiyle (spec §8.3, ana tabloyla tutarlı)
+
+
+def m3ot_table(runs: list[dict]) -> str:
+    """E7: M3OT'ta sınıfsız vehicle AP; her mod kendi etiket setiyle tek satır."""
+    rows = [M3OT_HEADER]
+    for r in sorted(runs, key=lambda r: r["run_id"]):
+        mode = r["model"]["mode"]
+        if r["label_set"] != M3OT_LABEL_SET.get(mode, "ir"):
+            continue
+        m = r["metrics"]
+        cells = [
+            r["run_id"],
+            mode,
+            r["label_set"],
+            fmt(m.get("map50"), (m.get("ci95") or {}).get("map50")),
+            fmt(m.get("map50_95")),
+        ]
+        rows.append("| " + " | ".join(cells) + " |")
+    return "\n".join(rows)

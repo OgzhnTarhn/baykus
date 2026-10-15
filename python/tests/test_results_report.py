@@ -9,6 +9,7 @@ from baykus.report.tables import (
     label_set_table,
     load_compares,
     load_runs,
+    m3ot_table,
     main_table,
 )
 
@@ -153,3 +154,35 @@ def test_load_compares_filters_split(tmp_path: Path):
         (tmp_path / f"{name}.json").write_text(json.dumps(c), encoding="utf-8")
     assert [c["name"] for c in load_compares(tmp_path, split="val")] == ["a"]
     assert len(load_compares(tmp_path)) == 3
+
+
+def _m3(run_id, mode, ls, map50):
+    metrics = {"map50": map50, "map50_95": 0.2, "ci95": {"map50": [0.1, 0.9]}}
+    return {"run_id": run_id, "split": "test", "label_set": ls, "dataset": "m3ot",
+            "model": {"mode": mode}, "metrics": metrics}  # fmt: skip
+
+
+def test_m3ot_table_label_set_per_mode():
+    runs = [_m3("a", "rgb", "rgb", 0.5), _m3("a", "rgb", "ir", 0.4),
+            _m3("b", "ir", "ir", 0.6), _m3("b", "ir", "rgb", 0.55),
+            _m3("c", "late_fusion", "ir", 0.65)]  # fmt: skip
+    rows = m3ot_table(runs).splitlines()[2:]
+    assert rows == [
+        "| a | rgb | rgb | 50.0 [10.0, 90.0] | 20.0 |",
+        "| b | ir | ir | 60.0 [10.0, 90.0] | 20.0 |",
+        "| c | late_fusion | ir | 65.0 [10.0, 90.0] | 20.0 |",
+    ]
+
+
+def test_cli_adds_m3ot_section_only_when_results_exist(tmp_path: Path):
+    runs, m3 = tmp_path / "runs", tmp_path / "m3ot"
+    runs.mkdir()
+    out = tmp_path / "results.md"
+    base = ["--runs", str(runs), "--compare", str(tmp_path / "c"), "--out", str(out),
+            "--fig", str(tmp_path / "f.png"), "--m3ot", str(m3)]  # fmt: skip
+    assert main(base) == 0 and "M3OT" not in out.read_text(encoding="utf-8")
+    m3.mkdir()
+    (m3 / "x.json").write_text(json.dumps(_m3("b", "ir", "ir", 0.6)), encoding="utf-8")
+    assert main(base) == 0
+    text = out.read_text(encoding="utf-8")
+    assert "## Veri setleri arası test (E7, M3OT)" in text and "| b | ir | ir |" in text
