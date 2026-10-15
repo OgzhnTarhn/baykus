@@ -1,0 +1,96 @@
+{
+  "run_id": "2026-10-14_e3-early-fusion_s_67ace37",
+  "git_commit": "125fa2d8ae172331e947ad217efd4a82e8aa65c4",
+  "git_dirty": false,
+  "config": "../configs/e3_early_fusion.yaml",
+  "config_hash": "sha256:d809f05be6d143290afd80ef7d1bb5a68caa036d3a692b6f1276d4fd2a6f0874",
+  "mlflow_run_id": "0b721f9899424cf9b2d3303e71e8c56a",
+  "train_run_id": "2026-10-14_e3-early-fusion_s_67ace37",
+  "seed": 42,
+  "dataset": "dronevehicle",
+  "split": "val",
+  "label_set": "ir",
+  "model": {
+    "family": "yolo26",
+    "size": "s",
+    "mode": "early_fusion",
+    "params_m": null,
+    "gflops": null
+  },
+  "format": "pytorch",
+  "precision": "fp32",
+  "hardware": {
+    "device": "NVIDIA A100-SXM4-40GB",
+    "driver": "13.0",
+    "cpu_count": 12
+  },
+  "software": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu130",
+    "ultralytics": "8.4.177",
+    "numpy": "2.1.3",
+    "pycocotools": "2.0.11"
+  },
+  "weights": "/content/drive/MyDrive/baykus/runs/2026-10-14_e3-early-fusion_s_67ace37/weights/best.pt",
+  "n_boot": 1000,
+  "dropped_predictions": 0,
+  "metrics": {
+    "map50": 0.3987108173541025,
+    "map50_95": 0.2609025268404884,
+    "precision": 0.8747818946936262,
+    "recall": 0.696039199673336,
+    "per_class": {
+      "car": 0.9072474202528449,
+      "truck": 0.3875631735085523,
+      "bus": 0.38451677863299744,
+      "van": 0.22605224622589587,
+      "freight_car": 0.08817446815022172
+    },
+    "per_illumination": {
+      "day": 0.5136270843896675,
+      "night": 0.4171762487965988,
+      "dark_night": 0.291714401038552
+    },
+    "per_size": {
+      "small": 0.21720962510083094,
+      "medium": 0.4117287468760212,
+      "large": 0.46495538594130276
+    },
+    "ci95": {
+      "map50": [
+        0.3732924355891595,
+        0.42864198603134446
+      ],
+      "per_illumination": {
+        "day": [
+          0.48503701868771293,
+          0.543354579887161
+        ],
+        "night": [
+          0.3693807788757482,
+          0.47443570406878754
+        ],
+        "dark_night": [
+          0.2505288842604146,
+          0.33841701063050134
+        ]
+      }
+    },
+    "n_images": 1469,
+    "n_dets": 73003
+  },
+  "created_at": "2026-10-15T20:24:26Z",
+  "robustness": {
+    "id": "noise-20",
+    "corruption": "noise",
+    "severity": 20.0,
+    "target": "ir",
+    "seed": 42
+  },
+  "crosscheck": {
+    "label_set": "ir",
+    "ultralytics_map50": 0.3981588098849767,
+    "pycocotools_map50": 0.3987108173541025,
+    "abs_diff": 0.0005520074691258148
+  }
+}
