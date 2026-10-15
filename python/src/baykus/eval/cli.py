@@ -93,8 +93,10 @@ def evaluate_weights(
     )
     if device:
         kwargs["device"] = device
-    ul = YOLO(str(weights)).val(**kwargs)
     save_dir = Path(project) / name
+    # Önceki koşudan kalan dosya, bu koşu tahmin üretmezse yanlışlıkla okunurdu
+    (save_dir / "predictions.json").unlink(missing_ok=True)
+    ul = YOLO(str(weights)).val(**kwargs)
     pred_file = save_dir / "predictions.json"  # Ultralytics tahmin yoksa dosyayı hiç yazmaz
     ul_preds = json.loads(pred_file.read_text(encoding="utf-8")) if pred_file.exists() else []
 

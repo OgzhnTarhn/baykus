@@ -21,8 +21,9 @@ def _cfg(tmp_path: Path) -> Path:
     return p
 
 
-def _run(tmp_path: Path, monkeypatch, **kw) -> tuple[list[Path], type]:
+def _run(tmp_path: Path, monkeypatch, write_preds: bool = True, **kw) -> tuple[list[Path], type]:
     fake = install(monkeypatch)
+    fake.write_preds = write_preds
     root = make_synthetic_dataset(tmp_path / "dv")
     cfg_path = _cfg(tmp_path)
     paths = evaluate_weights(
@@ -68,3 +69,14 @@ def test_evaluate_weights_condition_goes_to_robust(tmp_path: Path, monkeypatch):
     rec = json.loads(paths[0].read_text(encoding="utf-8"))
     assert rec["robustness"] == cond and rec["label_set"] == "ir"
     assert fake.calls[0]["name"] == f"{RUN}_val_darken-0.5"
+
+
+def test_stale_ultralytics_predictions_are_not_reused(tmp_path: Path, monkeypatch):
+    # Önceki koşunun dosyası kalmış; bu koşuda model hiç tahmin vermiyor → 0 tahmin, mAP 0
+    stale = tmp_path / "eval" / f"{RUN}_val" / "predictions.json"
+    stale.parent.mkdir(parents=True)
+    old = [{"image_id": 101, "category_id": 1, "bbox": [16, 20, 32, 20], "score": 0.9}]
+    stale.write_text(json.dumps(old), encoding="utf-8")
+    paths, _ = _run(tmp_path, monkeypatch, write_preds=False)
+    ir = json.loads(paths[0].read_text(encoding="utf-8"))
+    assert ir["metrics"]["n_dets"] == 0 and ir["metrics"]["map50"] == 0.0

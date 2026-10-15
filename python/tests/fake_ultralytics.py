@@ -17,6 +17,8 @@ import yaml
 
 class FakeYOLO:
     calls: list[dict] = []
+    write_preds = True  # False: gerçek Ultralytics gibi tahmin yoksa dosya yazılmaz
+    force_category: int | None = None  # sınıfsız testleri için: bütün tahminler bu sınıfta
 
     def __init__(self, weights: str):
         self.weights = weights
@@ -28,27 +30,32 @@ class FakeYOLO:
         img_dir = Path(cfg["path"]) / cfg[kw["split"]]
         if not any(img_dir.glob("*")):
             raise FileNotFoundError(f"görüntü yok: {img_dir}")
+        out = Path(kw["project"]) / kw["name"]
+        out.mkdir(parents=True, exist_ok=True)
+        if not FakeYOLO.write_preds:
+            return SimpleNamespace(box=SimpleNamespace(map50=0.0))
         gt = json.loads(
             (data.parent / "coco" / f"{kw['split']}_ir.json").read_text(encoding="utf-8")
         )
         stem = {im["id"]: Path(im["file_name"]).stem for im in gt["images"]}
         preds = [
             {
-                "image_id": int(stem[a["image_id"]]),
-                "category_id": a["category_id"],
+                # Ultralytics: sayısal adda int, değilse ad (M3OT: seq_000001)
+                "image_id": int(s) if (s := stem[a["image_id"]]).isdigit() else s,
+                "category_id": FakeYOLO.force_category or a["category_id"],
                 "bbox": a["bbox"],
                 "score": 0.9,
             }
             for a in gt["annotations"]
         ]
-        out = Path(kw["project"]) / kw["name"]
-        out.mkdir(parents=True, exist_ok=True)
         (out / "predictions.json").write_text(json.dumps(preds), encoding="utf-8")
         return SimpleNamespace(box=SimpleNamespace(map50=1.0))
 
 
 def install(monkeypatch) -> type:
     FakeYOLO.calls = []
+    FakeYOLO.write_preds = True
+    FakeYOLO.force_category = None
     mod = types.ModuleType("ultralytics")
     mod.YOLO = FakeYOLO
     monkeypatch.setitem(sys.modules, "ultralytics", mod)
