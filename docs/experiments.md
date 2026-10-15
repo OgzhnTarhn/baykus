@@ -63,20 +63,31 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
 
 - **Yorum (taslak, kullanıcıyla netleşecek):** Hipotezin ilk yarısı tutuyor: E3 genel skorda hem E1'i hem E2'yi anlamlı geçiyor. İkinci yarısı tutmuyor: karanlık gecedeki kazanç E1'e karşı büyük (+16,5) ama bunu IR kanalı tek başına da sağlıyor (E2 − E1 +16,3; E3 − E2 +0,1, fark yok). Füzyonun E2'ye kattığı fark **gündüzde** (+4,3): ışık varken RGB'nin renk ve doku bilgisi işe yarıyor. Gece E3 ile E2 arasında fark yok (aralık 0'ı içeriyor). Kısaca: karanlıkta termal taşıyor, gündüzde RGB katkı veriyor; erken füzyon ikisinden de yararlanıyor ama ikisinin en iyisinden fazlasını vermiyor.
 
-## 2026-10-15 · E6 (E1-E3) · Sağlamlık paketi — ara kayıt (Colab konsolu)
-- **Kurulum:** `03_robust.ipynb`, `baykus-robust run` (seed 42, val, IR etiketleri, 1000 bootstrap), commit `67ace37` (`h3`), Colab Pro A100, 12 çekirdek. Oturum bağlantısı ölçüm sürerken koptu; aynı komut biten (model, koşul) çiftlerini atlayarak sürer.
-- **Temiz koşul tutarlılık kontrolü (H3 Görev 11 Step 2):** bozulma hattından geçen temiz val, ana değerlendirmeyle birebir aynı: E1 0,7613 · E2 0,8390 · E3 0,8565 (`results/runs/*_val_ir.json` ile aynı). Bozulmuş klasör (PNG/TIFF) yolu sonucu değiştirmiyor.
-- **Kopmadan önce biten ölçümler (mAP50, `baykus-eval`, konsol):**
+## 2026-10-15 · E5 · Etiket seti farkı (E1-E3)
+- **Soru:** Aynı tahminler IR ve RGB etiketlerine karşı ne kadar farklı skor alıyor?
+- **Kurulum:** E1-E3 değerlendirmeleri (`baykus-eval run`, iki etiket seti, aynı tahmin dosyası), val, 1000 bootstrap.
+- **Sonuç:** `docs/results.md` "Etiket seti karşılaştırması (E5)" bölümü · `results/runs/*_val_{ir,rgb}.json`.
+- **Bulgular (mAP50, Δ = RGB − IR, puan):**
 
-  | Koşul | E1 (rgb) | E2 (ir) | E3 (early_fusion) |
-  |---|---|---|---|
-  | temiz | 0,7613 | 0,8390 | 0,8565 |
-  | karartma ×0,5 | 0,7625 | uygulanmaz | 0,8343 |
-  | karartma ×0,25 | 0,7339 | uygulanmaz | 0,7825 |
-  | karartma ×0,1 | 0,5757 | uygulanmaz | 0,7378 |
-  | IR gürültü σ5 | uygulanmaz | 0,8020 | 0,8477 |
-  | IR gürültü σ10 | uygulanmaz | 0,6187 | 0,7586 |
-  | IR gürültü σ20 | uygulanmaz | 0,1946 | 0,3987 |
-  | bulanıklık 3 | 0,7568 | (yarıda) | — |
+  | | IR | RGB | Δ genel | Δ gündüz | Δ gece | Δ karanlık gece |
+  |---|---|---|---|---|---|---|
+  | E1 (rgb) | 76,1 | 78,0 | +1,8 | +1,3 | +1,6 | +0,3 |
+  | E2 (ir) | 83,9 | 72,9 | −11,0 | −2,3 | −2,7 | −19,8 |
+  | E3 (early_fusion) | 85,7 | 75,8 | −9,8 | −2,8 | −2,2 | −18,0 |
 
-- **Ön gözlem (güven aralıkları ve kalan koşullar gelince netleşecek):** E3, RGB karardıkça E2'nin temiz skorunun (0,839) altına iniyor (×0,25 → 0,783, ×0,1 → 0,738): erken füzyon RGB kanalına güveniyor, termal tek başına bu durumda daha iyi olurdu. IR gürültüsünde E2 σ20'de çöküyor (0,195); E3 aynı gürültüde 0,399'da kalıyor (RGB kanalı kısmen taşıyor) ama yine de temiz E1'in (0,761) çok altında.
+  1. IR görebilen modellerin (E2, E3) kaybı karanlık gecede toplanıyor (≈ −18/−20 puan); gündüz ve gecede fark 2-3 puan.
+  2. Karanlık gecede sıralama etiket setine göre değişiyor: RGB etiketleriyle E1 0,711 · E3 0,693 · E2 0,673 (RGB modeli en iyi görünüyor); IR etiketleriyle E1 0,708 · E2 0,871 · E3 0,873.
+- **Yorum (taslak, kullanıcıyla netleşecek):** E0 bulgu 2: IR setinde RGB karşılığı olmayan ≈ 33 bin nesne var; karanlıkta RGB görüntüde görünmeyen araçlar RGB setinde etiketlenmemiş. IR'yi gören modeller bu araçları buluyor ve RGB etiketlerine karşı yanlış pozitif sayılıyor. Etiket seti seçimi karanlık gece sonucunu tersine çevirebildiği için "ana set IR" kararı (ADR 0003) ölçümle destekleniyor; RGB etiketleriyle raporlanan karanlık gece skorları termal modelleri haksız biçimde cezalandırır.
+
+## 2026-10-15 · E6 (E1-E3) · Sağlamlık paketi
+- **Soru:** Hangi model hangi arızada dayanıyor?
+- **Kurulum:** `03_robust.ipynb` → `baykus-robust run` (seed 42, val, IR etiketleri, 1000 bootstrap), commit `125fa2d` (`h3`), Colab Pro A100, 12 çekirdek. Oturum bir kez koptu, aynı komutla biten ölçümler atlanarak tamamlandı; toplam süre kaydedilmedi. Karartma piksel çarpanı, hizasızlık IR'nin yatay kaydırılması (etiketler yerinde).
+- **Sonuç:** `results/robust/*.json` (32 dosya, `dropped_predictions = 0`) · `docs/robustness.md` · `docs/figures/results/robustness.png` · görüntü düzeyinde tahminler Drive `baykus/robust/*/predictions_coco.json.gz` (kanca K1).
+- **Temiz koşul tutarlılık kontrolü:** bozulma hattından geçen temiz val ana değerlendirmeyle birebir aynı (E1 0,761264 · E2 0,839005 · E3 0,856506; fark 0,0).
+- **Bulgular (mAP50, köşeli parantez %95 GA; aralıkların örtüşmesine bakılarak, eşleştirilmiş test yapılmadı):**
+  1. **Kamera kaybı:** RGB kaybında E3 71,8 [68,8; 74,3] (temizden −13,9; E2'nin temiz 83,9'unun altında). IR kaybında E3 12,8 [11,6; 14,3]: çöküyor, E1'in temiz 76,1'inin çok altında. Erken füzyon IR kanalına bağımlı ve tek kamerayla tek modaliteli modelin yerini tutmuyor.
+  2. **Hizasızlık (yalnız E3):** 5 px 83,4 (−2,3) · 10 px 69,4 (−16,3) · 20 px 25,8 (−59,9) · 40 px 8,4. E0'daki doğal kayma p50 0 px, p90 7,2 px, p99 16,6 px (`docs/data-report.md`): 5 px tipik kayma aralığında ve kayıp küçük; 10 px p90-p99 arasında ve kayıp büyük; 20 px p99'un üstünde (kalibrasyon bozulması) ve model çöküyor. Eşik 5-10 px arasında: veri setindeki nesnelerin ≈ %4,8'i zaten 10 px'ten fazla kaymış.
+  3. **Karartma (RGB):** E3 her şiddette E1'in üstünde (×0,1: 73,8 [71,0; 76,2] vs 57,6 [54,6; 60,8]) ama ×0,25'ten itibaren E2'nin temiz skorunun altına iniyor (×0,1'de E2 temiz 83,9 [81,7; 85,9], aralıklar örtüşmüyor).
+  4. **IR gürültüsü:** E3 E2'den dayanıklı (σ10: 75,9 vs 61,9; σ20: 39,9 vs 19,5; aralıklar örtüşmüyor); RGB kanalı kısmen taşıyor.
+  5. **Bulanıklık (iki kamera birden):** E3 en hassas model: çekirdek 11'de 64,1 [61,7; 66,6], E2 78,7 [76,4; 81,0], E1 72,4 [69,8; 75,1]; çekirdek 3'te üçü de temize yakın.
+- **Yorum (taslak, kullanıcıyla netleşecek):** Erken füzyon temiz veride en iyi model, ama sağlamlıkta zayıf: IR kaybında, büyük hizasızlıkta ve güçlü bulanıklıkta tek modaliteli modellerin altına düşüyor. "Termal kamera kapandığında hangi model dayanıyor?" sorusunun H3 cevabı: E3 dayanmıyor (12,8), RGB modeli zaten etkilenmiyor. Bu, H4'teki E3c (modality dropout) ve E4 (geç füzyon) deneylerinin gerekçesi: amaç temiz skoru koruyup kamera kaybında tek modaliteli modele yakın kalmak. Bulanıklıktaki hassasiyetin nedeni bilinmiyor (hipotez: model iki kanalın ince kenar uyumuna dayanıyor); H4'te E3c ile birlikte bakılabilir.
