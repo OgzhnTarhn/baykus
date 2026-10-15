@@ -19,7 +19,7 @@ DroneVehicle'ın 4 kanallı hali, sıkıştırmasız tahminle ~37 GB (spec §23)
 - Uygulama: `baykus.data.multichannel.write_rgbt4`. Gidiş-dönüş testi tek sayfalı biçimde başarısız oluyor (bozulmayı yakalıyor).
 
 **İlk katman (kesin, E3 varyantları):**
-- `ul_default`: Ultralytics varsayılanı (RGB = COCO, T rastgele). E3b.
+- `ul_default`: Ultralytics varsayılanı (RGB = COCO, T rastgele). E3b için ayrılmıştı; E3b yapılmadı (2026-10-16, deney günlüğü). `first_conv_init` verilmeyen 4 kanallı config'in varsayılanı olarak kodda kalır.
 - `rgb_mean`: `on_pretrain_routine_end` callback'i T kanalını RGB ağırlıklarının ortalamasıyla doldurur (model + EMA). E3.
 - `random`: tüm ilk katman rastgele (alt sınır).
 

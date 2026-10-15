@@ -1,7 +1,7 @@
 # Baykuş — RGB + Termal Füzyonlu Hava Görüntüsü Tespiti, Edge için Optimize, Uçtan Uca Sistem
 
 > **Proje adı:** Baykuş · **Repo / paket adı:** `baykus` · **Alt başlık (EN):** *RGB-Thermal aerial vehicle detection on the edge*
-> **Sahibi:** Oğuzhan Tarhan · **Tarih:** 2026-10-07 · **Sürüm:** v4.1 (H1 kapanışı; v4.0: kapsam genişletme: güvenilirlik farkındalığı + hareketli hedef, ADR 0006; eğitim: Colab, kullanıcı çalıştırır · laptop: AMD Ryzen 7 8845HS) · **Süre:** 5 faz, ~7 ay (5 Ekim 2026-30 Nisan 2027) · **Durum:** v3.0 onaylandı (2026-10-02); v4.0 yol haritası onaylandı (2026-10-07)
+> **Sahibi:** Oğuzhan Tarhan · **Tarih:** 2026-10-07 · **Sürüm:** v4.2 (H4 planı: E3b kesildi; v4.1: H1 kapanışı; v4.0: kapsam genişletme: güvenilirlik farkındalığı + hareketli hedef, ADR 0006; eğitim: Colab, kullanıcı çalıştırır · laptop: AMD Ryzen 7 8845HS) · **Süre:** 5 faz, ~7 ay (5 Ekim 2026-30 Nisan 2027) · **Durum:** v3.0 onaylandı (2026-10-02); v4.0 yol haritası onaylandı (2026-10-07)
 
 ---
 
@@ -39,6 +39,9 @@
 ---
 
 ## 0. v1'den bu yana ne değişti
+
+### v4.2 (2026-10-16) — H4 planı
+E3b yapılmadı: sadece literatürdeki rgb_mean seçimini kontrol ediyordu, son sistemi değiştirmez; bütçe E3c'ye ayrıldı (spec §22 kesme sırası: ek hedefler → E3b). H4'teki tek eğitim E3c; E3c, geç füzyon (E4, iki model) H5'te cihazda yeterince hızlı çalışmazsa kamera kaybına dayanıklı tek model olarak yedekte. `ul_default` kodda 4 kanallı config'in varsayılanı olarak kalır; `configs/e3b_ul_default.yaml` silindi. Değişen yerler: §4.4, §13, §20.6, §22 (H4).
 
 ### v4.1 (2026-10-11) — H1 kapanışı
 H1 doğrulamalarıyla değişenler: §8.2 ölçülmüş hâle getirildi; §24 maddeleri kapandı; depolama (ADR 0004: işlenmiş veri private Kaggle veri setinde) ve aydınlatma (ADR 0005: gündüz eşiği elle etiketli örnekle) kesinleşti. Colab T4 oturumu Python 3.13 ile geliyor (Spike C) → paket aralığı H2'de genişletilir.
@@ -206,7 +209,7 @@ Her modelin `n, s, m, l, x` boyutları var. Örnekler: `yolo26n.pt` (nano: en k�
 ### 4.4 Önceden eğitilmiş ağırlıklar ve transfer öğrenme
 - `yolo26s.pt` dosyası COCO veri setinde (80 sınıf, günlük fotoğraflar) önceden eğitilmiş.
 - Biz bu ağırlıklardan başlayıp kendi verimizle ince ayar (fine-tuning) yapacağız. Sıfırdan eğitmekten çok daha hızlı ve daha iyi sonuç verir.
-- **4 kanallı modelde dikkat edilecek nokta:** COCO ağırlıkları 3 kanal için. Ultralytics (8.4.x) 4 kanallı modelde ilk katmanın kanal 0-2'sine COCO'nun RGB ağırlıklarını kopyalıyor, kanal 3'ü (termal) **rastgele** bırakıyor (`ul_default`). Literatürdeki yaygın alternatif termal kanalı RGB ağırlıklarının ortalamasıyla başlatmak (`rgb_mean`). Bunu deney olarak ölçeceğiz (E3, E3b).
+- **4 kanallı modelde dikkat edilecek nokta:** COCO ağırlıkları 3 kanal için. Ultralytics (8.4.x) 4 kanallı modelde ilk katmanın kanal 0-2'sine COCO'nun RGB ağırlıklarını kopyalıyor, kanal 3'ü (termal) **rastgele** bırakıyor (`ul_default`). Literatürdeki yaygın alternatif termal kanalı RGB ağırlıklarının ortalamasıyla başlatmak (`rgb_mean`). E3 `rgb_mean` ile eğitildi; iki başlatmayı karşılaştıracak E3b H4'te kesildi (§0 v4.2).
 - **Kanal sırası:** Kopyalanan ağırlıklar kanal 0-2'nin R, G, B olduğunu varsayar. Ultralytics BGR→RGB çevirmesini sadece 3 kanallı görüntüde yapar; 4 kanallı TIFF dosyadan çözüldüğü sırayla modele gider. Bu yüzden dosyaya hangi sırayla yazılacağı H1 Spike A'da ölçülür (ADR 0004).
 
 ### 4.5 Veri formatı (Ultralytics / YOLO formatı)
@@ -699,7 +702,7 @@ tracking:
 | E1 | Sadece RGB (s) | Normal kamera gece ne kadar çöküyor? | H2 |
 | E2 | Sadece IR (s) | Termal tek başına ne kadar iyi? | H3 |
 | E3 | Erken füzyon 4 kanal (s), `first_conv_init=rgb_mean` | Basit birleştirme yardım ediyor mu? | H3 |
-| E3b | E3 + `first_conv_init=ul_default` (Ultralytics varsayılanı: RGB kopya + T rastgele); bütçe varsa `random` | İlk katman başlatması ne kadar fark ediyor? | H4 |
+| E3b | ~~E3 + `first_conv_init=ul_default`~~ **yapılmadı** (2026-10-16, §0 v4.2) | İlk katman başlatması ne kadar fark ediyor? | — |
 | E3c | E3 + modality dropout (`p_rgb`, `p_ir` val'de seçilmez; sabit 0.15 / 0.15) | Kamera kaybına karşı eğitmek tam modalitede ne kadara mal oluyor, kayıpta ne kadar kurtarıyor? | H4 |
 | E4 | Geç füzyon (E1 + E2, WBF) | İki model mi, tek birleşik model mi? | H4 |
 | E4b | E4 + aydınlatmaya göre WBF ağırlıkları (val'de seçilir) | Gece RGB'ye daha az güvenmek geç füzyonu iyileştiriyor mu? GPU gerekmez. | H4 |
@@ -932,7 +935,7 @@ baykus/
 - **Pazar (30 dk):** Değerlendirme — ne bitti, hangi sayılar çıktı, GPU bütçesi, riskler, gelecek haftanın planı
 
 ### 20.6 Zaman varsayımı
-Haftada **~15 saat**. Faz 1 (5 hafta, ~75 saat) için 2. hafta sonunda gerçek tempoya ve ölçülen epoch süresine göre takvim güncellenir. Faz 1 içi kesme sırası: ek hedefler → E3b → NPU denemesi.
+Haftada **~15 saat**. Faz 1 (5 hafta, ~75 saat) için 2. hafta sonunda gerçek tempoya ve ölçülen epoch süresine göre takvim güncellenir. Faz 1 içi kesme sırası: ek hedefler → E3b → NPU denemesi. (E3b H4'te kesildi, §0 v4.2.)
 
 **v4.0 fazlar arası kurallar (ADR 0006):**
 - Bir fazın çıkış kriteri karşılanmadan sonraki faza geçilmez.
@@ -1050,7 +1053,7 @@ Aşağıdaki haftalık tablolar v3.0'dan. **H1-H5 = Faz 1** ve geçerli. **H6-H9
 | H1 | 5-11 Eki | Temel, doğrulama, veri, ölçüm | — (sadece Spike C denemesi) |
 | H2 | 12-18 Eki | Eğitim ve değerlendirme altyapısı, E1 | E1 (+ E2 smoke ve 1 epoch ölçümü) |
 | H3 | 19-25 Eki | Tek modalite + erken füzyon | E2, E3 |
-| H4 | 26 Eki-1 Kas | Füzyon tamam, sağlamlık, M3OT | E3b, E3c |
+| H4 | 26 Eki-1 Kas | Füzyon tamam, sağlamlık, M3OT | E3c (E3b kesildi) |
 | H5 | 2-8 Kas | Edge optimizasyonu · 🚩 MVP | E8-n, TensorRT ölçümleri |
 | H6 | *Faz 3* | C++ motor I: ön işleme, çıkarım, eşlik | — |
 | H7 | *Faz 3* | C++ motor II: WBF, HTTP, C++ bench | — |
@@ -1102,7 +1105,7 @@ Aşağıdaki haftalık tablolar v3.0'dan. **H1-H5 = Faz 1** ve geçerli. **H6-H9
 ### H4 — Füzyon tamam, sağlamlık, veri setleri arası test
 | # | Issue | Kabul kriteri |
 |---|---|---|
-| 24 | [GPU] E3b (`ul_default`) + E3c (modality dropout) | İki run JSON |
+| 24 | [GPU] E3c (modality dropout); E3b kesildi (§0 v4.2) | E3c run JSON; E3b "yapılmadı" notu |
 | 25 | WBF **(S)** sarmalayıcısı + E4 geç füzyon + E4b aydınlatmaya göre ağırlık (val'de seçilir) | Run JSON'lar; seçilen parametreler notta |
 | 26 | E6 tamamı (E1-E4b; kamera kaybı dahil) | E3 vs E3c vs E4 kamera kaybı karşılaştırması güven aralığıyla |
 | 27 | M3OT dönüştürücü (FR-D8) + E7 | Her mod için sınıfsız `vehicle` AP |

@@ -97,7 +97,8 @@ def test_load_rejects_non_mapping(tmp_path: Path):
 def test_repo_configs_load():
     root = Path(__file__).resolve().parents[2] / "configs"
     names = {f.stem for f in root.glob("*.yaml")}
-    assert names >= {"e1_rgb", "e2_ir", "e3_early_fusion", "e3b_ul_default", "e3c_modality_dropout"}
+    assert names >= {"e1_rgb", "e2_ir", "e3_early_fusion", "e3c_modality_dropout"}
+    assert "e3b_ul_default" not in names  # E3b yapılmadı (2026-10-16, deney günlüğü)
     for f in root.glob("*.yaml"):
         load_config(f)
     e3c = load_config(root / "e3c_modality_dropout.yaml")
