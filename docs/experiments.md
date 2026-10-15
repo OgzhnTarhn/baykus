@@ -42,3 +42,15 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
 - **E1 ile (eşleştirilmemiş, aralıklara bakarak):** genel 0,761 [0,736; 0,789] vs 0,839 [0,817; 0,859], aralıklar örtüşmüyor. Karanlık gece 0,708 vs 0,872, gündüz 0,818 vs 0,824. Kesin karşılaştırma eşleştirilmiş bootstrap ile (`baykus-eval compare`, H3 Görev 10'da `COMPARE` adımı).
 - **Başlatma:** E2 logunda "Remapped 3/5 cls head rows from pretrained weights by class name" (8.4.177). 8.4.175'te aynı kod varsayılan açık olduğu için E1 de aynı başlatmayı aldı (`gpu-budget.md`, 2026-10-15).
 - **Yorum (taslak, kullanıcıyla netleşecek):** Hipotez gündüz (fark ~0,6 puan) ve karanlık gece (~16 puan) için sayılarla uyumlu; gece farkı (~4 puan) aralıkların içinde. RGB etiketleriyle karanlık gecedeki büyük düşüş, RGB etiket setinin karanlık görüntülerde IR'nin gördüğü nesnelerden farklı/eksik kutular içerdiğini düşündürüyor (E0 bulgu 2-3); E5 yorumunda E3 ile birlikte ele alınacak.
+
+## 2026-10-14 · E3 · Erken füzyon, rgb_mean (yolo26s)
+- **Hipotez:** Basit 4 kanal birleştirme hem E1'i hem E2'yi geçer; en büyük kazanç karanlık gecede.
+- **Kurulum:** `configs/e3_early_fusion.yaml` (50 epoch, seed 42, `first_conv_init: rgb_mean`, `config_hash` sha256:d809f05b…) · eğitim ve değerlendirme commit `67ace37` (`h3`), Colab Pro A100, Ultralytics 8.4.177 · `rgbt4` oturumda üretildi (train + val, 3 dk 9 sn, ADR 0004) · val, `conf=0.001`, `max_det=1000`, 1000 bootstrap.
+- **Sonuç:** `results/train/2026-10-14_e3-early-fusion_s_67ace37.json` · MLflow `0b721f9899424cf9b2d3303e71e8c56a` · değerlendirme `results/runs/2026-10-14_e3-early-fusion_s_67ace37_val_{ir,rgb}.json` (Drive'dan gelecek).
+- **Bulgular (Colab konsolu, 2026-10-15; JSON gelince güven aralıkları ve kırılımlar eklenecek):**
+  1. `baykus-eval` mAP50: IR etiketleri **0,8565**, RGB etiketleri **0,7583**; `dropped=0` (ikisi de).
+  2. Ultralytics val (max_det 1000, `best.pt`): mAP50 0,860, mAP50-95 0,646; sınıf car 0,986, bus 0,972, truck 0,837, freight_car 0,804, van 0,702.
+  3. Ultralytics'in kendi COCO değerlendirmesi (faster-coco-eval 1.8.0, `maxDets=100`): AP50 0,855, AP50-95 0,644; small 0,307, medium 0,647, large 0,822.
+  4. Eğitim: Ultralytics val mAP50 en yüksek 0,861 (31. epoch); mozaik kapandıktan sonra 0,850'den 0,835'e (`gpu-budget.md`).
+- **E1/E2 ile (ham sayılar, IR etiketleri):** E1 0,761 · E2 0,839 · E3 0,8565. RGB etiketleriyle E1 0,780 · E2 0,729 · E3 0,758. Eşleştirilmiş farklar `results/compare/` gelince.
+- **Yorum:** sonuçlar tamamlanınca, kullanıcıyla.
