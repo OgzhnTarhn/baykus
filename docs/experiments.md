@@ -62,3 +62,21 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
   | E3 − E2 | +1,8 [+0,8; +2,8] * | +4,3 [+2,5; +6,3] * | −1,1 [−2,6; +0,8] | +0,1 [−1,3; +1,4] |
 
 - **Yorum (taslak, kullanıcıyla netleşecek):** Hipotezin ilk yarısı tutuyor: E3 genel skorda hem E1'i hem E2'yi anlamlı geçiyor. İkinci yarısı tutmuyor: karanlık gecedeki kazanç E1'e karşı büyük (+16,5) ama bunu IR kanalı tek başına da sağlıyor (E2 − E1 +16,3; E3 − E2 +0,1, fark yok). Füzyonun E2'ye kattığı fark **gündüzde** (+4,3): ışık varken RGB'nin renk ve doku bilgisi işe yarıyor. Gece E3 ile E2 arasında fark yok (aralık 0'ı içeriyor). Kısaca: karanlıkta termal taşıyor, gündüzde RGB katkı veriyor; erken füzyon ikisinden de yararlanıyor ama ikisinin en iyisinden fazlasını vermiyor.
+
+## 2026-10-15 · E6 (E1-E3) · Sağlamlık paketi — ara kayıt (Colab konsolu)
+- **Kurulum:** `03_robust.ipynb`, `baykus-robust run` (seed 42, val, IR etiketleri, 1000 bootstrap), commit `67ace37` (`h3`), Colab Pro A100, 12 çekirdek. Oturum bağlantısı ölçüm sürerken koptu; aynı komut biten (model, koşul) çiftlerini atlayarak sürer.
+- **Temiz koşul tutarlılık kontrolü (H3 Görev 11 Step 2):** bozulma hattından geçen temiz val, ana değerlendirmeyle birebir aynı: E1 0,7613 · E2 0,8390 · E3 0,8565 (`results/runs/*_val_ir.json` ile aynı). Bozulmuş klasör (PNG/TIFF) yolu sonucu değiştirmiyor.
+- **Kopmadan önce biten ölçümler (mAP50, `baykus-eval`, konsol):**
+
+  | Koşul | E1 (rgb) | E2 (ir) | E3 (early_fusion) |
+  |---|---|---|---|
+  | temiz | 0,7613 | 0,8390 | 0,8565 |
+  | karartma ×0,5 | 0,7625 | uygulanmaz | 0,8343 |
+  | karartma ×0,25 | 0,7339 | uygulanmaz | 0,7825 |
+  | karartma ×0,1 | 0,5757 | uygulanmaz | 0,7378 |
+  | IR gürültü σ5 | uygulanmaz | 0,8020 | 0,8477 |
+  | IR gürültü σ10 | uygulanmaz | 0,6187 | 0,7586 |
+  | IR gürültü σ20 | uygulanmaz | 0,1946 | 0,3987 |
+  | bulanıklık 3 | 0,7568 | (yarıda) | — |
+
+- **Ön gözlem (güven aralıkları ve kalan koşullar gelince netleşecek):** E3, RGB karardıkça E2'nin temiz skorunun (0,839) altına iniyor (×0,25 → 0,783, ×0,1 → 0,738): erken füzyon RGB kanalına güveniyor, termal tek başına bu durumda daha iyi olurdu. IR gürültüsünde E2 σ20'de çöküyor (0,195); E3 aynı gürültüde 0,399'da kalıyor (RGB kanalı kısmen taşıyor) ama yine de temiz E1'in (0,761) çok altında.
