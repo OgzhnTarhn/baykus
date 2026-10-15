@@ -218,7 +218,7 @@ TRAIN_CELLS = [
     ),
     code(
         """
-        CONFIG = 'configs/e1_rgb.yaml'   # e2_ir.yaml, e3_early_fusion.yaml ...
+        CONFIG = 'configs/e1_rgb.yaml'   # e2_ir, e3_early_fusion, e3c_modality_dropout
         BRANCH = 'main'                  # haftalık dalı denemek için ör. 'h3'
         # Adım anahtarları (True = çalışır, False = atlanır):
         SMOKE = True    # 1) %5 veri, 1 epoch: hattın çalıştığını doğrular (yeni deneyde ilk iş)
@@ -370,22 +370,31 @@ TRAIN_CELLS = [
     code(
         """
         # 5) eşleştirilmiş karşılaştırma (val, IR etiketleri; FR-V8): A − B, aydınlatma kırılımıyla.
-        # Sonuç: {DRIVE}/results/compare/*.json
+        # Biten eğitimi ya da değerlendirmesi olmayan deney atlanır; var olan karşılaştırma tekrar yapılmaz.
+        # H4'ün karşılaştırmaları (E3c, E4) 04_fusion'da.
         import json
         from pathlib import Path
         from baykus.train.checkpoints import find_runs
 
         def preds(exp):
-            d = find_runs(f'{DRIVE}/runs', exp, finished=True)[-1]
-            run_id = json.loads((d / 'baykus_train.json').read_text(encoding='utf-8'))['run_id']
+            runs = find_runs(f'{DRIVE}/runs', exp, finished=True)
+            if not runs:
+                return None
+            run_id = json.loads((runs[-1] / 'baykus_train.json').read_text(encoding='utf-8'))['run_id']
             p = Path(f'{DRIVE}/eval/{run_id}_val/predictions_coco.json.gz')
-            assert p.exists(), f'{p} yok: önce {exp} için 4) değerlendirme'
-            return p
+            return p if p.exists() else None
 
         if COMPARE:
             for A, B in [('e3_early_fusion', 'e1_rgb'), ('e3_early_fusion', 'e2_ir'), ('e2_ir', 'e1_rgb')]:
+                name = f'{A}-vs-{B}_val_ir'
+                if Path(f'{DRIVE}/results/compare/{name}.json').exists():
+                    print('zaten var:', name)
+                    continue
                 PA, PB = preds(A), preds(B)
-                !cd /content/baykus/python && baykus-eval compare --gt /content/dv_rgbt/coco/val_ir.json --a "{PA}" --b "{PB}" --slices /content/meta/slices_val.json --name {A}-vs-{B}_val_ir --results {DRIVE}/results
+                if PA is None or PB is None:
+                    print('atlandı (biten eğitim ya da değerlendirme yok):', name)
+                    continue
+                !cd /content/baykus/python && baykus-eval compare --gt /content/dv_rgbt/coco/val_ir.json --a "{PA}" --b "{PB}" --slices /content/meta/slices_val.json --split val --name {name} --results {DRIVE}/results
         else:
             print('COMPARE = False → atlandı')
         """
@@ -405,8 +414,10 @@ ROBUST_CELLS = [
     ),
     code(
         """
-        CONFIGS = ['configs/e1_rgb.yaml', 'configs/e2_ir.yaml', 'configs/e3_early_fusion.yaml']
-        BRANCH = 'main'                  # haftalık dalı denemek için ör. 'h3'
+        CONFIGS = ['configs/e1_rgb.yaml', 'configs/e2_ir.yaml', 'configs/e3_early_fusion.yaml',
+                   'configs/e3c_modality_dropout.yaml']
+        BRANCH = 'h4'
+        IR_MISALIGN = True   # E2'yi kaydırılmış IR'de de ölç: geç füzyonun (04_fusion) hizasızlık girdisi
         DRIVE = '/content/drive/MyDrive/baykus'
         from google.colab import drive
         drive.mount('/content/drive')
@@ -429,16 +440,19 @@ ROBUST_CELLS = [
     DATA_DOWNLOAD,
     code(
         """
-        # Modeller: her config'in biten en son tam eğitiminin best.pt'si
+        # Modeller: her config'in biten en son tam eğitiminin best.pt'si (bitmemiş olan atlanır)
         import os, yaml
         from baykus.train.checkpoints import find_runs
         MODEL_ARGS = []
         for c in CONFIGS:
             exp = yaml.safe_load(open(f'/content/baykus/{c}', encoding='utf-8'))['experiment']
             done = find_runs(f'{DRIVE}/runs', exp, finished=True)
-            assert done, f'{exp}: biten tam eğitim yok'
+            if not done:
+                print(exp, '→ biten tam eğitim yok, atlandı')
+                continue
             MODEL_ARGS.append(f'--model ../{c}={done[-1]}/weights/best.pt')
             print(exp, '→', done[-1])
+        assert MODEL_ARGS, 'hiç biten eğitim yok'
         NPROC = os.cpu_count()
         !du -sh {DRIVE}/eval {DRIVE}/robust 2>/dev/null   # Drive'da yer: tahmin dosyaları büyük olabilir
         """
@@ -446,8 +460,9 @@ ROBUST_CELLS = [
     code(
         """
         %%time
-        # E6: sağlamlık paketi (val, IR etiketleri). Süreyi ve son 20 satırı Claude'a getir.
-        ARGS = ' '.join(MODEL_ARGS)
+        # E6: sağlamlık paketi (val, IR etiketleri). Biten (model, koşul) atlanır.
+        # Süreyi ve son 20 satırı Claude'a getir.
+        ARGS = ' '.join(MODEL_ARGS) + (' --ir-misalign' if IR_MISALIGN else '')
         !cd /content/baykus/python && baykus-robust run {ARGS} --data-root /content/dv_rgbt --meta /content/meta --work /content/robust_work --project {DRIVE}/robust --results {DRIVE}/results --workers {NPROC}
         """
     ),
@@ -574,6 +589,143 @@ M3OT_CELLS = [
 ]
 
 
+FUSION_CELLS = [
+    md(
+        """
+        # 04 — Geç füzyon (E4, E4b) ve karşılaştırmalar (CPU)
+        **Çalışma zamanı → CPU** (GPU gerekmez). Secrets: `KAGGLE_API_TOKEN`, `GITHUB_TOKEN`.
+        Gerekenler Drive'da: E1 ve E2'nin değerlendirme tahminleri (`eval/`); sağlamlık için
+        03_robust'ın çıktıları (`robust/`, E2 hizasızlığı dahil); karşılaştırmalar için E3 ve E3c.
+        **Kullanım:** ilk hücrede anahtarları ayarla → **Çalışma zamanı → Tümünü çalıştır**.
+        Biten adımlar atlanır; oturum koparsa yeniden Tümünü çalıştır.
+        """
+    ),
+    code(
+        """
+        BRANCH = 'h4'
+        SELECT = True    # 1) E4 ve E4b parametre seçimi (sadece val) + run JSON'ları
+        ROBUST = True    # 2) geç füzyonun sağlamlık paketi (03_robust bitmiş olmalı)
+        COMPARE = True   # 3) eşleştirilmiş karşılaştırmalar (temiz + kamera kaybı)
+        DRIVE = '/content/drive/MyDrive/baykus'
+        from google.colab import drive
+        drive.mount('/content/drive')
+        """
+    ),
+    KAGGLE_TOKEN,
+    CLONE_BRANCH,
+    code(
+        """
+        %%time
+        !pip -q install uv kaggle
+        !nproc   # işçi sayısı: birleştirme süresini belirler
+        !uv pip install --system -q -e /content/baykus/python
+        import sys
+        sys.path.insert(0, '/content/baykus/python/src')
+        """
+    ),
+    DATA_DOWNLOAD,
+    code(
+        """
+        # Modeller: her deneyin biten en son tam eğitimi → run_id
+        import json, os
+        from pathlib import Path
+        from baykus.train.checkpoints import find_runs
+        NPROC = os.cpu_count()
+
+        def train_run(exp):
+            done = find_runs(f'{DRIVE}/runs', exp, finished=True)
+            return json.loads((done[-1] / 'baykus_train.json').read_text(encoding='utf-8'))['run_id'] if done else None
+
+        RUN = {e: train_run(e) for e in ['e1_rgb', 'e2_ir', 'e3_early_fusion', 'e3c_modality_dropout']}
+        for e, r in RUN.items():
+            print(e, '→', r)
+        assert RUN['e1_rgb'] and RUN['e2_ir'], 'E1 ve E2 biten eğitim yok'
+        EVAL = lambda r: f'{DRIVE}/eval/{r}_val/predictions_coco.json.gz'
+        SEL = lambda exp: f'{DRIVE}/results/fusion/{exp}_val_selection.json'
+        """
+    ),
+    code(
+        """
+        %%time
+        # 1) E4: sabit ağırlık (12 hücreli ızgara); E4b: aydınlatmaya göre ağırlık (E4'ün IoU eşiğiyle).
+        # Süreyi ve 'map50' satırlarını Claude'a getir.
+        COMMON = (f'--rgb-preds {EVAL(RUN["e1_rgb"])} --ir-preds {EVAL(RUN["e2_ir"])} '
+                  f'--rgb-run-id {RUN["e1_rgb"]} --ir-run-id {RUN["e2_ir"]} '
+                  f'--data-root /content/dv_rgbt --meta /content/meta '
+                  f'--project {DRIVE}/eval --results {DRIVE}/results --workers {NPROC}')
+        if SELECT:
+            !cd /content/baykus/python && baykus-fusion select --config ../configs/fusion/e4_late_fusion.yaml {COMMON}
+            !cd /content/baykus/python && baykus-fusion select --config ../configs/fusion/e4b_late_fusion_illum.yaml --base {SEL('e4_late_fusion')} {COMMON}
+        else:
+            print('SELECT = False → atlandı')
+        """
+    ),
+    code(
+        """
+        %%time
+        # 2) Sağlamlık: E1 ve E2'nin her koşuldaki tahminleri birleştirilir (GPU yok). Biten koşul atlanır.
+        if ROBUST:
+            for EXP in ['e4_late_fusion', 'e4b_late_fusion_illum']:
+                !cd /content/baykus/python && baykus-fusion robust --config ../configs/fusion/{EXP}.yaml --selection {SEL(EXP)} --robust-preds {DRIVE}/robust --data-root /content/dv_rgbt --meta /content/meta --project {DRIVE}/robust --results {DRIVE}/results --workers {NPROC}
+        else:
+            print('ROBUST = False → atlandı')
+        """
+    ),
+    code(
+        """
+        # 3) Eşleştirilmiş karşılaştırmalar (val, IR etiketleri; FR-V8). Eksik model/koşul atlanır.
+        for EXP in ['e4_late_fusion', 'e4b_late_fusion_illum']:
+            p = Path(SEL(EXP))
+            RUN[EXP] = json.loads(p.read_text(encoding='utf-8'))['run_id'] if p.exists() else None
+
+        def preds(exp, cond):
+            r = RUN.get(exp)
+            if r is None:
+                return None
+            p = Path(EVAL(r) if cond == 'clean' else f'{DRIVE}/robust/{r}_val_{cond}/predictions_coco.json.gz')
+            return p if p.exists() else None
+
+        PAIRS = [('e3c_modality_dropout', 'e3_early_fusion', 'clean'),
+                 ('e4_late_fusion', 'e3_early_fusion', 'clean'),
+                 ('e4_late_fusion', 'e2_ir', 'clean'),
+                 ('e4b_late_fusion_illum', 'e4_late_fusion', 'clean')]
+        PAIRS += [(a, b, c) for c in ('drop_rgb', 'drop_ir') for a, b in [
+            ('e3c_modality_dropout', 'e3_early_fusion'),
+            ('e4_late_fusion', 'e3_early_fusion'),
+            ('e4_late_fusion', 'e3c_modality_dropout')]]
+        # Kamera kaybı puanı (seçim kuralı): iki kayıp koşulunun ortalaması, birleşik bootstrap
+        CAMLOSS = [('e4_late_fusion', 'e3c_modality_dropout'),
+                   ('e3c_modality_dropout', 'e3_early_fusion'),
+                   ('e4_late_fusion', 'e3_early_fusion')]
+        if COMPARE:
+            for A, B in CAMLOSS:
+                name = f'{A}-vs-{B}_val_camloss_ir'
+                if Path(f'{DRIVE}/results/compare/{name}.json').exists():
+                    print('zaten var:', name)
+                    continue
+                PA = [preds(A, c) for c in ('drop_rgb', 'drop_ir')]
+                PB = [preds(B, c) for c in ('drop_rgb', 'drop_ir')]
+                if None in PA + PB:
+                    print('atlandı (tahmin yok):', name)
+                    continue
+                !cd /content/baykus/python && baykus-eval compare --gt /content/dv_rgbt/coco/val_ir.json --a "{PA[0]}" "{PA[1]}" --b "{PB[0]}" "{PB[1]}" --slices /content/meta/slices_val.json --split val --name {name} --results {DRIVE}/results
+            for A, B, C in PAIRS:
+                name = f'{A}-vs-{B}_val_ir' if C == 'clean' else f'{A}-vs-{B}_val_{C}_ir'
+                if Path(f'{DRIVE}/results/compare/{name}.json').exists():
+                    print('zaten var:', name)
+                    continue
+                PA, PB = preds(A, C), preds(B, C)
+                if PA is None or PB is None:
+                    print('atlandı (tahmin yok):', name)
+                    continue
+                !cd /content/baykus/python && baykus-eval compare --gt /content/dv_rgbt/coco/val_ir.json --a "{PA}" --b "{PB}" --slices /content/meta/slices_val.json --split val --name {name} --results {DRIVE}/results
+        else:
+            print('COMPARE = False → atlandı')
+        """
+    ),
+]
+
+
 def build(cells: list[tuple[str, str]], path: Path, gpu: bool) -> None:
     nb = nbf.v4.new_notebook()
     nb.cells = [
@@ -593,5 +745,6 @@ if __name__ == "__main__":
     build(DATA_CELLS, Path("notebooks/colab/01_data.ipynb"), gpu=False)
     build(TRAIN_CELLS, Path("notebooks/colab/02_train.ipynb"), gpu=True)
     build(ROBUST_CELLS, Path("notebooks/colab/03_robust.ipynb"), gpu=True)
+    build(FUSION_CELLS, Path("notebooks/colab/04_fusion.ipynb"), gpu=False)
     build(M3OT_CELLS, Path("notebooks/colab/05_m3ot.ipynb"), gpu=False)  # ilk açılış CPU (inceleme)
     print("ok")
