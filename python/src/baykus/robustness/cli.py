@@ -63,6 +63,11 @@ def _mismatch(p: Path, seed: int | None, n_boot: int | None) -> str | None:
     return None
 
 
+def _wanted(c: Condition, mode: str, ir_misalign: bool) -> bool:
+    # --ir-misalign: E2 kaydırılmış IRde de ölçülür (geç füzyon girdisi; tek başına etiket kayması)
+    return applies(c, mode) or (ir_misalign and mode == "ir" and c.corruption == "misalign")
+
+
 def plan(
     models: list[ModelSpec],
     conds: list[Condition],
@@ -71,6 +76,7 @@ def plan(
     *,
     seed: int | None = None,
     n_boot: int | None = None,
+    ir_misalign: bool = False,
 ) -> list[tuple[Condition, list[ModelSpec]]]:
     """Koşulun uygulandığı ve sonucu olmayan modeller. Var olan sonuç başka seed/n_boot ile
     yazılmışsa hata: iki ayar aynı tabloda sessizce karışmasın."""
@@ -78,7 +84,7 @@ def plan(
     for c in conds:
         todo = []
         for m in models:
-            if not applies(c, m.cfg.mode):
+            if not _wanted(c, m.cfg.mode, ir_misalign):
                 continue
             p = result_path(results, m, split, c)
             if p.exists():
@@ -109,6 +115,7 @@ def run_suite(
     n_boot: int,
     device: str | None = None,
     workers: int = 1,
+    ir_misalign: bool = False,
     evaluate: Callable | None = None,
 ) -> int:
     if evaluate is None:
@@ -116,7 +123,9 @@ def run_suite(
 
         evaluate = evaluate_weights
     n = 0
-    for cond, todo in plan(models, conds, results, split, seed=seed, n_boot=n_boot):
+    for cond, todo in plan(
+        models, conds, results, split, seed=seed, n_boot=n_boot, ir_misalign=ir_misalign
+    ):
         cdir = Path(work) / cond.id
         shutil.rmtree(cdir, ignore_errors=True)  # önceki oturumdan yarım kalmış olabilir
         mods = {MODALITY_DIR[m.cfg.mode] for m in todo}
@@ -172,6 +181,7 @@ def _cmd_run(a: argparse.Namespace) -> int:
             n_boot=a.n_boot if a.n_boot is not None else models[0].cfg.eval.n_boot,
             device=a.device,
             workers=a.workers,
+            ir_misalign=a.ir_misalign,
         )
     except (RobustError, ConfigError, FileNotFoundError) as e:
         print(f"hata: {e}", file=sys.stderr)
@@ -217,6 +227,11 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--n-boot", type=int, default=None)
     r.add_argument("--device", default=None)
     r.add_argument("--workers", type=int, default=1)
+    r.add_argument(
+        "--ir-misalign",
+        action="store_true",
+        help="IR modellerini hizasızlık koşullarında da değerlendir (geç füzyon girdisi)",
+    )
     r.set_defaults(func=_cmd_run)
     rp = sub.add_parser("report", help="results/robust → docs/robustness.md + eğriler")
     rp.add_argument("--robust", default="../results/robust")

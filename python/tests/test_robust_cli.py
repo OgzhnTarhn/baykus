@@ -186,3 +186,26 @@ def test_cli_bad_config_is_error_not_traceback(tmp_path: Path, capsys):
     rc = main(["run", "--model", f"{cfg}={w}", "--data-root", str(tmp_path),
                "--meta", str(tmp_path)])  # fmt: skip
     assert rc == 2 and "foo" in capsys.readouterr().err
+
+
+def test_ir_misalign_adds_ir_model_runs(tmp_path: Path):
+    models = [_spec(tmp_path, m) for m in ("rgb", "ir")]
+    p = plan(models, suite_conditions(), tmp_path / "results", "val", ir_misalign=True)
+    ir_conds = [c.id for c, todo in p for m in todo if m.cfg.mode == "ir"]
+    rgb_conds = [c.id for c, todo in p for m in todo if m.cfg.mode == "rgb"]
+    assert len(ir_conds) == 12 and "misalign-40" in ir_conds
+    assert not any(c.startswith("misalign") for c in rgb_conds)  # RGB'ye hâlâ uygulanmaz
+
+
+def test_cli_ir_misalign_flag_reaches_suite(tmp_path: Path, monkeypatch):
+    import baykus.robustness.cli as rc
+
+    seen = {}
+    monkeypatch.setattr(rc, "run_suite", lambda *a, **kw: seen.update(kw) or 0)
+    w = make_weights(tmp_path / "run", "2026-10-20_e2-ir_s_abc1234")
+    cfg = tmp_path / "e2.yaml"
+    cfg.write_text("experiment: e2_ir\nmode: ir\nmodel: yolo26s.pt\ndata: data_ir.yaml\n",
+                   encoding="utf-8")  # fmt: skip
+    assert main(["run", "--model", f"{cfg}={w}", "--data-root", str(tmp_path),
+                 "--meta", str(tmp_path), "--ir-misalign"]) == 0  # fmt: skip
+    assert seen["ir_misalign"] is True

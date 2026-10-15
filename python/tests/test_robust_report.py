@@ -120,3 +120,18 @@ def test_cli_report_split(tmp_path: Path):
     args = ["report", "--robust", str(rob), "--out", str(out), "--fig", str(tmp_path / "f.png")]
     assert main([*args, "--split", "test"]) == 2
     assert main(args) == 0 and "(val, IR etiketleri)" in out.read_text(encoding="utf-8")
+
+
+def test_late_fusion_column_and_e2_misalign_hidden():
+    recs = [
+        *RECS,
+        _rec("configs/e2_ir.yaml", "ir", "misalign-5", "misalign", 5.0, "ir", 0.3),
+        _rec("configs/fusion/e4_late_fusion.yaml", "late_fusion", "clean", "clean", 0.0, "none",
+             0.85),
+        _rec("configs/fusion/e4_late_fusion.yaml", "late_fusion", "misalign-5", "misalign", 5.0,
+             "ir", 0.8),
+    ]  # fmt: skip
+    md = robust_markdown(recs, "f.png")
+    mis = _rows(md, "Hizasızlık")
+    assert mis[1] == "| 5 | uygulanmaz | uygulanmaz | 80.0 [10.0, 90.0] |"  # e1, e2, e4
+    assert "Geç füzyon" in md

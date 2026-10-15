@@ -83,6 +83,9 @@ def robust_markdown(recs: list[dict], fig_rel: str) -> str:
         "bozulma modelin görmediği modaliteye ait ya da tek modaliteli modelde hizasızlık.",
         "> Karartma piksel değerini çarpanla ölçekler (gamma eğrisi değil). Hizasızlıkta IR "
         "kaydırılır, etiketler yerinde kalır.",
+        "> Geç füzyon (E4, E4b) GPU'da ayrıca koşulmaz: E1 ve E2'nin aynı koşuldaki tahminleri "
+        "birleştirilir. E2'nin hizasızlık ölçümleri sadece bu birleştirmenin girdisidir; tek "
+        "başına etiket kayması olduğu için E2 sütununda uygulanmaz yazar.",
         "",
     ]
     for c in CURVES:

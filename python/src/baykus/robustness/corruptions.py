@@ -24,7 +24,12 @@ SUITE: dict[str, tuple[str, tuple[float, ...]]] = {
     "drop_ir": ("ir", (1,)),
 }
 IDENTITY: dict[str, float] = {"darken": 1.0, "noise": 0, "blur": 0, "misalign": 0}
-MODE_NEEDS: dict[str, set[str]] = {"rgb": {"rgb"}, "ir": {"ir"}, "early_fusion": {"rgb", "ir"}}
+MODE_NEEDS: dict[str, set[str]] = {
+    "rgb": {"rgb"},
+    "ir": {"ir"},
+    "early_fusion": {"rgb", "ir"},
+    "late_fusion": {"rgb", "ir"},  # E4/E4b: GPU koşusu yok, E1 + E2 tahminleri birleşir
+}
 
 
 @dataclass(frozen=True)

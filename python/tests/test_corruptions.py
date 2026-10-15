@@ -130,3 +130,8 @@ def test_apply_condition_targets_and_purity():
     assert rb.shape == bgr.shape and ri.shape == ir.shape
     np.testing.assert_array_equal(bgr, b0)  # girdiler değişmedi
     np.testing.assert_array_equal(ir, i0)
+
+
+def test_late_fusion_sees_every_condition():
+    for c in suite_conditions():
+        assert applies(c, "late_fusion"), c.id
