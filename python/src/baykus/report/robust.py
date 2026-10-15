@@ -95,12 +95,13 @@ def robust_markdown(recs: list[dict], fig_rel: str) -> str:
     return "\n".join(out)
 
 
-def robust_plot(recs: list[dict], path: Path) -> Path:
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
+def robust_figure(recs: list[dict]):
+    """Dört bozulma paneli; her model bütün panellerde aynı renkte."""
     idx = _index(recs)
     models = sorted({model_key(r) for r in recs})
     modes = {model_key(r): r["model"]["mode"] for r in recs}
+    palette = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    color = {mk: palette[i % len(palette)] for i, mk in enumerate(models)}
     fig, axes = plt.subplots(2, 2, figsize=(9, 6.5))
     for ax, c in zip(axes.flat, CURVES, strict=True):
         for mk in models:
@@ -118,8 +119,8 @@ def robust_plot(recs: list[dict], path: Path) -> Path:
                 lo.append(v if ci[0] is None else 100 * ci[0])
                 hi.append(v if ci[1] is None else 100 * ci[1])
             if xs:
-                ax.plot(xs, ys, marker="o", label=mk)
-                ax.fill_between(xs, lo, hi, alpha=0.15)
+                ax.plot(xs, ys, marker="o", label=mk, color=color[mk])
+                ax.fill_between(xs, lo, hi, alpha=0.15, color=color[mk])
         ax.set_title(TITLES[c], fontsize=9)
         ax.set_ylim(0, 100)
         ax.set_ylabel("mAP50 (%)")
@@ -128,6 +129,13 @@ def robust_plot(recs: list[dict], path: Path) -> Path:
         if ax.get_legend_handles_labels()[0]:
             ax.legend(fontsize=7)
     fig.tight_layout()
+    return fig
+
+
+def robust_plot(recs: list[dict], path: Path) -> Path:
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fig = robust_figure(recs)
     fig.savefig(path, dpi=150)
     plt.close(fig)
     return path

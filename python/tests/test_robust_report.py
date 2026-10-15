@@ -73,3 +73,22 @@ def test_plot_and_cli(tmp_path: Path):
     assert main(["report", "--robust", str(rob), "--out", str(out), "--fig", str(fig)]) == 0
     assert fig.exists() and "figs/r.png" in out.read_text(encoding="utf-8")
     assert main(["report", "--robust", str(tmp_path / "bos"), "--out", str(out)]) == 2
+
+
+def test_each_model_keeps_one_color_across_panels():
+    from baykus.report.robust import robust_figure
+
+    e3 = ("configs/e3_early_fusion.yaml", "early_fusion")
+    recs = RECS + [
+        _rec(*e3, "clean", "clean", 0.0, "none", 0.85),
+        _rec(*e3, "noise-5", "noise", 5.0, "ir", 0.8),
+        _rec(*e3, "darken-0.5", "darken", 0.5, "rgb", 0.8),
+    ]
+    fig = robust_figure(recs)
+    colors: dict[str, set] = {}
+    for ax in fig.axes:
+        for line in ax.get_lines():
+            colors.setdefault(line.get_label(), set()).add(line.get_color())
+    assert set(colors) == {"e1_rgb", "e2_ir", "e3_early_fusion"}
+    assert all(len(c) == 1 for c in colors.values()), colors
+    assert len({next(iter(c)) for c in colors.values()}) == 3
