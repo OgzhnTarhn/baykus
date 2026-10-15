@@ -135,7 +135,7 @@ def test_cli_adds_e5_and_compare_sections(tmp_path: Path):
     comp.mkdir()
     for r in (_rec("a", "ir", 0.761), _rec("a", "rgb", 0.78)):
         (runs / f"a_{r['label_set']}.json").write_text(json.dumps(r), encoding="utf-8")
-    c = {"name": "e3-vs-e1_val_ir", "overall": None, "per_illumination": {}}
+    c = {"name": "e3-vs-e1_val_ir", "split": "val", "overall": None, "per_illumination": {}}
     (comp / "x.json").write_text(json.dumps(c), encoding="utf-8")
     out = tmp_path / "results.md"
     argv = ["--runs", str(runs), "--compare", str(comp), "--out", str(out)]
@@ -143,3 +143,13 @@ def test_cli_adds_e5_and_compare_sections(tmp_path: Path):
     text = out.read_text(encoding="utf-8")
     assert "## Etiket seti karşılaştırması (E5)" in text and "+1.9" in text
     assert "## Eşleştirilmiş farklar" in text and "e3-vs-e1_val_ir" in text
+
+
+def test_load_compares_filters_split(tmp_path: Path):
+    for name, split in (("a", "val"), ("b", "test"), ("c", None)):
+        c = {"name": name, "overall": None, "per_illumination": {}}
+        if split:
+            c["split"] = split
+        (tmp_path / f"{name}.json").write_text(json.dumps(c), encoding="utf-8")
+    assert [c["name"] for c in load_compares(tmp_path, split="val")] == ["a"]
+    assert len(load_compares(tmp_path)) == 3

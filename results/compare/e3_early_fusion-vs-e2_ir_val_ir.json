@@ -1,5 +1,6 @@
 {
   "name": "e3_early_fusion-vs-e2_ir_val_ir",
+  "split": "val",
   "gt": "/content/dv_rgbt/coco/val_ir.json",
   "a": "/content/drive/MyDrive/baykus/eval/2026-10-14_e3-early-fusion_s_67ace37_val/predictions_coco.json.gz",
   "b": "/content/drive/MyDrive/baykus/eval/2026-10-14_e2-ir_s_02c4098_val/predictions_coco.json.gz",

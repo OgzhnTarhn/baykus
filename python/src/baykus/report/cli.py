@@ -37,7 +37,7 @@ def main(argv: list[str] | None = None) -> int:
         "> Aynı tahminler iki etiket setine karşı (FR-V3). Δ = RGB − IR, mAP50 puanı.\n\n"
         f"{label_set_table(load_runs(a.runs, split=a.split))}\n"
     )
-    compares = load_compares(a.compare)
+    compares = load_compares(a.compare, split=a.split)
     if compares:
         text += (
             "\n## Eşleştirilmiş farklar\n\n"

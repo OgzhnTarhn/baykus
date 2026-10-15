@@ -47,3 +47,10 @@ def test_compare_slice_without_gt_images_is_null(tmp_path: Path):
     # Dilim listesi başka bir bölümün kimliklerini taşıyorsa (GT'de yok) çökmemeli
     assert main(_setup(tmp_path, {"day": [1, 2], "night": [999, 1000]})) == 0
     assert _out(tmp_path)["per_illumination"]["night"] is None
+
+
+def test_compare_records_split(tmp_path: Path):
+    args = _setup(tmp_path, {"day": list(range(1, 21))})
+    assert main([*args, "--split", "test"]) == 0
+    assert _out(tmp_path)["split"] == "test"
+    assert main(args) == 0 and _out(tmp_path)["split"] == "val"  # varsayılan

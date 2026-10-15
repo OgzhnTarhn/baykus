@@ -183,6 +183,7 @@ def _cmd_compare(a: argparse.Namespace) -> int:
     mb = collect_matches(gt, load_predictions(Path(a.b)))
     out = {
         "name": a.name,
+        "split": a.split,
         "gt": a.gt,
         "a": a.a,
         "b": a.b,
@@ -220,6 +221,7 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("--b", required=True)
     c.add_argument("--slices", required=True)
     c.add_argument("--name", required=True)
+    c.add_argument("--split", default="val", choices=["val", "test"])
     c.add_argument("--results", type=Path, default=Path("../results"))
     c.add_argument("--n-boot", type=int, default=1000)
     c.set_defaults(func=_cmd_compare)

@@ -104,8 +104,9 @@ def compare_table(compares: list[dict]) -> str:
     return "\n".join(rows)
 
 
-def load_compares(folder: Path) -> list[dict]:
+def load_compares(folder: Path, split: str | None = None) -> list[dict]:
     folder = Path(folder)
     if not folder.is_dir():
         return []
-    return [json.loads(p.read_text(encoding="utf-8")) for p in sorted(folder.glob("*.json"))]
+    out = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(folder.glob("*.json"))]
+    return [c for c in out if split is None or c.get("split") == split]

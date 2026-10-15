@@ -1,5 +1,6 @@
 {
   "name": "e2_ir-vs-e1_rgb_val_ir",
+  "split": "val",
   "gt": "/content/dv_rgbt/coco/val_ir.json",
   "a": "/content/drive/MyDrive/baykus/eval/2026-10-14_e2-ir_s_02c4098_val/predictions_coco.json.gz",
   "b": "/content/drive/MyDrive/baykus/eval/2026-10-11_e1-rgb_s_49da0cb_val/predictions_coco.json.gz",
