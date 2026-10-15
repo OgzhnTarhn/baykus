@@ -39,18 +39,26 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
   4. Sınıf: car 0,979, bus 0,970, truck 0,792, freight_car 0,779, van 0,675. Boyut: small 0,578, medium 0,845, large 0,922.
   5. FR-V6: Ultralytics 0,8424 vs pycocotools 0,8390, fark 0,0034 ≤ 0,01.
   6. Eğitim: Ultralytics val mAP50 en yüksek 0,840 (37-38. epoch); mozaik kapandıktan sonra (41-50) 0,834'ten 0,821'e indi, `best.pt` 0,840 noktasını tutuyor (`gpu-budget.md`).
-- **E1 ile (eşleştirilmemiş, aralıklara bakarak):** genel 0,761 [0,736; 0,789] vs 0,839 [0,817; 0,859], aralıklar örtüşmüyor. Karanlık gece 0,708 vs 0,872, gündüz 0,818 vs 0,824. Kesin karşılaştırma eşleştirilmiş bootstrap ile (`baykus-eval compare`, H3 Görev 10'da `COMPARE` adımı).
+- **E1 ile (eşleştirilmemiş, aralıklara bakarak):** genel 0,761 [0,736; 0,789] vs 0,839 [0,817; 0,859], aralıklar örtüşmüyor. Karanlık gece 0,708 vs 0,872, gündüz 0,818 vs 0,824. Eşleştirilmiş bootstrap (`results/compare/e2_ir-vs-e1_rgb_val_ir.json`, E2 − E1): genel +7,8 [+5,4; +9,9] *, gündüz +0,6 [−1,6; +2,8], gece +4,3 [+0,8; +8,5] *, karanlık gece +16,3 [+12,8; +20,3] * (`*` anlamlı).
 - **Başlatma:** E2 logunda "Remapped 3/5 cls head rows from pretrained weights by class name" (8.4.177). 8.4.175'te aynı kod varsayılan açık olduğu için E1 de aynı başlatmayı aldı (`gpu-budget.md`, 2026-10-15).
 - **Yorum (taslak, kullanıcıyla netleşecek):** Hipotez gündüz (fark ~0,6 puan) ve karanlık gece (~16 puan) için sayılarla uyumlu; gece farkı (~4 puan) aralıkların içinde. RGB etiketleriyle karanlık gecedeki büyük düşüş, RGB etiket setinin karanlık görüntülerde IR'nin gördüğü nesnelerden farklı/eksik kutular içerdiğini düşündürüyor (E0 bulgu 2-3); E5 yorumunda E3 ile birlikte ele alınacak.
 
 ## 2026-10-14 · E3 · Erken füzyon, rgb_mean (yolo26s)
 - **Hipotez:** Basit 4 kanal birleştirme hem E1'i hem E2'yi geçer; en büyük kazanç karanlık gecede.
 - **Kurulum:** `configs/e3_early_fusion.yaml` (50 epoch, seed 42, `first_conv_init: rgb_mean`, `config_hash` sha256:d809f05b…) · eğitim ve değerlendirme commit `67ace37` (`h3`), Colab Pro A100, Ultralytics 8.4.177 · `rgbt4` oturumda üretildi (train + val, 3 dk 9 sn, ADR 0004) · val, `conf=0.001`, `max_det=1000`, 1000 bootstrap.
-- **Sonuç:** `results/train/2026-10-14_e3-early-fusion_s_67ace37.json` · MLflow `0b721f9899424cf9b2d3303e71e8c56a` · değerlendirme `results/runs/2026-10-14_e3-early-fusion_s_67ace37_val_{ir,rgb}.json` (Drive'dan gelecek).
-- **Bulgular (Colab konsolu, 2026-10-15; JSON gelince güven aralıkları ve kırılımlar eklenecek):**
-  1. `baykus-eval` mAP50: IR etiketleri **0,8565**, RGB etiketleri **0,7583**; `dropped=0` (ikisi de).
-  2. Ultralytics val (max_det 1000, `best.pt`): mAP50 0,860, mAP50-95 0,646; sınıf car 0,986, bus 0,972, truck 0,837, freight_car 0,804, van 0,702.
-  3. Ultralytics'in kendi COCO değerlendirmesi (faster-coco-eval 1.8.0, `maxDets=100`): AP50 0,855, AP50-95 0,644; small 0,307, medium 0,647, large 0,822.
-  4. Eğitim: Ultralytics val mAP50 en yüksek 0,861 (31. epoch); mozaik kapandıktan sonra 0,850'den 0,835'e (`gpu-budget.md`).
-- **E1/E2 ile (ham sayılar, IR etiketleri):** E1 0,761 · E2 0,839 · E3 0,8565. RGB etiketleriyle E1 0,780 · E2 0,729 · E3 0,758. Eşleştirilmiş farklar `results/compare/` gelince.
-- **Yorum:** sonuçlar tamamlanınca, kullanıcıyla.
+- **Sonuç:** `results/runs/2026-10-14_e3-early-fusion_s_67ace37_val_ir.json`, `_val_rgb.json` · `results/train/2026-10-14_e3-early-fusion_s_67ace37.json` · `results/compare/*.json` · tablo `docs/results.md` · çapraz kontrol `docs/eval-crosscheck.md` · MLflow `0b721f9899424cf9b2d3303e71e8c56a`.
+- **Bulgular (IR etiketleri, ana set):**
+  1. mAP50 0,857 [0,838; 0,876], mAP50-95 0,645; precision 0,893, recall 0,954 (conf 0,25).
+  2. Aydınlatma: gündüz 0,867 [0,846; 0,892] · gece 0,793 [0,750; 0,834] · karanlık gece 0,873 [0,840; 0,902].
+  3. Sınıf: car 0,981, bus 0,967, truck 0,833, freight_car 0,801, van 0,700. Boyut: small 0,583, medium 0,859, large 0,942.
+  4. RGB etiketleriyle 0,758 [0,736; 0,787] (gündüz 0,840, gece 0,771, karanlık gece 0,693); fark (RGB − IR) −9,8, karanlık gecede −18,0 (E5).
+  5. FR-V6: Ultralytics 0,8600 vs pycocotools 0,8565, fark 0,0035 ≤ 0,01.
+  6. Eğitim: Ultralytics val mAP50 en yüksek 0,861 (31. epoch); mozaik kapandıktan sonra 0,850'den 0,835'e (`gpu-budget.md`).
+- **Eşleştirilmiş farklar (A − B, mAP50 puanı, %95 GA, 1000 bootstrap; `*` anlamlı):**
+
+  | | Genel | Gündüz | Gece | Karanlık gece |
+  |---|---|---|---|---|
+  | E3 − E1 | +9,5 [+7,3; +11,7] * | +4,9 [+2,9; +7,0] * | +3,2 [−0,2; +7,9] | +16,5 [+13,2; +20,2] * |
+  | E3 − E2 | +1,8 [+0,8; +2,8] * | +4,3 [+2,5; +6,3] * | −1,1 [−2,6; +0,8] | +0,1 [−1,3; +1,4] |
+
+- **Yorum (taslak, kullanıcıyla netleşecek):** Hipotezin ilk yarısı tutuyor: E3 genel skorda hem E1'i hem E2'yi anlamlı geçiyor. İkinci yarısı tutmuyor: karanlık gecedeki kazanç E1'e karşı büyük (+16,5) ama bunu IR kanalı tek başına da sağlıyor (E2 − E1 +16,3; E3 − E2 +0,1, fark yok). Füzyonun E2'ye kattığı fark **gündüzde** (+4,3): ışık varken RGB'nin renk ve doku bilgisi işe yarıyor. Gece E3 ile E2 arasında fark yok (aralık 0'ı içeriyor). Kısaca: karanlıkta termal taşıyor, gündüzde RGB katkı veriyor; erken füzyon ikisinden de yararlanıyor ama ikisinin en iyisinden fazlasını vermiyor.
