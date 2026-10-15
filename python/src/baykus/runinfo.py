@@ -58,9 +58,17 @@ def iso(t: dt.datetime) -> str:
 
 
 def write_json(path: Path, data: dict) -> Path:
+    """Atomik yazma: önce .tmp, sonra os.replace. Colab oturumu yazma anında koparsa
+    Drive'da yarım JSON kalmaz (sağlamlık paketi var olan dosyayı "bitti" sayar)."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    try:
+        os.replace(tmp, path)
+    except OSError:
+        tmp.unlink(missing_ok=True)
+        raise
     return path
 
 

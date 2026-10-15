@@ -84,3 +84,19 @@ def test_software_versions_missing_package(monkeypatch):
 
     monkeypatch.setattr(ri, "SOFTWARE", ("numpy", "yok-boyle-bir-paket"))
     assert ri.software_versions()["yok-boyle-bir-paket"] is None
+
+
+def test_write_json_is_atomic(tmp_path: Path, monkeypatch):
+    # Colab oturumu yazma anında koparsa eski dosya bozulmamalı, yarım dosya kalmamalı
+    import baykus.runinfo as ri
+
+    p = ri.write_json(tmp_path / "r.json", {"a": 1})
+
+    def boom(*a, **k):
+        raise OSError("oturum koptu")
+
+    monkeypatch.setattr(ri.os, "replace", boom)
+    with pytest.raises(OSError):
+        ri.write_json(p, {"a": 2})
+    assert json.loads(p.read_text(encoding="utf-8")) == {"a": 1}
+    assert [f.name for f in tmp_path.iterdir()] == ["r.json"]
