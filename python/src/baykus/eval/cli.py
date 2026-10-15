@@ -243,26 +243,36 @@ def _cmd_run(a: argparse.Namespace) -> int:
 
 
 def _cmd_compare(a: argparse.Namespace) -> int:
-    from baykus.eval.bootstrap import collect_matches, paired_diff_ci, subset
+    from baykus.eval.bootstrap import collect_matches, paired_mean_diff_ci, subset
 
+    if len(a.a) != len(a.b):
+        print("hata: --a ve --b aynı sayıda tahmin dosyası almalı (koşul koşul eşleşir)",
+              file=sys.stderr)  # fmt: skip
+        return 2
     gt = load_coco(Path(a.gt))
-    ma = collect_matches(gt, load_predictions(Path(a.a)))
-    mb = collect_matches(gt, load_predictions(Path(a.b)))
+    ma = [collect_matches(gt, load_predictions(Path(p))) for p in a.a]
+    mb = [collect_matches(gt, load_predictions(Path(p))) for p in a.b]
+
+    def one(xs: list[str]) -> str | list[str]:
+        return xs[0] if len(xs) == 1 else xs
+
     out = {
         "name": a.name,
         "split": a.split,
         "gt": a.gt,
-        "a": a.a,
-        "b": a.b,
+        "a": one(a.a),
+        "b": one(a.b),
         "n_boot": a.n_boot,
-        "overall": paired_diff_ci(ma, mb, a.n_boot),
+        "overall": paired_mean_diff_ci(ma, mb, a.n_boot),
         "per_illumination": {},
     }
     slices = json.loads(Path(a.slices).read_text(encoding="utf-8")).get("illumination", {})
     for name, ids in slices.items():
-        sa, sb = subset(ma, ids), subset(mb, ids)
+        sa, sb = [subset(m, ids) for m in ma], [subset(m, ids) for m in mb]
         # GT'de görüntüsü olmayan dilim ölçülmemiştir: 0 değil null
-        out["per_illumination"][name] = paired_diff_ci(sa, sb, a.n_boot) if sa.img_ids else None
+        out["per_illumination"][name] = (
+            paired_mean_diff_ci(sa, sb, a.n_boot) if sa[0].img_ids else None
+        )
     out["created_at"] = iso(utc_now())
     print(write_json(Path(a.results) / "compare" / f"{a.name}.json", out))
     return 0
@@ -287,8 +297,8 @@ def build_parser() -> argparse.ArgumentParser:
     r.set_defaults(func=_cmd_run)
     c = sub.add_parser("compare", help="iki modelin eşleştirilmiş bootstrap farkı")
     c.add_argument("--gt", required=True)
-    c.add_argument("--a", required=True)
-    c.add_argument("--b", required=True)
+    c.add_argument("--a", required=True, nargs="+")
+    c.add_argument("--b", required=True, nargs="+")
     c.add_argument("--slices", required=True)
     c.add_argument("--name", required=True)
     c.add_argument("--split", default="val", choices=["val", "test"])

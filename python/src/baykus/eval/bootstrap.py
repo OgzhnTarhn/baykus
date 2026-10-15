@@ -157,17 +157,34 @@ def bootstrap_ci(m: Matches, n: int = 1000, seed: int = 0) -> tuple[float | None
     return float(lo), float(hi)
 
 
-def paired_diff_ci(a: Matches, b: Matches, n: int = 1000, seed: int = 0) -> dict:
-    if a.img_ids != b.img_ids:
+def paired_mean_diff_ci(a: list[Matches], b: list[Matches], n: int = 1000, seed: int = 0) -> dict:
+    """A'nın koşul ortalaması − B'nin koşul ortalaması (ör. kamera kaybı puanı: RGB kaybı ve IR
+    kaybının ortalaması). Her bootstrap örneği bütün koşullarda aynı görüntülerle çekilir."""
+    if not a or len(a) != len(b):
+        raise ValueError(f"koşul sayısı eşit ve sıfırdan büyük olmalı: {len(a)} ≠ {len(b)}")
+    ids = a[0].img_ids
+    if any(m.img_ids != ids for m in (*a, *b)):
         raise ValueError("eşleştirilmiş bootstrap için iki model aynı görüntü listesinde ölçülmeli")
-    k = len(a.img_ids)
+    k = len(ids)
     rng = np.random.default_rng(seed)
+
+    def mean_ap(ms: list[Matches], s: np.ndarray | None = None) -> float:
+        return float(np.mean([ap50(m, s) for m in ms]))
+
     diffs = []
     for _ in range(n):
         s = rng.integers(0, k, k)
-        diffs.append(ap50(a, s) - ap50(b, s))
+        diffs.append(mean_ap(a, s) - mean_ap(b, s))
     lo, hi = (float(x) for x in np.percentile(diffs, [2.5, 97.5]))
-    return {"diff": ap50(a) - ap50(b), "ci95": [lo, hi], "significant": bool(lo > 0 or hi < 0)}
+    return {
+        "diff": mean_ap(a) - mean_ap(b),
+        "ci95": [lo, hi],
+        "significant": bool(lo > 0 or hi < 0),
+    }
+
+
+def paired_diff_ci(a: Matches, b: Matches, n: int = 1000, seed: int = 0) -> dict:
+    return paired_mean_diff_ci([a], [b], n, seed)
 
 
 def precision_recall(m: Matches, conf: float = 0.25) -> tuple[float | None, float | None]:

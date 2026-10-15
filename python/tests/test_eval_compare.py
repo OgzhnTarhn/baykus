@@ -3,6 +3,8 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from baykus.eval.cli import main
 from baykus.eval.predictions import save_predictions
 from tests.coco_helpers import make_gt, perfect
@@ -54,3 +56,17 @@ def test_compare_records_split(tmp_path: Path):
     assert main([*args, "--split", "test"]) == 0
     assert _out(tmp_path)["split"] == "test"
     assert main(args) == 0 and _out(tmp_path)["split"] == "val"  # varsayılan
+
+
+def test_compare_mean_of_conditions_and_count_mismatch(tmp_path: Path, capsys):
+    args = _setup(tmp_path, {"day": list(range(1, 21))})
+    good, half = args[args.index("--a") + 1], args[args.index("--b") + 1]
+    assert main(args) == 0
+    single = _out(tmp_path)["overall"]["diff"]
+    base = [x for x in args if x not in (good, half) and x not in ("--a", "--b")]
+    assert main([*base, "--a", good, good, "--b", good, half]) == 0  # kamera kaybı puanı gibi
+    out = _out(tmp_path)
+    assert out["a"] == [good, good] and out["b"] == [good, half]
+    assert out["overall"]["diff"] == pytest.approx(single / 2)
+    assert main([*base, "--a", good, good, "--b", half]) == 2
+    assert "aynı sayıda" in capsys.readouterr().err

@@ -131,3 +131,36 @@ def test_precision_recall_at_conf():
     ]
     assert precision_recall(collect_matches(gt, dets), conf=0.25) == (0.5, 0.5)
     assert precision_recall(collect_matches(gt, []), conf=0.25) == (None, 0.0)
+
+
+def test_paired_mean_diff_single_condition_equals_paired_diff():
+    from baykus.eval.bootstrap import paired_diff_ci, paired_mean_diff_ci
+
+    gt = make_gt({i: [(1, [0, 0, 10, 10])] for i in range(1, 21)})
+    ma = collect_matches(gt, perfect(gt))
+    mb = collect_matches(gt, [d for d in perfect(gt) if d["image_id"] % 2 == 0])
+    assert paired_mean_diff_ci([ma], [mb], 200, 3) == paired_diff_ci(ma, mb, 200, 3)
+
+
+def test_paired_mean_diff_averages_conditions():
+    from baykus.eval.bootstrap import paired_diff_ci, paired_mean_diff_ci
+
+    gt = make_gt({i: [(1, [0, 0, 10, 10])] for i in range(1, 21)})
+    good = collect_matches(gt, perfect(gt))
+    half = collect_matches(gt, [d for d in perfect(gt) if d["image_id"] % 2 == 0])
+    single = paired_diff_ci(good, half, 200)
+    both = paired_mean_diff_ci([good, good], [good, half], 200)  # 1. koşulda fark 0
+    assert both["diff"] == pytest.approx(single["diff"] / 2)
+    assert both["ci95"][0] <= both["diff"] <= both["ci95"][1]
+
+
+def test_paired_mean_diff_rejects_mismatch():
+    from baykus.eval.bootstrap import paired_mean_diff_ci
+
+    gt = make_gt({i: [(1, [0, 0, 10, 10])] for i in range(1, 5)})
+    other = make_gt({i: [(1, [0, 0, 10, 10])] for i in range(1, 4)})
+    m, o = collect_matches(gt, perfect(gt)), collect_matches(other, perfect(other))
+    with pytest.raises(ValueError, match="koşul"):
+        paired_mean_diff_ci([m], [m, m])
+    with pytest.raises(ValueError, match="aynı görüntü"):
+        paired_mean_diff_ci([m, o], [m, m])
