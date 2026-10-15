@@ -80,3 +80,63 @@ def test_stale_ultralytics_predictions_are_not_reused(tmp_path: Path, monkeypatc
     paths, _ = _run(tmp_path, monkeypatch, write_preds=False)
     ir = json.loads(paths[0].read_text(encoding="utf-8"))
     assert ir["metrics"]["n_dets"] == 0 and ir["metrics"]["map50"] == 0.0
+
+
+def _single_class_gt(root: Path) -> None:
+    """M3OT gibi: GT tek kategori 'vehicle' (id 1)."""
+    for ls in ("ir", "rgb"):
+        p = root / "coco" / f"val_{ls}.json"
+        d = json.loads(p.read_text(encoding="utf-8"))
+        d["categories"] = [{"id": 1, "name": "vehicle"}]
+        for a in d["annotations"]:
+            a["category_id"] = 1
+        p.write_text(json.dumps(d), encoding="utf-8")
+
+
+def test_class_agnostic_m3ot_naming_overrides_and_categories(tmp_path: Path, monkeypatch):
+    fake = install(monkeypatch)
+    fake.force_category = 3  # model 'bus' diyor; sınıfsız değerlendirmede yine doğru sayılmalı
+    root = make_synthetic_dataset(tmp_path / "m3ot")
+    _single_class_gt(root)
+    cfg_path = _cfg(tmp_path)
+    paths = evaluate_weights(
+        load_config(cfg_path),
+        config=str(cfg_path),
+        weights=make_weights(tmp_path / "runs" / RUN, RUN),
+        data=root / "data_rgb.yaml",
+        split="val",
+        meta=root / "meta",
+        project=tmp_path / "eval",
+        results=tmp_path / "results",
+        n_boot=10,
+        dataset="m3ot",
+        class_agnostic=True,
+        results_subdir="m3ot",
+    )
+    assert [p.name for p in paths] == [f"{RUN}_m3ot_val_ir.json", f"{RUN}_m3ot_val_rgb.json"]
+    assert all(p.parent == tmp_path / "results" / "m3ot" for p in paths)
+    rec = json.loads(paths[0].read_text(encoding="utf-8"))
+    assert rec["dataset"] == "m3ot" and rec["class_agnostic"] is True
+    assert rec["metrics"]["map50"] == pytest.approx(1.0)
+    call = fake.calls[0]
+    assert call["single_cls"] is True and call["agnostic_nms"] is True
+    assert call["name"] == f"{RUN}_m3ot_val"
+    from baykus.eval.predictions import load_predictions
+
+    dets = load_predictions(tmp_path / "eval" / f"{RUN}_m3ot_val" / "predictions_coco.json.gz")
+    assert dets and {d["category_id"] for d in dets} == {1}
+
+
+def test_default_dataset_keeps_h3_names_and_no_overrides(tmp_path: Path, monkeypatch):
+    paths, fake = _run(tmp_path, monkeypatch)
+    rec = json.loads(paths[0].read_text(encoding="utf-8"))
+    assert rec["dataset"] == "dronevehicle" and rec["class_agnostic"] is False
+    assert "single_cls" not in fake.calls[0] and "agnostic_nms" not in fake.calls[0]
+
+
+def test_run_name():
+    from baykus.eval.cli import run_name
+
+    assert run_name("r", "val") == "r_val"
+    assert run_name("r", "test", "m3ot") == "r_m3ot_test"
+    assert run_name("r", "val", condition={"id": "drop_rgb"}) == "r_val_drop_rgb"
