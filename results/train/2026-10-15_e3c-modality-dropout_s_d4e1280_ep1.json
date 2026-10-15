@@ -1,0 +1,33 @@
+{
+  "run_id": "2026-10-15_e3c-modality-dropout_s_d4e1280_ep1",
+  "experiment": "e3c_modality_dropout",
+  "config": "../configs/e3c_modality_dropout.yaml",
+  "config_hash": "sha256:b8c73fd3660f739bf7189ea4eea5acecdef0df18359c56f2503df76407e18659",
+  "git_commit": "d4e128037b653063b7a16d2ca332cb49e5a2bd54",
+  "git_dirty": false,
+  "mlflow_run_id": "06bb7616c46c4270b0e72971e48093d2",
+  "seed": 42,
+  "mode": "early_fusion",
+  "model": "yolo26s.pt",
+  "label_set": "ir",
+  "smoke": false,
+  "epochs_requested": 1,
+  "status": "finished",
+  "train_seconds": 189.1,
+  "run_dir": "/content/drive/MyDrive/baykus/runs/2026-10-15_e3c-modality-dropout_s_d4e1280_ep1",
+  "weights": "/content/drive/MyDrive/baykus/runs/2026-10-15_e3c-modality-dropout_s_d4e1280_ep1/weights/best.pt",
+  "hardware": {
+    "device": "NVIDIA A100-SXM4-40GB",
+    "driver": "13.0",
+    "cpu_count": 12
+  },
+  "software": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu130",
+    "ultralytics": "8.4.177",
+    "numpy": "2.1.3",
+    "pycocotools": "2.0.11"
+  },
+  "created_at": "2026-10-15T22:30:39Z",
+  "finished_at": "2026-10-15T22:33:54Z"
+}
