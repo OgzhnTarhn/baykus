@@ -1,0 +1,42 @@
+{
+  "name": "e2_ir-vs-e1_rgb_val_ir",
+  "gt": "/content/dv_rgbt/coco/val_ir.json",
+  "a": "/content/drive/MyDrive/baykus/eval/2026-10-14_e2-ir_s_02c4098_val/predictions_coco.json.gz",
+  "b": "/content/drive/MyDrive/baykus/eval/2026-10-11_e1-rgb_s_49da0cb_val/predictions_coco.json.gz",
+  "n_boot": 1000,
+  "overall": {
+    "diff": 0.0777417212724395,
+    "ci95": [
+      0.05389013925048653,
+      0.09936180130667918
+    ],
+    "significant": true
+  },
+  "per_illumination": {
+    "day": {
+      "diff": 0.006415244140304921,
+      "ci95": [
+        -0.016056102800154758,
+        0.02833335589947953
+      ],
+      "significant": false
+    },
+    "night": {
+      "diff": 0.04274907213472223,
+      "ci95": [
+        0.008150194093435589,
+        0.08497407208643395
+      ],
+      "significant": true
+    },
+    "dark_night": {
+      "diff": 0.1631138304524823,
+      "ci95": [
+        0.12827716343813722,
+        0.20336763234963803
+      ],
+      "significant": true
+    }
+  },
+  "created_at": "2026-10-14T23:48:17Z"
+}
