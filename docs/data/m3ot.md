@@ -45,3 +45,27 @@ baykus-data rgbt4 --out /content/m3ot --splits test --workers N
 - DroneVehicle'da eğitilen her model M3OT **test** bölümünde, sınıfsız `vehicle` AP: `baykus-eval run ... --dataset m3ot --class-agnostic` (Ultralytics `single_cls=True`, `agnostic_nms=True`; pycocotools'ta bütün tahminler kategori 1).
 - Tabloda rgb modu RGB etiketiyle, diğer modlar IR etiketiyle; geç füzyon E4'ün val'de seçilen parametreleriyle (`baykus-fusion apply`), E4b uygulanmaz (aydınlatma etiketi yok).
 - Kareler aynı videodan ve ardışık: görüntü düzeyinde bootstrap güven aralığı iyimser (dar) çıkabilir. M3OT kutuları DroneVehicle'dan küçük (< 1024 px²). Mutlak değer değil, **modlar arası sıra** yorumlanır.
+
+## Sonuçlar (E7, 2026-10-16, Colab A100, `05_m3ot`)
+
+Kaynak: notebook çıktısındaki `baykus-eval` / `baykus-fusion apply` satırları (pycocotools, `maxDets=1000`).
+JSON dosyaları `results/m3ot/` altına indirilince bu tablo onlarla doğrulanacak.
+
+| Deney | Model | mAP50 IR etiketi | mAP50 RGB etiketi | Tablodaki değer |
+|---|---|---|---|---|
+| E1 | `2026-10-11_e1-rgb_s_49da0cb` | 0,1009 | **0,8522** | 0,852 (RGB etiketi) |
+| E2 | `2026-10-14_e2-ir_s_02c4098` | **0,9806** | 0,0756 | 0,981 |
+| E3 | `2026-10-14_e3-early-fusion_s_67ace37` | **0,9706** | 0,1015 | 0,971 |
+| E3c | `2026-10-15_e3c-modality-dropout_s_d4e1280` | **0,8889** | 0,1677 | 0,889 |
+| E4 | `2026-10-16_e4-late-fusion_s_b346199` (E1 + E2, val'de seçilen ağırlıklar) | **0,9713** | 0,4262 | 0,971 |
+
+- Dönüştürme: 960 çift, 2 dizi, eşleşmeyen dizi ya da kare yok; kutu RGB 2473, IR 2465; süzülen satır yok.
+  `rgbt4` 960 görüntü 9 sn (12 işçi). Diskte: `rgb` 128 MB, `ir` 180 MB, `rgbt4` 975 MB, etiketler 3,8 MB × 2.
+- Ultralytics taraması: 960 görüntü, **10 arka plan** (IR etiketinde kutusuz kare).
+- `dropped=0` (E1-E3c); E4 satırı `dropped` yazmıyor.
+- Sıra (IR etiketi): E2 > E4 ≈ E3 > E3c. E3c, DroneVehicle val'deki gibi temiz koşulda geride; burada fark daha büyük (−8,2 puan E3'e göre).
+- **Açık soru, doğrulanmadı:** Her model öbür modalitenin etiketleriyle ≈ 0,1 alıyor. Makale RGB'nin IR'ye hizalandığını
+  söylüyor, ama RGB ve IR etiketleri arasında kayma ya da kare kayması olabilir; kutular küçük (< 1024 px²) olduğu için
+  birkaç piksellik kayma bile IoU 0,5'i düşürür. Etiketleri karşılaştırmadan yorum yazılmayacak
+  (`meta/m3ot_tracks.csv`'de aynı kare ve iz numarasının RGB-IR kutuları arasındaki IoU). E4'ün IR etiketiyle E2'nin
+  altında kalması (0,971 vs 0,981) ve E3c'nin düşüşü bu kaymayla ilgili olabilir.
