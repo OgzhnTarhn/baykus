@@ -49,7 +49,7 @@ baykus-data rgbt4 --out /content/m3ot --splits test --workers N
 ## Sonuçlar (E7, 2026-10-16, Colab A100, `05_m3ot`)
 
 Kaynak: notebook çıktısındaki `baykus-eval` / `baykus-fusion apply` satırları (pycocotools, `maxDets=1000`).
-JSON dosyaları `results/m3ot/` altına indirilince bu tablo onlarla doğrulanacak.
+Sayılar `results/m3ot/*.json` ile doğrulandı (10 dosya, hepsi `class_agnostic: true`, `git_dirty: false`).
 
 | Deney | Model | mAP50 IR etiketi | mAP50 RGB etiketi | Tablodaki değer |
 |---|---|---|---|---|
@@ -62,7 +62,7 @@ JSON dosyaları `results/m3ot/` altına indirilince bu tablo onlarla doğrulanac
 - Dönüştürme: 960 çift, 2 dizi, eşleşmeyen dizi ya da kare yok; kutu RGB 2473, IR 2465; süzülen satır yok.
   `rgbt4` 960 görüntü 9 sn (12 işçi). Diskte: `rgb` 128 MB, `ir` 180 MB, `rgbt4` 975 MB, etiketler 3,8 MB × 2.
 - Ultralytics taraması: 960 görüntü, **10 arka plan** (IR etiketinde kutusuz kare).
-- `dropped=0` (E1-E3c); E4 satırı `dropped` yazmıyor.
+- `dropped_predictions = 0` (beş modelde de).
 - Sıra (IR etiketi): E2 > E4 ≈ E3 > E3c. E3c, DroneVehicle val'deki gibi temiz koşulda geride; burada fark daha büyük (−8,2 puan E3'e göre).
 - **RGB-IR etiket hizası (Colab, `meta/m3ot_tracks.csv`, test):** RGB 2473, IR 2465 kutu; aynı kare + iz
   numarasıyla 2455 çift eşleşti (iz numaraları iki modalitede tutarlı). Kutu genişliği ortanca ≈ 12,5 px.
