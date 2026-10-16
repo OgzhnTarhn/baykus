@@ -40,6 +40,9 @@
 
 ## 0. v1'den bu yana ne değişti
 
+### v4.3 (2026-10-17) — H5 planı
+Gecikme hedefi ölçümden **önce** sabitlendi (ADR 0007, "Önerildi"): laptop CPU'da toplam p95 ≤ 100 ms; varyantın val mAP50'si aynı pipeline'ın ONNX FP32'sinden en fazla 1,0 puan düşük; aday sırası E4 → E3c, hiçbiri tutmazsa E8-n. Edge varyantları: ONNX FP32, FP16 (CPU dönüşümü, FP32 giriş/çıkış), INT8 tam (Conv/Gemm/MatMul, kanal başına QDQ) ve INT8 head FP32; TensorRT FP32, FP16, INT8. ΔmAP50'nin referansı aynı pipeline'ın ONNX FP32'si; PyTorch satırı ayrıca. Final test: E1-E4b ve sevk edilen varyant, test bölümünde bir kez. Değişen yerler: §7.5 (NFR-5), §22 (H5).
+
 ### v4.2 (2026-10-16) — H4 planı
 E3b yapılmadı: sadece literatürdeki rgb_mean seçimini kontrol ediyordu, son sistemi değiştirmez; bütçe E3c'ye ayrıldı (spec §22 kesme sırası: ek hedefler → E3b). H4'teki tek eğitim E3c; E3c, geç füzyon (E4, iki model) H5'te cihazda yeterince hızlı çalışmazsa kamera kaybına dayanıklı tek model olarak yedekte. `ul_default` kodda 4 kanallı config'in varsayılanı olarak kalır; `configs/e3b_ul_default.yaml` silindi. Değişen yerler: §4.4, §13, §20.6, §22 (H4).
 
@@ -475,7 +478,7 @@ Faz 1'in kapsamını değiştirmeyen, ama sonradan yeniden iş yapmayı önleyen
 - **NFR-2 Tekrarlanabilirlik:** config + commit + seed + donanım + `uv.lock`.
 - **NFR-3 Test:** Deterministik kod pytest ve GoogleTest ile test edilir. CI yeşil olmadan merge yok.
 - **NFR-4 Kod kalitesi:** ruff, clang-format, eslint. pre-commit kancalarıyla zorunlu.
-- **NFR-5 Gecikme hedefi:** H5'teki ilk ölçümden sonra ADR-0007 ile sabitlenir. Yön: s modeli laptop CPU'da FP32 ile gerçek zamanlıya yakın, INT8 ile daha hızlı.
+- **NFR-5 Gecikme hedefi:** H5'teki ilk ölçümden sonra ADR-0007 ile sabitlenir. Yön: s modeli laptop CPU'da FP32 ile gerçek zamanlıya yakın, INT8 ile daha hızlı. Hedef ölçümden önce ADR 0007'de sabitlendi (v4.3).
 - **NFR-6 Bellek:** Motor, laptopta tek model için makul bir RAM sınırı içinde kalır. Ölçülür ve raporlanır.
 
 ### 7.6 Lisans ve veri gereksinimleri
@@ -1126,6 +1129,8 @@ Aşağıdaki haftalık tablolar v3.0'dan. **H1-H5 = Faz 1** ve geçerli. **H6-H9
 | 34 | README v1 + ADR 0007 + `v0.1.0` tag | README'de ana tablo, aydınlatma, sağlamlık, edge tabloları + 1 grafik |
 
 **Çıkış (MVP):** Repo herkese gösterilebilir. Proje burada kalsa bile güçlü.
+
+> v4.3: gecikme hedefi ve sevk kuralı ölçümden önce ADR 0007'de; H5'te eğitim yok (E8-n yalnız kural gerektirirse); test seti sevk kararından sonra bir kez (`docs/plans/H5.md`).
 
 ### H6 — C++ motor I
 | # | Issue | Kabul kriteri |
