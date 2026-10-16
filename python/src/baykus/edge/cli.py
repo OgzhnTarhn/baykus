@@ -3,21 +3,41 @@
 calib  — INT8 kalibrasyon görüntü adları + Ultralytics veri YAML'ı (isteğe bağlı rgbt4 üretimi).
 export — seçilen varyantları dışa aktarır; manifest sayesinde yeniden başlatılabilir.
 eval   — bir varyantı COCO metrikleriyle değerlendirir (FR-X4).
+bench-inputs — bench için val'den seçili görüntüler, .npy'ler ve Colab tahmin referansları.
+parity — laptop çıktısı Colab referansıyla aynı mı (FR-E6 toleransları).
 """
 
 from __future__ import annotations
 
 import argparse
+import json
+import shutil
 import sys
 from pathlib import Path
 
+import numpy as np
+
 from baykus.data.multichannel import build_rgbt4
+from baykus.edge.backends import open_backend
 from baykus.edge.calib import calibration_stems, write_calib_data
 from baykus.edge.config import load_edge_config, repo_root
-from baykus.edge.evaluate import evaluate_variant
+from baykus.edge.evaluate import evaluate_variant, predict_images
 from baykus.edge.export import export_model
-from baykus.edge.variants import VARIANTS
+from baykus.edge.frames import load_input, preprocess
+from baykus.edge.parity import compare_dets
+from baykus.edge.variants import ONNX_VARIANTS, VARIANTS, model_file
+from baykus.eval.cli import load_coco, run_name
+from baykus.eval.predictions import load_predictions
+from baykus.runinfo import write_json
 from baykus.train.config import load_config
+
+EXT = {"rgb": ".jpg", "ir": ".png", "rgbt4": ".tif"}
+
+
+def _modalities(config: Path, cfg) -> dict[str, str]:
+    """models anahtarı → modalite (rgb / ir / rgbt4), model config'lerinden."""
+    root = repo_root(config)
+    return {k: load_config(root / ref.config).modality for k, ref in cfg.models.items()}
 
 
 def _cmd_calib(a: argparse.Namespace) -> int:
@@ -83,6 +103,68 @@ def _cmd_eval(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_bench_inputs(a: argparse.Namespace) -> int:
+    config, root, out = Path(a.config), Path(a.data_root), Path(a.out)
+    cfg = load_edge_config(config)
+    mods = a.modalities or sorted(set(_modalities(config, cfg).values()))
+    images = sorted(load_coco(root / "coco" / f"{a.split}_ir.json").dataset["images"],
+                    key=lambda im: im["file_name"])  # fmt: skip
+    rng = np.random.default_rng(cfg.seed)
+    pick = sorted(rng.choice(len(images), size=min(cfg.bench.images, len(images)), replace=False))
+    chosen = [images[i] for i in pick]
+    for im in chosen:
+        stem = Path(im["file_name"]).stem
+        for m in mods:
+            dst = out / m / "images" / a.split / f"{stem}{EXT[m]}"
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(root / m / "images" / a.split / f"{stem}{EXT[m]}", dst)
+            npy = out / "npy" / m / f"{stem}.npy"
+            npy.parent.mkdir(parents=True, exist_ok=True)
+            np.save(npy, preprocess(load_input(root, a.split, stem, m), cfg.imgsz)[0])
+    index = [{"stem": Path(im["file_name"]).stem, "image_id": im["id"], "width": im["width"],
+              "height": im["height"], "split": a.split} for im in chosen]  # fmt: skip
+    write_json(out / "images.json", index)
+    ids = {im["id"] for im in chosen}
+    n_refs = 0
+    for ref in cfg.models.values():
+        for v in a.variants:
+            src = Path(a.preds_dir) / run_name(ref.run_id, a.split, variant=v)
+            src = src / "predictions_coco.json.gz"
+            if not src.exists():
+                continue
+            keep = [d for d in load_predictions(src)
+                    if d["image_id"] in ids and d["score"] >= cfg.bench.conf]  # fmt: skip
+            write_json(out / "refs" / f"{ref.run_id}_{v}.json", keep)
+            n_refs += 1
+    print(out, f"{len(chosen)} görüntü, {len(mods)} modalite, {n_refs} referans")
+    return 0
+
+
+def _cmd_parity(a: argparse.Namespace) -> int:
+    config, inputs = Path(a.config), Path(a.inputs)
+    cfg = load_edge_config(config)
+    mods = _modalities(config, cfg)
+    index = json.loads((inputs / "images.json").read_text(encoding="utf-8"))
+    images = [{"id": im["image_id"], "file_name": im["stem"]} for im in index]
+    split = index[0]["split"] if index else "val"
+    report: dict[str, dict] = {}
+    for key, ref in cfg.models.items():
+        ref_file = inputs / "refs" / f"{ref.run_id}_{a.variant}.json"
+        if not ref_file.exists():
+            continue
+        backend = open_backend(model_file(Path(a.models_dir), ref.run_id, a.variant), a.threads)
+        dets = predict_images(backend, inputs, split, mods[key], images, conf=cfg.bench.conf)[0]
+        refs = json.loads(ref_file.read_text(encoding="utf-8"))
+        report[key] = compare_dets(dets, refs, conf=cfg.bench.conf)
+        print(key, a.variant, json.dumps(report[key], ensure_ascii=False))
+    if not report:
+        raise ValueError(f"{inputs / 'refs'}: {a.variant} için referans yok")
+    out = Path(a.results) / "bench" / f"parity_{a.hardware}_{a.variant}.json"
+    write_json(out, {"variant": a.variant, "hardware": a.hardware, "models": report})
+    print(out)
+    return 0 if all(r["ok"] for r in report.values()) else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="baykus-edge")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -118,6 +200,24 @@ def build_parser() -> argparse.ArgumentParser:
     v.add_argument("--project", default="runs/edge")
     v.add_argument("--results", default="../results")
     v.set_defaults(func=_cmd_eval)
+    bi = sub.add_parser("bench-inputs", help="bench girdileri ve Colab referansları")
+    bi.add_argument("--config", required=True)
+    bi.add_argument("--data-root", required=True)
+    bi.add_argument("--split", default="val", choices=["val", "test"])
+    bi.add_argument("--preds-dir", required=True, help="eval'in --project klasörü")
+    bi.add_argument("--out", required=True)
+    bi.add_argument("--variants", nargs="+", default=list(ONNX_VARIANTS), choices=list(VARIANTS))
+    bi.add_argument("--modalities", nargs="+", default=None, choices=list(EXT))
+    bi.set_defaults(func=_cmd_bench_inputs)
+    pa = sub.add_parser("parity", help="çıktı eşliği: bu makine ↔ Colab referansı")
+    pa.add_argument("--config", required=True)
+    pa.add_argument("--inputs", required=True)
+    pa.add_argument("--models-dir", required=True)
+    pa.add_argument("--variant", required=True, choices=list(VARIANTS))
+    pa.add_argument("--hardware", required=True)
+    pa.add_argument("--threads", type=int, default=None)
+    pa.add_argument("--results", default="../results")
+    pa.set_defaults(func=_cmd_parity)
     return p
 
 
