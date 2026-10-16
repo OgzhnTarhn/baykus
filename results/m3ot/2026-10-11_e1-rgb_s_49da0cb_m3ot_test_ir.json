@@ -1,0 +1,86 @@
+{
+  "run_id": "2026-10-11_e1-rgb_s_49da0cb",
+  "git_commit": "47c42dc05331d41c50b6daee99eef05aedc86e8f",
+  "git_dirty": false,
+  "config": "../configs/e1_rgb.yaml",
+  "config_hash": "sha256:749df56f9ffcfabb8d638a473702ac77d97fa932c0e9ae60b1c21191453ee6d9",
+  "mlflow_run_id": null,
+  "train_run_id": "2026-10-11_e1-rgb_s_49da0cb",
+  "seed": 42,
+  "dataset": "m3ot",
+  "class_agnostic": true,
+  "split": "test",
+  "label_set": "ir",
+  "model": {
+    "family": "yolo26",
+    "size": "s",
+    "mode": "rgb",
+    "params_m": null,
+    "gflops": null
+  },
+  "format": "pytorch",
+  "precision": "fp32",
+  "hardware": {
+    "device": "NVIDIA A100-SXM4-40GB",
+    "driver": "13.0",
+    "cpu_count": 12
+  },
+  "software": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu130",
+    "ultralytics": "8.4.177",
+    "numpy": "2.1.3",
+    "pycocotools": "2.0.11"
+  },
+  "weights": "/content/drive/MyDrive/baykus/runs/2026-10-11_e1-rgb_s_49da0cb/weights/best.pt",
+  "n_boot": 1000,
+  "dropped_predictions": 0,
+  "metrics": {
+    "map50": 0.10093943397422608,
+    "map50_95": 0.02239064789512566,
+    "precision": 0.24063324538258576,
+    "recall": 0.18498985801217038,
+    "per_class": {
+      "vehicle": 0.10093943397422608
+    },
+    "per_illumination": {
+      "day": null,
+      "night": null,
+      "dark_night": null
+    },
+    "per_size": {
+      "small": 0.10145587797897994,
+      "medium": null,
+      "large": null
+    },
+    "ci95": {
+      "map50": [
+        0.09058425070289253,
+        0.11396411345281755
+      ],
+      "per_illumination": {
+        "day": [
+          null,
+          null
+        ],
+        "night": [
+          null,
+          null
+        ],
+        "dark_night": [
+          null,
+          null
+        ]
+      }
+    },
+    "n_images": 960,
+    "n_dets": 12487
+  },
+  "created_at": "2026-10-16T11:18:23Z",
+  "crosscheck": {
+    "label_set": "ir",
+    "ultralytics_map50": 0.09694133464081006,
+    "pycocotools_map50": 0.10093943397422608,
+    "abs_diff": 0.003998099333416022
+  }
+}

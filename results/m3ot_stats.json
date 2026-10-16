@@ -1,0 +1,15 @@
+{
+  "pairs": 960,
+  "sequences": 2,
+  "unpaired_sequences": [],
+  "frames_rgb_only": 0,
+  "frames_ir_only": 0,
+  "boxes": {
+    "rgb": 2473,
+    "ir": 2465
+  },
+  "dropped_rows": {
+    "rgb": 0,
+    "ir": 0
+  }
+}
