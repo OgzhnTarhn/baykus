@@ -24,8 +24,16 @@ from baykus.eval.cli import (
 from baykus.eval.metrics import build_metrics
 from baykus.eval.predictions import load_predictions, save_predictions
 from baykus.fusion.config import FusionConfig, load_fusion_config
-from baykus.fusion.late import fuse_predictions, illumination_weights, levels_from_slices
+from baykus.fusion.late import (
+    condition_levels,
+    fuse_predictions,
+    illumination_weights,
+    levels_from_slices,
+    load_brightness,
+)
 from baykus.fusion.select import select_constant, select_per_illumination
+from baykus.robustness.cli import ROBUST_DIR
+from baykus.robustness.corruptions import SUITE, Condition, applies, suite_conditions
 from baykus.runinfo import git_info, iso, make_run_id, utc_now, write_json
 from baykus.train.config import ConfigError
 
@@ -183,6 +191,75 @@ def _cmd_select(a: argparse.Namespace) -> int:
     return 0
 
 
+def compose_sources(cond: Condition) -> tuple[str, str]:
+    """Geç füzyonun koşul girdileri: bozulma bir modaliteye dokunmuyorsa o modelin temiz
+    tahmini. Hizasızlık IR'yi kaydırır: E2'nin kaydırılmış IR tahmini (--ir-misalign)."""
+    rgb = cond.id if applies(cond, "rgb") else "clean"
+    ir = cond.id if applies(cond, "ir") or cond.corruption == "misalign" else "clean"
+    return rgb, ir
+
+
+def _load_selection(a: argparse.Namespace) -> tuple[dict, FusionConfig]:
+    cfg = load_fusion_config(Path(a.config))
+    sel = json.loads(Path(a.selection).read_text(encoding="utf-8"))
+    if sel["experiment"] != cfg.experiment:
+        raise FusionError(f"seçim {sel['experiment']!r}, config {cfg.experiment!r}: eşleşmiyor")
+    return sel, cfg
+
+
+def _cmd_robust(a: argparse.Namespace) -> int:
+    sel, cfg = _load_selection(a)
+    root, meta, rp = Path(a.data_root), Path(a.meta), Path(a.robust_preds)
+    conds = [c for c in suite_conditions(a.only) if applies(c, "late_fusion")]
+    srcs = {}
+    for c in conds:
+        cid_rgb, cid_ir = compose_sources(c)
+        srcs[c.id] = (
+            rp / f"{sel['rgb_run_id']}_{a.split}_{cid_rgb}" / "predictions_coco.json.gz",
+            rp / f"{sel['ir_run_id']}_{a.split}_{cid_ir}" / "predictions_coco.json.gz",
+            {"rgb": cid_rgb, "ir": cid_ir},
+        )
+    missing = sorted({str(p) for r, i, _ in srcs.values() for p in (r, i) if not p.exists()})
+    if missing:
+        raise FusionError(
+            "tahmin dosyası yok (03_robust bitti mi? E2 hizasızlığı için --ir-misalign): "
+            + ", ".join(missing)
+        )
+    brightness = th = None
+    if cfg.per_illumination:
+        gt = load_coco(root / "coco" / f"{a.split}_ir.json")
+        brightness, th = load_brightness(meta, a.split, gt.dataset["images"])
+    for c in conds:
+        rgb_p, ir_p, sources = srcs[c.id]
+        info = {"id": c.id, "corruption": c.corruption, "severity": c.severity,
+                "target": c.target, "seed": a.seed, "sources": sources}  # fmt: skip
+        fuse_and_record(
+            sel, cfg, rgb_preds=rgb_p, ir_preds=ir_p, root=root, meta=meta, split=a.split,
+            project=Path(a.project), results=Path(a.results), n_boot=a.n_boot or cfg.n_boot,
+            workers=a.workers, condition=info, label_sets=(LABEL_SET,),
+            results_subdir=ROBUST_DIR,
+            levels=condition_levels(brightness, th, c) if cfg.per_illumination else None,
+        )  # fmt: skip
+    return 0
+
+
+def _cmd_apply(a: argparse.Namespace) -> int:
+    sel, cfg = _load_selection(a)
+    if isinstance(sel["selected"]["ir_weight"], dict):
+        raise FusionError(
+            f"aydınlatmaya göre ağırlık (E4b) {a.dataset}'te uygulanmaz: aydınlatma etiketi yok"
+        )
+    root = Path(a.data_root)
+    fuse_and_record(
+        sel, cfg, rgb_preds=Path(a.rgb_preds), ir_preds=Path(a.ir_preds), root=root,
+        meta=Path(a.meta) if a.meta else root / "meta", split=a.split, project=Path(a.project),
+        results=Path(a.results), n_boot=a.n_boot or cfg.n_boot, workers=a.workers,
+        dataset=a.dataset, class_agnostic=a.class_agnostic,
+        results_subdir="runs" if a.dataset == DEFAULT_DATASET else a.dataset,
+    )  # fmt: skip
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="baykus-fusion")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -200,6 +277,35 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--workers", type=int, default=1)
     s.add_argument("--n-boot", type=int, default=None)
     s.set_defaults(func=_cmd_select)
+    r = sub.add_parser("robust", help="sağlamlık paketi: koşul tahminlerini birleştir")
+    r.add_argument("--config", required=True)
+    r.add_argument("--selection", required=True)
+    r.add_argument("--robust-preds", required=True, help="03_robust'ın --project klasörü")
+    r.add_argument("--data-root", required=True)
+    r.add_argument("--meta", required=True)
+    r.add_argument("--split", default="val", choices=["val", "test"])
+    r.add_argument("--project", default="runs/robust")
+    r.add_argument("--results", default="../results")
+    r.add_argument("--only", nargs="+", choices=list(SUITE), default=None)
+    r.add_argument("--seed", type=int, default=42, help="03_robust'ın bozulma seed'i (kayıt için)")
+    r.add_argument("--workers", type=int, default=1)
+    r.add_argument("--n-boot", type=int, default=None)
+    r.set_defaults(func=_cmd_robust)
+    ap = sub.add_parser("apply", help="seçilmiş parametrelerle başka veri setinde birleştir")
+    ap.add_argument("--config", required=True)
+    ap.add_argument("--selection", required=True)
+    ap.add_argument("--rgb-preds", required=True)
+    ap.add_argument("--ir-preds", required=True)
+    ap.add_argument("--data-root", required=True)
+    ap.add_argument("--meta", default=None)
+    ap.add_argument("--split", default="test", choices=["val", "test"])
+    ap.add_argument("--dataset", default="m3ot", choices=[DEFAULT_DATASET, "m3ot"])
+    ap.add_argument("--class-agnostic", action="store_true")
+    ap.add_argument("--project", default="runs/m3ot")
+    ap.add_argument("--results", default="../results")
+    ap.add_argument("--workers", type=int, default=1)
+    ap.add_argument("--n-boot", type=int, default=None)
+    ap.set_defaults(func=_cmd_apply)
     return p
 
 
