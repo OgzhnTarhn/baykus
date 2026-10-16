@@ -726,6 +726,247 @@ FUSION_CELLS = [
 ]
 
 
+EDGE_INSTALL = code(
+    """
+    %%time
+    # Kurulum (≈ 1 dk). Sürüm satırlarını Claude'a getir.
+    !pip -q install uv kaggle
+    if PART == 'trt':
+        !pip -q install tensorrt
+    !uv pip install --system -q -e '/content/baykus/python[train]'
+    import sys
+    sys.path.insert(0, '/content/baykus/python/src')
+    !python --version && nproc && (nvidia-smi -L || true)
+    !python -c "import onnxruntime as o, ultralytics as u; print('onnxruntime', o.__version__, '· ultralytics', u.__version__)"
+    !python -c "import tensorrt as t; print('tensorrt', t.__version__)" || true
+    """
+)
+
+EDGE_MODELS = code(
+    """
+    %%time
+    # Modeller ve kalibrasyon listesi (≈ 1-5 dk; T4'ün 2 çekirdeğinde rgbt4 üretimi daha uzun).
+    import json, os
+    from pathlib import Path
+    import yaml
+    from baykus.train.config import load_config
+    NPROC = os.cpu_count()
+    REPO = Path('/content/baykus')
+    E = yaml.safe_load((REPO / 'configs/edge/e9_edge.yaml').read_text(encoding='utf-8'))
+    RUN = {k: v['run_id'] for k, v in E['models'].items()}
+    MOD = {k: load_config(REPO / v['config']).modality for k, v in E['models'].items()}
+    W = {k: Path(f'{DRIVE}/runs/{r}/weights/best.pt') for k, r in RUN.items()}
+    missing = [str(p) for p in W.values() if not p.exists()]
+    assert not missing, f'best.pt yok: {missing}'
+    MODELS_DIR = f'{DRIVE}/edge/models'
+    PROJ = f'{DRIVE}/edge/eval'
+    CFG = '../configs/edge/e9_edge.yaml'
+    for m in sorted(set(MOD.values())):
+        !cd /content/baykus/python && baykus-edge calib --config {CFG} --data-root /content/dv_rgbt --modality {m} --out /content/calib --build-rgbt4 --workers {NPROC}
+    if 'rgbt4' in MOD.values():
+        !baykus-data rgbt4 --out /content/dv_rgbt --splits val --workers {NPROC}
+    VARIANTS = ['onnx_fp32', 'onnx_fp16', 'onnx_int8', 'onnx_int8_headfp32'] if PART == 'onnx' else ['trt_fp32', 'trt_fp16', 'trt_int8']
+    EXT = '.onnx' if PART == 'onnx' else '.engine'
+    for k in RUN:
+        print(k, RUN[k], MOD[k])
+    """
+)
+
+EDGE_EXPORT = code(
+    """
+    %%time
+    # Export (onnx: model başına ≈ 1-3 dk, INT8 kalibrasyonu dahil; trt: motor başına ≈ 3-6 dk).
+    # Biten varyant manifest'ten atlanır. Wall time'ı ve son 20 satırı Claude'a getir.
+    for k in RUN:
+        !cd /content/baykus/python && baykus-edge export --config {CFG} --model {k} --weights "{W[k]}" --out {MODELS_DIR} --variants {' '.join(VARIANTS)} --data-root /content/dv_rgbt --calib-dir /content/calib
+    !ls -la {MODELS_DIR}
+    """
+)
+
+EDGE_ACCURACY = code(
+    """
+    %%time
+    # Doğruluk (val, IR etiketleri, bootstrap yok; FR-X4). ONNX: ORT CPU, bütün çekirdekler;
+    # ilk varyantın süresine bakarak kalanı tahmin et. 'map50=' satırlarını Claude'a getir.
+    THREADS = f'--threads {NPROC}' if PART == 'onnx' else ''
+    for k in RUN:
+        for V in VARIANTS:
+            F = f'{MODELS_DIR}/{RUN[k]}_{V}{EXT}'
+            !cd /content/baykus/python && baykus-edge eval --config {CFG} --model {k} --variant {V} --file "{F}" --data-root /content/dv_rgbt --meta /content/meta --project {PROJ} --results {DRIVE}/results {THREADS}
+    # E4: iki modelin aynı varyantı, H4'te val'de seçilen WBF parametreleriyle
+    for V in VARIANTS:
+        R = f'{PROJ}/{RUN["e1_rgb"]}_val_{V}/predictions_coco.json.gz'
+        I = f'{PROJ}/{RUN["e2_ir"]}_val_{V}/predictions_coco.json.gz'
+        !cd /content/baykus/python && baykus-fusion apply --config ../configs/fusion/e4_late_fusion.yaml --selection ../results/fusion/e4_late_fusion_val_selection.json --rgb-preds "{R}" --ir-preds "{I}" --data-root /content/dv_rgbt --meta /content/meta --split val --dataset dronevehicle --variant {V} --n-boot 0 --project {PROJ} --results {DRIVE}/results --workers {NPROC}
+    """
+)
+
+EDGE_LAPTOP = code(
+    """
+    %%time
+    # Yalnız PART='onnx': laptop için modeller + bench girdileri tek zip'te (≈ 1 dk).
+    # 'du' satırlarını Claude'a getir; boyutu görmeden indirme.
+    if PART == 'onnx':
+        !rm -rf /content/edge_laptop && mkdir -p /content/edge_laptop/models
+        !cd /content/baykus/python && baykus-edge bench-inputs --config {CFG} --data-root /content/dv_rgbt --split val --preds-dir {PROJ} --out /content/edge_laptop/bench_inputs
+        !cp {MODELS_DIR}/*.onnx /content/edge_laptop/models/
+        !du -sh /content/edge_laptop/models /content/edge_laptop/bench_inputs
+        !cd /content/edge_laptop && zip -q -r -0 {DRIVE}/edge/edge_laptop.zip models bench_inputs
+        !du -sh {DRIVE}/edge/edge_laptop.zip
+    else:
+        print("PART='trt' → atlandı")
+    """
+)
+
+EDGE_BENCH = code(
+    """
+    %%time
+    # Yalnız PART='trt': T4 gecikmesi (§14: 50 ısınma + 500 ölçüm; ölçüm başına ≈ 1 dk).
+    if PART == 'trt':
+        !cd /content/baykus/python && baykus-edge bench-inputs --config {CFG} --data-root /content/dv_rgbt --split val --preds-dir {PROJ} --out /content/bench_inputs --variants {' '.join(VARIANTS)}
+        for P in E['pipelines']:
+            for V in VARIANTS:
+                !cd /content/baykus/python && baykus-bench run --config {CFG} --pipeline {P} --variant {V} --models-dir {MODELS_DIR} --inputs /content/bench_inputs --hardware colab-t4 --results {DRIVE}/results
+    else:
+        print("PART='onnx' → atlandı (laptop bench'i Görev 14)")
+    """
+)
+
+EDGE_CELLS = [
+    md(
+        """
+        # 06 — Edge: export, nicemleme, doğruluk (E9)
+        **H5'te eğitim yok:** eğitilmiş `s` modelleri (E1, E2, E3c) dışa aktarılır ve ölçülür.
+        - `PART = 'onnx'` → **Çalışma zamanı → A100** (GPU kullanılmaz; 12 CPU çekirdeği ORT CPU
+          doğruluk ölçümünü hızlandırır). ONNX FP32/FP16/INT8/INT8-head-FP32 + laptop zip'i.
+        - `PART = 'trt'` → **Çalışma zamanı → T4** (TensorRT motoru donanıma özgü). FP32/FP16/INT8,
+          doğruluk ve T4 gecikmesi.
+
+        Secrets: `KAGGLE_API_TOKEN`, `GITHUB_TOKEN`. **Kullanım:** ilk hücrede `PART`'ı seç →
+        **Tümünü çalıştır**. Biten adımlar atlanır; oturum koparsa yeniden Tümünü çalıştır.
+        İş bitince oturumu hemen sonlandır.
+        """
+    ),
+    code(
+        """
+        BRANCH = 'h5'
+        PART = 'onnx'   # 'onnx' (A100 çalışma zamanı) | 'trt' (T4)
+        DRIVE = '/content/drive/MyDrive/baykus'
+        from google.colab import drive
+        drive.mount('/content/drive')
+        """
+    ),
+    KAGGLE_TOKEN,
+    CLONE_BRANCH,
+    EDGE_INSTALL,
+    DATA_DOWNLOAD,
+    EDGE_MODELS,
+    EDGE_EXPORT,
+    EDGE_ACCURACY,
+    EDGE_LAPTOP,
+    EDGE_BENCH,
+]
+
+FINAL_CELLS = [
+    md(
+        """
+        # 07 — Final test: test seti, bir kez
+        ⚠️ **Test seti bir kez ölçülür; bu notebook'tan sonra hiçbir seçim değişmez.**
+        Sevk kararı (H5 Görev 16) verilmeden çalıştırma.
+        **Çalışma zamanı → A100** (bootstrap 12 çekirdekte paralel). Secrets: `KAGGLE_API_TOKEN`,
+        `GITHUB_TOKEN`. Oturum koparsa yeniden **Tümünü çalıştır**: biten sonuçlar atlanır.
+        """
+    ),
+    code(
+        """
+        BRANCH = 'h5'
+        SHIPPED_PIPELINE = ''   # Görev 16'daki karar, ör. 'e4_late_fusion'
+        SHIPPED_VARIANT = ''    # ör. 'onnx_int8'
+        assert SHIPPED_PIPELINE and SHIPPED_VARIANT, 'önce sevk kararı (H5 Görev 16)'
+        DRIVE = '/content/drive/MyDrive/baykus'
+        from google.colab import drive
+        drive.mount('/content/drive')
+        """
+    ),
+    KAGGLE_TOKEN,
+    CLONE_BRANCH,
+    code(
+        """
+        %%time
+        !pip -q install uv kaggle
+        !uv pip install --system -q -e '/content/baykus/python[train]'
+        import sys
+        sys.path.insert(0, '/content/baykus/python/src')
+        !python --version && nproc && (nvidia-smi -L || true)
+        """
+    ),
+    DATA_DOWNLOAD,
+    code(
+        """
+        %%time
+        # Test bölümünün 4 kanallı TIFF'leri (E3, E3c; ≈ 2-3 dk, 12 çekirdek) ve modeller
+        import json, os
+        from pathlib import Path
+        from baykus.train.checkpoints import find_runs
+        NPROC = os.cpu_count()
+        !baykus-data rgbt4 --out /content/dv_rgbt --splits test --workers {NPROC}
+
+        def train_run(exp):
+            done = find_runs(f'{DRIVE}/runs', exp, finished=True)
+            return json.loads((done[-1] / 'baykus_train.json').read_text(encoding='utf-8'))['run_id'] if done else None
+
+        EXPS = ['e1_rgb', 'e2_ir', 'e3_early_fusion', 'e3c_modality_dropout']
+        RUN = {e: train_run(e) for e in EXPS}
+        for e, r in RUN.items():
+            print(e, '→', r)
+        assert all(RUN.values()), 'biten eğitim eksik'
+        DONE = lambda name: Path(f'{DRIVE}/results/runs/{name}_ir.json').exists()
+        """
+    ),
+    code(
+        """
+        %%time
+        # 1) E1, E2, E3, E3c test (iki etiket seti, 1000 bootstrap; model başına ≈ birkaç dk).
+        for e in EXPS:
+            if DONE(f'{RUN[e]}_test'):
+                print('zaten var:', e)
+                continue
+            W = f'{DRIVE}/runs/{RUN[e]}/weights/best.pt'
+            !cd /content/baykus/python && baykus-eval run --config ../configs/{e}.yaml --weights "{W}" --data-root /content/dv_rgbt --meta /content/meta --split test --project {DRIVE}/eval --results {DRIVE}/results --workers {NPROC}
+        """
+    ),
+    code(
+        """
+        %%time
+        # 2) E4 ve E4b test: val'de seçilen parametrelerle (yeniden seçim yok).
+        R = f'{DRIVE}/eval/{RUN["e1_rgb"]}_test/predictions_coco.json.gz'
+        I = f'{DRIVE}/eval/{RUN["e2_ir"]}_test/predictions_coco.json.gz'
+        for EXP in ['e4_late_fusion', 'e4b_late_fusion_illum']:
+            !cd /content/baykus/python && baykus-fusion apply --config ../configs/fusion/{EXP}.yaml --selection ../results/fusion/{EXP}_val_selection.json --rgb-preds "{R}" --ir-preds "{I}" --data-root /content/dv_rgbt --meta /content/meta --split test --dataset dronevehicle --project {DRIVE}/eval --results {DRIVE}/results --workers {NPROC}
+        """
+    ),
+    code(
+        """
+        %%time
+        # 3) Sevk edilen varyant test'te (ORT CPU, bütün çekirdekler; iki etiket seti, 1000 bootstrap).
+        import yaml
+        E = yaml.safe_load(Path('/content/baykus/configs/edge/e9_edge.yaml').read_text(encoding='utf-8'))
+        P = E['pipelines'][SHIPPED_PIPELINE]
+        V, MODELS_DIR, PROJ = SHIPPED_VARIANT, f'{DRIVE}/edge/models', f'{DRIVE}/edge/eval'
+        EXT = '.engine' if V.startswith('trt_') else '.onnx'
+        names = [P['model']] if P['kind'] == 'single' else [P['rgb'], P['ir']]
+        for k in names:
+            r = E['models'][k]['run_id']
+            !cd /content/baykus/python && baykus-edge eval --config ../configs/edge/e9_edge.yaml --model {k} --variant {V} --file "{MODELS_DIR}/{r}_{V}{EXT}" --data-root /content/dv_rgbt --meta /content/meta --split test --label-sets ir rgb --n-boot 1000 --workers {NPROC} --threads {NPROC} --project {PROJ} --results {DRIVE}/results
+        if P['kind'] == 'late_fusion':
+            R = f"{PROJ}/{E['models'][P['rgb']]['run_id']}_test_{V}/predictions_coco.json.gz"
+            I = f"{PROJ}/{E['models'][P['ir']]['run_id']}_test_{V}/predictions_coco.json.gz"
+            !cd /content/baykus/python && baykus-fusion apply --config ../configs/fusion/e4_late_fusion.yaml --selection ../{P['selection']} --rgb-preds "{R}" --ir-preds "{I}" --data-root /content/dv_rgbt --meta /content/meta --split test --dataset dronevehicle --variant {V} --project {PROJ} --results {DRIVE}/results --workers {NPROC}
+        """
+    ),
+]
+
+
 def build(cells: list[tuple[str, str]], path: Path, gpu: bool) -> None:
     nb = nbf.v4.new_notebook()
     nb.cells = [
@@ -747,4 +988,6 @@ if __name__ == "__main__":
     build(ROBUST_CELLS, Path("notebooks/colab/03_robust.ipynb"), gpu=True)
     build(FUSION_CELLS, Path("notebooks/colab/04_fusion.ipynb"), gpu=False)
     build(M3OT_CELLS, Path("notebooks/colab/05_m3ot.ipynb"), gpu=False)  # ilk açılış CPU (inceleme)
+    build(EDGE_CELLS, Path("notebooks/colab/06_edge.ipynb"), gpu=True)
+    build(FINAL_CELLS, Path("notebooks/colab/07_final_test.ipynb"), gpu=True)
     print("ok")
