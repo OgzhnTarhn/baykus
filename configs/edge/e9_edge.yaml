@@ -1,0 +1,18 @@
+# E9 edge: export, doğruluk, bench ve sevk kuralı (H5; ADR 0007). Değerler ölçümden önce sabitlendi.
+experiment: e9_edge
+imgsz: 640
+seed: 42
+calibration: {split: train, n: 500}   # FR-X3: yalnız eğitim seti
+variants: [onnx_fp32, onnx_fp16, onnx_int8, onnx_int8_headfp32, trt_fp32, trt_fp16, trt_int8]
+models:
+  e1_rgb: {run_id: 2026-10-11_e1-rgb_s_49da0cb, config: configs/e1_rgb.yaml}
+  e2_ir: {run_id: 2026-10-14_e2-ir_s_02c4098, config: configs/e2_ir.yaml}
+  e3c_modality_dropout: {run_id: 2026-10-15_e3c-modality-dropout_s_d4e1280, config: configs/e3c_modality_dropout.yaml}
+pipelines:
+  e4_late_fusion: {kind: late_fusion, rgb: e1_rgb, ir: e2_ir, selection: results/fusion/e4_late_fusion_val_selection.json}
+  e3c_modality_dropout: {kind: single, model: e3c_modality_dropout}
+bench: {warmup: 50, runs: 500, images: 20, conf: 0.25}
+rule:
+  target_p95_ms: 100        # laptop CPU, toplam süre p95 (ADR 0007)
+  max_map50_drop: 0.010     # aynı pipeline'ın onnx_fp32'sine göre (1,0 puan)
+  order: [e4_late_fusion, e3c_modality_dropout]
