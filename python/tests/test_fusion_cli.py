@@ -77,6 +77,15 @@ def test_select_resumes_without_searching_again(tmp_path: Path, monkeypatch, cap
     assert "zaten var" in capsys.readouterr().out
 
 
+def test_select_resume_with_other_models_is_error(tmp_path: Path, capsys):
+    # E1 yeniden eğitilirse eski seçim yeni tahminlere sessizce uygulanmamalı
+    s = setup_dv(tmp_path)
+    assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
+    args = select_args(tmp_path, s, "e4_late_fusion.yaml")
+    args[args.index("E1")] = "E1x"
+    assert main(args) == 2 and "başka modeller" in capsys.readouterr().err
+
+
 def test_select_e4b_needs_base_and_picks_per_slice(tmp_path: Path, capsys):
     s = setup_dv(tmp_path)
     assert main(select_args(tmp_path, s, "e4b_late_fusion_illum.yaml")) == 2

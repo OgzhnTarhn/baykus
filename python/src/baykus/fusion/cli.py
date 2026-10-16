@@ -145,6 +145,13 @@ def _cmd_select(a: argparse.Namespace) -> int:
     out = selection_path(a.results, cfg.experiment, "val")
     if out.exists():
         sel = json.loads(out.read_text(encoding="utf-8"))
+        if (sel["rgb_run_id"], sel["ir_run_id"], sel["config_hash"]) != (
+            a.rgb_run_id, a.ir_run_id, cfg.config_hash
+        ):  # fmt: skip
+            raise FusionError(
+                f"{out} başka modellerle ya da config ile seçilmiş "
+                f"({sel['rgb_run_id']}, {sel['ir_run_id']}); dosyayı taşıyıp yeniden seç"
+            )
         print(f"seçim zaten var, yeniden aranmadı: {out}")
     else:
         gt = load_coco(root / "coco" / f"val_{LABEL_SET}.json")
