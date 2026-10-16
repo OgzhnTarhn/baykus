@@ -119,3 +119,67 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
 
   7. Temiz koşul kontrolü: sağlamlık paketindeki temiz skor ana değerlendirmeyle aynı (0,8506).
 - **Yorum (taslak, kullanıcıyla netleşecek):** Hipotez tutuyor görünüyor. Temiz veride E3c E3'ün 0,6 puan altında; güven aralıkları örtüşüyor (eşleştirilmiş fark Görev 16'da `baykus-eval compare` ile). Kamera kaybında fark çok büyük: IR kaybında E3 çöküyor (0,128), E3c 0,720'de kalıyor; RGB kaybında 0,718'e karşı 0,829. Karartma ve IR gürültüsünde de E3c önde; bulanıklık ve hizasızlıkta fark yok (aralıklar örtüşüyor). Yani dropout, modellerin bir kameraya tek başına yaslanmasını engelliyor ama iki kameranın hizasız olmasına karşı bir şey öğretmiyor. E4 ile seçim, sonuçlardan önce yazılan kurala göre (H4 planı, "E3c / geç füzyon seçim kuralı").
+
+## 2026-10-16 · E3c (ek) · Eşleştirilmiş farklar
+- **Sonuç:** `results/compare/e3c_modality_dropout-vs-e3_early_fusion_val_*.json` (1000 bootstrap, aynı örnekler).
+- **Bulgular (E3c − E3, mAP50 puanı [%95 GA]):** temiz −0,6 [−1,6; +0,4] (anlamlı değil) · RGB kaybı +11,1 [+8,9; +13,5] ·
+  IR kaybı +59,1 [+56,4; +61,9] · kamera kaybı puanı K +35,1 [+33,1; +37,1].
+- **Yorum (taslak):** Hipotez tutuyor: temiz veride ölçülebilir bir bedel yok, kamera kaybında büyük kazanç var.
+
+## 2026-10-16 · E4 · Geç füzyon, WBF (E1 + E2)
+- **Hipotez:** İki ayrı modelin kutularını birleştirmek tek modelden iyi; bir kamera kaybolursa öbür model tek başına çalışmaya devam eder.
+- **Kurulum:** `configs/fusion/e4_late_fusion.yaml` (`config_hash` sha256:361de02b…) · E1 `2026-10-11_e1-rgb_s_49da0cb` + E2 `2026-10-14_e2-ir_s_02c4098` val tahminleri · ensemble-boxes WBF, `conf_type=avg`, `skip_box_thr` 0,001 · ızgara 12 hücre (iou_thr 0,5 / 0,6 / 0,7 × ir_weight 0,5 / 1 / 2 / 3, w_rgb 1), ölçüt val mAP50 (IR etiketi), eşitlikte ızgara sırası · seçim 659 sn (A100 oturumu, 12 çekirdek) · commit `b346199`.
+- **Sonuç:** `results/fusion/e4_late_fusion_val_selection.json` · `results/runs/2026-10-16_e4-late-fusion_s_b346199_val_{ir,rgb}.json`.
+- **Izgara (val mAP50):**
+
+  | iou_thr \ ir_weight | 0,5 | 1 | 2 | 3 |
+  |---|---|---|---|---|
+  | 0,5 | 0,8224 | 0,8323 | 0,8341 | 0,8334 |
+  | 0,6 | 0,8259 | 0,8383 | 0,8426 | 0,8423 |
+  | 0,7 | 0,8279 | 0,8405 | 0,8476 | **0,8478** |
+
+- **Bulgular (IR etiketleri):**
+  1. Seçilen iou_thr 0,7, ir_weight 3 (2 ile fark 0,0002). mAP50 0,848 [0,828; 0,867], mAP50-95 0,629; precision 0,905, recall 0,945.
+  2. Aydınlatma: gündüz 0,853 · gece 0,811 · karanlık gece 0,865. Sınıf: car 0,976, bus 0,967, truck 0,813, freight_car 0,791, van 0,693.
+  3. RGB etiketleriyle 0,799; fark (RGB − IR) −4,8 (E3: −9,8) → etiket seti farkına en az duyarlı mod.
+  4. Eşleştirilmiş farklar (temiz): E4 − E2 +0,9 [+0,2; +1,6] (anlamlı) · E4 − E3 −0,9 [−1,8; +0,0] (anlamlı değil).
+- **Not:** Parametre val'de seçildi ve val'de raporlandı → iyimser yanlı; tarafsız sayı final test ölçümünde.
+- **Yorum (taslak):** Geç füzyon IR modelini az ama anlamlı geçiyor, erken füzyonla temiz veride ayırt edilemiyor.
+
+## 2026-10-16 · E4b · Geç füzyon, aydınlatmaya göre ağırlık
+- **Kurulum:** `configs/fusion/e4b_late_fusion_illum.yaml` · iou_thr E4'ten (0,7) · her aydınlatma diliminde ayrı ir_weight (0,5 / 1 / 2 / 3), val'de · seçim 282 sn.
+- **Sonuç:** `results/fusion/e4b_late_fusion_illum_val_selection.json` · `results/runs/2026-10-16_e4b-late-fusion-illum_s_b346199_val_{ir,rgb}.json`.
+- **Bulgular:**
+  1. Seçilen ir_weight: gündüz 1, gece 2, karanlık gece 3 (karanlık arttıkça IR'ye daha çok ağırlık: beklenen yön).
+  2. mAP50 0,850 [0,831; 0,869]; gündüz 0,857 · gece 0,812 · karanlık gece 0,865.
+  3. E4b − E4 +0,3 [+0,1; +0,5] (anlamlı ama çok küçük); dilimlerde anlamlı değil.
+- **Yorum (taslak):** Aydınlatmaya göre ağırlık, sabit ağırlığa pratikte bir şey katmıyor. Seçim kuralında aday değildi.
+
+## 2026-10-16 · E6 (geç füzyon) · Sağlamlık paketi
+- **Kurulum:** E1 ve E2'nin her koşuldaki tahminleri E4'ün parametreleriyle birleştirildi (`baykus-fusion robust`, GPU yok). Hizasızlıkta E2'nin kaydırılmış IR tahmini kullanıldı.
+- **Sonuç:** `results/robust/2026-10-16_e4-late-fusion_s_b346199_val_*_ir.json` (16) · tablo `docs/robustness.md`.
+- **Bulgular (mAP50; E3 / E3c / E4):**
+  1. RGB kaybı 0,718 / 0,829 / 0,839 · IR kaybı 0,128 / 0,720 / 0,761.
+  2. Hizasızlık 10 px 0,694 / 0,696 / 0,744 · 20 px 0,258 / 0,266 / 0,485 · 40 px 0,084 / 0,090 / 0,351.
+  3. Bulanıklık 11: 0,641 / 0,652 / 0,809. Karartma ×0,1: 0,738 / 0,832 / 0,835. IR gürültüsü σ20: 0,399 / 0,535 / 0,513.
+  4. Kamera kaybında E4'ün değeri kalan tek modelin temiz değerine eşit ya da çok yakın (RGB kaybı 0,8389, E2 temiz 0,8390; IR kaybı 0,7613, E1 temiz 0,7613): kaybolan modelin kutusu gelmiyor, kalan modelin kutuları sıra değiştirmeden ağırlık payıyla küçülüyor.
+- **E4b:** yalnız 4 koşul (temiz, karartma 0,5 / 0,25 / 0,1: 0,850 / 0,850 / 0,846 / 0,835); geri kalan 12 koşul yapılmadı (seçim kuralında aday değil, temizde E4'ten farkı 0,3 puan; kullanıcı kararı, 2026-10-16).
+- **Yorum (taslak):** Geç füzyon hizasızlık ve bulanıklığa erken füzyondan çok daha dayanıklı: iki model ayrı ayrı çalıştığı için IR'nin kayması RGB'nin kutularını bozmuyor. IR gürültüsünde E3c biraz önde.
+
+## 2026-10-16 · E7 · M3OT veri setleri arası test
+- **Kurulum:** M3OT test bölümü (`results/m3ot_stats.json`: 960 RGB-IR çifti, 2 dizi, kutu RGB 2473 / IR 2465, süzülen satır yok), sınıfsız `vehicle` AP, `single_cls` + `agnostic_nms`; rgb modu RGB etiketiyle, öbürleri IR etiketiyle; E4 val'de seçilen parametrelerle (`baykus-fusion apply`), E4b uygulanmadı (aydınlatma etiketi yok) · Colab A100, commit `47c42dc`.
+- **Sonuç:** `results/m3ot/*.json` (10) · tablo `docs/results.md` ve `docs/data/m3ot.md`.
+- **Bulgular (AP50 [%95 GA]):** E1 0,852 [0,838; 0,866] · E2 0,981 [0,973; 0,985] · E3 0,971 [0,965; 0,980] · E3c 0,889 [0,877; 0,902] · E4 0,971 [0,965; 0,977].
+  Sıra: E2 > E3 ≈ E4 > E3c > E1. DroneVehicle val sırası (E3 > E3c > E4 > E2 > E1) ile aynı değil: M3OT'ta IR tek başına en iyi.
+- **Etiket hizası:** RGB ve IR etiketleri aynı kare + iz numarasında ortanca IoU 0,35, düşey kayma ortanca 5,5 px (std 10,8); kutular ≈ 12,5 px (`docs/data/m3ot.md`). İki girdiyi birlikte kullanan modeller hizasız girdiyle çalışıyor.
+- **Yorum (taslak):** E3c'nin M3OT'ta 8 puan geride kalması ve E4'ün E2'nin altında kalması bu hizasızlıkla uyumlu; ayrıca ölçülmedi. Kareler ardışık video kareleri: güven aralıkları iyimser.
+
+## 2026-10-16 · E10 · Orta füzyon (YOLOv11-RGBT) — yapılmadı
+- **Neden:** Ultralytics dışı çerçeve (export ve C++ motoru zorlaşır), Faz 1 bütçesi; spec kesme sırasında ilk madde. Faz 2 tasarımında yeniden değerlendirilir.
+
+## 2026-10-16 · E3c / E4 seçimi (kural sonuçlardan önce yazıldı, H4 planı)
+- **Temiz val mAP50 (IR):** E3 0,8565 (en yüksek) · E3c 0,8506 (−0,6 puan) · E4 0,8478 (−0,9 puan) → elenen yok (eşik 2,0 puan).
+- **Kamera kaybı puanı K** (RGB kaybı ve IR kaybı ortalaması): E3c 0,7741 (0,8287 / 0,7195) · E4 0,8001 (0,8389 / 0,7613).
+  K_E4 − K_E3c = +0,0260 [+0,0182; +0,0338] (`results/compare/e4_late_fusion-vs-e3c_modality_dropout_val_camloss_ir.json`, birleşik bootstrap, 1000 örnek). Aydınlatma dilimlerinin üçünde de anlamlı.
+- **Seçim: E4** (aralık tamamen 0'ın üstünde).
+- **H5'te kontrol:** E4 cihazda iki model çalıştırıyor; gecikme hedefi (ADR 0007) tutmazsa E3c (tek model) seçilir.
