@@ -1,0 +1,99 @@
+{
+  "experiment": "e4b_late_fusion_illum",
+  "config": "../configs/fusion/e4b_late_fusion_illum.yaml",
+  "config_hash": "sha256:f4d49c806007da58fb1cf0a27208341973fca6caeec3f0c0a2b68572eb15cff8",
+  "run_id": "2026-10-16_e4b-late-fusion-illum_s_b346199",
+  "split": "val",
+  "label_set": "ir",
+  "criterion": "map50",
+  "rgb_run_id": "2026-10-11_e1-rgb_s_49da0cb",
+  "ir_run_id": "2026-10-14_e2-ir_s_02c4098",
+  "rgb_preds": "/content/drive/MyDrive/baykus/eval/2026-10-11_e1-rgb_s_49da0cb_val/predictions_coco.json.gz",
+  "ir_preds": "/content/drive/MyDrive/baykus/eval/2026-10-14_e2-ir_s_02c4098_val/predictions_coco.json.gz",
+  "skip_box_thr": 0.001,
+  "grid": [
+    {
+      "iou_thr": 0.7,
+      "ir_weight": 0.5,
+      "map50": 0.8550753593079937,
+      "slice": "day"
+    },
+    {
+      "iou_thr": 0.7,
+      "ir_weight": 1.0,
+      "map50": 0.856529899755008,
+      "slice": "day"
+    },
+    {
+      "iou_thr": 0.7,
+      "ir_weight": 2.0,
+      "map50": 0.8556349759968801,
+      "slice": "day"
+    },
+    {
+      "iou_thr": 0.7,
+      "ir_weight": 3.0,
+      "map50": 0.8531351457582266,
+      "slice": "day"
+    },
+    {
+      "iou_thr": 0.7,
+      "ir_weight": 0.5,
+      "map50": 0.7988016214143625,
+      "slice": "night"
+    },
+    {
+      "iou_thr": 0.7,
+      "ir_weight": 1.0,
+      "map50": 0.8069263845474169,
+      "slice": "night"
+    },
+    {
+      "iou_thr": 0.7,
+      "ir_weight": 2.0,
+      "map50": 0.8123847774406788,
+      "slice": "night"
+    },
+    {
+      "iou_thr": 0.7,
+      "ir_weight": 3.0,
+      "map50": 0.8113850047768587,
+      "slice": "night"
+    },
+    {
+      "iou_thr": 0.7,
+      "ir_weight": 0.5,
+      "map50": 0.8195885383112702,
+      "slice": "dark_night"
+    },
+    {
+      "iou_thr": 0.7,
+      "ir_weight": 1.0,
+      "map50": 0.8479241846004227,
+      "slice": "dark_night"
+    },
+    {
+      "iou_thr": 0.7,
+      "ir_weight": 2.0,
+      "map50": 0.8616992013541448,
+      "slice": "dark_night"
+    },
+    {
+      "iou_thr": 0.7,
+      "ir_weight": 3.0,
+      "map50": 0.8646434466500207,
+      "slice": "dark_night"
+    }
+  ],
+  "selected": {
+    "iou_thr": 0.7,
+    "w_rgb": 1.0,
+    "ir_weight": {
+      "day": 1.0,
+      "night": 2.0,
+      "dark_night": 3.0
+    }
+  },
+  "seconds": 281.5,
+  "created_at": "2026-10-16T10:57:44Z"
+}
