@@ -1,0 +1,112 @@
+{
+  "run_id": "2026-10-16_e4b-late-fusion-illum_s_b346199",
+  "git_commit": "ea0278b22098107269cda652884f253235b6d9b7",
+  "git_dirty": false,
+  "config": "../configs/fusion/e4b_late_fusion_illum.yaml",
+  "config_hash": "sha256:f4d49c806007da58fb1cf0a27208341973fca6caeec3f0c0a2b68572eb15cff8",
+  "mlflow_run_id": null,
+  "train_run_id": null,
+  "seed": 42,
+  "dataset": "dronevehicle",
+  "class_agnostic": false,
+  "split": "val",
+  "label_set": "ir",
+  "model": {
+    "family": "yolo26",
+    "size": "s",
+    "mode": "late_fusion",
+    "params_m": null,
+    "gflops": null
+  },
+  "format": "pytorch",
+  "precision": "fp32",
+  "hardware": {
+    "device": "x86_64",
+    "driver": null,
+    "cpu_count": 2
+  },
+  "software": {
+    "python": "3.13.16",
+    "torch": "2.11.0+cpu",
+    "ultralytics": null,
+    "numpy": "2.1.3",
+    "pycocotools": "2.0.11"
+  },
+  "weights": null,
+  "n_boot": 1000,
+  "dropped_predictions": 0,
+  "metrics": {
+    "map50": 0.8504257967525414,
+    "map50_95": 0.6314388810725376,
+    "precision": 0.8966691167936864,
+    "recall": 0.9464271131073908,
+    "per_class": {
+      "car": 0.9753538225238191,
+      "truck": 0.8186313607716531,
+      "bus": 0.9682397451735435,
+      "van": 0.6969926833201517,
+      "freight_car": 0.7929113719735388
+    },
+    "per_illumination": {
+      "day": 0.8559038253627125,
+      "night": 0.8122295575584855,
+      "dark_night": 0.8653448048183846
+    },
+    "per_size": {
+      "small": 0.5865694263257606,
+      "medium": 0.8561160518203623,
+      "large": 0.9342149591773741
+    },
+    "ci95": {
+      "map50": [
+        0.8302823039347452,
+        0.8691206292922176
+      ],
+      "per_illumination": {
+        "day": [
+          0.8316001619843864,
+          0.8810328550762662
+        ],
+        "night": [
+          0.769971637770619,
+          0.8518548994326195
+        ],
+        "dark_night": [
+          0.8320194625992601,
+          0.897688110982005
+        ]
+      }
+    },
+    "n_images": 1469,
+    "n_dets": 262745
+  },
+  "created_at": "2026-10-16T12:25:53Z",
+  "fusion": {
+    "rgb_run_id": "2026-10-11_e1-rgb_s_49da0cb",
+    "ir_run_id": "2026-10-14_e2-ir_s_02c4098",
+    "rgb_preds": "/content/drive/MyDrive/baykus/robust/2026-10-11_e1-rgb_s_49da0cb_val_darken-0.5/predictions_coco.json.gz",
+    "ir_preds": "/content/drive/MyDrive/baykus/robust/2026-10-14_e2-ir_s_02c4098_val_clean/predictions_coco.json.gz",
+    "iou_thr": 0.7,
+    "w_rgb": 1.0,
+    "ir_weight": {
+      "day": 1.0,
+      "night": 2.0,
+      "dark_night": 3.0
+    },
+    "skip_box_thr": 0.001,
+    "conf_type": "avg",
+    "selected_on": "val",
+    "selection": "e4b_late_fusion_illum"
+  },
+  "robustness": {
+    "id": "darken-0.5",
+    "corruption": "darken",
+    "severity": 0.5,
+    "target": "rgb",
+    "seed": 42,
+    "sources": {
+      "rgb": "darken-0.5",
+      "ir": "clean"
+    }
+  }
+}
