@@ -1,0 +1,97 @@
+{
+  "run_id": "2026-10-15_e3c-modality-dropout_s_d4e1280",
+  "git_commit": "dd74e8751a03ad993bb7a7b690a66f3ed28f0f58",
+  "git_dirty": false,
+  "config": "../configs/e3c_modality_dropout.yaml",
+  "config_hash": "sha256:b8c73fd3660f739bf7189ea4eea5acecdef0df18359c56f2503df76407e18659",
+  "mlflow_run_id": "07b9556171ee4edd84078c4788e5699c",
+  "train_run_id": "2026-10-15_e3c-modality-dropout_s_d4e1280",
+  "seed": 42,
+  "dataset": "dronevehicle",
+  "class_agnostic": false,
+  "split": "val",
+  "label_set": "ir",
+  "model": {
+    "family": "yolo26",
+    "size": "s",
+    "mode": "early_fusion",
+    "params_m": null,
+    "gflops": null
+  },
+  "format": "pytorch",
+  "precision": "fp32",
+  "hardware": {
+    "device": "NVIDIA A100-SXM4-40GB",
+    "driver": "13.0",
+    "cpu_count": 12
+  },
+  "software": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu130",
+    "ultralytics": "8.4.177",
+    "numpy": "2.1.3",
+    "pycocotools": "2.0.11"
+  },
+  "weights": "/content/drive/MyDrive/baykus/runs/2026-10-15_e3c-modality-dropout_s_d4e1280/weights/best.pt",
+  "n_boot": 1000,
+  "dropped_predictions": 0,
+  "metrics": {
+    "map50": 0.6522708479991065,
+    "map50_95": 0.45520643731249166,
+    "precision": 0.8878024602352093,
+    "recall": 0.8045324622294814,
+    "per_class": {
+      "car": 0.9044883630796418,
+      "truck": 0.6010191496912044,
+      "bus": 0.9297120843496198,
+      "van": 0.3503543131176335,
+      "freight_car": 0.47578032975743306
+    },
+    "per_illumination": {
+      "day": 0.7449180608081537,
+      "night": 0.6464198894306293,
+      "dark_night": 0.5860255666955695
+    },
+    "per_size": {
+      "small": 0.36382556304622654,
+      "medium": 0.6403993332921444,
+      "large": 0.8786972677733472
+    },
+    "ci95": {
+      "map50": [
+        0.6233710524473963,
+        0.683704333337502
+      ],
+      "per_illumination": {
+        "day": [
+          0.7168417909274285,
+          0.7765508699170379
+        ],
+        "night": [
+          0.5903151988559195,
+          0.7011698421936194
+        ],
+        "dark_night": [
+          0.5460185348098581,
+          0.6419755834541299
+        ]
+      }
+    },
+    "n_images": 1469,
+    "n_dets": 79084
+  },
+  "created_at": "2026-10-16T08:51:39Z",
+  "robustness": {
+    "id": "blur-11",
+    "corruption": "blur",
+    "severity": 11.0,
+    "target": "both",
+    "seed": 42
+  },
+  "crosscheck": {
+    "label_set": "ir",
+    "ultralytics_map50": 0.6537445482770833,
+    "pycocotools_map50": 0.6522708479991065,
+    "abs_diff": 0.001473700277976775
+  }
+}
