@@ -43,6 +43,8 @@
 ### v4.2 (2026-10-16) — H4 planı
 E3b yapılmadı: sadece literatürdeki rgb_mean seçimini kontrol ediyordu, son sistemi değiştirmez; bütçe E3c'ye ayrıldı (spec §22 kesme sırası: ek hedefler → E3b). H4'teki tek eğitim E3c; E3c, geç füzyon (E4, iki model) H5'te cihazda yeterince hızlı çalışmazsa kamera kaybına dayanıklı tek model olarak yedekte. `ul_default` kodda 4 kanallı config'in varsayılanı olarak kalır; `configs/e3b_ul_default.yaml` silindi. Değişen yerler: §4.4, §13, §20.6, §22 (H4).
 
+Eğitim kuralı (kullanıcı kararı, 2026-10-16): bir eğitim ancak son sistemde kullanılacaksa ya da bir kararı değiştirecekse yapılır; sırf tabloya satır eklemek için eğitim yok. Buna göre E8-m çıkarıldı; E8-n yalnız `s` modeli H5 ölçümünde cihazda (INT8 dahil) yeterince hızlı değilse eğitilir, o zaman son sistem `n` olur. Değişen yerler: §8 (E8), §22 (H5).
+
 ### v4.1 (2026-10-11) — H1 kapanışı
 H1 doğrulamalarıyla değişenler: §8.2 ölçülmüş hâle getirildi; §24 maddeleri kapandı; depolama (ADR 0004: işlenmiş veri private Kaggle veri setinde) ve aydınlatma (ADR 0005: gündüz eşiği elle etiketli örnekle) kesinleşti. Colab T4 oturumu Python 3.13 ile geliyor (Spike C) → paket aralığı H2'de genişletilir.
 
@@ -579,7 +581,7 @@ dv_rgbt/
 
 | Parametre | Değer | Not |
 |---|---|---|
-| model | `yolo26s.pt` | n ve m E8'de |
+| model | `yolo26s.pt` | n yalnız E8 gerekirse |
 | imgsz | 640 | Görüntüler 640×512, letterbox ile 640×640 |
 | epochs | 100 | H2'deki zaman ölçümüne göre güncellenir |
 | patience | 20 | Erken durdurma |
@@ -709,7 +711,7 @@ tracking:
 | E5 | E1-E4 için iki etiket seti | Skor ne kadar değişiyor? | H3-H4 |
 | E6 | Sağlamlık paketi (E1-E4b) | Hangi model hangi arızada dayanıyor? | H3-H4 |
 | E7 | M3OT veri setleri arası test (E1-E4, sınıfsız `vehicle` AP) | Hangi mod başka bir drone/sensör verisinde genelleşiyor? | H4 |
-| E8 | Boyut: n / s (/ m) için en iyi mod | Doğruluk ve hız ödünleşimi | H5 |
+| E8 | Boyut: en iyi modun `n` sürümü, **koşullu** (yalnız `s` cihazda yavaşsa) | Doğruluk ve hız ödünleşimi | H5 |
 | E9 | Format × hassasiyet × donanım (+ INT8 head FP32, + NPU denemesi) | Edge tablosu | H5 |
 | E10 *(ek)* | Orta füzyon (YOLOv11-RGBT) | Karmaşık füzyon farkı kapatır mı? | H4 / tampon |
 | E11 *(ek)* | YOLO26-OBB, sadece IR | OBB literatürüyle karşılaştırma | tampon |
@@ -1054,7 +1056,7 @@ Aşağıdaki haftalık tablolar v3.0'dan. **H1-H5 = Faz 1** ve geçerli. **H6-H9
 | H2 | 12-18 Eki | Eğitim ve değerlendirme altyapısı, E1 | E1 (+ E2 smoke ve 1 epoch ölçümü) |
 | H3 | 19-25 Eki | Tek modalite + erken füzyon | E2, E3 |
 | H4 | 26 Eki-1 Kas | Füzyon tamam, sağlamlık, M3OT | E3c (E3b kesildi) |
-| H5 | 2-8 Kas | Edge optimizasyonu · 🚩 MVP | E8-n, TensorRT ölçümleri |
+| H5 | 2-8 Kas | Edge optimizasyonu · 🚩 MVP | TensorRT ölçümleri; E8-n koşullu |
 | H6 | *Faz 3* | C++ motor I: ön işleme, çıkarım, eşlik | — |
 | H7 | *Faz 3* | C++ motor II: WBF, HTTP, C++ bench | — |
 | H8 | *Faz 3* | Takip (kendi ByteTrack) + M3OT takip ölçümü | — |
@@ -1119,7 +1121,7 @@ Aşağıdaki haftalık tablolar v3.0'dan. **H1-H5 = Faz 1** ve geçerli. **H6-H9
 | 29 | Export script: ONNX FP32/FP16/INT8 (tam + head FP32), TensorRT FP16/INT8 | Tüm dosyalar üretiliyor |
 | 30 | Her varyantın doğruluğu (FR-X4) | Varyant başına metrik JSON |
 | 31 | `baykus.bench` (§14 protokolü; CPU bayrakları dahil) | p50/p95 JSON, donanım bilgisiyle |
-| 32 | [GPU] E8: en iyi mod için `n` modeli (+ bütçe varsa `m`) | Tablo |
+| 32 | [GPU, koşullu] E8: `s` cihazda (INT8 dahil) yeterince hızlı değilse en iyi mod için `n` modeli; `m` yok | Hız ölçümü + karar notu; eğitim olursa tablo |
 | 33 | NPU denemesi (FR-X6, zaman kutusu 3 saat) | Bulgu notu (çalıştı / çalışmadı ve neden) |
 | 34 | README v1 + ADR 0007 + `v0.1.0` tag | README'de ana tablo, aydınlatma, sağlamlık, edge tabloları + 1 grafik |
 
