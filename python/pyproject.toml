@@ -13,12 +13,20 @@ dependencies = [
   "matplotlib>=3.8",
   "tqdm>=4.66",
   "ensemble-boxes==1.0.9",
+  "onnx>=1.23.1",
+  "onnxruntime>=1.30.0",
+  "py-cpuinfo>=9.0.0",
+  "psutil>=7.2.2",
 ]
 
 [project.optional-dependencies]
 spike = ["ultralytics==8.4.177", "onnx>=1.16", "onnxruntime>=1.18"]
 # Ultralytics sabit: deneyler arası sürüm farkı sonucu etkilemesin (E1 sonu, E2 ölçümü: 8.4.177)
-train = ["ultralytics==8.4.177", "mlflow>=2.14"]
+train = [
+    "ultralytics==8.4.177",
+    "mlflow>=2.14",
+    "onnxslim>=0.1.82",
+]
 
 [project.scripts]
 baykus-data = "baykus.data.cli:main"
