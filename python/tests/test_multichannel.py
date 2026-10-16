@@ -52,3 +52,12 @@ def test_cli_rgbt4_writes_tiffs_and_yamls(raw_root, tmp_path):
         assert cfg["channels"] == ch
         assert cfg["path"] == (out / modality).as_posix()
         assert cfg["names"] == {0: "car", 1: "truck", 2: "bus", 3: "van", 4: "freight_car"}
+
+
+def test_build_rgbt4_selected_stems(tmp_path):
+    from baykus.data.multichannel import build_rgbt4
+    from tests.synthetic import make_synthetic_dataset
+
+    root = make_synthetic_dataset(tmp_path / "d", with_ir=True)
+    assert build_rgbt4(root, ["train"], stems=["00002"]) == 1
+    assert sorted(p.name for p in (root / "rgbt4/images/train").glob("*.tif")) == ["00002.tif"]

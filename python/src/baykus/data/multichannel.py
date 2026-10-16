@@ -49,9 +49,16 @@ def _write_one(job: tuple[Path, Path, Path]) -> None:
     write_rgbt4(out_path, stack_rgbt(*read_pair(rgb_path, ir_path)))
 
 
-def build_rgbt4(root: Path, splits: Iterable[str] = SPLITS, workers: int = 1) -> int:
-    """rgb/ + ir/ → rgbt4/images/<split>/*.tif. ADR 0004: E3 oturumunda yeniden üretilir."""
+def build_rgbt4(
+    root: Path,
+    splits: Iterable[str] = SPLITS,
+    workers: int = 1,
+    stems: Iterable[str] | None = None,
+) -> int:
+    """rgb/ + ir/ → rgbt4/images/<split>/*.tif. ADR 0004: E3 oturumunda yeniden üretilir.
+    stems verilirse yalnız o adlar işlenir (T4'ün 2 çekirdeğinde bütün train'i üretmemek için)."""
     root = Path(root)
+    keep = None if stems is None else set(stems)
     jobs = [
         (
             p,
@@ -60,6 +67,7 @@ def build_rgbt4(root: Path, splits: Iterable[str] = SPLITS, workers: int = 1) ->
         )
         for split in splits
         for p in sorted((root / "rgb/images" / split).glob("*.jpg"))
+        if keep is None or p.stem in keep
     ]
     if workers <= 1:
         for job in jobs:
