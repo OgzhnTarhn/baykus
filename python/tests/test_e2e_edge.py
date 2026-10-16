@@ -82,3 +82,29 @@ def test_evaluate_variant_with_real_onnx(tmp_path):
     rec = json.loads(paths[0].read_text(encoding="utf-8"))
     assert isinstance(rec["metrics"]["map50"], float) and rec["edge"]["threads"] == 2
     assert rec["format"] == "onnx" and rec["edge"]["seconds_per_image"] > 0
+
+
+def test_bench_single_pipeline_with_real_onnx(tmp_path):
+    """Gerçek ONNX FP32 (yolo26n) + ORT CPU: bench kaydı aşama süreleriyle yazılıyor."""
+    pytest.importorskip("ultralytics")
+    import shutil
+    from pathlib import Path
+
+    from baykus.bench.core import SinglePipeline, bench_record, time_pipeline
+    from baykus.edge.backends import OrtBackend
+    from baykus.edge.export import export_model
+
+    src = Path(__file__).resolve().parents[1] / "yolo26n.pt"
+    if not src.exists():
+        pytest.skip("yolo26n.pt yok")
+    w = tmp_path / "w" / "best.pt"
+    w.parent.mkdir()
+    shutil.copy(src, w)
+    f = export_model(w, tmp_path / "m", "R", "rgb", ["onnx_fp32"], imgsz=640)["onnx_fp32"]["file"]
+    b = OrtBackend(Path(f), threads=2)
+    p = SinglePipeline(b, [np.zeros((512, 640, 3), np.uint8)], conf=0.25)
+    times = time_pipeline(p.step, warmup=2, runs=5)
+    rec = bench_record(pipeline="p", variant="onnx_fp32", hardware="laptop-cpu", models=[],
+                       times=times, protocol={"warmup": 2, "runs": 5}, threads=2)  # fmt: skip
+    assert rec["stages"]["infer"]["n"] == 5 and rec["stages"]["infer"]["p50"] > 0
+    assert rec["fps"] > 0 and rec["system"]["logical_cores"]
