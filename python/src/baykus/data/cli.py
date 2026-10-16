@@ -181,6 +181,14 @@ def _cmd_report(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_m3ot(a: argparse.Namespace) -> int:
+    from baykus.data.m3ot import convert_m3ot
+
+    stats = convert_m3ot(Path(a.raw), Path(a.out), a.splits, a.workers)
+    print(json.dumps(stats, ensure_ascii=False))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="baykus-data")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -230,6 +238,12 @@ def build_parser() -> argparse.ArgumentParser:
     rp.add_argument("--md", default="../docs/data-report.md")
     rp.add_argument("--fig", default="../docs/figures/data")
     rp.set_defaults(func=_cmd_report)
+    m = sub.add_parser("m3ot", help="M3OT → işlenmiş düzen (FR-D8, K5)")
+    m.add_argument("--raw", required=True)
+    m.add_argument("--out", required=True)
+    m.add_argument("--splits", nargs="+", default=["test"], choices=list(SPLITS))
+    m.add_argument("--workers", type=int, default=1)
+    m.set_defaults(func=_cmd_m3ot)
     return p
 
 
