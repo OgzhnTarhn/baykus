@@ -197,3 +197,11 @@ def load_edge_config(path: Path) -> EdgeConfig:
     if not isinstance(raw, dict):
         raise ConfigError(f"{path}: config bir sözlük (YAML mapping) olmalı")
     return parse_edge_config(raw)
+
+
+def repo_root(path: Path) -> Path:
+    """Config yolundan yukarı doğru 'configs' klasörünü barındıran ilk dizin (E9)."""
+    for parent in Path(path).resolve().parents:
+        if (parent / "configs").is_dir():
+            return parent
+    raise ConfigError(f"{path}: 'configs' klasörü içeren üst dizin bulunamadı")

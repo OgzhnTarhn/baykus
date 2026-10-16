@@ -19,6 +19,7 @@ class FakeYOLO:
     calls: list[dict] = []
     write_preds = True  # False: gerçek Ultralytics gibi tahmin yoksa dosya yazılmaz
     force_category: int | None = None  # sınıfsız testleri için: bütün tahminler bu sınıfta
+    export_calls: list[dict] = []
 
     def __init__(self, weights: str):
         self.weights = weights
@@ -51,11 +52,31 @@ class FakeYOLO:
         (out / "predictions.json").write_text(json.dumps(preds), encoding="utf-8")
         return SimpleNamespace(box=SimpleNamespace(map50=1.0))
 
+    def export(self, **kw):
+        FakeYOLO.export_calls.append(kw)
+        fmt = kw["format"]
+        out = Path(self.weights).with_suffix(".onnx" if fmt == "onnx" else ".engine")
+        if fmt == "onnx":
+            import onnx
+            from onnx import TensorProto, helper
+
+            inp = helper.make_tensor_value_info("images", TensorProto.FLOAT, [1, 3, 8, 8])
+            outv = helper.make_tensor_value_info("output0", TensorProto.FLOAT, [1, 3, 8, 8])
+            node = helper.make_node("Identity", ["images"], ["output0"])
+            graph = helper.make_graph([node], "g", [inp], [outv])
+            model = helper.make_model(graph, opset_imports=[helper.make_opsetid("", 17)])
+            model.ir_version = 8
+            onnx.save(model, str(out))
+        else:
+            out.write_bytes(b"fake-engine")
+        return str(out)
+
 
 def install(monkeypatch) -> type:
     FakeYOLO.calls = []
     FakeYOLO.write_preds = True
     FakeYOLO.force_category = None
+    FakeYOLO.export_calls = []
     mod = types.ModuleType("ultralytics")
     mod.YOLO = FakeYOLO
     monkeypatch.setitem(sys.modules, "ultralytics", mod)
