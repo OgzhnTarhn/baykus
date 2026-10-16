@@ -40,11 +40,19 @@ def load_slices(meta: Path, split: str) -> dict | None:
 
 
 def run_name(
-    run_id: str, split: str, dataset: str = DEFAULT_DATASET, condition: dict | None = None
+    run_id: str,
+    split: str,
+    dataset: str = DEFAULT_DATASET,
+    condition: dict | None = None,
+    variant: str | None = None,
 ) -> str:
     """Tahmin klasörü ve sonuç dosyası adı. DroneVehicle'da veri seti eki yok (H3 adları)."""
     ds = "" if dataset == DEFAULT_DATASET else f"_{dataset}"
-    return f"{run_id}{ds}_{split}" + (f"_{condition['id']}" if condition else "")
+    return (
+        f"{run_id}{ds}_{split}"
+        + (f"_{variant}" if variant else "")
+        + (f"_{condition['id']}" if condition else "")
+    )
 
 
 def model_block(model: str, mode: str) -> dict:
@@ -74,6 +82,8 @@ def eval_record(
     metrics: dict,
     train_rec: dict | None = None,
     class_agnostic: bool = False,
+    fmt: str = "pytorch",
+    precision: str = "fp32",
 ) -> dict:
     """Spec §12.4 run JSON gövdesi; baykus-eval ve baykus-fusion ortak kullanır."""
     train_rec = train_rec or {}
@@ -91,8 +101,8 @@ def eval_record(
         "split": split,
         "label_set": label_set,
         "model": model,
-        "format": "pytorch",
-        "precision": "fp32",
+        "format": fmt,
+        "precision": precision,
         "hardware": hardware_info(),
         "software": software_versions(),
         "weights": weights,

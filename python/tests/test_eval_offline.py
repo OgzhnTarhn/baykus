@@ -150,3 +150,35 @@ def test_zero_boot_records_null_intervals(tmp_path: Path, monkeypatch):
     assert rec["n_boot"] == 0 and rec["metrics"]["ci95"]["map50"] == [None, None]
     assert rec["metrics"]["ci95"]["per_illumination"]["day"] == [None, None]
     assert isinstance(rec["metrics"]["map50"], float)
+
+
+def test_run_name_variant():
+    from baykus.eval.cli import run_name
+
+    assert run_name("r", "val", variant="onnx_fp16") == "r_val_onnx_fp16"
+    assert run_name("r", "test", "m3ot", variant="v") == "r_m3ot_test_v"
+    assert run_name("r", "val", condition={"id": "drop_rgb"}, variant="v") == "r_val_v_drop_rgb"
+
+
+def test_eval_record_format_default_and_override():
+    from baykus.eval.cli import eval_record
+
+    base = dict(
+        run_id="r",
+        config="c",
+        config_hash="h",
+        git={"git_commit": "x", "git_dirty": False},
+        seed=42,
+        dataset="dronevehicle",
+        split="val",
+        label_set="ir",
+        model={},
+        weights=None,
+        n_boot=0,
+        dropped=0,
+        metrics={},
+    )
+    rec = eval_record(**base)
+    assert rec["format"] == "pytorch" and rec["precision"] == "fp32"
+    rec = eval_record(**base, fmt="onnx", precision="int8")
+    assert rec["format"] == "onnx" and rec["precision"] == "int8"

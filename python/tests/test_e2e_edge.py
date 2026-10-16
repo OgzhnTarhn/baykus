@@ -52,3 +52,33 @@ def test_export_onnx_variants_with_real_ultralytics(tmp_path):
         assert s.run(None, {"images": x})[0].shape == (1, 300, 6)
     assert out["onnx_int8_headfp32"]["quant"]["excluded_nodes"] > out["onnx_int8"]["quant"][
         "excluded_nodes"]  # fmt: skip
+
+
+def test_evaluate_variant_with_real_onnx(tmp_path):
+    """Gerçek ONNX FP32 (yolo26n) + ORT CPU ile sentetik val'de kayıt yazılıyor."""
+    pytest.importorskip("ultralytics")
+    import json
+    import shutil
+    from pathlib import Path
+
+    from baykus.edge.evaluate import evaluate_variant
+    from baykus.edge.export import export_model
+    from baykus.train.config import load_config
+    from tests.synthetic import make_synthetic_dataset
+
+    src = Path(__file__).resolve().parents[1] / "yolo26n.pt"
+    if not src.exists():
+        pytest.skip("yolo26n.pt yok")
+    w = tmp_path / "w" / "best.pt"
+    w.parent.mkdir()
+    shutil.copy(src, w)
+    out = export_model(w, tmp_path / "m", "R", "rgb", ["onnx_fp32"], imgsz=640)
+    root = make_synthetic_dataset(tmp_path / "d")
+    cfg = Path(__file__).resolve().parents[2] / "configs/e1_rgb.yaml"
+    paths = evaluate_variant(model_cfg=load_config(cfg), run_id="R", config="configs/e1_rgb.yaml",
+                             variant="onnx_fp32", model_path=Path(out["onnx_fp32"]["file"]),
+                             data_root=root, meta=root / "meta", split="val",
+                             project=tmp_path / "p", results=tmp_path / "r", threads=2)  # fmt: skip
+    rec = json.loads(paths[0].read_text(encoding="utf-8"))
+    assert isinstance(rec["metrics"]["map50"], float) and rec["edge"]["threads"] == 2
+    assert rec["format"] == "onnx" and rec["edge"]["seconds_per_image"] > 0

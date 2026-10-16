@@ -2,6 +2,7 @@
 
 calib  — INT8 kalibrasyon görüntü adları + Ultralytics veri YAML'ı (isteğe bağlı rgbt4 üretimi).
 export — seçilen varyantları dışa aktarır; manifest sayesinde yeniden başlatılabilir.
+eval   — bir varyantı COCO metrikleriyle değerlendirir (FR-X4).
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ from pathlib import Path
 from baykus.data.multichannel import build_rgbt4
 from baykus.edge.calib import calibration_stems, write_calib_data
 from baykus.edge.config import load_edge_config, repo_root
+from baykus.edge.evaluate import evaluate_variant
 from baykus.edge.export import export_model
 from baykus.edge.variants import VARIANTS
 from baykus.train.config import load_config
@@ -58,6 +60,29 @@ def _cmd_export(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_eval(a: argparse.Namespace) -> int:
+    cfg = load_edge_config(Path(a.config))
+    ref = cfg.models[a.model]
+    model_cfg = load_config(repo_root(Path(a.config)) / ref.config)
+    evaluate_variant(
+        model_cfg=model_cfg,
+        run_id=ref.run_id,
+        config=ref.config,
+        variant=a.variant,
+        model_path=Path(a.file),
+        data_root=Path(a.data_root),
+        meta=Path(a.meta),
+        split=a.split,
+        project=Path(a.project),
+        results=Path(a.results),
+        n_boot=a.n_boot,
+        threads=a.threads,
+        label_sets=tuple(a.label_sets),
+        workers=a.workers,
+    )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="baykus-edge")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -78,6 +103,21 @@ def build_parser() -> argparse.ArgumentParser:
     e.add_argument("--data-root", default=None)
     e.add_argument("--calib-dir", default=None, help="calib komutunun --out klasörü")
     e.set_defaults(func=_cmd_export)
+    v = sub.add_parser("eval", help="bir varyantı COCO metrikleriyle değerlendir")
+    v.add_argument("--config", required=True)
+    v.add_argument("--model", required=True, help="config'teki models anahtarı")
+    v.add_argument("--variant", required=True, choices=list(VARIANTS))
+    v.add_argument("--file", required=True)
+    v.add_argument("--data-root", required=True)
+    v.add_argument("--meta", required=True)
+    v.add_argument("--split", default="val", choices=["val", "test"])
+    v.add_argument("--threads", type=int, default=None)
+    v.add_argument("--n-boot", type=int, default=0)
+    v.add_argument("--label-sets", nargs="+", default=["ir"], choices=["ir", "rgb"])
+    v.add_argument("--workers", type=int, default=1)
+    v.add_argument("--project", default="runs/edge")
+    v.add_argument("--results", default="../results")
+    v.set_defaults(func=_cmd_eval)
     return p
 
 
