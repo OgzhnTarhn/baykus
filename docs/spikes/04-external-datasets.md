@@ -34,8 +34,10 @@
 
 **Test bölümü (2026-10-16):** iki dizi; RGB `1-03`, `2-03`, IR `1-03T`, `2-03T` (IR dizi adına `T` eki). Açılmış hâli 1,1 GB; Drive'a `baykus/m3ot_raw/m3ot_test.zip` olarak kaydedildi (sıkıştırmasız zip 1,1 GB, 1 dk 19 sn). Dönüştürücü IR'deki `T` ekini dizi adından atar.
 
+**KAPI M incelemesi (2026-10-16, `05_m3ot` INSPECT, `inspect_m3ot.py`):** test bölümü 2 dizi × 2 modalite, dizi başına 480 kare (`000001..000480.PNG`, ardışık), 640×512, IR de 3 kanal PNG. `gt.txt` 9 sütun; bütün satırlarda flag 1, sınıf 1, görünürlük 1,0 (resmi süzgeç hiçbir satırı atmıyor). Satır sayıları: 1-03 RGB 1304 / IR 1301, 2-03 RGB 1169 / IR 1164; dizi başına 19 iz (her iki modalitede). Kare başına ≈ 2,6 araç. Çizim (241. kare, dört görüntü): kutular RGB'de ve IR'de aracın üstüne oturuyor, iki modalite arasında gözle görülür kayma yok. `gt/labels.txt` ve `seqinfo.ini` var. **Not:** test 960 RGB-IR çifti ve ≈ 2470 kutu; kareler aynı videodan, ardışık kareler birbirine bağımlı → görüntü düzeyinde bootstrap GA'sı iyimser (dar) çıkabilir; E7'de modlar arası sıra yorumlanır.
+
 **İndirmeden sonra kontrol edilecekler ([KULLANICI] tarayıcıdan indirip `C:\baykus\data\raw\m3ot\` altına açar):**
-- [ ] Dizi sayısı, dizi başına kare sayısı; RGB ve IR dizilerinin adlandırması (aynı dizi adı + modalite eki mi?)
+- [x] Dizi sayısı, dizi başına kare sayısı; RGB ve IR dizilerinin adlandırması (aynı dizi adı + modalite eki mi?) → IR'de `T` eki (yukarıda)
 - [ ] `gt.txt` 7. sütun (conf / ignore) ve 9. sütun (visibility) değerleri; `m3OT2coco.py`'deki `USELESS` / `IGNORES` sınıf kodları gerçekte geçiyor mu?
 - [ ] Kare hızı (dosya adlarından ya da `seqinfo.ini`'den)
 - [ ] RGB ve IR kare sayıları eşit mi, aynı kare numaraları hizalı mı?
