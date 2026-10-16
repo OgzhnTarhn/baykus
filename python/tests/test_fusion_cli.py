@@ -33,8 +33,9 @@ def setup_dv(tmp_path: Path) -> dict:
     (meta / "illumination_thresholds.json").write_text(
         json.dumps({"t_dark": 40.0, "t_day": 114.14}), encoding="utf-8"
     )
-    rgb = save_predictions(tmp_path / "e1.json.gz", RGB)
-    ir = save_predictions(tmp_path / "e2.json.gz", IR)
+    # değerlendirme klasörü adı run kimliğiyle başlar (check_sources)
+    rgb = save_predictions(tmp_path / "E1_val" / "predictions_coco.json.gz", RGB)
+    ir = save_predictions(tmp_path / "E2_val" / "predictions_coco.json.gz", IR)
     return {"root": root, "meta": meta, "rgb": rgb, "ir": ir}
 
 
@@ -198,3 +199,59 @@ def test_apply_on_other_dataset_and_e4b_refused(tmp_path: Path, capsys):
     args[args.index(str(REPO / "configs/fusion/e4_late_fusion.yaml"))] = str(
         REPO / "configs/fusion/e4b_late_fusion_illum.yaml")  # fmt: skip
     assert main(args) == 2 and "uygulanmaz" in capsys.readouterr().err
+
+
+def test_rerun_with_other_n_boot_is_error(tmp_path: Path, capsys):
+    s = setup_dv(tmp_path)
+    assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
+    args = select_args(tmp_path, s, "e4_late_fusion.yaml")
+    args[args.index("--n-boot") + 1] = "20"
+    assert main(args) == 2 and "farklı girdilerle" in capsys.readouterr().err
+
+
+def test_rerun_with_other_sources_is_error(tmp_path: Path, capsys):
+    s = setup_dv(tmp_path)
+    assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
+    other = save_predictions(tmp_path / "x" / "E1_val" / "predictions_coco.json.gz", RGB)
+    args = select_args(tmp_path, s, "e4_late_fusion.yaml")
+    args[args.index(str(s["rgb"]))] = str(other)
+    assert main(args) == 2 and "farklı girdilerle" in capsys.readouterr().err
+
+
+def _apply_args(tmp_path: Path, s: dict, config: Path, rgb: Path, ir: Path) -> list[str]:
+    sel = selection_path(tmp_path / "res", "e4_late_fusion", "val")
+    return ["apply", "--config", str(config), "--selection", str(sel), "--rgb-preds", str(rgb),
+            "--ir-preds", str(ir), "--data-root", str(s["root"]), "--meta", str(s["meta"]),
+            "--split", "val", "--dataset", "m3ot", "--class-agnostic",
+            "--project", str(tmp_path / "m"), "--results", str(tmp_path / "res"),
+            "--n-boot", "10"]  # fmt: skip
+
+
+def test_apply_preds_from_other_run_is_error(tmp_path: Path, capsys):
+    s = setup_dv(tmp_path)
+    assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
+    wrong = save_predictions(tmp_path / "E1x_val" / "predictions_coco.json.gz", RGB)
+    cfg = REPO / "configs/fusion/e4_late_fusion.yaml"
+    assert main(_apply_args(tmp_path, s, cfg, wrong, s["ir"])) == 2
+    assert "E1" in capsys.readouterr().err
+
+
+def test_apply_config_hash_mismatch_is_error(tmp_path: Path, capsys):
+    s = setup_dv(tmp_path)
+    assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
+    src = (REPO / "configs/fusion/e4_late_fusion.yaml").read_text(encoding="utf-8")
+    cfg = tmp_path / "e4_changed.yaml"
+    cfg.write_text(src.replace("n_boot: 1000", "n_boot: 999"), encoding="utf-8")
+    assert main(_apply_args(tmp_path, s, cfg, s["rgb"], s["ir"])) == 2
+    assert "config_hash" in capsys.readouterr().err
+
+
+def test_value_error_becomes_error_line(tmp_path: Path, capsys):
+    s = setup_dv(tmp_path)
+    assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
+    bad = [{**RGB[0], "image_id": 99}]
+    rgb = save_predictions(tmp_path / "y" / "E1_val" / "predictions_coco.json.gz", bad)
+    cfg = REPO / "configs/fusion/e4_late_fusion.yaml"
+    assert main(_apply_args(tmp_path, s, cfg, rgb, s["ir"])) == 2
+    err = capsys.readouterr().err
+    assert err.startswith("hata: ") and "Traceback" not in err

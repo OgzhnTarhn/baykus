@@ -35,7 +35,6 @@ from baykus.fusion.select import select_constant, select_per_illumination
 from baykus.robustness.cli import ROBUST_DIR
 from baykus.robustness.corruptions import SUITE, Condition, applies, suite_conditions
 from baykus.runinfo import git_info, iso, make_run_id, utc_now, write_json
-from baykus.train.config import ConfigError
 
 SEL_DIR = "fusion"
 LABEL_SET = "ir"  # seçim ölçütü ana etiket setinde (ADR 0003)
@@ -47,6 +46,26 @@ class FusionError(ValueError):
 
 def selection_path(results: Path, experiment: str, split: str) -> Path:
     return Path(results) / SEL_DIR / f"{experiment}_{split}_selection.json"
+
+
+def check_sources(sel: dict, rgb_preds: Path, ir_preds: Path) -> None:
+    """Tahmin dosyası seçimdeki modellere mi ait? Değerlendirme klasörleri
+    `<run_id>[_<veri seti>]_<split>[_…]` adlı (baykus.eval.cli.run_name)."""
+    for side, path in (("rgb", rgb_preds), ("ir", ir_preds)):
+        run_id, folder = sel[f"{side}_run_id"], Path(path).parent.name
+        if not folder.startswith(f"{run_id}_"):
+            raise FusionError(
+                f"{side} tahmini ({path}) seçimdeki {run_id} modeline ait değil "
+                f"(klasör adı {run_id}_… ile başlamalı)"
+            )
+
+
+def _same_inputs(path: Path, n_boot: int, rgb_preds: Path, ir_preds: Path) -> bool:
+    rec = json.loads(path.read_text(encoding="utf-8"))
+    fusion = rec.get("fusion") or {}
+    return (rec.get("n_boot"), fusion.get("rgb_preds"), fusion.get("ir_preds")) == (
+        n_boot, str(rgb_preds), str(ir_preds)
+    )  # fmt: skip
 
 
 def _weights(sel: dict, levels: dict[int, str] | None):
@@ -84,8 +103,14 @@ def fuse_and_record(
     name = run_name(sel["run_id"], split, dataset, condition)
     outs = [Path(results) / results_subdir / f"{name}_{ls}.json" for ls in label_sets]
     if all(p.exists() for p in outs):
+        stale = [p for p in outs if not _same_inputs(p, n_boot, rgb_preds, ir_preds)]
+        if stale:
+            raise FusionError(
+                f"farklı girdilerle yazılmış sonuç var: {stale[0]}; silip yeniden çalıştırın"
+            )
         print(f"zaten var, atlandı: {name}")
         return outs
+    check_sources(sel, rgb_preds, ir_preds)
     root = Path(root)
     gt_ir = load_coco(root / "coco" / f"{split}_ir.json")
     images = {im["id"]: (im["width"], im["height"]) for im in gt_ir.dataset["images"]}
@@ -211,6 +236,11 @@ def _load_selection(a: argparse.Namespace) -> tuple[dict, FusionConfig]:
     sel = json.loads(Path(a.selection).read_text(encoding="utf-8"))
     if sel["experiment"] != cfg.experiment:
         raise FusionError(f"seçim {sel['experiment']!r}, config {cfg.experiment!r}: eşleşmiyor")
+    if sel["config_hash"] != cfg.config_hash:
+        raise FusionError(
+            f"seçim başka bir config ile yapılmış (config_hash {sel['config_hash'][:15]}… ≠ "
+            f"{cfg.config_hash[:15]}…)"
+        )
     return sel, cfg
 
 
@@ -320,6 +350,6 @@ def main(argv: list[str] | None = None) -> int:
     a = build_parser().parse_args(argv)
     try:
         return a.func(a)
-    except (FusionError, ConfigError, FileNotFoundError) as e:
+    except (ValueError, KeyError, FileNotFoundError) as e:  # FusionError, ConfigError dahil
         print(f"hata: {e}", file=sys.stderr)
         return 2
