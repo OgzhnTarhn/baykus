@@ -1,0 +1,43 @@
+{
+  "name": "e4_late_fusion-vs-e2_ir_val_ir",
+  "split": "val",
+  "gt": "/content/dv_rgbt/coco/val_ir.json",
+  "a": "/content/drive/MyDrive/baykus/eval/2026-10-16_e4-late-fusion_s_b346199_val/predictions_coco.json.gz",
+  "b": "/content/drive/MyDrive/baykus/eval/2026-10-14_e2-ir_s_02c4098_val/predictions_coco.json.gz",
+  "n_boot": 1000,
+  "overall": {
+    "diff": 0.00883829937815861,
+    "ci95": [
+      0.0023622381689486966,
+      0.015694963742215396
+    ],
+    "significant": true
+  },
+  "per_illumination": {
+    "day": {
+      "diff": 0.028735802793731224,
+      "ci95": [
+        0.01764445817072839,
+        0.03975044700957833
+      ],
+      "significant": true
+    },
+    "night": {
+      "diff": 0.008198951446290459,
+      "ci95": [
+        -0.00020589869327105603,
+        0.01521420281659404
+      ],
+      "significant": false
+    },
+    "dark_night": {
+      "diff": -0.006819255900798238,
+      "ci95": [
+        -0.013823492889106706,
+        0.0003791624361300633
+      ],
+      "significant": false
+    }
+  },
+  "created_at": "2026-10-16T12:55:59Z"
+}

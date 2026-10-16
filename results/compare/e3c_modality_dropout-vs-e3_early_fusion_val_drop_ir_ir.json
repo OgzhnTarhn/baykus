@@ -1,0 +1,43 @@
+{
+  "name": "e3c_modality_dropout-vs-e3_early_fusion_val_drop_ir_ir",
+  "split": "val",
+  "gt": "/content/dv_rgbt/coco/val_ir.json",
+  "a": "/content/drive/MyDrive/baykus/robust/2026-10-15_e3c-modality-dropout_s_d4e1280_val_drop_ir/predictions_coco.json.gz",
+  "b": "/content/drive/MyDrive/baykus/robust/2026-10-14_e3-early-fusion_s_67ace37_val_drop_ir/predictions_coco.json.gz",
+  "n_boot": 1000,
+  "overall": {
+    "diff": 0.5913468079042261,
+    "ci95": [
+      0.5637775666587467,
+      0.6193409309733999
+    ],
+    "significant": true
+  },
+  "per_illumination": {
+    "day": {
+      "diff": 0.5732848950906568,
+      "ci95": [
+        0.5404050050917575,
+        0.6087636515447385
+      ],
+      "significant": true
+    },
+    "night": {
+      "diff": 0.5801780238723239,
+      "ci95": [
+        0.5226126627345503,
+        0.6299147629017463
+      ],
+      "significant": true
+    },
+    "dark_night": {
+      "diff": 0.6046159222189345,
+      "ci95": [
+        0.5603916511259452,
+        0.6450669793446001
+      ],
+      "significant": true
+    }
+  },
+  "created_at": "2026-10-16T13:04:24Z"
+}

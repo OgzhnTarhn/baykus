@@ -1,0 +1,49 @@
+{
+  "name": "e4_late_fusion-vs-e3_early_fusion_val_camloss_ir",
+  "split": "val",
+  "gt": "/content/dv_rgbt/coco/val_ir.json",
+  "a": [
+    "/content/drive/MyDrive/baykus/robust/2026-10-16_e4-late-fusion_s_b346199_val_drop_rgb/predictions_coco.json.gz",
+    "/content/drive/MyDrive/baykus/robust/2026-10-16_e4-late-fusion_s_b346199_val_drop_ir/predictions_coco.json.gz"
+  ],
+  "b": [
+    "/content/drive/MyDrive/baykus/robust/2026-10-14_e3-early-fusion_s_67ace37_val_drop_rgb/predictions_coco.json.gz",
+    "/content/drive/MyDrive/baykus/robust/2026-10-14_e3-early-fusion_s_67ace37_val_drop_ir/predictions_coco.json.gz"
+  ],
+  "n_boot": 1000,
+  "overall": {
+    "diff": 0.37713376837053736,
+    "ci95": [
+      0.35697821467493396,
+      0.39818692859808796
+    ],
+    "significant": true
+  },
+  "per_illumination": {
+    "day": {
+      "diff": 0.4339959322094652,
+      "ci95": [
+        0.4046854118498151,
+        0.4650373412498056
+      ],
+      "significant": true
+    },
+    "night": {
+      "diff": 0.3636931129691327,
+      "ci95": [
+        0.3260758448207081,
+        0.394448354972793
+      ],
+      "significant": true
+    },
+    "dark_night": {
+      "diff": 0.3305718260352018,
+      "ci95": [
+        0.3063478228066544,
+        0.35291471765951504
+      ],
+      "significant": true
+    }
+  },
+  "created_at": "2026-10-16T12:51:52Z"
+}
