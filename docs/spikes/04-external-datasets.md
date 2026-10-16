@@ -28,6 +28,8 @@
 - Kutular çok küçük. 640 girdiyle M3OT AP'si DroneVehicle AP'sinden belirgin düşük çıkabilir. E7'de mutlak değer değil, **modlar arası sıralama** yorumlanmalı.
 - M3OT RGB'si tele kameradan küçültülmüş. DroneVehicle RGB'sinden keskinlik ve renk farkı (alan kayması) beklenir; E7'nin amacı da bu.
 
+**İndirme (2026-10-16, H4 Görev 5):** figshare'de tek dosya `M3OT.zip` (file id 52023875), 10,0 GB, `Zip archive, compression method=store` (sıkıştırmasız). Colab'dan düz `curl` ve tarayıcı kimliğiyle `curl` engellendi (boş yanıt, sonra HTTP 403: AWS WAF). Tarayıcıdan "Copy as cURL" ile alınan çerezlerle Colab'da indirildi: HTTP 200, 4 dk 2 sn (≈ 42 MB/s). Çerezler kısa ömürlü ve kişisel; hiçbir dosyaya yazılmaz, her yeni indirmede tarayıcıdan yeniden kopyalanır.
+
 **İndirmeden sonra kontrol edilecekler ([KULLANICI] tarayıcıdan indirip `C:\baykus\data\raw\m3ot\` altına açar):**
 - [ ] Dizi sayısı, dizi başına kare sayısı; RGB ve IR dizilerinin adlandırması (aynı dizi adı + modalite eki mi?)
 - [ ] `gt.txt` 7. sütun (conf / ignore) ve 9. sütun (visibility) değerleri; `m3OT2coco.py`'deki `USELESS` / `IGNORES` sınıf kodları gerçekte geçiyor mu?
