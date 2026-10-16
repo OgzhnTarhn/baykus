@@ -64,8 +64,14 @@ JSON dosyaları `results/m3ot/` altına indirilince bu tablo onlarla doğrulanac
 - Ultralytics taraması: 960 görüntü, **10 arka plan** (IR etiketinde kutusuz kare).
 - `dropped=0` (E1-E3c); E4 satırı `dropped` yazmıyor.
 - Sıra (IR etiketi): E2 > E4 ≈ E3 > E3c. E3c, DroneVehicle val'deki gibi temiz koşulda geride; burada fark daha büyük (−8,2 puan E3'e göre).
-- **Açık soru, doğrulanmadı:** Her model öbür modalitenin etiketleriyle ≈ 0,1 alıyor. Makale RGB'nin IR'ye hizalandığını
-  söylüyor, ama RGB ve IR etiketleri arasında kayma ya da kare kayması olabilir; kutular küçük (< 1024 px²) olduğu için
-  birkaç piksellik kayma bile IoU 0,5'i düşürür. Etiketleri karşılaştırmadan yorum yazılmayacak
-  (`meta/m3ot_tracks.csv`'de aynı kare ve iz numarasının RGB-IR kutuları arasındaki IoU). E4'ün IR etiketiyle E2'nin
-  altında kalması (0,971 vs 0,981) ve E3c'nin düşüşü bu kaymayla ilgili olabilir.
+- **RGB-IR etiket hizası (Colab, `meta/m3ot_tracks.csv`, test):** RGB 2473, IR 2465 kutu; aynı kare + iz
+  numarasıyla 2455 çift eşleşti (iz numaraları iki modalitede tutarlı). Kutu genişliği ortanca ≈ 12,5 px.
+  RGB-IR kutu IoU: ortalama 0,38, ortanca 0,35, çeyrekler 0,24 / 0,50 → çiftlerin ≈ dörtte biri IoU ≥ 0,5.
+  Kayma (IR − RGB, piksel): dx ortanca −0,95 (std 3,1); dy ortanca +5,5 (std 10,8, çeyrekler −0,2 / 14,7,
+  uçlar −103 / +54). İki dizide de aynı (1-03: IoU 0,35, dy 5,3 · 2-03: IoU 0,36, dy 5,8).
+  - Sonuç: iki modalitenin etiketleri 12 px'lik kutular ölçeğinde hizalı değil; asıl kayma düşeyde ve sabit değil.
+    Çapraz etiket skorlarının (≈ 0,1) sebebi bu; o sütun model kalitesi hakkında bilgi taşımaz.
+  - Tablo kuralı (rgb modu RGB etiketiyle, öbürleri IR etiketiyle) bu yüzden doğru. İki girdiyi birlikte kullanan
+    modeller (E3, E3c, E4) M3OT'ta hizasız girdiyle çalışıyor; E3c'nin düşüşü ve E4'ün E2'nin altında kalması
+    bununla uyumlu, ama ayrıca ölçülmedi. DroneVehicle'daki E6 hizasızlık sonucuyla da uyumlu (dropout
+    hizasızlığa karşı bir şey öğretmiyor).
