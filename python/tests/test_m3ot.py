@@ -119,6 +119,7 @@ def test_convert_layouts(tmp_path: Path, layout: str):
     assert stats["frames_rgb_only"] == 1 and stats["frames_ir_only"] == 0
     assert stats["boxes"] == {"rgb": 5, "ir": 5}
     assert stats["dropped_rows"] == {"rgb": 4, "ir": 4}  # dizi başına 2 süzülen satır
+    assert stats["rows_unpaired_frames"] == {"rgb": 0, "ir": 0}
     stems = sorted(p.stem for p in (out / "rgb/images/test").glob("*.jpg"))
     assert stems == ["seqA_000001", "seqA_000002", "seqA_000003", "seqB_000001", "seqB_000002"]
     ir = imread_any(out / "ir/images/test/seqA_000001.png", cv2.IMREAD_UNCHANGED)
@@ -169,6 +170,15 @@ def test_k5_index_and_tracks(tmp_path: Path):
     )
     stats = json.loads((out / "meta/m3ot_stats.json").read_text(encoding="utf-8"))
     assert stats["pairs"] == 5
+
+
+def test_rows_on_single_modality_frames_are_counted(tmp_path: Path):
+    raw = make_raw(tmp_path / "raw", "dirs")
+    gt = LAYOUTS["dirs"](raw, "test", "seqA", "rgb") / "gt" / "gt.txt"
+    gt.write_text(gt.read_text(encoding="utf-8") + "4,7,4,6,10,8,1,1,1.0\n", encoding="utf-8")
+    stats = convert_m3ot(raw, tmp_path / "m3ot", splits=["test"])
+    assert stats["rows_unpaired_frames"] == {"rgb": 1, "ir": 0}
+    assert stats["boxes"] == {"rgb": 5, "ir": 5}  # 4. kare etikete girmez
 
 
 def test_unpaired_sequence_is_counted_not_fatal(tmp_path: Path):

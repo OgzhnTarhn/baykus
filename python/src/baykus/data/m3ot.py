@@ -205,6 +205,8 @@ def convert_m3ot(raw: Path, out: Path, splits: Iterable[str] = ("test",), worker
         "frames_ir_only": 0,
         "boxes": {"rgb": 0, "ir": 0},
         "dropped_rows": {"rgb": 0, "ir": 0},
+        # süzgeçten geçen ama karesi tek modalitede olduğu için etikete girmeyen satırlar
+        "rows_unpaired_frames": {"rgb": 0, "ir": 0},
     }
     jobs, labels, index, tracks = [], {}, [], []
     for rgb, ir in pairs:
@@ -222,6 +224,9 @@ def convert_m3ot(raw: Path, out: Path, splits: Iterable[str] = ("test",), worker
                     by_frame[m][r.frame].append(r)
                 else:
                     stats["dropped_rows"][m] += 1
+            stats["rows_unpaired_frames"][m] += sum(
+                len(rows) for fr, rows in by_frame[m].items() if fr not in set(common)
+            )
         for fr in common:
             stem = f"{rgb.name}_{fr:06d}"
             jobs.append((f_rgb[fr], f_ir[fr], out, rgb.split, stem))
