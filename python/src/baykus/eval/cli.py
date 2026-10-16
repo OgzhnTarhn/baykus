@@ -128,6 +128,7 @@ def evaluate_weights(
     results_subdir: str = "runs",
     dataset: str = DEFAULT_DATASET,
     class_agnostic: bool = False,
+    workers: int = 1,
 ) -> list[Path]:
     """Ultralytics val → etiket seti başına run JSON. condition verilirse (sağlamlık paketi)
     ada koşul kimliği eklenir ve kayda `robustness` alanı yazılır."""
@@ -181,7 +182,12 @@ def evaluate_weights(
         if i == 0:
             save_predictions(save_dir / "predictions_coco.json.gz", dets)
         metrics = build_metrics(
-            gt, dets, load_slices(meta, split), n_boot=n_boot, seed=cfg.train.seed
+            gt,
+            dets,
+            load_slices(meta, split),
+            n_boot=n_boot,
+            seed=cfg.train.seed,
+            workers=workers,
         )
         record = eval_record(
             run_id=run_id,
@@ -237,6 +243,7 @@ def _cmd_run(a: argparse.Namespace) -> int:
         device=a.device,
         dataset=a.dataset,
         class_agnostic=a.class_agnostic,
+        workers=a.workers,
         results_subdir=a.results_subdir or ("runs" if a.dataset == DEFAULT_DATASET else a.dataset),
     )
     return 0
@@ -263,7 +270,7 @@ def _cmd_compare(a: argparse.Namespace) -> int:
         "a": one(a.a),
         "b": one(a.b),
         "n_boot": a.n_boot,
-        "overall": paired_mean_diff_ci(ma, mb, a.n_boot),
+        "overall": paired_mean_diff_ci(ma, mb, a.n_boot, workers=a.workers),
         "per_illumination": {},
     }
     slices = json.loads(Path(a.slices).read_text(encoding="utf-8")).get("illumination", {})
@@ -271,7 +278,7 @@ def _cmd_compare(a: argparse.Namespace) -> int:
         sa, sb = [subset(m, ids) for m in ma], [subset(m, ids) for m in mb]
         # GT'de görüntüsü olmayan dilim ölçülmemiştir: 0 değil null
         out["per_illumination"][name] = (
-            paired_mean_diff_ci(sa, sb, a.n_boot) if sa[0].img_ids else None
+            paired_mean_diff_ci(sa, sb, a.n_boot, workers=a.workers) if sa[0].img_ids else None
         )
     out["created_at"] = iso(utc_now())
     print(write_json(Path(a.results) / "compare" / f"{a.name}.json", out))
@@ -294,6 +301,7 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--dataset", default=DEFAULT_DATASET, choices=[DEFAULT_DATASET, "m3ot"])
     r.add_argument("--class-agnostic", action="store_true", help="sınıfsız AP (M3OT, spec §8.3)")
     r.add_argument("--results-subdir", default=None)
+    r.add_argument("--workers", type=int, default=1, help="bootstrap süreç sayısı")
     r.set_defaults(func=_cmd_run)
     c = sub.add_parser("compare", help="iki modelin eşleştirilmiş bootstrap farkı")
     c.add_argument("--gt", required=True)
@@ -304,6 +312,7 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("--split", default="val", choices=["val", "test"])
     c.add_argument("--results", type=Path, default=Path("../results"))
     c.add_argument("--n-boot", type=int, default=1000)
+    c.add_argument("--workers", type=int, default=1, help="bootstrap süreç sayısı")
     c.set_defaults(func=_cmd_compare)
     return p
 

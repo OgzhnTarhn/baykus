@@ -139,7 +139,8 @@ def fuse_and_record(
     git = git_info()
     for ls, out in zip(label_sets, outs, strict=True):
         gt = load_coco(root / "coco" / f"{split}_{ls}.json")
-        metrics = build_metrics(gt, fused, load_slices(meta, split), n_boot=n_boot, seed=cfg.seed)
+        metrics = build_metrics(gt, fused, load_slices(meta, split), n_boot=n_boot, seed=cfg.seed,
+                                workers=workers)  # fmt: skip
         rec = eval_record(
             run_id=sel["run_id"],
             config=sel["config"],

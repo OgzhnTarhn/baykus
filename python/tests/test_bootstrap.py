@@ -164,3 +164,37 @@ def test_paired_mean_diff_rejects_mismatch():
         paired_mean_diff_ci([m], [m, m])
     with pytest.raises(ValueError, match="aynı görüntü"):
         paired_mean_diff_ci([m, o], [m, m])
+
+
+def _legacy_ci(m, n, seed):
+    """H4'teki tek çekirdekli gövde, olduğu gibi: paralel sürüm bit bit aynı olmalı."""
+    k = len(m.img_ids)
+    rng = np.random.default_rng(seed)
+    vals = np.array([ap50(m, rng.integers(0, k, k)) for _ in range(n)])
+    lo, hi = np.percentile(vals, [2.5, 97.5])
+    return float(lo), float(hi)
+
+
+def test_parallel_bootstrap_equals_legacy():
+    gt, dets = _random_case(5, n_img=13)  # tek sayıda görüntü: örnek üretim sırası önemli
+    m = collect_matches(gt, dets)
+    want = _legacy_ci(m, 40, 7)
+    assert bootstrap_ci(m, 40, 7) == want
+    assert bootstrap_ci(m, 40, 7, workers=3) == want
+
+
+def test_parallel_paired_equals_serial():
+    gt, dets = _random_case(6)
+    a = collect_matches(gt, dets)
+    b = collect_matches(gt, [d for d in dets if d["score"] > 0.3])
+    assert paired_diff_ci(a, b, 30, 3, workers=2) == paired_diff_ci(a, b, 30, 3)
+
+
+def test_zero_boot_gives_none():
+    gt, dets = _random_case(8)
+    a = collect_matches(gt, dets)
+    b = collect_matches(gt, dets[: len(dets) // 2])
+    assert bootstrap_ci(a, 0) == (None, None)
+    r = paired_diff_ci(a, b, 0)
+    assert r["ci95"] == [None, None] and r["significant"] is None
+    assert r["diff"] == pytest.approx(ap50(a) - ap50(b))

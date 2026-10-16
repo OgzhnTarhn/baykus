@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import contextlib
 import io
+import multiprocessing
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 
 import numpy as np
@@ -147,44 +149,69 @@ def ap50(m: Matches, sample: np.ndarray | None = None) -> float:
     return float(np.mean(aps)) if aps else 0.0
 
 
-def bootstrap_ci(m: Matches, n: int = 1000, seed: int = 0) -> tuple[float | None, float | None]:
-    k = len(m.img_ids)
-    if k == 0:
-        return (None, None)
+def _samples(k: int, n: int, seed: int) -> list[np.ndarray]:
+    """Örnekler ebeveynde, H3-H4'teki sırayla (n kez integers(0, k, k)); tek seferde (n, k)
+    çekmek numpy'da farklı dizi verebilir, eski güven aralıkları değişmesin."""
     rng = np.random.default_rng(seed)
-    vals = np.array([ap50(m, rng.integers(0, k, k)) for _ in range(n)])
+    return [rng.integers(0, k, k) for _ in range(n)]
+
+
+def _mean_ap(ms: list[Matches], s: np.ndarray | None = None) -> float:
+    return float(np.mean([ap50(m, s) for m in ms]))
+
+
+def _values(job: tuple) -> list[float]:
+    """Bir parça örnek için değerler: b yoksa ap50(a[0]), varsa koşul ortalamalarının farkı."""
+    a, b, samples = job
+    if b is None:
+        return [ap50(a[0], s) for s in samples]
+    return [_mean_ap(a, s) - _mean_ap(b, s) for s in samples]
+
+
+def _boot_values(
+    a: list[Matches], b: list[Matches] | None, samples: list[np.ndarray], workers: int
+) -> list[float]:
+    if workers <= 1 or len(samples) < 2:
+        return _values((a, b, samples))
+    parts = [c for c in np.array_split(np.arange(len(samples)), workers) if len(c)]
+    jobs = [(a, b, [samples[i] for i in c]) for c in parts]
+    ctx = multiprocessing.get_context("spawn")
+    with ProcessPoolExecutor(max_workers=len(jobs), mp_context=ctx) as ex:
+        return [v for part in ex.map(_values, jobs) for v in part]
+
+
+def bootstrap_ci(
+    m: Matches, n: int = 1000, seed: int = 0, workers: int = 1
+) -> tuple[float | None, float | None]:
+    k = len(m.img_ids)
+    if k == 0 or n == 0:
+        return (None, None)
+    vals = np.array(_boot_values([m], None, _samples(k, n, seed), workers))
     lo, hi = np.percentile(vals, [2.5, 97.5])
     return float(lo), float(hi)
 
 
-def paired_mean_diff_ci(a: list[Matches], b: list[Matches], n: int = 1000, seed: int = 0) -> dict:
+def paired_mean_diff_ci(
+    a: list[Matches], b: list[Matches], n: int = 1000, seed: int = 0, workers: int = 1
+) -> dict:
     """A'nın koşul ortalaması − B'nin koşul ortalaması (ör. kamera kaybı puanı: RGB kaybı ve IR
-    kaybının ortalaması). Her bootstrap örneği bütün koşullarda aynı görüntülerle çekilir."""
+    kaybının ortalaması). Her bootstrap örneği bütün koşullarda aynı görüntülerle çekilir.
+    n == 0: yalnız nokta fark, aralık null."""
     if not a or len(a) != len(b):
         raise ValueError(f"koşul sayısı eşit ve sıfırdan büyük olmalı: {len(a)} ≠ {len(b)}")
     ids = a[0].img_ids
     if any(m.img_ids != ids for m in (*a, *b)):
         raise ValueError("eşleştirilmiş bootstrap için iki model aynı görüntü listesinde ölçülmeli")
-    k = len(ids)
-    rng = np.random.default_rng(seed)
-
-    def mean_ap(ms: list[Matches], s: np.ndarray | None = None) -> float:
-        return float(np.mean([ap50(m, s) for m in ms]))
-
-    diffs = []
-    for _ in range(n):
-        s = rng.integers(0, k, k)
-        diffs.append(mean_ap(a, s) - mean_ap(b, s))
+    diff = _mean_ap(a) - _mean_ap(b)
+    if n == 0:
+        return {"diff": diff, "ci95": [None, None], "significant": None}
+    diffs = _boot_values(a, b, _samples(len(ids), n, seed), workers)
     lo, hi = (float(x) for x in np.percentile(diffs, [2.5, 97.5]))
-    return {
-        "diff": mean_ap(a) - mean_ap(b),
-        "ci95": [lo, hi],
-        "significant": bool(lo > 0 or hi < 0),
-    }
+    return {"diff": diff, "ci95": [lo, hi], "significant": bool(lo > 0 or hi < 0)}
 
 
-def paired_diff_ci(a: Matches, b: Matches, n: int = 1000, seed: int = 0) -> dict:
-    return paired_mean_diff_ci([a], [b], n, seed)
+def paired_diff_ci(a: Matches, b: Matches, n: int = 1000, seed: int = 0, workers: int = 1) -> dict:
+    return paired_mean_diff_ci([a], [b], n, seed, workers)
 
 
 def precision_recall(m: Matches, conf: float = 0.25) -> tuple[float | None, float | None]:

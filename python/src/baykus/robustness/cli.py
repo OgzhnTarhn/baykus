@@ -153,6 +153,7 @@ def run_suite(
                     label_sets=(LABEL_SET,),
                     condition=info,
                     results_subdir=ROBUST_DIR,
+                    workers=workers,
                 )
                 # Ultralytics'in ham tahmin kopyası Drive'da yer kaplar; bizimki .json.gz'de (K1)
                 (Path(project) / f"{m.run_id}_{split}_{cond.id}" / "predictions.json").unlink(

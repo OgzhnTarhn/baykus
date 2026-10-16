@@ -21,7 +21,9 @@ def _cfg(tmp_path: Path) -> Path:
     return p
 
 
-def _run(tmp_path: Path, monkeypatch, write_preds: bool = True, **kw) -> tuple[list[Path], type]:
+def _run(
+    tmp_path: Path, monkeypatch, write_preds: bool = True, n_boot: int = 10, **kw
+) -> tuple[list[Path], type]:
     fake = install(monkeypatch)
     fake.write_preds = write_preds
     root = make_synthetic_dataset(tmp_path / "dv")
@@ -35,7 +37,7 @@ def _run(tmp_path: Path, monkeypatch, write_preds: bool = True, **kw) -> tuple[l
         meta=root / "meta",
         project=tmp_path / "eval",
         results=tmp_path / "results",
-        n_boot=10,
+        n_boot=n_boot,
         **kw,
     )
     return paths, fake
@@ -140,3 +142,11 @@ def test_run_name():
     assert run_name("r", "val") == "r_val"
     assert run_name("r", "test", "m3ot") == "r_m3ot_test"
     assert run_name("r", "val", condition={"id": "drop_rgb"}) == "r_val_drop_rgb"
+
+
+def test_zero_boot_records_null_intervals(tmp_path: Path, monkeypatch):
+    paths, _ = _run(tmp_path, monkeypatch, n_boot=0, workers=2)
+    rec = json.loads(paths[0].read_text(encoding="utf-8"))
+    assert rec["n_boot"] == 0 and rec["metrics"]["ci95"]["map50"] == [None, None]
+    assert rec["metrics"]["ci95"]["per_illumination"]["day"] == [None, None]
+    assert isinstance(rec["metrics"]["map50"], float)
