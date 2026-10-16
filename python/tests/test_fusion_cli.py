@@ -1,0 +1,105 @@
+import json
+from pathlib import Path
+
+import pytest
+
+pytest.importorskip("ensemble_boxes")
+
+from baykus.eval.predictions import load_predictions, save_predictions  # noqa: E402
+from baykus.fusion.cli import main, selection_path  # noqa: E402
+from tests.coco_helpers import make_gt  # noqa: E402
+from tests.test_fusion_select import IR, RGB  # noqa: E402
+
+A = [100.0, 100.0, 20.0, 20.0]
+REPO = Path(__file__).resolve().parents[2]
+
+
+def setup_dv(tmp_path: Path) -> dict:
+    """İki görüntülü val: 1 gündüz, 2 gece; GT her iki etiket setinde aynı."""
+    root, meta = tmp_path / "dv", tmp_path / "meta"
+    (root / "coco").mkdir(parents=True)
+    meta.mkdir()
+    gt = make_gt({1: [(1, A)], 2: [(1, A)]})
+    for im, stem in zip(gt.dataset["images"], ("00101", "00103"), strict=True):
+        im["file_name"] = stem
+    for ls in ("ir", "rgb"):
+        (root / "coco" / f"val_{ls}.json").write_text(json.dumps(gt.dataset), encoding="utf-8")
+    slices = {"illumination": {"day": [1], "night": [2], "dark_night": []}}
+    (meta / "slices_val.json").write_text(json.dumps(slices), encoding="utf-8")
+    (meta / "illumination.csv").write_text(
+        "split,stem,brightness,illumination\nval,00101,150.00,day\nval,00103,60.00,night\n",
+        encoding="utf-8",
+    )
+    (meta / "illumination_thresholds.json").write_text(
+        json.dumps({"t_dark": 40.0, "t_day": 114.14}), encoding="utf-8"
+    )
+    rgb = save_predictions(tmp_path / "e1.json.gz", RGB)
+    ir = save_predictions(tmp_path / "e2.json.gz", IR)
+    return {"root": root, "meta": meta, "rgb": rgb, "ir": ir}
+
+
+def select_args(tmp_path: Path, s: dict, config: str, extra=()) -> list[str]:
+    return ["select", "--config", str(REPO / "configs/fusion" / config),
+            "--rgb-preds", str(s["rgb"]), "--ir-preds", str(s["ir"]),
+            "--rgb-run-id", "E1", "--ir-run-id", "E2", "--data-root", str(s["root"]),
+            "--meta", str(s["meta"]), "--project", str(tmp_path / "eval"),
+            "--results", str(tmp_path / "res"), "--n-boot", "10", *extra]  # fmt: skip
+
+
+def test_select_e4_writes_selection_runs_and_predictions(tmp_path: Path):
+    s = setup_dv(tmp_path)
+    assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
+    sel = json.loads(selection_path(tmp_path / "res", "e4_late_fusion", "val").read_text(
+        encoding="utf-8"))  # fmt: skip
+    assert len(sel["grid"]) == 12 and sel["criterion"] == "map50"
+    assert sel["selected"]["w_rgb"] == 1.0 and sel["rgb_run_id"] == "E1"
+    run_id = sel["run_id"]
+    assert "_e4-late-fusion_s_" in run_id
+    for ls in ("ir", "rgb"):
+        rec = json.loads((tmp_path / "res/runs" / f"{run_id}_val_{ls}.json").read_text(
+            encoding="utf-8"))  # fmt: skip
+        assert rec["model"]["mode"] == "late_fusion" and rec["weights"] is None
+        assert rec["fusion"]["ir_weight"] == sel["selected"]["ir_weight"]
+        assert rec["metrics"]["per_illumination"]["day"] is not None
+    assert load_predictions(tmp_path / "eval" / f"{run_id}_val" / "predictions_coco.json.gz")
+
+
+def test_select_resumes_without_searching_again(tmp_path: Path, monkeypatch, capsys):
+    s = setup_dv(tmp_path)
+    assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
+    import baykus.fusion.cli as fc
+
+    def boom(*a, **kw):
+        raise AssertionError("ızgara yeniden arandı")
+
+    monkeypatch.setattr(fc, "select_constant", boom)
+    assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
+    assert "zaten var" in capsys.readouterr().out
+
+
+def test_select_e4b_needs_base_and_picks_per_slice(tmp_path: Path, capsys):
+    s = setup_dv(tmp_path)
+    assert main(select_args(tmp_path, s, "e4b_late_fusion_illum.yaml")) == 2
+    assert "--base" in capsys.readouterr().err
+    assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
+    base = selection_path(tmp_path / "res", "e4_late_fusion", "val")
+    assert main(select_args(tmp_path, s, "e4b_late_fusion_illum.yaml",
+                            ["--base", str(base)])) == 0  # fmt: skip
+    sel = json.loads(selection_path(tmp_path / "res", "e4b_late_fusion_illum", "val").read_text(
+        encoding="utf-8"))  # fmt: skip
+    # repo ızgarası [0.5, 1, 2, 3]: gecede 2 ve 3 eşit (AP 1.0) → eşitlikte ilk: 2.0
+    assert sel["selected"]["ir_weight"] == {"day": 0.5, "night": 2.0}
+    assert sel["selected"]["iou_thr"] == json.loads(base.read_text(encoding="utf-8"))[
+        "selected"]["iou_thr"]  # fmt: skip
+    rec = json.loads((tmp_path / "res/runs" / f"{sel['run_id']}_val_ir.json").read_text(
+        encoding="utf-8"))  # fmt: skip
+    assert rec["metrics"]["map50"] == pytest.approx(1.0)  # her karede TP önde
+
+
+def test_select_base_from_other_models_is_error(tmp_path: Path, capsys):
+    s = setup_dv(tmp_path)
+    assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
+    base = selection_path(tmp_path / "res", "e4_late_fusion", "val")
+    args = select_args(tmp_path, s, "e4b_late_fusion_illum.yaml", ["--base", str(base)])
+    args[args.index("E2")] = "E2x"
+    assert main(args) == 2 and "başka modeller" in capsys.readouterr().err

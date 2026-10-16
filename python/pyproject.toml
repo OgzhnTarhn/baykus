@@ -26,6 +26,7 @@ baykus-train = "baykus.train.cli:main"
 baykus-eval = "baykus.eval.cli:main"
 baykus-report = "baykus.report.cli:main"
 baykus-robust = "baykus.robustness.cli:main"
+baykus-fusion = "baykus.fusion.cli:main"
 
 [dependency-groups]
 dev = ["pytest>=8.0", "ruff>=0.6", "pre-commit>=3.7"]
