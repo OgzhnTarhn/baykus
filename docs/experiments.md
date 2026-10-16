@@ -95,3 +95,27 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
 ## 2026-10-16 · E3b · Erken füzyon, ul_default — yapılmadı
 - **Karar (kullanıcı, H4 planı):** E3b yapılmadı: sadece literatürdeki rgb_mean seçimini kontrol ediyordu, son sistemi değiştirmez; bütçe E3c'ye ayrıldı (spec §22 kesme sırası: ek hedefler → E3b).
 - **Not:** E3 `rgb_mean` ile eğitildi. `ul_default` kodda 4 kanallı config'in varsayılanı olarak kalır; `configs/e3b_ul_default.yaml` silindi.
+
+## 2026-10-16 · E3c · Erken füzyon + modality dropout (yolo26s)
+- **Hipotez:** Tam modalitede küçük bir bedel, kamera kaybında büyük kazanç (spec §13).
+- **Kurulum:** `configs/e3c_modality_dropout.yaml` (E3 + `modality_dropout` p_rgb 0,15 / p_ir 0,15; 50 epoch, seed 42, `first_conv_init: rgb_mean`, `config_hash` sha256:b8c73fd3…) · eğitim ve değerlendirme commit `d4e1280` (`main`), Colab Pro A100, Ultralytics 8.4.177, 2,123 saat · val, `conf=0.001`, `max_det=1000`, 1000 bootstrap.
+- **Sonuç:** `results/runs/2026-10-15_e3c-modality-dropout_s_d4e1280_val_ir.json`, `_val_rgb.json` · `results/train/2026-10-15_e3c-modality-dropout_s_d4e1280.json` · `results/robust/2026-10-15_e3c-modality-dropout_s_d4e1280_val_*_ir.json` (16) · MLflow `07b9556171ee4edd84078c4788e5699c`.
+- **Bulgular (IR etiketleri):**
+  1. mAP50 0,851 [0,831; 0,869], mAP50-95 0,638; precision 0,896, recall 0,954 (conf 0,25). E3: 0,857 [0,838; 0,876].
+  2. Aydınlatma: gündüz 0,860 [0,837; 0,886] · gece 0,802 [0,759; 0,840] · karanlık gece 0,867 [0,834; 0,897].
+  3. Sınıf: car 0,981, bus 0,969, truck 0,814, freight_car 0,781, van 0,708. Boyut: small 0,606, medium 0,852, large 0,938.
+  4. RGB etiketleriyle 0,759 [0,737; 0,786]; fark (RGB − IR) −9,2 (E5).
+  5. FR-V6: Ultralytics 0,8541 vs pycocotools 0,8506, fark 0,0035.
+  6. Sağlamlık (E6, aynı val, mAP50 [%95 GA]; E3 ile yan yana):
+
+     | Koşul | E3 | E3c |
+     |---|---|---|
+     | RGB kaybı | 0,718 [0,688; 0,743] | 0,829 [0,808; 0,848] |
+     | IR kaybı | 0,128 [0,116; 0,143] | 0,720 [0,695; 0,748] |
+     | Karartma ×0,1 | 0,738 [0,710; 0,762] | 0,832 [0,811; 0,851] |
+     | IR gürültüsü σ20 | 0,399 [0,373; 0,429] | 0,535 [0,510; 0,567] |
+     | Bulanıklık 11 | 0,641 [0,617; 0,666] | 0,652 [0,623; 0,684] |
+     | Hizasızlık 10 px | 0,694 [0,661; 0,728] | 0,696 [0,662; 0,726] |
+
+  7. Temiz koşul kontrolü: sağlamlık paketindeki temiz skor ana değerlendirmeyle aynı (0,8506).
+- **Yorum (taslak, kullanıcıyla netleşecek):** Hipotez tutuyor görünüyor. Temiz veride E3c E3'ün 0,6 puan altında; güven aralıkları örtüşüyor (eşleştirilmiş fark Görev 16'da `baykus-eval compare` ile). Kamera kaybında fark çok büyük: IR kaybında E3 çöküyor (0,128), E3c 0,720'de kalıyor; RGB kaybında 0,718'e karşı 0,829. Karartma ve IR gürültüsünde de E3c önde; bulanıklık ve hizasızlıkta fark yok (aralıklar örtüşüyor). Yani dropout, modellerin bir kameraya tek başına yaslanmasını engelliyor ama iki kameranın hizasız olmasına karşı bir şey öğretmiyor. E4 ile seçim, sonuçlardan önce yazılan kurala göre (H4 planı, "E3c / geç füzyon seçim kuralı").
