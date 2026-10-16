@@ -63,3 +63,10 @@ def test_cli_coco_writes_gt_and_slices(raw_root, tmp_path):
             assert len(gt["annotations"]) == 2
         sl = json.loads((meta / f"slices_{split}.json").read_text("utf-8"))["illumination"]
         assert sorted(sum(sl.values(), [])) == [1, 2]
+
+
+def test_yolo_to_coco_single_class(tmp_path):
+    (tmp_path / "a.txt").write_text("0 0.5 0.5 0.5 0.5\n3 0.25 0.25 0.1 0.1\n", encoding="utf-8")
+    d = yolo_to_coco(tmp_path, ["a"], 40, 32, single_class="vehicle")
+    assert d["categories"] == [{"id": 1, "name": "vehicle"}]
+    assert {a["category_id"] for a in d["annotations"]} == {1} and len(d["annotations"]) == 2

@@ -8,7 +8,10 @@ from pathlib import Path
 from baykus.classes import CLASS_NAMES, coco_category_id
 
 
-def yolo_to_coco(label_dir: Path, stems: list[str], width: int, height: int) -> dict:
+def yolo_to_coco(
+    label_dir: Path, stems: list[str], width: int, height: int, single_class: str | None = None
+) -> dict:
+    """single_class verilirse (M3OT, spec §8.3) bütün kutular tek kategoride (id 1)."""
     images, anns = [], []
     for img_id, stem in enumerate(sorted(stems), start=1):
         images.append({"id": img_id, "file_name": stem, "width": width, "height": height})
@@ -24,13 +27,16 @@ def yolo_to_coco(label_dir: Path, stems: list[str], width: int, height: int) -> 
                 {
                     "id": len(anns) + 1,
                     "image_id": img_id,
-                    "category_id": coco_category_id(int(c)),
+                    "category_id": 1 if single_class else coco_category_id(int(c)),
                     "bbox": [round(x, 4), round(y, 4), round(bw, 4), round(bh, 4)],
                     "area": bw * bh,
                     "iscrowd": 0,
                 }
             )
-    cats = [{"id": coco_category_id(i), "name": n} for i, n in enumerate(CLASS_NAMES)]
+    if single_class:
+        cats = [{"id": 1, "name": single_class}]
+    else:
+        cats = [{"id": coco_category_id(i), "name": n} for i, n in enumerate(CLASS_NAMES)]
     return {"images": images, "annotations": anns, "categories": cats}
 
 
