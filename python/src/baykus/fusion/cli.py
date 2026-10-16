@@ -13,6 +13,7 @@ import sys
 import time
 from pathlib import Path
 
+from baykus.edge.variants import VARIANTS
 from baykus.eval.cli import (
     DEFAULT_DATASET,
     eval_record,
@@ -98,9 +99,10 @@ def fuse_and_record(
     levels: dict[int, str] | None = None,
     label_sets: tuple[str, ...] | None = None,
     results_subdir: str = "runs",
+    variant: str | None = None,
 ) -> list[Path]:
     label_sets = label_sets or cfg.label_sets
-    name = run_name(sel["run_id"], split, dataset, condition)
+    name = run_name(sel["run_id"], split, dataset, condition, variant=variant)
     outs = [Path(results) / results_subdir / f"{name}_{ls}.json" for ls in label_sets]
     if all(p.exists() for p in outs):
         stale = [p for p in outs if not _same_inputs(p, n_boot, rgb_preds, ir_preds)]
@@ -135,6 +137,7 @@ def fuse_and_record(
         "conf_type": "avg",
         "selected_on": sel["split"],
         "selection": sel["experiment"],
+        "variant": variant,
     }
     git = git_info()
     for ls, out in zip(label_sets, outs, strict=True):
@@ -156,6 +159,8 @@ def fuse_and_record(
             dropped=0,
             metrics=metrics,
             class_agnostic=class_agnostic,
+            fmt=VARIANTS[variant].fmt if variant else "pytorch",
+            precision=VARIANTS[variant].precision if variant else "fp32",
         )
         rec["fusion"] = info
         if condition is not None:
@@ -219,7 +224,7 @@ def _cmd_select(a: argparse.Namespace) -> int:
     levels = levels_from_slices(load_slices(meta, "val") or {}) if cfg.per_illumination else None
     fuse_and_record(sel, cfg, rgb_preds=Path(a.rgb_preds), ir_preds=Path(a.ir_preds), root=root,
                     meta=meta, split="val", project=Path(a.project), results=Path(a.results),
-                    n_boot=a.n_boot or cfg.n_boot, workers=a.workers,
+                    n_boot=_n_boot(a, cfg), workers=a.workers,
                     levels=levels)  # fmt: skip
     return 0
 
@@ -273,7 +278,7 @@ def _cmd_robust(a: argparse.Namespace) -> int:
                 "target": c.target, "seed": a.seed, "sources": sources}  # fmt: skip
         fuse_and_record(
             sel, cfg, rgb_preds=rgb_p, ir_preds=ir_p, root=root, meta=meta, split=a.split,
-            project=Path(a.project), results=Path(a.results), n_boot=a.n_boot or cfg.n_boot,
+            project=Path(a.project), results=Path(a.results), n_boot=_n_boot(a, cfg),
             workers=a.workers, condition=info, label_sets=(LABEL_SET,),
             results_subdir=ROBUST_DIR,
             levels=condition_levels(brightness, th, c) if cfg.per_illumination else None,
@@ -281,19 +286,32 @@ def _cmd_robust(a: argparse.Namespace) -> int:
     return 0
 
 
+def _n_boot(a: argparse.Namespace, cfg: FusionConfig) -> int:
+    return a.n_boot if a.n_boot is not None else cfg.n_boot  # 0 geçerli: bootstrap'sız
+
+
 def _cmd_apply(a: argparse.Namespace) -> int:
     sel, cfg = _load_selection(a)
-    if isinstance(sel["selected"]["ir_weight"], dict):
-        raise FusionError(
-            f"aydınlatmaya göre ağırlık (E4b) {a.dataset}'te uygulanmaz: aydınlatma etiketi yok"
-        )
     root = Path(a.data_root)
+    meta = Path(a.meta) if a.meta else root / "meta"
+    levels = None
+    if isinstance(sel["selected"]["ir_weight"], dict):
+        if a.dataset != DEFAULT_DATASET:
+            raise FusionError(
+                f"aydınlatmaya göre ağırlık (E4b) {a.dataset}'te uygulanmaz: aydınlatma etiketi yok"
+            )
+        slices = load_slices(meta, a.split)
+        if not slices:
+            raise FusionError(f"{meta}/slices_{a.split}.json yok: E4b aydınlatma etiketi ister")
+        levels = levels_from_slices(slices)
+    subdir = a.results_subdir or (
+        a.dataset if a.dataset != DEFAULT_DATASET else "edge" if a.variant else "runs"
+    )
     fuse_and_record(
-        sel, cfg, rgb_preds=Path(a.rgb_preds), ir_preds=Path(a.ir_preds), root=root,
-        meta=Path(a.meta) if a.meta else root / "meta", split=a.split, project=Path(a.project),
-        results=Path(a.results), n_boot=a.n_boot or cfg.n_boot, workers=a.workers,
-        dataset=a.dataset, class_agnostic=a.class_agnostic,
-        results_subdir="runs" if a.dataset == DEFAULT_DATASET else a.dataset,
+        sel, cfg, rgb_preds=Path(a.rgb_preds), ir_preds=Path(a.ir_preds), root=root, meta=meta,
+        split=a.split, project=Path(a.project), results=Path(a.results), n_boot=_n_boot(a, cfg),
+        workers=a.workers, dataset=a.dataset, class_agnostic=a.class_agnostic,
+        results_subdir=subdir, levels=levels, variant=a.variant,
     )  # fmt: skip
     return 0
 
@@ -343,6 +361,8 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--results", default="../results")
     ap.add_argument("--workers", type=int, default=1)
     ap.add_argument("--n-boot", type=int, default=None)
+    ap.add_argument("--variant", default=None, choices=list(VARIANTS), help="edge varyantı")
+    ap.add_argument("--results-subdir", default=None)
     ap.set_defaults(func=_cmd_apply)
     return p
 

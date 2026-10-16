@@ -255,3 +255,62 @@ def test_value_error_becomes_error_line(tmp_path: Path, capsys):
     assert main(_apply_args(tmp_path, s, cfg, rgb, s["ir"])) == 2
     err = capsys.readouterr().err
     assert err.startswith("hata: ") and "Traceback" not in err
+
+
+def _dv_apply_args(tmp_path: Path, s: dict, sel: Path, config: str, rgb, ir, extra=()):
+    return ["apply", "--config", str(REPO / "configs/fusion" / config), "--selection", str(sel),
+            "--rgb-preds", str(rgb), "--ir-preds", str(ir), "--data-root", str(s["root"]),
+            "--meta", str(s["meta"]), "--split", "val", "--dataset", "dronevehicle",
+            "--project", str(tmp_path / "e"), "--results", str(tmp_path / "res"),
+            *extra]  # fmt: skip
+
+
+def test_apply_variant_names_and_format(tmp_path: Path):
+    s = setup_dv(tmp_path)
+    assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
+    sel = selection_path(tmp_path / "res", "e4_late_fusion", "val")
+    rgb = save_predictions(tmp_path / "E1_val_onnx_int8" / "predictions_coco.json.gz", RGB)
+    ir = save_predictions(tmp_path / "E2_val_onnx_int8" / "predictions_coco.json.gz", IR)
+    args = _dv_apply_args(tmp_path, s, sel, "e4_late_fusion.yaml", rgb, ir,
+                          ["--variant", "onnx_int8", "--n-boot", "0"])  # fmt: skip
+    assert main(args) == 0
+    run_id = json.loads(sel.read_text(encoding="utf-8"))["run_id"]
+    rec = json.loads((tmp_path / "res/edge" / f"{run_id}_val_onnx_int8_ir.json").read_text(
+        encoding="utf-8"))  # fmt: skip
+    assert rec["format"] == "onnx" and rec["precision"] == "int8"
+    assert rec["fusion"]["variant"] == "onnx_int8" and rec["n_boot"] == 0
+    assert rec["metrics"]["ci95"]["map50"] == [None, None]
+    assert (tmp_path / "e" / f"{run_id}_val_onnx_int8" / "predictions_coco.json.gz").exists()
+
+
+def test_apply_e4b_on_dronevehicle_uses_slices(tmp_path: Path):
+    s = setup_dv(tmp_path)
+    assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
+    base = selection_path(tmp_path / "res", "e4_late_fusion", "val")
+    assert main(select_args(tmp_path, s, "e4b_late_fusion_illum.yaml",
+                            ["--base", str(base)])) == 0  # fmt: skip
+    sel = selection_path(tmp_path / "res", "e4b_late_fusion_illum", "val")
+    rgb = save_predictions(tmp_path / "E1_val_onnx_fp32" / "predictions_coco.json.gz", RGB)
+    ir = save_predictions(tmp_path / "E2_val_onnx_fp32" / "predictions_coco.json.gz", IR)
+    args = _dv_apply_args(tmp_path, s, sel, "e4b_late_fusion_illum.yaml", rgb, ir,
+                          ["--variant", "onnx_fp32", "--n-boot", "10"])  # fmt: skip
+    assert main(args) == 0
+    run_id = json.loads(sel.read_text(encoding="utf-8"))["run_id"]
+    rec = json.loads((tmp_path / "res/edge" / f"{run_id}_val_onnx_fp32_ir.json").read_text(
+        encoding="utf-8"))  # fmt: skip
+    assert rec["fusion"]["ir_weight"] == {"day": 0.5, "night": 2.0}
+
+
+def test_apply_e4b_without_slices_is_error(tmp_path: Path, capsys):
+    s = setup_dv(tmp_path)
+    assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
+    base = selection_path(tmp_path / "res", "e4_late_fusion", "val")
+    assert main(select_args(tmp_path, s, "e4b_late_fusion_illum.yaml",
+                            ["--base", str(base)])) == 0  # fmt: skip
+    (s["meta"] / "slices_val.json").unlink()
+    sel = selection_path(tmp_path / "res", "e4b_late_fusion_illum", "val")
+    rgb = save_predictions(tmp_path / "E1_val_x" / "predictions_coco.json.gz", RGB)
+    ir = save_predictions(tmp_path / "E2_val_x" / "predictions_coco.json.gz", IR)
+    args = _dv_apply_args(tmp_path, s, sel, "e4b_late_fusion_illum.yaml", rgb, ir,
+                          ["--results-subdir", "t"])  # fmt: skip
+    assert main(args) == 2 and "slices_val.json" in capsys.readouterr().err
