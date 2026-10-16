@@ -6,6 +6,8 @@ import argparse
 import os
 from pathlib import Path
 
+from baykus.edge.config import load_edge_config
+from baykus.report.edge import apply_rule, edge_rows, edge_table, load_edge, rule_text
 from baykus.report.plots import illumination_plot
 from baykus.report.tables import (
     compare_table,
@@ -27,6 +29,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--label-set", default="ir")
     p.add_argument("--m3ot", type=Path, default=Path("../results/m3ot"))
     p.add_argument("--m3ot-split", default="test")
+    p.add_argument("--edge-results", type=Path, default=Path("../results"))
+    p.add_argument("--edge-config", type=Path, default=Path("../configs/edge/e9_edge.yaml"))
     a = p.parse_args(argv)
     runs = load_runs(a.runs, split=a.split, label_set=a.label_set)
     illumination_plot(runs, a.fig)
@@ -56,6 +60,19 @@ def main(argv: list[str] | None = None) -> int:
             "(spec §8.3): rgb RGB etiketiyle, diğer modlar IR etiketiyle. M3OT kutuları çok küçük "
             "(< 1024 px²): mutlak değer değil modlar arası sıra yorumlanır.\n\n"
             f"{m3ot_table(m3)}\n"
+        )
+    acc, bench = load_edge(a.edge_results)
+    if acc or bench:
+        cfg = load_edge_config(a.edge_config)
+        rows = edge_rows(acc, bench, runs, cfg, split=a.split)
+        text += (
+            "\n## Edge (E9)\n\n"
+            "> `baykus-edge eval` (val, IR etiketleri, bootstrap yok) ve `baykus-bench` (§14: "
+            "batch 1, 640×640, 50 ısınma + 500 ölçüm; toplam = ön işleme + çıkarım + son işleme "
+            "[+ WBF]). ΔmAP50 aynı pipeline'ın ONNX FP32'sine göre; PyTorch satırı ana "
+            "değerlendirme (dikdörtgen girdi, max_det 1000).\n\n"
+            f"{edge_table(rows)}\n\n### Sevk kuralı (ADR 0007)\n\n"
+            f"{rule_text(apply_rule(rows, cfg), cfg)}\n"
         )
     a.out.parent.mkdir(parents=True, exist_ok=True)
     a.out.write_text(text, encoding="utf-8")
