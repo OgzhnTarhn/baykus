@@ -1,0 +1,14 @@
+experiment: e4_late_fusion
+mode: late_fusion
+model: yolo26s.pt          # iki girdinin boyutu (run_id ve kayıt için)
+rgb: configs/e1_rgb.yaml   # RGB modeli (E1)
+ir: configs/e2_ir.yaml     # IR modeli (E2)
+wbf:
+  iou_thr: [0.5, 0.6, 0.7]
+  ir_weight: [0.5, 1.0, 2.0, 3.0]   # w_rgb = 1 sabit: WBF skoru sadece orana bağlı
+  skip_box_thr: 0.001               # değerlendirmenin conf=0.001'i: AP eğrisi kırpılmasın
+  per_illumination: false
+eval:
+  label_sets: [ir, rgb]
+  n_boot: 1000
+  seed: 42

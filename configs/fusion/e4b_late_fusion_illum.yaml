@@ -1,0 +1,13 @@
+experiment: e4b_late_fusion_illum
+mode: late_fusion
+model: yolo26s.pt
+rgb: configs/e1_rgb.yaml
+ir: configs/e2_ir.yaml
+wbf:
+  ir_weight: [0.5, 1.0, 2.0, 3.0]   # her aydınlatma diliminde ayrı seçilir
+  skip_box_thr: 0.001
+  per_illumination: true            # iou_thr E4'ün seçtiği (--base)
+eval:
+  label_sets: [ir, rgb]
+  n_boot: 1000
+  seed: 42
