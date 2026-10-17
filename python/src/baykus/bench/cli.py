@@ -33,12 +33,22 @@ def _cmd_run(a: argparse.Namespace) -> int:
     models = [{"name": n, "file": str(f), "size_mb": round(f.stat().st_size / 1e6, 3),
                "sha256": sha256_file(f)} for n, f in files.items()]  # fmt: skip
     out = Path(a.results) / "bench" / f"{a.pipeline}_{a.variant}_{a.hardware}.json"
+    warmup = a.warmup if a.warmup is not None else cfg.bench.warmup
+    runs = a.runs if a.runs is not None else cfg.bench.runs
     if out.exists():
         old = json.loads(out.read_text(encoding="utf-8"))
-        if [m["sha256"] for m in old["models"]] == [m["sha256"] for m in models]:
-            print(f"zaten var, atlandı: {out}")
-            return 0
-        raise ValueError(f"başka model dosyalarıyla ölçülmüş sonuç var: {out}; silip yeniden ölç")
+        if [m["sha256"] for m in old["models"]] != [m["sha256"] for m in models]:
+            raise ValueError(
+                f"başka model dosyalarıyla ölçülmüş sonuç var: {out}; silip yeniden ölç"
+            )
+        was = (old["protocol"].get("warmup"), old["protocol"].get("runs"), old.get("threads"))
+        if was != (warmup, runs, a.threads):
+            raise ValueError(
+                f"başka protokolle ölçülmüş sonuç var: {out} (ısınma, ölçüm, thread = {was}); "
+                "silip yeniden ölç"
+            )
+        print(f"zaten var, atlandı: {out}")
+        return 0
     inputs = Path(a.inputs)
     index = json.loads((inputs / "images.json").read_text(encoding="utf-8"))
 
@@ -53,8 +63,6 @@ def _cmd_run(a: argparse.Namespace) -> int:
         sel = json.loads((root / pipe.selection).read_text(encoding="utf-8"))
         pairs = list(zip(frames(pipe.rgb), frames(pipe.ir), strict=True))
         p = LateFusionPipeline(backends[pipe.rgb], backends[pipe.ir], pairs, sel, cfg.bench.conf)
-    warmup = a.warmup if a.warmup is not None else cfg.bench.warmup
-    runs = a.runs if a.runs is not None else cfg.bench.runs
     times = time_pipeline(p.step, warmup, runs)
     first = next(iter(backends.values()))
     protocol = {"warmup": warmup, "runs": runs, "imgsz": first.imgsz, "images": len(index),

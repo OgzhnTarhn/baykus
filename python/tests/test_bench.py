@@ -208,3 +208,27 @@ def test_bench_cli_prints_on_cp1254_console(tmp_path: Path, monkeypatch):
            "--inputs", str(out), "--hardware", "laptop-cpu", "--results", str(tmp_path / "r"),
            "--warmup", "1", "--runs", "2"]  # fmt: skip
     assert bc.main(run) == 0
+
+
+def test_bench_rerun_with_other_protocol_is_error(tmp_path: Path, monkeypatch, capsys):
+    """Deneme ölçümü (az tur) asıl ölçümü 'zaten var' diye gölgelememeli."""
+    import baykus.bench.cli as bc
+    from baykus.edge.variants import model_file
+
+    _, out = _inputs(tmp_path, monkeypatch)
+    models = tmp_path / "models"
+    f = model_file(models, "2026-10-15_e3c-modality-dropout_s_d4e1280", "onnx_fp32")
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_bytes(b"m")
+    monkeypatch.setattr(bc, "open_backend", lambda p, threads=None: BoxBackend([], imgsz=640))
+    monkeypatch.setattr("baykus.bench.cli.load_input",
+                        lambda *a, **k: np.zeros((SIZE, SIZE, 4), np.uint8))  # fmt: skip
+    base = ["run", "--config", str(REPO / "configs/edge/e9_edge.yaml"), "--pipeline",
+            "e3c_modality_dropout", "--variant", "onnx_fp32", "--models-dir", str(models),
+            "--inputs", str(out), "--hardware", "laptop-cpu",
+            "--results", str(tmp_path / "r")]  # fmt: skip
+    assert bc.main([*base, "--warmup", "1", "--runs", "2"]) == 0
+    assert bc.main([*base, "--warmup", "1", "--runs", "2"]) == 0  # aynı protokol: atlanır
+    assert bc.main([*base, "--warmup", "1", "--runs", "3"]) == 2
+    assert bc.main([*base, "--warmup", "1", "--runs", "2", "--threads", "4"]) == 2
+    assert "protokol" in capsys.readouterr().err
