@@ -1,0 +1,84 @@
+{
+  "run_id": "2026-10-11_e1-rgb_s_49da0cb",
+  "git_commit": "9c7133d97197ca0d9e55a083a0d2575fcaaa3bd5",
+  "git_dirty": false,
+  "config": "../configs/e1_rgb.yaml",
+  "config_hash": "sha256:749df56f9ffcfabb8d638a473702ac77d97fa932c0e9ae60b1c21191453ee6d9",
+  "mlflow_run_id": null,
+  "train_run_id": "2026-10-11_e1-rgb_s_49da0cb",
+  "seed": 42,
+  "dataset": "dronevehicle",
+  "class_agnostic": false,
+  "split": "test",
+  "label_set": "rgb",
+  "model": {
+    "family": "yolo26",
+    "size": "s",
+    "mode": "rgb",
+    "params_m": null,
+    "gflops": null
+  },
+  "format": "pytorch",
+  "precision": "fp32",
+  "hardware": {
+    "device": "NVIDIA A100-SXM4-40GB",
+    "driver": "13.0",
+    "cpu_count": 12
+  },
+  "software": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu130",
+    "ultralytics": "8.4.177",
+    "numpy": "2.1.3",
+    "pycocotools": "2.0.11"
+  },
+  "weights": "/content/drive/MyDrive/baykus/runs/2026-10-11_e1-rgb_s_49da0cb/weights/best.pt",
+  "n_boot": 1000,
+  "dropped_predictions": 0,
+  "metrics": {
+    "map50": 0.7628529104367017,
+    "map50_95": 0.5298564444997921,
+    "precision": 0.8030428281403859,
+    "recall": 0.9218569016285918,
+    "per_class": {
+      "car": 0.9387692168686163,
+      "truck": 0.7744731402712927,
+      "bus": 0.9446769087596274,
+      "van": 0.5866160805974027,
+      "freight_car": 0.5697292056865696
+    },
+    "per_illumination": {
+      "day": 0.8226572959334224,
+      "night": 0.7525499829211594,
+      "dark_night": 0.6954762665072515
+    },
+    "per_size": {
+      "small": 0.43252425012259593,
+      "medium": 0.7628827546444341,
+      "large": 0.680018584909586
+    },
+    "ci95": {
+      "map50": [
+        0.7509822614055142,
+        0.7740399220840218
+      ],
+      "per_illumination": {
+        "day": [
+          0.8088648865566791,
+          0.8362801012384529
+        ],
+        "night": [
+          0.7298650134570457,
+          0.7738768343377337
+        ],
+        "dark_night": [
+          0.6721104014961803,
+          0.7189537168719362
+        ]
+      }
+    },
+    "n_images": 8980,
+    "n_dets": 1534693
+  },
+  "created_at": "2026-10-17T11:27:13Z"
+}

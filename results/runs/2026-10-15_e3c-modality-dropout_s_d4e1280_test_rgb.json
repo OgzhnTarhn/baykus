@@ -1,0 +1,84 @@
+{
+  "run_id": "2026-10-15_e3c-modality-dropout_s_d4e1280",
+  "git_commit": "9c7133d97197ca0d9e55a083a0d2575fcaaa3bd5",
+  "git_dirty": false,
+  "config": "../configs/e3c_modality_dropout.yaml",
+  "config_hash": "sha256:b8c73fd3660f739bf7189ea4eea5acecdef0df18359c56f2503df76407e18659",
+  "mlflow_run_id": "07b9556171ee4edd84078c4788e5699c",
+  "train_run_id": "2026-10-15_e3c-modality-dropout_s_d4e1280",
+  "seed": 42,
+  "dataset": "dronevehicle",
+  "class_agnostic": false,
+  "split": "test",
+  "label_set": "rgb",
+  "model": {
+    "family": "yolo26",
+    "size": "s",
+    "mode": "early_fusion",
+    "params_m": null,
+    "gflops": null
+  },
+  "format": "pytorch",
+  "precision": "fp32",
+  "hardware": {
+    "device": "NVIDIA A100-SXM4-40GB",
+    "driver": "13.0",
+    "cpu_count": 12
+  },
+  "software": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu130",
+    "ultralytics": "8.4.177",
+    "numpy": "2.1.3",
+    "pycocotools": "2.0.11"
+  },
+  "weights": "/content/drive/MyDrive/baykus/runs/2026-10-15_e3c-modality-dropout_s_d4e1280/weights/best.pt",
+  "n_boot": 1000,
+  "dropped_predictions": 0,
+  "metrics": {
+    "map50": 0.7214408032104174,
+    "map50_95": 0.4969311865403321,
+    "precision": 0.7857243666643144,
+    "recall": 0.932316451986547,
+    "per_class": {
+      "car": 0.8563867760457898,
+      "truck": 0.7161788900905326,
+      "bus": 0.8820054882303993,
+      "van": 0.614591749424253,
+      "freight_car": 0.5380411122611125
+    },
+    "per_illumination": {
+      "day": 0.8090595481084233,
+      "night": 0.776912562930627,
+      "dark_night": 0.6443378408693635
+    },
+    "per_size": {
+      "small": 0.461284150644593,
+      "medium": 0.7275535194825773,
+      "large": 0.646578171311269
+    },
+    "ci95": {
+      "map50": [
+        0.7087511100277186,
+        0.7349400633325405
+      ],
+      "per_illumination": {
+        "day": [
+          0.7956213992018295,
+          0.8222339160883617
+        ],
+        "night": [
+          0.7572072822912902,
+          0.7965293433713364
+        ],
+        "dark_night": [
+          0.6216977567354078,
+          0.6710013598645619
+        ]
+      }
+    },
+    "n_images": 8980,
+    "n_dets": 402753
+  },
+  "created_at": "2026-10-17T12:00:08Z"
+}
