@@ -190,3 +190,15 @@ def test_cli_compare_without_thresholds_file_is_error(tmp_path: Path, capsys):
     args = ["compare", "--run-id", RUN, "--robust-preds", str(d["preds"])]
     assert main([*args, "--data-root", str(tmp_path), "--results", str(d["res"])]) == 2
     assert "thresholds.json" in capsys.readouterr().err
+
+
+def test_acceptance_with_uncomputable_false_alarm_is_not_a_pass():
+    k3 = acceptance(0.0, [0.1, 0.2], None)["k3"]
+    assert k3 == {"value": None, "limit": 0.02, "passed": False}
+
+
+def test_gate_report_checks_results_thresholds_file_by_default(tmp_path: Path):
+    d = _setup(tmp_path, "val", ["clean", "noise-20"], {"noise-20"})
+    (d["res"] / "health" / "thresholds.json").write_text("{}", encoding="utf-8")  # başka eşikler
+    with pytest.raises(HealthError, match="eşik"):
+        gate_report(run_id=RUN, split="val", robust_preds=d["preds"], gt=GT, results=d["res"])

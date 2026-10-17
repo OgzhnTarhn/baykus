@@ -119,7 +119,8 @@ def _cmd_compare(a: argparse.Namespace) -> int:
         k1, k2, k3 = acc["k1"], acc["k2"], acc["k3"]
         print(f"Kabul 1 {_mark(k1['passed'])} temiz fark {k1['value'] * 100:+.2f} puan (≥ −0,5)")
         print(f"Kabul 2 {_mark(k2['passed'])} Z birleşik GA {k2['ci95']} (alt sınır > 0)")
-        print(f"Kabul 3 {_mark(k3['passed'])} temiz yanlış alarm {k3['value'] * 100:.2f}% (≤ %2)")
+        alarm = "—" if k3["value"] is None else f"{k3['value'] * 100:.2f}%"
+        print(f"Kabul 3 {_mark(k3['passed'])} temiz yanlış alarm {alarm} (≤ %2)")
     return 0
 
 
@@ -168,7 +169,7 @@ def _cmd_report(a: argparse.Namespace) -> int:
         raise FileNotFoundError(f"{h / 'thresholds.json'} yok (önce baykus-health fit)")
     calib = _read(h / "calibration_e3c_onnx_fp32.json")
     gate_val, gate_test = _read(h / "gate_val.json"), _read(h / "gate_test.json")
-    sha = hashlib.sha256((h / "thresholds.json").read_bytes()).hexdigest()
+    sha = sha256_file(h / "thresholds.json")
     check_thresholds(sha, {"gate_val.json": gate_val, "gate_test.json": gate_test})
     rel = Path(os.path.relpath(fig, out.parent)).as_posix()
     text = health_markdown(th, gate_val, gate_test, calib, rel)

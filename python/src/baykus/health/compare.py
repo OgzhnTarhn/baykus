@@ -7,12 +7,12 @@ Kabul ölçütleri yalnız val'de; test kontrolünde seçim yapılmaz (§6.4).
 
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
 
 from pycocotools.coco import COCO
 
+from baykus.edge.export import sha256_file
 from baykus.eval.bootstrap import ap50, collect_matches, paired_diff_ci, paired_mean_diff_ci
 from baykus.eval.cli import run_name
 from baykus.eval.predictions import load_predictions
@@ -27,7 +27,9 @@ K3_LIMIT = 0.02  # temiz val'de kapıyı tetikleyen yanlış alarm ≤ %2 görü
 PREDS = "predictions_coco.json.gz"
 
 
-def acceptance(clean_diff: float, harmful_ci: list[float | None], clean_false_alarm: float) -> dict:
+def acceptance(
+    clean_diff: float, harmful_ci: list[float | None], clean_false_alarm: float | None
+) -> dict:
     lo = harmful_ci[0] if harmful_ci else None
     return {
         "k1": {"value": clean_diff, "limit": K1_LIMIT, "passed": bool(clean_diff >= K1_LIMIT)},
@@ -35,7 +37,8 @@ def acceptance(clean_diff: float, harmful_ci: list[float | None], clean_false_al
         "k3": {
             "value": clean_false_alarm,
             "limit": K3_LIMIT,
-            "passed": bool(clean_false_alarm <= K3_LIMIT),
+            # oran hesaplanamıyorsa (boş koşul) ölçüt doğrulanamaz: geçmiş sayılmaz
+            "passed": clean_false_alarm is not None and clean_false_alarm <= K3_LIMIT,
         },
     }
 
@@ -91,8 +94,11 @@ def gate_report(
     thresholds: Path | None = None,
 ) -> dict:
     summaries = _load_summaries(Path(results), run_id, split)
+    if thresholds is None:  # kütüphaneden çağrıda da denetle: sonuçların yanındaki eşik dosyası
+        default = Path(results) / "health" / "thresholds.json"
+        thresholds = default if default.exists() else None
     if thresholds is not None:
-        check_thresholds(hashlib.sha256(Path(thresholds).read_bytes()).hexdigest(), summaries)
+        check_thresholds(sha256_file(Path(thresholds)), summaries)
     files: dict[str, tuple[Path, Path | None]] = {}
     for cid, s in summaries.items():
         base = Path(robust_preds) / run_name(run_id, split, condition={"id": cid}) / PREDS
