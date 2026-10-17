@@ -259,3 +259,21 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
   2. **T4'te çıkarım artık darboğaz değil:** E3c FP16 / INT8'de çıkarım ≈ 4,8 ms, ön işleme ≈ 4,8 ms (CPU, 2 çekirdek); E4'te ön işleme 10-11 ms + WBF 3-5 ms. INT8 FP16'ya göre E3c'de hız kazandırmadı.
   3. **TensorRT INT8 doğruluğu ORT INT8'den çok daha iyi:** E3c −1,5 puan (ORT tam INT8 −3,3), E1 −2,1, E2 −1,2. E4 INT8'de birleştirme kaybı kapatıyor (−0,0). TensorRT FP32 doğruluğu ONNX FP32 ile aynı.
   4. Motor dosyaları ONNX'ten büyük (FP32 121 MB / ONNX 38 MB): TensorRT motoru T4'e özgü derlenmiş çekirdekleri de içeriyor.
+
+## 2026-10-17 · Açık iş: PyTorch → ONNX FP32 farkının nedeni (analiz 1)
+- **Soru:** ONNX FP32 neden PyTorch değerlendirmesinden ≈ 1 puan düşük (E9 bulgusu 5)? Hipotezler: (a) uçtan uca çıktının 300 kutu sınırı, (b) kare 640×640 dolgulu girdi (PyTorch val dikdörtgen).
+- **Kurulum:** laptopta, Drive'dan indirilen val tahminleri (E3c PyTorch + ONNX FP32; E2 PyTorch + TensorRT FP32 — TRT FP32 doğruluğu ONNX FP32 ile aynı, 0,8262) ve `data/dv_rgbt/coco/val_ir.json`; `build_metrics` (bootstrap yok).
+- **Bulgular (val mAP50, IR):**
+
+  | Model | Tahmin | mAP50 | small | medium | large | Görüntü başına > 300 kutu |
+  |---|---|---|---|---|---|---|
+  | E3c | PyTorch | 0,8506 | 0,606 | 0,852 | 0,938 | 4 görüntü |
+  | E3c | PyTorch, ilk 300 kutu | 0,8498 | 0,603 | 0,851 | 0,938 | — |
+  | E3c | ONNX FP32 (640×640) | 0,8411 | **0,509** | 0,849 | 0,921 | 7 görüntüde 300'e dayanıyor |
+  | E2 | PyTorch | 0,8390 | 0,578 | 0,845 | 0,922 | 5 görüntü |
+  | E2 | PyTorch, ilk 300 kutu | 0,8365 | 0,564 | 0,844 | 0,922 | — |
+  | E2 | TensorRT FP32 (640×640) | 0,8262 | **0,456** | 0,837 | 0,912 | 9 görüntüde 300'e dayanıyor |
+
+  1. **300 kutu sınırı farkın küçük bir kısmı:** E3c 0,1 / 0,95 puan, E2 0,25 / 1,3 puan.
+  2. **Kayıp küçük nesnelerde:** small AP E3c −9,7, E2 −12,2 puan; medium / large neredeyse aynı. Export'lu model toplamda daha fazla kutu üretiyor (E3c 72.201 / 62.860).
+  3. Kalan hipotez (b): ölçek aynı (640×512 görüntü iki yolda da büyütülmüyor), değişen yalnız dolgu ve ızgara boyutu. Doğrulamak için PyTorch modelini Ultralytics val'de `rect=False` (kare girdi) ile ölçmek gerekiyor (Colab, kısa T4 oturumu).
