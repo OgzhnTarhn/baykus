@@ -1,7 +1,7 @@
 # Baykuş — RGB + Termal Füzyonlu Hava Görüntüsü Tespiti, Edge için Optimize, Uçtan Uca Sistem
 
 > **Proje adı:** Baykuş · **Repo / paket adı:** `baykus` · **Alt başlık (EN):** *RGB-Thermal aerial vehicle detection on the edge*
-> **Sahibi:** Oğuzhan Tarhan · **Tarih:** 2026-10-07 · **Sürüm:** v4.2 (H4 planı: E3b kesildi; v4.1: H1 kapanışı; v4.0: kapsam genişletme: güvenilirlik farkındalığı + hareketli hedef, ADR 0006; eğitim: Colab, kullanıcı çalıştırır · laptop: AMD Ryzen 7 8845HS) · **Süre:** 5 faz, ~7 ay (5 Ekim 2026-30 Nisan 2027) · **Durum:** v3.0 onaylandı (2026-10-02); v4.0 yol haritası onaylandı (2026-10-07)
+> **Sahibi:** Oğuzhan Tarhan · **Tarih:** 2026-10-07 · **Sürüm:** v4.5 (Faz 3 tasarımı ve planı; v4.4: Faz 2; v4.3: H5 planı; v4.2: H4 planı, E3b kesildi; v4.1: H1 kapanışı; v4.0: kapsam genişletme: güvenilirlik farkındalığı + hareketli hedef, ADR 0006; eğitim: Colab, kullanıcı çalıştırır · laptop: AMD Ryzen 7 8845HS) · **Süre:** 5 faz, ~7 ay (5 Ekim 2026-30 Nisan 2027) · **Durum:** v3.0 onaylandı (2026-10-02); v4.0 yol haritası onaylandı (2026-10-07)
 
 ---
 
@@ -39,6 +39,9 @@
 ---
 
 ## 0. v1'den bu yana ne değişti
+
+### v4.5 (2026-10-18) — Faz 3 tasarımı ve planı
+Faz 3 yalın tutuldu (`docs/design/faz3.md` v3, plan `docs/plans/F3.md`): sevk edilen tek model (E3c · ONNX FP32) C++ motorunda; geç füzyon + C++ WBF ve ham çıktı + NMS yolu yok; Python referansıyla tanımlı eşlik (Kabul 1-4); Faz 2 sağlık dedektörü motorda, hizasızlıkta kare kuralı (train'de seçilen yanıt eşiği) ve videoda zaman kuralı; kapı varsayılanı yalnız uyarı; takip `trackers==2.6.1` ByteTrack'inin C++ uyarlaması; tek sayfa Next.js ekranı (sağlık paneli, alarm sözleşmesi, kapı modu; mod seçimi yok); compose + kapalı katmanla NFR-1 kanıtları; M3OT test yalnız son ölçümde, geliştirme ve demo M3OT val (yoksa train) bölümünden. Bu fazda (S) görev yok. Takvim ≈ 7-8 hafta (tampon dahil). Değişen yerler: §2.3 (S7, S8), §7.4 (FR-E, FR-U), §7.5 (NFR-1), §8.4, §15, §16, §17, §18, §22 (Faz 3, H6-H9), §23.
 
 ### v4.4 (2026-10-17) — Faz 2 tasarımı ve planı
 Faz 2 yalın tutuldu (`docs/design/faz2.md`, plan `docs/plans/F2.md`): kare başına kural tabanlı RGB/IR sağlık dedektörü, modele zarar verecek kamerayı sıfırlayan arızaya duyarlı kanal kapısı (uyarlanabilir füzyonun bu fazdaki biçimi) ve sevk edilen E3c · ONNX FP32 skorlarının izotonik kalibrasyonu. Öğrenen güvenilirlik ağı, yeni eğitim ve E4'te kare başına WBF ağırlığı (K4) yok. Takvim ≈ 1,5 hafta, tek Colab oturumu. Değişen yerler: §2.3 (S10), §6.1 (K4), §22 (Faz 2), §23.
@@ -146,8 +149,8 @@ Mezuniyette (Haziran 2027) **Türk savunma sanayii** şirketlerinde (ASELSAN, HA
 - [x] **S4 — Sağlamlık:** *(5 bozulma türü, E1-E4: `docs/robustness.md`.)* En az 4 bozulma türünde doğruluk eğrileri çıkarılmış.
 - [x] **S5 — Veri setleri arası test:** *(E7: `docs/data/m3ot.md`.)* DroneVehicle'da eğitilen RGB, IR ve füzyon modelleri, görmediği M3OT verisinde (RGB-IR, araç) ölçülmüş.
 - [x] **S6 — Edge tablosu:** *(H5: laptop CPU ONNX FP32/FP16/INT8 + INT8 head FP32, Colab T4 TensorRT FP32/FP16/INT8: `docs/results.md` "Edge (E9)". NPU denemesi yapılmadı.)* En az 3 hassasiyet (FP32/FP16/INT8) × en az 2 donanım (laptop CPU, Colab T4) için doğruluk, boyut ve p50/p95 gecikme. INT8'de head FP32 varyantı dahil. Laptop NPU satırı varsa eklenir (FR-X6).
-- [ ] **S7 — C++/Python eşliği:** C++ motor çıktısı Python referansıyla tolerans içinde aynı. Bu CI'da test ediliyor.
-- [ ] **S8 — Kapalı ağ:** `docker compose up` dış ağa çıkmadan çalışıyor.
+- [ ] **S7 — C++/Python eşliği:** C++ motor çıktısı Python referansıyla tolerans içinde aynı: tespit, letterbox, sağlık (kare ve zaman kuralı) ve takip; tanımlar ve toleranslar `docs/design/faz3.md` §6.1 (Kabul 1-4). Bu CI'da test ediliyor; kabul testleri CI'da atlanamaz.
+- [ ] **S8 — Kapalı ağ:** `docker compose up` dış ağa çıkmadan çalışıyor: kapalı katmanda uçtan uca kare, iki konteynerden dış bağlantı denemesinin başarısızlığı, tarayıcının yalnız `127.0.0.1:3000`'a istek yapması (CI) ve Wi-Fi kapalı elle demo (`docs/design/faz3.md` §4.5, Kabul 6).
 - [ ] **S9 — Sunum:** README, demo videosu ve teknik yazı yayında.
 - [x] **S10 — Güvenilirlik farkındalığı (Faz 2):** *(ölçüldü, olumsuz: kapı bozuk IR'de val +40,7 puan [+38,3; +43,1], ama temiz val'de −3,1 puan ve %4,1 yanlış alarm → Kabul 1, 3 ❌, 2 ✅; kalibrasyon ECE 0,080 → 0,007, mAP |Δ| 0,112 puan → Kabul 4 ❌. Kanıt: `docs/health.md`, `results/health/`. Düzeltme Faz 3'e.)* Uyarlanabilir füzyon, en iyi sabit füzyona (E3c / E4b) karşı sağlamlık paketinin bozulmaları ve kamera kaybında güven aralığıyla ölçülmüş; güven kalibrasyonu (ECE) önce/sonra raporlanmış; sensör arıza tespitinin doğruluğu ölçülmüş. Sonuç olumsuz çıkarsa o da raporlanır. Ayrıntılı ölçütler Faz 2 tasarımında. Ölçütler ve kabul eşikleri: `docs/design/faz2.md` §6 (v4.4).
 - [ ] **S11 — Hareketli hedef (Faz 4):** M3OT'ta hareketli/duran ayrımı ölçülmüş (etiketler iz yörüngelerinden türetilmiş, yöntemi belgelenmiş); göreli mozaik harita ve bölge olayları demoda çalışıyor. Ayrıntılı ölçütler Faz 4 tasarımında.
@@ -463,21 +466,22 @@ Faz 1'in kapsamını değiştirmeyen, ama sonradan yeniden iş yapmayı önleyen
 
 **C++ motor (FR-E)**
 - **FR-E1:** Letterbox ön işleme (Python ile piksel düzeyinde aynı), ONNX Runtime çıkarımı, YOLO26 uçtan uca çıktı çözümleme, koordinatların orijinal görüntüye geri ölçeklenmesi.
-- **FR-E2:** Modlar: rgb, ir, early_fusion (4 kanal) ve late_fusion (iki model + C++ WBF).
-- **FR-E3:** Ham çıktı + NMS yolu da desteklenir: YOLO11 yedeği ve uçtan uca grafiğin INT8'de bozulması ihtimali için (Ultralytics exporter'ı statik INT8'de uçtan uca dalın sınıf indeksi çıktısını bozabildiğini not ediyor).
-- **FR-E4:** Kendi C++ ByteTrack'imizle takip, oturum (session) bazında. Fikstür dizisinde Python referansıyla (roboflow/trackers ByteTrack, aynı parametreler) eşlik testi: aynı tespit dizisi verildiğinde iz atamaları ID permütasyonu dışında aynı; fark varsa nedeni belgelenir.
-- **FR-E5:** HTTP API (§15.3).
-- **FR-E6 — eşlik testi:** Fikstür görüntülerde C++ çıktısı ile Python referans JSON'u karşılaştırılır. Kutu sayısı aynı, eşleşen kutularda IoU ≥ 0.99, skor farkı ≤ 1e-3. CI'da çalışır.
-- **FR-E7:** Her yanıtta aşama süreleri: pre / infer / post / track / total.
+- **FR-E2:** Modlar: rgb, ir, early_fusion (4 kanal) ve late_fusion (iki model + C++ WBF). **v4.5:** Faz 3 motoru yalnız sevk edilen early_fusion (E3c) modelini çalıştırır; late_fusion ve C++ WBF yok (E4 laptop CPU'da sevk edilmedi, ADR 0007).
+- **FR-E3:** *(v4.5: Faz 3'te yok — uçtan uca FP32 sevk edildi, INT8 sevk edilmedi.)* Ham çıktı + NMS yolu da desteklenir: YOLO11 yedeği ve uçtan uca grafiğin INT8'de bozulması ihtimali için (Ultralytics exporter'ı statik INT8'de uçtan uca dalın sınıf indeksi çıktısını bozabildiğini not ediyor).
+- **FR-E4:** Kendi C++ ByteTrack'imizle takip, oturum (session) bazında. Fikstür dizisinde Python referansıyla (`trackers==2.6.1` ByteTrack, aynı parametreler; SORT tarzı Kalman, SciPy atama çözücüsünün uyarlaması) eşlik testi: aynı tespit dizisi verildiğinde iz atamaları ID permütasyonu dışında aynı; istisna yalnız mekanik kanıtla (`docs/design/faz3.md` §6.1 Kabul 4).
+- **FR-E5:** HTTP API (§15.3; Faz 3 güncel hâli `docs/design/faz3.md` §4.1: sağlık sözlüğü, kapı modu, kalibre ve ham skor, oturumlar).
+- **FR-E6 — eşlik testi:** Fikstür görüntülerde C++ çıktısı ile Python referans JSON'u karşılaştırılır. Kutu sayısı aynı, eşleşen kutularda IoU ≥ 0.99, skor farkı ≤ 1e-3. CI'da çalışır. **v4.5:** ham ORT çıktısı, üç çıktı katmanı (değerlendirme 0,001 / takip 0,1 / gösterim kalibre ≥ conf), kalibrasyon (double, birebir) ve sınır kuralları `docs/design/faz3.md` §6.1 Kabul 1.
+- **FR-E7:** Her yanıtta aşama süreleri: pre / infer / post / track / total (v4.5: ayrıca decode ve health).
 
 **UI (FR-U)**
 - **FR-U1:** Görüntü dizisi veya video oynatma: oynat, durdur, kare kare, hız ayarı.
 - **FR-U2:** RGB / IR / yan yana görünüm. Kutu, sınıf, skor ve takip numarası.
-- **FR-U3:** Mod seçimi ve canlı gecikme grafiği (son N kare, p50/p95).
-- **FR-U4:** "Kamera arızası" simülasyonu: RGB'yi karart, IR'a gürültü ekle, bir modaliteyi kapat. Sonucu anlık gör.
+- **FR-U3:** ~~Mod seçimi~~ (v4.5: sistem tek model, seçici yok) ve canlı gecikme grafiği (son N kare, p50/p95); conf kaydırıcısı, takip aç/kapa, kapı modu (`kapalı / uyar / otomatik`).
+- **FR-U4:** "Kamera arızası" simülasyonu: RGB'yi karart, IR'a gürültü ekle, bir modaliteyi kapat. Sonucu anlık gör. (v4.5: IR kaydırma ve bulanıklık da; tanımlar sağlamlık paketiyle aynı.)
+- **FR-U5 (v4.5):** Sensör sağlık paneli (kamera başına durum, çift için hizasızlık, ölçülen değerler), alarm sözleşmesi (`docs/design/faz3.md` §4.4) ve her karenin kapı rozeti.
 
 ### 7.5 Fonksiyonel olmayan gereksinimler (NFR)
-- **NFR-1 Kapalı ağ:** Çalışma zamanında hiçbir dış ağ çağrısı yok (font, CDN, telemetri dahil). Compose ağı `internal: true`. Ultralytics ayarlarında `sync=False`.
+- **NFR-1 Kapalı ağ:** Çalışma zamanında hiçbir dış ağ çağrısı yok (font, CDN, telemetri dahil). Compose ağı `internal: true`. Ultralytics ayarlarında `sync=False`. (v4.5: kanıtlar `docs/design/faz3.md` §4.5 — kapalı katman `compose.offline.yml`, dış bağlantı denemesi, tarayıcı istek kaydı, Wi-Fi kapalı elle demo; `NEXT_TELEMETRY_DISABLED=1`.)
 - **NFR-2 Tekrarlanabilirlik:** config + commit + seed + donanım + `uv.lock`.
 - **NFR-3 Test:** Deterministik kod pytest ve GoogleTest ile test edilir. CI yeşil olmadan merge yok.
 - **NFR-4 Kod kalitesi:** ruff, clang-format, eslint. pre-commit kancalarıyla zorunlu.
@@ -529,6 +533,8 @@ Sonuç iki satır olarak raporlanır: `car` AP ve sınıfsız `vehicle` AP. Test
 ### 8.4 Bölümler
 - DroneVehicle'ın resmi train / val / test bölümleri aynen kullanılır.
 - Hiperparametre, WBF ağırlıkları ve eşikler **sadece val** üzerinde seçilir. **Test her deneyde bir kez** ölçülür.
+- **İstisna (v4.4-v4.5):** sağlık dedektörünün eşikleri (Faz 2) ve hizasızlık yanıt eşiği `r_min` (Faz 3) **train**'den seçilir; val yalnız ölçüm ve keşif içindir (`docs/design/faz2.md`, `docs/design/faz3.md` §4.2).
+- **M3OT (v4.5):** val bölümü (yoksa train) geliştirme, CI fikstürleri ve demo için; test bölümü yalnız Faz 3 son ölçümünde, bir kez.
 
 ### 8.5 İşlenmiş veri düzeni
 ```
@@ -753,6 +759,8 @@ ONNX INT8 için ONNX Runtime'ın `quantize_static` fonksiyonu kullanılır (QDQ,
 
 ## 15. C++ motor
 
+> **v4.5:** Faz 3'ün güncel modül listesi, API'si, eşlik tanımları ve derleme ortamı `docs/design/faz3.md` §4.1, §6.1 ve `docs/plans/F3.md`'de. Aşağıdaki v3.0 taslağından farklar: `nms`, `wbf` yok; `health`, `temporal`, `calibration`, `lsap` (SciPy atama çözücüsünün uyarlaması), `runtime` (sunucu, bench ve CLI'ın ortak yolu), `sessions` eklendi; bağımlılıklar FetchContent değil Docker imajında (OpenCV 5.0.0 kaynaktan, ORT 1.30.0 hazır paket); derleme yalnız Docker'da.
+
 ### 15.1 Modül yapısı
 ```
 engine/
@@ -774,10 +782,11 @@ engine/
 ```
 
 ### 15.2 Kendimiz yazacaklarımız ve hazır kullanacaklarımız
-- **Biz yazıyoruz (mülakat malzemesi):** letterbox ön işleme, çıktı çözümleme, NMS, WBF, pipeline, zamanlama, HTTP katmanı, eşlik testi.
+- **Biz yazıyoruz (mülakat malzemesi):** letterbox ön işleme, çıktı çözümleme, ~~NMS, WBF~~ (v4.5: yok), sağlık dedektörü ve zaman kuralı, kalibrasyon, ByteTrack (Kalman + atama), pipeline, zamanlama, HTTP katmanı, eşlik testi.
 - **Hazır kullanıyoruz (sektör pratiği):** ONNX Runtime (çıkarım), OpenCV (görüntü), Eigen (lineer cebir), cpp-httplib (HTTP), nlohmann/json (JSON).
 
 ### 15.3 HTTP API sözleşmesi
+> **v4.5:** güncel sözleşme `docs/design/faz3.md` §4.1 (iki parça zorunlu, `gate=off|advise|auto`, `score` kalibre + `score_raw`, `health` sözlüğü, `timing_ms` 7 alan, `session_new`). Aşağısı v3.0 taslağı.
 ```
 GET  /health          → {"status":"ok","model_loaded":true}
 GET  /v1/model        → {"name","family","mode","precision","input_size":[640,640],"channels":4,"classes":[...]}
@@ -803,14 +812,14 @@ Motor tek bir hatalı istek yüzünden çökmez.
 1. Python, fikstür görüntülerde ONNX modeliyle `fixtures/expected/*.json` üretir. Bu dosya repoda tutulur.
 2. CI'da C++ motoru aynı görüntü ve aynı ONNX modeliyle çalışır.
 3. Kutular IoU ile eşleştirilip toleranslar kontrol edilir.
-4. CI'da kullanılan model fikstür amaçlı küçük bir modeldir (`n`, Release'ten indirilir).
+4. ~~CI'da kullanılan model fikstür amaçlı küçük bir modeldir (`n`, Release'ten indirilir).~~ **v4.5:** CI sevk edilen E3c · ONNX FP32'yi (38 MB) Release `models-v1`'den sha256 denetimiyle indirir; E8-n eğitilmedi. Fikstürler yalnız M3OT (CC BY 4.0) karelerinden.
 
 ---
 
 ## 16. Takip (tracking)
 
 - **Algoritma: ByteTrack.** Düşük skorlu tespitleri de eşleştirmede kullanan, Kalman + Macar algoritması tabanlı, sektörde en yaygın hafif takipçi.
-- **Python referansı:** Ultralytics `model.track(..., tracker="bytetrack.yaml")`
+- **Python referansı:** ~~Ultralytics `model.track(..., tracker="bytetrack.yaml")`~~ **v4.5:** `trackers==2.6.1` ByteTrack (roboflow; FR-E4 ile aynı); parametreler `configs/engine/tracker.json`; değerlendirme `trackers eval`.
 - **C++:** Kendi ByteTrack uygulamamız (Kalman + Macar + iki aşamalı eşleşme). Motorda oturum başına bir takipçi tutulur. Kalman ve atama birim testli; tam takipçi Python referansıyla eşlik testli (FR-E4).
 - **Değerlendirme:** HOTA, MOTA ve IDF1 (TrackEval veya `roboflow/trackers eval`). Veri: **M3OT** (8 saatlik drone videosu, tek sınıf `vehicle`, RGB-IR, MOT formatı, CC-BY-4.0).
   - **B planı 1:** M3OT'un hazır kutularıyla ("oracle tespit") sadece takipçi ölçülür. Bu ölçüm modelden bağımsız olduğu için her durumda raporlanır; model tespitiyle olan ölçüm onun yanında durur.
@@ -823,10 +832,11 @@ Motor tek bir hatalı istek yüzünden çökmez.
 
 - **Yığın:** Next.js (App Router) + TypeScript + Tailwind + shadcn/ui. Çizim için `<canvas>`, gecikme grafiği için hafif bir grafik bileşeni.
 - **Sayfa düzeni (tek sayfa):**
-  - Üst çubuk: model/mod seçici, conf kaydırıcısı, takip aç/kapa
+  - Üst çubuk: ~~model/mod seçici~~ (v4.5: yok), conf kaydırıcısı, takip aç/kapa, kapı modu, oturum sıfırla
   - Sol (büyük): oynatıcı; RGB / IR / yan yana sekmeleri; kutular ve takip numaraları
   - Sağ: tespit listesi (sınıf, skor, ID), canlı gecikme grafiği (p50/p95)
-  - Alt: **arıza simülasyonu paneli** (RGB karart, IR gürültü, modalite kapat)
+  - Alt: **arıza simülasyonu paneli** (RGB karart, IR gürültü, IR kaydır, bulanıklaştır, modalite kapat)
+  - v4.5: **sensör sağlık paneli** ve alarm listesi, kapı rozeti; ayrıntılar `docs/design/faz3.md` §4.4
 - **Veri kaynağı:** Yerel klasördeki görüntü dizileri veya video. Dış ağ çağrısı yok. Fontlar yerelde, CDN yok.
 - **Kapsam dışı:** Kullanıcı girişi, veritabanı, çoklu kullanıcı.
 
@@ -837,18 +847,18 @@ Motor tek bir hatalı istek yüzünden çökmez.
 **Docker:**
 - `engine.Dockerfile`: multi-stage (build: GCC + CMake → runtime: sadece kütüphaneler + binary + model)
 - `ui.Dockerfile`: Next.js `output: standalone`
-- `docker-compose.yml`: iki servis, `networks: { baykus: { internal: true } }`. UI dış dünyaya yalnızca localhost portundan açılır.
+- `docker-compose.yml`: iki servis, `networks: { baykus: { internal: true } }`. UI dış dünyaya yalnızca localhost portundan açılır. **v4.5:** motor yalnız `back` (`internal: true`), UI `back` + `front` (`127.0.0.1:3000`); `front` dışa açık olduğundan kanıt `compose.offline.yml` (bütün ağlar `internal`) katmanında; model ve demo verisi salt okunur volume; `scripts/prepare.sh --bundle` ile `docker save` paketi.
 
-**NFR-1 testi:** Dış ağ kapalıyken (`internal` ağ ve test sırasında internet bağlantısı kesik) sistem açılıyor ve `/health` ile `/v1/detect` çalışıyor.
+**NFR-1 testi:** Dış ağ kapalıyken (`internal` ağ ve test sırasında internet bağlantısı kesik) sistem açılıyor ve `/health` ile `/v1/detect` çalışıyor. **v4.5:** kanıt 1-4 (`docs/design/faz3.md` §4.5) CI'da; Wi-Fi kapalı elle demo.
 
 **CI (`.github/workflows/ci.yml`):**
 
 | İş | Adımlar |
 |---|---|
 | python | uv sync → ruff → pytest (veri gerektirmeyen testler) |
-| engine | apt (OpenCV, Eigen) → ORT indir → CMake build → ctest (eşlik testi dahil) |
-| ui | install → eslint → build |
-| docker (main'de) | imajlar derlenir |
+| engine | ~~apt (OpenCV, Eigen)~~ v4.5: Docker imajı (OpenCV 5.0.0 kaynaktan, ORT 1.30.0, buildx önbelleği) → CMake build → model + fikstür bağlanarak ctest (eşlik testi dahil, atlanamaz) → ASan/UBSan koşusu → clang-format |
+| ui | install → eslint → vitest → build → statik tarama |
+| ~~docker (main'de)~~ compose (v4.5, her push) | imajlar → kapalı katmanda uçtan uca kare + dış bağlantı denemesi → normal compose'da Playwright istek kaydı |
 
 **Release (`release.yml`):** Tag atıldığında ONNX modeli ve sürüm notlarıyla bir GitHub Release oluşturulur.
 
@@ -1044,9 +1054,11 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 |---|---|---|---|---|
 | **1. Çekirdek** | 5 Eki - 8 Kas 2026 | Aşağıdaki H1-H5 (değişmedi) + kancalar K1-K5 (§6.1) | 🚩 MVP, `v0.1.0` | Bu spec |
 | **2. Güvenilirlik farkındalığı** | ≈ 1,5 hafta (v4.4) | Kare başına RGB/IR sağlık dedektörü (sensör arıza tespiti), arızaya duyarlı kanal kapısı (uyarlanabilir füzyon), güven kalibrasyonu (ECE) | S10 | `docs/design/faz2.md` (onaylı, 2026-10-17) |
-| **3. Sistem** | 7 Ara 2026 - 31 Oca 2027 | Aşağıdaki H6-H9 içeriği (C++ motor, takip, UI, Docker) + sensör sağlık paneli, güven tabanlı alarmlar | S7, S8; `v0.2.0` | Faz 3 tasarımı, Faz 2 sonunda |
+| **3. Sistem** | ≈ 7-8 hafta, tampon dahil (v4.5; pencere 7 Ara 2026 - 31 Oca 2027) | C++ motor (tek model, sağlık, kalibre skor, ByteTrack), Next.js ekranı (sağlık paneli, alarmlar, arıza simülasyonu), compose + kapalı ağ kanıtları | S7, S8; `v0.2.0` | `docs/design/faz3.md` (onaylı, 2026-10-18), plan `docs/plans/F3.md` |
 | **4. Hareketli hedef** | 1 Şub - 28 Mar 2027 | Kamera hareketi telafisi, hareketli/duran ayrımı, göreli mozaik harita, bölge olayları (M3OT) | S11; `v0.3.0` | Faz 4 tasarımı, Faz 3 sonunda |
 | **5. Sunum** | 1-30 Nis 2027 | Aşağıdaki H10 içeriği: README, demo videosu, teknik yazı, CV; isteğe bağlı arXiv | S1-S11; `v1.0.0` | Faz 5 başında |
+
+**v4.5:** H6-H9 tabloları tarihî kayıt; Faz 3'ün güncel görev listesi `docs/plans/F3.md` (37 görev). Farklar: #36 ve #37'deki **(S)** işaretleri kalktı (Faz 3'te bütün kodu Claude yazar, kullanıcı inceler); #37'nin YOLO11 NMS kısmı, #39 (C++ WBF) ve #41'in Python–C++ hız karşılaştırması kesildi; #46'da mod seçimi yok.
 
 Aşağıdaki haftalık tablolar v3.0'dan. **H1-H5 = Faz 1** ve geçerli. **H6-H9 içeriği Faz 3'e, H10 içeriği Faz 5'e taşındı**; bu haftaların tarihleri ve sırası ilgili fazın tasarımında yeniden yazılır. Faz 2 ve Faz 4'ün GPU ihtiyacı kendi tasarımlarında tahmin edilip `docs/gpu-budget.md`'ye eklenir; Faz 1'in bütçesi değişmez.
 
@@ -1204,7 +1216,10 @@ Hareketli / duran araç v4.0'da ek hedef olmaktan çıktı, Faz 4'ün çekirdeğ
 | Kaggle API ile indirme de izin vermiyor | Düşük | Yüksek | Resmi BaiduYun bağlantısı; M3OT (figshare, hesap gerekmez) ile RGB-IR geliştirmeye başla |
 | TensorRT kurulumu sorunlu | Orta | Düşük | ONNX Runtime CUDA/TensorRT EP. TensorRT ek hedefe iner. |
 | M3OT uygunsuz (format, kare hızı, erişim) | Düşük-Orta | Orta | Yedek VT-MOT; oracle tespitle takip ölçümü veya niteliksel demo (ADR 0008) |
-| Windows'ta C++ zorluğu | Yüksek | Orta | Baştan WSL2. Docker imajı tek doğru kaynak. |
+| Windows'ta C++ zorluğu | Yüksek | Orta | Baştan WSL2. Docker imajı tek doğru kaynak. (v4.5: Windows'ta C++ araç zinciri hiç kurulmaz; derleme ve test yalnız Docker'da.) |
+| C++ ve Python eşliği tutmuyor (OpenCV SIMD farkı, ByteTrack'te eşit maliyetler) (v4.5) | Orta | Yüksek | Aynı OpenCV (5.0.0) ve ORT sürümü; fikstür sınır kuralları; takipte zaman kutusu, mekanik kanıtlı istisna ve 5 günlük tampon (`docs/design/faz3.md` §6.1, plan). |
+| Docker Desktop (WSL2) gecikmesi 100 ms bütçesini aşar (v4.5) | Düşük-Orta | Orta | Aşama kırılımı raporlanır; aşılırsa faz yalnız kullanıcının ADR'siyle kapanır. |
+| M3OT'ta doğal kayma ya da gece kareleri demoyu bozar (v4.5) | Orta | Orta | Demo dizisi M3OT geliştirme bölümünde önceden sabit ölçütle seçilir; test sonucu yalnız raporlanır. |
 | Zaman aşımı | Yüksek | Yüksek | H5 MVP kapısı ve §20.6 kesme sırası |
 | AGPL | Düşük | Düşük | Açık portfolyo için uygun. README'de açıkça belirt. |
 | Kodu anlamadan ilerlemek | Orta | **Yüksek (mülakat)** | §21.1 ilkeleri ve DoD |
