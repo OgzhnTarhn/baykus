@@ -81,7 +81,7 @@ Görüntü oranı, %. Zararlı şiddetler: IR gürültüsü σ 20, hizasızlık 
 
 ## Test kontrolü
 
-Tek sefer, 3 koşul; seçim yapılmadı (tasarım §6.4).
+Tek sefer, 3 koşul; seçim yapılmadı (tasarım §6.4). Bootstrap (1000, seed 42).
 
 | Koşul | Kapı % | E3c | E3c + kapı | Δ puan [%95 GA] |
 |---|---|---|---|---|
