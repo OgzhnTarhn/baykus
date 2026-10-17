@@ -22,7 +22,7 @@ from baykus.edge.export import sha256_file
 from baykus.eval.cli import load_coco
 from baykus.eval.predictions import load_predictions
 from baykus.health.calibrate import calibrate
-from baykus.health.compare import gate_report
+from baykus.health.compare import check_thresholds, gate_report
 from baykus.health.features import FEATURES
 from baykus.health.fit import feature_rows, fit_thresholds
 from baykus.health.report import calibration_plot, health_markdown
@@ -94,6 +94,9 @@ def _mark(ok: bool) -> str:
 
 
 def _cmd_compare(a: argparse.Namespace) -> int:
+    th = Path(a.thresholds) if a.thresholds else Path(a.results) / "health" / "thresholds.json"
+    if not th.exists():
+        raise FileNotFoundError(f"{th} yok: özetler hangi eşiklerle üretildi denetlenemez")
     gt = load_coco(Path(a.data_root) / "coco" / f"{a.split}_ir.json")
     rep = gate_report(
         run_id=a.run_id,
@@ -104,6 +107,7 @@ def _cmd_compare(a: argparse.Namespace) -> int:
         n_boot=a.n_boot,
         seed=a.seed,
         workers=a.workers,
+        thresholds=th,
     )
     out = write_json(Path(a.results) / "health" / f"gate_{a.split}.json", rep)
     print(out)
@@ -163,8 +167,11 @@ def _cmd_report(a: argparse.Namespace) -> int:
     if th is None:
         raise FileNotFoundError(f"{h / 'thresholds.json'} yok (önce baykus-health fit)")
     calib = _read(h / "calibration_e3c_onnx_fp32.json")
+    gate_val, gate_test = _read(h / "gate_val.json"), _read(h / "gate_test.json")
+    sha = hashlib.sha256((h / "thresholds.json").read_bytes()).hexdigest()
+    check_thresholds(sha, {"gate_val.json": gate_val, "gate_test.json": gate_test})
     rel = Path(os.path.relpath(fig, out.parent)).as_posix()
-    text = health_markdown(th, _read(h / "gate_val.json"), _read(h / "gate_test.json"), calib, rel)
+    text = health_markdown(th, gate_val, gate_test, calib, rel)
     if calib:
         calibration_plot(calib, fig)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -207,6 +214,9 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("--robust-preds", required=True, help="Faz 1 ve kapılı tahmin klasörleri")
     c.add_argument("--data-root", required=True, help="coco/<split>_ir.json kökü")
     c.add_argument("--results", default="../results")
+    c.add_argument(
+        "--thresholds", default=None, help="varsayılan: <results>/health/thresholds.json"
+    )
     c.add_argument("--n-boot", type=int, default=1000)
     c.add_argument("--seed", type=int, default=42)
     c.add_argument("--workers", type=int, default=1)

@@ -1,3 +1,4 @@
+import hashlib
 import json
 from pathlib import Path
 
@@ -143,6 +144,7 @@ def test_cli_compare_writes_json(tmp_path: Path, capsys):
     from baykus.health.cli import main
 
     d = _setup(tmp_path, "val", ["clean", *HARMFUL], set(HARMFUL))
+    _with_thresholds_file(d["res"])
     coco = tmp_path / "dv" / "coco"
     coco.mkdir(parents=True)
     (coco / "val_ir.json").write_text(json.dumps(GT.dataset), encoding="utf-8")
@@ -159,3 +161,32 @@ def test_detection_rates_empty_condition_is_null():
                    "rgb": dict(FLAGS0), "ir": dict(FLAGS0), "misaligned": 0}}  # fmt: skip
     r = detection_rates(s)["clean"]
     assert r["gate_rate"] is None and r["ir"]["noisy"] is None and r["misaligned"] is None
+
+
+def _with_thresholds_file(res: Path) -> Path:
+    """results/health/thresholds.json yazar ve özetlerin sha256'sını ona eşitler."""
+    th = res / "health" / "thresholds.json"
+    th.write_text('{"states": {}}', encoding="utf-8")
+    sha = hashlib.sha256(th.read_bytes()).hexdigest()
+    for p in (res / "health").glob("*_health.json"):
+        rec = json.loads(p.read_text(encoding="utf-8"))
+        write_json(p, {**rec, "thresholds_sha256": sha})
+    return th
+
+
+def test_gate_report_rejects_other_thresholds_file(tmp_path: Path):
+    d = _setup(tmp_path, "val", ["clean", "noise-20"], {"noise-20"})
+    other = tmp_path / "other.json"
+    other.write_text("{}", encoding="utf-8")
+    with pytest.raises(HealthError, match="eşik"):
+        gate_report(run_id=RUN, split="val", robust_preds=d["preds"], gt=GT, results=d["res"],
+                    thresholds=other)  # fmt: skip
+
+
+def test_cli_compare_without_thresholds_file_is_error(tmp_path: Path, capsys):
+    from baykus.health.cli import main
+
+    d = _setup(tmp_path, "val", ["clean"], set())
+    args = ["compare", "--run-id", RUN, "--robust-preds", str(d["preds"])]
+    assert main([*args, "--data-root", str(tmp_path), "--results", str(d["res"])]) == 2
+    assert "thresholds.json" in capsys.readouterr().err

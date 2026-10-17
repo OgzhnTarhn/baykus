@@ -7,6 +7,7 @@ Kabul ölçütleri yalnız val'de; test kontrolünde seçim yapılmaz (§6.4).
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -56,6 +57,13 @@ def detection_rates(summaries: dict[str, dict]) -> dict:
     return out
 
 
+def check_thresholds(sha: str, records: dict[str, dict | None]) -> None:
+    """Sonuçlar bu eşik dosyasıyla mı üretildi? Değilse iki ayar aynı rapora karışmasın."""
+    bad = [k for k, r in records.items() if r is not None and r.get("thresholds_sha256") != sha]
+    if bad:
+        raise HealthError(f"eşik dosyası uyuşmuyor (sha256 {sha[:12]}…): {bad}")
+
+
 def _load_summaries(results: Path, run_id: str, split: str) -> dict[str, dict]:
     out = {}
     for c in suite_conditions():
@@ -80,8 +88,11 @@ def gate_report(
     n_boot: int = 1000,
     seed: int = 42,
     workers: int = 1,
+    thresholds: Path | None = None,
 ) -> dict:
     summaries = _load_summaries(Path(results), run_id, split)
+    if thresholds is not None:
+        check_thresholds(hashlib.sha256(Path(thresholds).read_bytes()).hexdigest(), summaries)
     files: dict[str, tuple[Path, Path | None]] = {}
     for cid, s in summaries.items():
         base = Path(robust_preds) / run_name(run_id, split, condition={"id": cid}) / PREDS

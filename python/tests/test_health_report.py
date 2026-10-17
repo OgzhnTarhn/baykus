@@ -1,3 +1,4 @@
+import hashlib
 from pathlib import Path
 
 from baykus.health.fit import STATES
@@ -108,7 +109,8 @@ def test_cli_report(tmp_path: Path):
 
     h = tmp_path / "health"
     write_json(h / "thresholds.json", TH)
-    write_json(h / "gate_val.json", _gate("val", True))
+    sha = hashlib.sha256((h / "thresholds.json").read_bytes()).hexdigest()
+    write_json(h / "gate_val.json", {**_gate("val", True), "thresholds_sha256": sha})
     out, fig = tmp_path / "docs" / "health.md", tmp_path / "docs" / "figures" / "cal.png"
     args = ["report", "--health", str(h), "--out", str(out), "--fig", str(fig)]
     assert main(args) == 0
@@ -133,3 +135,14 @@ def test_k1_shown_with_two_decimals_and_header_from_json():
     md = health_markdown(TH, g, None, None, "x.png")
     assert "| -0.54 | ❌ |" in md  # tek ondalıkta "-0.5 ❌" sınırla çelişik görünürdü
     assert "(500, seed 7)" in md and "(1000, seed 42)" not in md
+
+
+def test_cli_report_rejects_results_from_other_thresholds(tmp_path: Path, capsys):
+    from baykus.health.cli import main
+    from baykus.runinfo import write_json
+
+    h = tmp_path / "health"
+    write_json(h / "thresholds.json", TH)
+    write_json(h / "gate_val.json", {**_gate("val", True), "thresholds_sha256": "z" * 64})
+    assert main(["report", "--health", str(h), "--out", str(tmp_path / "x.md")]) == 2
+    assert "eşik" in capsys.readouterr().err
