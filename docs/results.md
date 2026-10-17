@@ -73,11 +73,17 @@
 | e4_late_fusion | laptop-cpu | onnx | fp16 | 38.3 | 83.2 | +0.0 | 121.4 | 133.0 | 8.3 |
 | e4_late_fusion | laptop-cpu | onnx | int8 | 20.6 | 76.6 | -6.6 | 216.1 | 241.5 | 4.6 |
 | e4_late_fusion | laptop-cpu | onnx | int8 (head FP32) | 23.1 | 83.0 | -0.2 | 203.9 | 224.4 | 4.9 |
+| e4_late_fusion | colab-t4 | engine | fp32 | 243.1 | 83.2 | -0.0 | 32.9 | 44.0 | 28.7 |
+| e4_late_fusion | colab-t4 | engine | fp16 | 189.0 | 83.2 | +0.0 | 29.0 | 40.9 | 32.3 |
+| e4_late_fusion | colab-t4 | engine | int8 | 94.3 | 83.2 | +0.0 | 25.9 | 36.6 | 36.9 |
 | e3c_modality_dropout | — | pytorch | fp32 | — | 85.1 | — | — | — | — |
 | e3c_modality_dropout | laptop-cpu | onnx | fp32 | 38.2 | 84.1 | +0.0 | 46.4 | 59.9 | 21.0 |
 | e3c_modality_dropout | laptop-cpu | onnx | fp16 | 19.2 | 84.1 | -0.0 | 49.3 | 62.5 | 19.7 |
 | e3c_modality_dropout | laptop-cpu | onnx | int8 | 10.3 | 80.8 | -3.3 | 98.7 | 117.8 | 9.9 |
 | e3c_modality_dropout | laptop-cpu | onnx | int8 (head FP32) | 11.6 | 83.4 | -0.7 | 90.1 | 108.1 | 10.9 |
+| e3c_modality_dropout | colab-t4 | engine | fp32 | 121.5 | 84.1 | -0.0 | 13.1 | 14.1 | 75.8 |
+| e3c_modality_dropout | colab-t4 | engine | fp16 | 92.9 | 84.1 | -0.0 | 9.9 | 11.4 | 99.3 |
+| e3c_modality_dropout | colab-t4 | engine | int8 | 34.3 | 82.6 | -1.5 | 9.9 | 11.7 | 99.5 |
 
 ### Sevk kuralı (ADR 0007)
 
