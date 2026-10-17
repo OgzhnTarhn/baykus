@@ -83,7 +83,9 @@ def test_select_resume_with_other_models_is_error(tmp_path: Path, capsys):
     s = setup_dv(tmp_path)
     assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
     args = select_args(tmp_path, s, "e4_late_fusion.yaml")
-    args[args.index("E1")] = "E1x"
+    args[args.index("E1")] = "E1x"  # yeni modelin tahminleri kendi klasöründe
+    new = save_predictions(tmp_path / "E1x_val" / "predictions_coco.json.gz", RGB)
+    args[args.index(str(s["rgb"]))] = str(new)
     assert main(args) == 2 and "başka modeller" in capsys.readouterr().err
 
 
@@ -112,6 +114,8 @@ def test_select_base_from_other_models_is_error(tmp_path: Path, capsys):
     base = selection_path(tmp_path / "res", "e4_late_fusion", "val")
     args = select_args(tmp_path, s, "e4b_late_fusion_illum.yaml", ["--base", str(base)])
     args[args.index("E2")] = "E2x"
+    new = save_predictions(tmp_path / "E2x_val" / "predictions_coco.json.gz", IR)
+    args[args.index(str(s["ir"]))] = str(new)
     assert main(args) == 2 and "başka modeller" in capsys.readouterr().err
 
 
@@ -177,12 +181,20 @@ def test_robust_missing_inputs_fail_before_any_work(tmp_path: Path, capsys):
     assert not (tmp_path / "res/robust").exists()
 
 
+def _m3ot_preds(tmp_path: Path, rgb=RGB, ir=IR) -> tuple[Path, Path]:
+    """M3OT değerlendirme klasörleri (baykus.eval.cli.run_name: <run>_m3ot_<split>)."""
+    name = "predictions_coco.json.gz"
+    return (save_predictions(tmp_path / "E1_m3ot_val" / name, rgb),
+            save_predictions(tmp_path / "E2_m3ot_val" / name, ir))  # fmt: skip
+
+
 def test_apply_on_other_dataset_and_e4b_refused(tmp_path: Path, capsys):
     s = setup_dv(tmp_path)
     assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
     sel = selection_path(tmp_path / "res", "e4_late_fusion", "val")
+    m_rgb, m_ir = _m3ot_preds(tmp_path)
     args = ["apply", "--config", str(REPO / "configs/fusion/e4_late_fusion.yaml"),
-            "--selection", str(sel), "--rgb-preds", str(s["rgb"]), "--ir-preds", str(s["ir"]),
+            "--selection", str(sel), "--rgb-preds", str(m_rgb), "--ir-preds", str(m_ir),
             "--data-root", str(s["root"]), "--meta", str(s["meta"]), "--split", "val",
             "--dataset", "m3ot", "--class-agnostic", "--project", str(tmp_path / "m"),
             "--results", str(tmp_path / "res"), "--n-boot", "10"]  # fmt: skip
@@ -215,7 +227,8 @@ def test_rerun_with_other_sources_is_error(tmp_path: Path, capsys):
     other = save_predictions(tmp_path / "x" / "E1_val" / "predictions_coco.json.gz", RGB)
     args = select_args(tmp_path, s, "e4_late_fusion.yaml")
     args[args.index(str(s["rgb"]))] = str(other)
-    assert main(args) == 2 and "farklı girdilerle" in capsys.readouterr().err
+    # seçim başka tahminlerle yapılmış: aramadan önce yakalanır (birleştirmeye gelmez)
+    assert main(args) == 2 and "tahminlerle" in capsys.readouterr().err
 
 
 def _apply_args(tmp_path: Path, s: dict, config: Path, rgb: Path, ir: Path) -> list[str]:
@@ -249,10 +262,9 @@ def test_apply_config_hash_mismatch_is_error(tmp_path: Path, capsys):
 def test_value_error_becomes_error_line(tmp_path: Path, capsys):
     s = setup_dv(tmp_path)
     assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
-    bad = [{**RGB[0], "image_id": 99}]
-    rgb = save_predictions(tmp_path / "y" / "E1_val" / "predictions_coco.json.gz", bad)
+    rgb, ir = _m3ot_preds(tmp_path, rgb=[{**RGB[0], "image_id": 99}])
     cfg = REPO / "configs/fusion/e4_late_fusion.yaml"
-    assert main(_apply_args(tmp_path, s, cfg, rgb, s["ir"])) == 2
+    assert main(_apply_args(tmp_path, s, cfg, rgb, ir)) == 2
     err = capsys.readouterr().err
     assert err.startswith("hata: ") and "Traceback" not in err
 
@@ -314,3 +326,68 @@ def test_apply_e4b_without_slices_is_error(tmp_path: Path, capsys):
     args = _dv_apply_args(tmp_path, s, sel, "e4b_late_fusion_illum.yaml", rgb, ir,
                           ["--results-subdir", "t"])  # fmt: skip
     assert main(args) == 2 and "slices_val.json" in capsys.readouterr().err
+
+
+# --- H5 dal incelemesi bulguları (2026-10-17) ---
+
+
+def test_select_checks_sources_before_search(tmp_path: Path, capsys):
+    s = setup_dv(tmp_path)
+    wrong = save_predictions(tmp_path / "E9_val" / "predictions_coco.json.gz", RGB)
+    args = select_args(tmp_path, s, "e4_late_fusion.yaml")
+    args[args.index(str(s["rgb"]))] = str(wrong)
+    assert main(args) == 2 and "E1" in capsys.readouterr().err
+    assert not selection_path(tmp_path / "res", "e4_late_fusion", "val").exists()
+
+
+def test_select_resume_with_other_preds_is_error(tmp_path: Path, capsys):
+    s = setup_dv(tmp_path)
+    assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
+    other = save_predictions(tmp_path / "z" / "E1_val" / "predictions_coco.json.gz", RGB)
+    args = select_args(tmp_path, s, "e4_late_fusion.yaml")
+    args[args.index(str(s["rgb"]))] = str(other)
+    assert main(args) == 2 and "seçilmiş" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    ("rgb_dir", "ir_dir", "extra"),
+    [
+        ("E1_test", "E2_test", []),  # yanlış bölüm (val isteniyor)
+        ("E1_val_onnx_fp32", "E2_val_onnx_fp32", ["--variant", "onnx_int8"]),  # yanlış varyant
+        ("E1_val_onnx_int8", "E2_val_onnx_fp32", ["--variant", "onnx_int8"]),  # karışık çift
+    ],
+)
+def test_apply_requires_exact_prediction_folder(tmp_path: Path, capsys, rgb_dir, ir_dir, extra):
+    s = setup_dv(tmp_path)
+    assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
+    sel = selection_path(tmp_path / "res", "e4_late_fusion", "val")
+    rgb = save_predictions(tmp_path / rgb_dir / "predictions_coco.json.gz", RGB)
+    ir = save_predictions(tmp_path / ir_dir / "predictions_coco.json.gz", IR)
+    args = _dv_apply_args(tmp_path, s, sel, "e4_late_fusion.yaml", rgb, ir, extra)
+    assert main(args) == 2 and "klasör" in capsys.readouterr().err
+
+
+def test_variant_record_stale_after_prediction_change_is_error(tmp_path: Path, capsys):
+    s = setup_dv(tmp_path)
+    assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
+    sel = selection_path(tmp_path / "res", "e4_late_fusion", "val")
+    rgb = save_predictions(tmp_path / "E1_val_onnx_int8" / "predictions_coco.json.gz", RGB)
+    ir = save_predictions(tmp_path / "E2_val_onnx_int8" / "predictions_coco.json.gz", IR)
+    args = _dv_apply_args(tmp_path, s, sel, "e4_late_fusion.yaml", rgb, ir,
+                          ["--variant", "onnx_int8", "--n-boot", "0"])  # fmt: skip
+    assert main(args) == 0
+    assert main(args) == 0  # aynı girdi: atlanır
+    save_predictions(rgb, RGB[:1])  # model yeniden nicemlendi: aynı yola yeni tahminler
+    assert main(args) == 2 and "farklı girdilerle" in capsys.readouterr().err
+
+
+def test_old_records_without_prediction_hashes_still_skip(tmp_path: Path, capsys):
+    s = setup_dv(tmp_path)
+    assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
+    for p in (tmp_path / "res/runs").glob("*.json"):  # H5 öncesi kayıtlar: sha256 alanı yok
+        rec = json.loads(p.read_text(encoding="utf-8"))
+        rec["fusion"].pop("rgb_preds_sha256", None)
+        rec["fusion"].pop("ir_preds_sha256", None)
+        p.write_text(json.dumps(rec), encoding="utf-8")
+    assert main(select_args(tmp_path, s, "e4_late_fusion.yaml")) == 0
+    assert "zaten var" in capsys.readouterr().out

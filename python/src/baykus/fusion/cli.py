@@ -8,6 +8,7 @@ apply  — seçilmiş parametrelerle başka bir veri setinde (M3OT, E7) birleşt
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 import time
@@ -49,24 +50,46 @@ def selection_path(results: Path, experiment: str, split: str) -> Path:
     return Path(results) / SEL_DIR / f"{experiment}_{split}_selection.json"
 
 
-def check_sources(sel: dict, rgb_preds: Path, ir_preds: Path) -> None:
-    """Tahmin dosyası seçimdeki modellere mi ait? Değerlendirme klasörleri
-    `<run_id>[_<veri seti>]_<split>[_…]` adlı (baykus.eval.cli.run_name)."""
+def check_sources(
+    sel: dict,
+    rgb_preds: Path,
+    ir_preds: Path,
+    *,
+    split: str,
+    dataset: str = DEFAULT_DATASET,
+    variant: str | None = None,
+    sources: dict | None = None,
+) -> None:
+    """Tahmin dosyası seçimdeki modelin, bu bölümün ve bu varyantın mı? Değerlendirme klasörü
+    tam olarak baykus.eval.cli.run_name adını taşımalı (sağlamlıkta koşul eki `sources`'tan)."""
     for side, path in (("rgb", rgb_preds), ("ir", ir_preds)):
         run_id, folder = sel[f"{side}_run_id"], Path(path).parent.name
-        if not folder.startswith(f"{run_id}_"):
+        cond = {"id": sources[side]} if sources else None
+        want = run_name(run_id, split, dataset, cond, variant=variant)
+        if folder != want:
             raise FusionError(
-                f"{side} tahmini ({path}) seçimdeki {run_id} modeline ait değil "
-                f"(klasör adı {run_id}_… ile başlamalı)"
+                f"{side} tahmini ({path}) beklenen klasörde değil: {want} "
+                f"(model {run_id}, bölüm {split}, varyant {variant or 'pytorch'})"
             )
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def _same_inputs(path: Path, n_boot: int, rgb_preds: Path, ir_preds: Path) -> bool:
     rec = json.loads(path.read_text(encoding="utf-8"))
     fusion = rec.get("fusion") or {}
-    return (rec.get("n_boot"), fusion.get("rgb_preds"), fusion.get("ir_preds")) == (
+    same = (rec.get("n_boot"), fusion.get("rgb_preds"), fusion.get("ir_preds")) == (
         n_boot, str(rgb_preds), str(ir_preds)
     )  # fmt: skip
+    # Aynı yola yeniden yazılmış tahmin (ör. yeniden nicemlenen model) özetten yakalanır;
+    # H5 öncesi kayıtlarda özet yok, onlar yalnız yol ve n_boot ile karşılaştırılır.
+    for side, p in (("rgb", rgb_preds), ("ir", ir_preds)):
+        old = fusion.get(f"{side}_preds_sha256")
+        if old is not None and old != _sha256(p):
+            same = False
+    return same
 
 
 def _weights(sel: dict, levels: dict[int, str] | None):
@@ -104,6 +127,8 @@ def fuse_and_record(
     label_sets = label_sets or cfg.label_sets
     name = run_name(sel["run_id"], split, dataset, condition, variant=variant)
     outs = [Path(results) / results_subdir / f"{name}_{ls}.json" for ls in label_sets]
+    check_sources(sel, rgb_preds, ir_preds, split=split, dataset=dataset, variant=variant,
+                  sources=(condition or {}).get("sources"))  # fmt: skip
     if all(p.exists() for p in outs):
         stale = [p for p in outs if not _same_inputs(p, n_boot, rgb_preds, ir_preds)]
         if stale:
@@ -112,7 +137,6 @@ def fuse_and_record(
             )
         print(f"zaten var, atlandı: {name}")
         return outs
-    check_sources(sel, rgb_preds, ir_preds)
     root = Path(root)
     gt_ir = load_coco(root / "coco" / f"{split}_ir.json")
     images = {im["id"]: (im["width"], im["height"]) for im in gt_ir.dataset["images"]}
@@ -130,6 +154,8 @@ def fuse_and_record(
         "ir_run_id": sel["ir_run_id"],
         "rgb_preds": str(rgb_preds),
         "ir_preds": str(ir_preds),
+        "rgb_preds_sha256": _sha256(rgb_preds),
+        "ir_preds_sha256": _sha256(ir_preds),
         "iou_thr": s["iou_thr"],
         "w_rgb": s["w_rgb"],
         "ir_weight": s["ir_weight"],
@@ -174,13 +200,15 @@ def _cmd_select(a: argparse.Namespace) -> int:
     cfg = load_fusion_config(Path(a.config))
     root, meta = Path(a.data_root), Path(a.meta)
     out = selection_path(a.results, cfg.experiment, "val")
+    ids = {"rgb_run_id": a.rgb_run_id, "ir_run_id": a.ir_run_id}
+    check_sources(ids, Path(a.rgb_preds), Path(a.ir_preds), split="val")  # aramadan önce
     if out.exists():
         sel = json.loads(out.read_text(encoding="utf-8"))
-        if (sel["rgb_run_id"], sel["ir_run_id"], sel["config_hash"]) != (
-            a.rgb_run_id, a.ir_run_id, cfg.config_hash
-        ):  # fmt: skip
+        if (sel["rgb_run_id"], sel["ir_run_id"], sel["config_hash"], sel["rgb_preds"],
+                sel["ir_preds"]) != (a.rgb_run_id, a.ir_run_id, cfg.config_hash,
+                                     str(a.rgb_preds), str(a.ir_preds)):  # fmt: skip
             raise FusionError(
-                f"{out} başka modellerle ya da config ile seçilmiş "
+                f"{out} başka modellerle, tahminlerle ya da config ile seçilmiş "
                 f"({sel['rgb_run_id']}, {sel['ir_run_id']}); dosyayı taşıyıp yeniden seç"
             )
         print(f"seçim zaten var, yeniden aranmadı: {out}")
