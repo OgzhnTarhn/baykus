@@ -119,6 +119,10 @@ def _cmd_compare(a: argparse.Namespace) -> int:
     return 0
 
 
+def _num(v: float | None) -> str:
+    return "—" if v is None else f"{v:.4f}"
+
+
 def _cmd_calibrate(a: argparse.Namespace) -> int:
     coco = Path(a.coco_dir)
     vp, tp = Path(a.val_preds), Path(a.test_preds)
@@ -141,7 +145,8 @@ def _cmd_calibrate(a: argparse.Namespace) -> int:
     print(write_json(Path(a.out), rec))
     t, k4 = rec["test"], rec["k4"]
     print(
-        f"test ECE {t['ece_before']:.4f} → {t['ece_after']:.4f} ({t['n_eval']} tespit, skor ≥ 0,25)"
+        f"test ECE {_num(t['ece_before'])} → {_num(t['ece_after'])} "
+        f"({t['n_eval']} tespit, skor ≥ 0,25)"
     )
     print(f"test mAP50 {t['map50_before']:.4f} → {t['map50_after']:.4f}")
     print(f"Kabul 4 {_mark(k4['passed'])} |ΔmAP50| {k4['value'] * 100:.3f} puan (≤ 0,1)")

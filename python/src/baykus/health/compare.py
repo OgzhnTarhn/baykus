@@ -42,12 +42,16 @@ def acceptance(clean_diff: float, harmful_ci: list[float | None], clean_false_al
 def detection_rates(summaries: dict[str, dict]) -> dict:
     out = {}
     for cid, s in summaries.items():
-        n = s["n_images"] or 1
+        n = s["n_images"]
+
+        def rate(k: int, n: int = n) -> float | None:
+            return k / n if n else None  # boş koşulda oran hesaplanamaz: null
+
         out[cid] = {
-            "gate_rate": (s["gate"]["ir_off"] + s["gate"]["rgb_off"]) / n,
-            "rgb": {f: s["rgb"][f] / n for f in FLAG_ORDER},
-            "ir": {f: s["ir"][f] / n for f in FLAG_ORDER},
-            "misaligned": s["misaligned"] / n,
+            "gate_rate": rate(s["gate"]["ir_off"] + s["gate"]["rgb_off"]),
+            "rgb": {f: rate(s["rgb"][f]) for f in FLAG_ORDER},
+            "ir": {f: rate(s["ir"][f]) for f in FLAG_ORDER},
+            "misaligned": rate(s["misaligned"]),
         }
     return out
 
@@ -91,6 +95,7 @@ def gate_report(
     if missing:  # uzun bootstrap'tan önce dur
         raise HealthError("eksik tahmin dosyası: " + ", ".join(missing))
 
+    detection = detection_rates(summaries)
     rows, z_gate, z_base = [], [], []
     for cid, (base, gate) in files.items():
         mb = collect_matches(gt, load_predictions(base))
@@ -108,7 +113,7 @@ def gate_report(
             {
                 "condition": cid,
                 "n_images": s["n_images"],
-                "gate_rate": (s["gate"]["ir_off"] + s["gate"]["rgb_off"]) / (s["n_images"] or 1),
+                "gate_rate": detection[cid]["gate_rate"],
                 "changed": s["changed"],
                 "base_map50": ap50(mb),
                 "gate_map50": ap50(mg),
@@ -131,7 +136,6 @@ def gate_report(
         if z
         else None
     )
-    detection = detection_rates(summaries)
     acc = None
     if split == "val" and "clean" in summaries and z == list(HARMFUL):
         clean = next(r for r in rows if r["condition"] == "clean")

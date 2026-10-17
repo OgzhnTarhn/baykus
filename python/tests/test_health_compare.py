@@ -152,3 +152,10 @@ def test_cli_compare_writes_json(tmp_path: Path, capsys):
     rec = json.loads((d["res"] / "health" / "gate_val.json").read_text(encoding="utf-8"))
     assert rec["acceptance"]["k2"]["passed"] is True
     assert "Kabul 2" in capsys.readouterr().out
+
+
+def test_detection_rates_empty_condition_is_null():
+    s = {"clean": {"n_images": 0, "gate": {"none": 0, "ir_off": 0, "rgb_off": 0},
+                   "rgb": dict(FLAGS0), "ir": dict(FLAGS0), "misaligned": 0}}  # fmt: skip
+    r = detection_rates(s)["clean"]
+    assert r["gate_rate"] is None and r["ir"]["noisy"] is None and r["misaligned"] is None

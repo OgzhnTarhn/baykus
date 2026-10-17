@@ -63,7 +63,7 @@ def test_apply_clamps_outside_range():
 def test_ece_values():
     assert ece(np.full(10, 0.9), np.ones(10)) == pytest.approx(0.1)
     assert ece(np.array([1.0, 1.0]), np.array([1, 1])) == 0.0  # 1,0 son aralıkta
-    assert ece(np.array([]), np.array([])) == 0.0
+    assert ece(np.array([]), np.array([])) is None  # hesaplanamayan değer null
 
 
 def test_reliability_bins():

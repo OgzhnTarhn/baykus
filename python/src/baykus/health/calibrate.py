@@ -88,10 +88,10 @@ def reliability(conf: np.ndarray, labels: np.ndarray, bins: int = ECE_BINS) -> l
     return out
 
 
-def ece(conf: np.ndarray, labels: np.ndarray, bins: int = ECE_BINS) -> float:
+def ece(conf: np.ndarray, labels: np.ndarray, bins: int = ECE_BINS) -> float | None:
     total = len(conf)
     if not total:
-        return 0.0
+        return None  # hesaplanamayan değer null
     return float(
         sum(
             b["n"] / total * abs(b["acc"] - b["conf"])

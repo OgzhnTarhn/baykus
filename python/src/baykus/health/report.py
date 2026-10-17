@@ -44,6 +44,10 @@ def _ci(ci: list | None) -> str:
     return f"[{100 * ci[0]:+.1f}, {100 * ci[1]:+.1f}]"
 
 
+def _ece(v: float | None) -> str:
+    return "—" if v is None else f"{v:.3f}"
+
+
 def _mark(ok: bool | None) -> str:
     return "—" if ok is None else ("✅" if ok else "❌")
 
@@ -154,11 +158,11 @@ def _calibration(calib: dict | None, fig_rel: str) -> list[str]:
         "E3c · ONNX FP32 (sevk edilen); tablo val'de izotonik regresyonla, ECE testte ham "
         f"skoru ≥ 0,25 olan {t['n_eval']} tespitte, 15 eşit aralık.",
         "",
-        f"ECE {t['ece_before']:.3f} → {t['ece_after']:.3f}.",
+        f"ECE {_ece(t['ece_before'])} → {_ece(t['ece_after'])}.",
         "",
         "| | Önce | Sonra |",
         "|---|---|---|",
-        f"| ECE | {t['ece_before']:.3f} | {t['ece_after']:.3f} |",
+        f"| ECE | {_ece(t['ece_before'])} | {_ece(t['ece_after'])} |",
         f"| mAP50 | {fmt(t['map50_before'])} | {fmt(t['map50_after'])} |",
         "",
         f"![Güvenilirlik diyagramı]({fig_rel})",
