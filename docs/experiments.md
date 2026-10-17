@@ -217,3 +217,6 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
 - **Bedeli (H4 ölçümleri, val):** kamera kaybı puanı K E3c 0,774 / E4 0,800; hizasızlık 20 px E3c 0,266 / E4 0,485; bulanıklık 11 E3c 0,652 / E4 0,809; M3OT AP50 E3c 0,889 / E4 0,971. Temiz val ONNX FP32'de E3c 0,841 / E4 0,832.
 - **E8 (n boyutu): yapılmadı** — `s` boyutundaki E3c hedefi tuttu (ADR 0007 madde 6 gerekmedi).
 - **Sonra:** E4'ün hızlandırılması (iki modeli paralel çalıştırmak, RTX 4060 GPU) ve E3c'nin hizasızlığa dayanıklılığı Faz 2-3'e.
+
+## 2026-10-17 · NPU denemesi (FR-X6, H5 Görev 18) — yapılmadı
+- **Neden:** kullanıcı kararı (2026-10-17). Ryzen AI Software kurulumu uv ortamından ayrı ve uzun; sevk kararı laptop CPU'yla verildi (ADR 0007), NPU satırı S6 için zorunlu değil (spec FR-X6: "S6'yı engellemez"). Faz 3'te yeniden değerlendirilebilir.
