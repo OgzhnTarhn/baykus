@@ -317,3 +317,22 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
 ## 2026-10-17 · F2 · Karar: kapı düzeltmesi Faz 3'e
 - **Karar (kullanıcı, 2026-10-17):** Faz 2 olumsuz sonuçla kapanır. Hizasızlık yanlış alarmının düzeltmesi bu fazda denenmez: kural val sonuçlarına bakılarak bulundu (val'de ölçmek iyimser olurdu) ve test bir kez kullanıldı (yeniden doğrulanamaz).
 - **Faz 3 tasarımına önceden yazılacak girdiler:** (1) faz korelasyonu yanıtı düşükse (ör. eşik train'den) ya da RGB `dark` ise `misaligned` kararı verilmez; ölçüt yine "temiz veride zarar yok" önce, sonra fayda; (2) ardışık karelerle donmuş kare tespiti; (3) kalibre skorla sıralamada eşitlik ham skorla bozulur (Kabul 4'teki kayıp böylece sıfır, `scripts/analysis/f2_checks.py`); (4) dedektör hızı: laptop CPU'da `check_frame` medyan 11,3 ms (20 val çifti, 640×512; tasarım hedefi < 5 ms tutmadı), C++'ta yeniden ölçülür.
+
+## 2026-10-18 · F3 · Tasarım kararları (tasarım incelemesi sonrası)
+- **Bağlam:** `docs/design/faz3.md` taslağı eleştirel incelemeden geçti (eşlik ölçütleri, takipçi girdisi, OpenCV sürümü, kapalı ağ kanıtı, `r_min` ölçütü, M3OT sağlık kontrolü). Bulgular tasarımın v2'sine işlendi.
+- **Karar (kullanıcı, 2026-10-18; önerilen seçenekler kabul edildi):**
+  1. Hizasızlık yanlış alarmı iki katmanlı kuralla düzeltilir: **kare kuralı** (yanıt eşiği `r_min`; train temiz karelerde kapı alarmı ≤ %2 olan en küçük değer; Youden J değil, "önce temiz veride zarar yok") ve videoda **zaman kuralı** (son 5 karenin en az 3'ünde kayma vektörü ±3 px içinde tutarlı). Modelin yeniden eğitimi ve görüntüye bakan sinir ağı yok: sorun modelde değil kuralda. Kullanıcı önce bir karar modeli (karar ağacı) önerdi; train keşfinde ağaç elendi (aşağıdaki girdi), zaman kuralını kullanıcı onayladı ("video kısmından ilerleyelim"), ayrıntılar Claude'a bırakıldı.
+  2. **Karar değişikliği:** dikdörtgen (640×512) export Faz 3'te değil Faz 5'te (2026-10-17 kararı "Faz 3'te C++ motoruyla birlikte" idi). Neden: sevk edilen modeli değiştirir, Colab'da val ölçümü ve ADR 0007 sevk kuralının yeniden uygulanmasını ister.
+  3. M3OT test dizilerindeki sağlık ölçümü yalnız raporlanır, hiçbir eşik ona bakılarak değişmez; demo ölçütü tutmazsa sınırlama notu ve demo için test dışı bir M3OT dizisi.
+  4. Faz 3'te (S) görev yok: bütün kodu Claude yazar, kullanıcı inceler.
+  5. Ek ölçümler girer: motor tespitleriyle M3OT AP50 + ECE, kapının M3OT'ta sentetik bozulmayla denenmesi, internetsiz kurulum paketi (`docker save`). Donmuş kare girmez.
+  6. Takip eşliğinde belgelenmiş kayan nokta eşitliği istisnası kabul (kural ölçümden önce, tasarım §6.1 Kabul 4).
+
+## 2026-10-18 · F3 · Hizasızlık alarmı: train keşfi (karar ağacı elendi)
+- **Soru:** Faz 2'nin temiz karedeki hizasızlık yanlış alarmları (val %4,1) bir karar modeliyle (karar ağacı) mı, yanıt eşiğiyle mi düzelir?
+- **Kurulum:** yalnız train (`data/health/train_features.csv`, 500 görüntü × 16 koşul, Faz 2 özellikleri); geçici betik (repoda değil), laptop CPU, saniyeler. Val ve test kullanılmadı. Sayılar keşif; kayıtlı sonuç Faz 3'te `results/health/gate_model.json`.
+- **Bulgular:**
+  1. Train'in 500 temiz karesinin 25'inde (%5) hizasızlık alarmı; iki grup: **(a)** 12 kare, neredeyse hepsi karanlık, yanıt ≤ 0,08, kayma çoğu 38-248 px (anlamsız kestirim); **(b)** 13 kare, çoğu aydınlık, yanıt 0,16-0,69, kayma 16-45 px — büyük olasılıkla veri setinin gerçek RGB-IR kayması (E0: merkez kayması p99 16,6 px; Faz 2 eşiği 16,16 px; sentetik şiddet 20 px).
+  2. Yanıt eşiği (bütün train, çapraz doğrulamasız): r 0,10 → temiz alarm %2,6, misalign-20/40 yakalama %94,5 (karanlıkta %89) · r 0,20 → %2,2, %89,0 (%74) · r 0,30 → %1,6, %79,1 (%47).
+  3. Karar ağacı (Faz 2'nin 9 özelliği, derinlik 2-3, yaprakta ≥ 20, görüntüye göre gruplu 5 katlı çapraz doğrulama, ≤ %2 temiz alarm ölçütü içte seçilerek): katlar dışı yakalama derinlik 2-3'te ≈ %0, `misalign_px` çıkarılınca ≈ %18 (temiz alarm %1,0). Üst dallar RGB / IR gürültü kestirimi: ağaç kaymanın güvenilirliğini değil sentetik **bozulma türünü** öğreniyor.
+- **Yorum:** (a) grubunu yanıt eşiği temizler; (b) grubu tek kareye bakan hiçbir ölçüyle sentetik 20 px kaymadan ayrılamaz (bilgi eksik, model değil). Videoda gerçek kayma kareden kareye sabit, anlamsız kestirim zıplıyor → zaman tutarlılığı kuralı (tasarım §4.2). Karar ağacı tasarımdan çıkarıldı.
