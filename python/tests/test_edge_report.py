@@ -161,3 +161,20 @@ def test_report_cli_without_edge_results_has_no_section(tmp_path: Path):
             "--m3ot", str(tmp_path / "yok"), "--out", str(out), "--fig", str(tmp_path / "f.png"),
             "--edge-results", str(tmp_path / "bos")]  # fmt: skip
     assert main(args) == 0 and "Edge" not in out.read_text(encoding="utf-8")
+
+
+def test_report_cli_test_split_has_no_edge_section(tmp_path: Path):
+    """Sevk kuralı val'de uygulanır; test raporunda edge bölümü ve kural izi olmamalı."""
+    from baykus.report.cli import main
+
+    acc, bench, runs = data()
+    for folder, recs in (("edge", acc), ("bench", bench)):
+        (tmp_path / folder).mkdir()
+        for i, r in enumerate(recs):
+            (tmp_path / folder / f"{i}.json").write_text(json.dumps(r), encoding="utf-8")
+    (tmp_path / "runs").mkdir()
+    out = tmp_path / "results-test.md"
+    args = ["--runs", str(tmp_path / "runs"), "--compare", str(tmp_path / "yok"),
+            "--m3ot", str(tmp_path / "yok"), "--out", str(out), "--fig", str(tmp_path / "f.png"),
+            "--split", "test", "--edge-results", str(tmp_path)]  # fmt: skip
+    assert main(args) == 0 and "Sevk kuralı" not in out.read_text(encoding="utf-8")

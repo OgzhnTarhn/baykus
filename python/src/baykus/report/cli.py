@@ -62,7 +62,7 @@ def main(argv: list[str] | None = None) -> int:
             f"{m3ot_table(m3)}\n"
         )
     acc, bench = load_edge(a.edge_results)
-    if acc or bench:
+    if a.split == "val" and (acc or bench):  # sevk kuralı val'de (ADR 0007)
         cfg = load_edge_config(a.edge_config)
         rows = edge_rows(acc, bench, runs, cfg, split=a.split)
         text += (
