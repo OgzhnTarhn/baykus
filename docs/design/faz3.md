@@ -431,9 +431,11 @@ Tek sayfa, spec §17 düzeni + Faz 3 ekleri. Kullanıcının günlük yığını
     temiz, baştan `shift(ir, 20, 0)`, 8. kareden sonra `shift(ir, 20, 0)`. Kaydırma tam sayı ve rastgelesiz
     (`baykus.robustness.corruptions.shift`: sağa kaydırma, boşalan kenar 0); değişkenler de dosya olarak
     kaydedilir (≈ 2 × 15 IR PNG ek).
-- **Fikstür kuralı (sınır uzaklığı; üretici denetler):** her sağlık özelliği her eşikten (ve `r_min`'den),
-  her ham skor `conf` (kalibre 0,25'in ham karşılığı) ve kalibrasyon blok sınırlarından ile taban süzgecinden
-  (0,1) **en az 10 × tolerans** uzak. Zaman kuralı için klipte `S`'ye giren her karede
+- **Fikstür kuralı (sınır uzaklığı; üretici denetler):** her sağlık özelliği her eşikten **en az 10 ×
+  tolerans** uzak; `response` için `|response − r_min| ≥ 0,2` yalnız `misalign_px ≥ t − 5` olan karelerde
+  (daha küçük kaymada `misalign_px` toleransı 0,5 px olduğundan Faz 2 kuralı iki tarafta da ateşlemez ve
+  `response` kararı etkilemez; birim testle gösterilir). Ham skorlar için kare elenmez (kare başına 300
+  satır); Kabul 1'in satır düzeyindeki sınır kuralı geçerli. Zaman kuralı için klipte `S`'ye giren her karede
   `|‖vᵢ − v̄‖ − 3| ≥ 2 px` (iki taraftaki 0,5 px'lik bileşen farkının vektör ve ortancada en kötü toplamı
   ≈ 1,41 px). Tek karede tutmayan kare seçilmez, bir sonraki eşit aralıklı kareye geçilir; klipte başlangıç
   karesi kaydırılır. Seçim yalnız val karelerinde ve yalnız eşlik testi için (model ya da eşik seçimi değil).
@@ -520,13 +522,23 @@ Her sayı bir JSON'a bağlı; `docs/system.md`, `docs/health.md` gibi bu dosyala
 | `results/health/m3ot_val_health.json`, `m3ot_test_health.json` | M3OT sağlık kontrolü: demo ölçütü (val), son rapor (test) |
 
 ### 6.1 Eşlik (S7, FR-E6) — CI'da, her commit'te
-- **Kabul 1 — tespit:** M3OT + sentetik fikstürlerde C++ ile Python referansı:
-  (a) ham ORT çıktısı `[1, 300, 6]` bütün satırlarda mutlak fark ≤ 1e-4;
-  (b) taban süzgecinden geçen kutu sayısı aynı, eşleşen kutularda IoU ≥ 0,99, ham skor farkı ≤ 1e-3
-  (H5'teki tolerans), sıralama aynı;
-  (c) kalibrasyon ayrı birim testle: C++ kalibre skoru = tablo(C++ ham skoru), blok sınırları dahil
-  **birebir**. Kalibre skor pipeline düzeyinde ham skordan karşılaştırılmaz (basamaklı fonksiyon: ham
-  0,2533'te 0,231 → 0,282 sıçrar).
+- **Kabul 1 — tespit:** M3OT + sentetik fikstürlerde C++ ile Python referansı (sınır kuralları plan
+  incelemesinde açık karar olarak eklendi, 2026-10-18; ölçümden önce):
+  (a) ham ORT çıktısı `[1, 300, 6]` satır satır, 6 bileşenin hepsinde mutlak fark ≤ 1e-4. Tek istisna:
+  ardışık iki Python satırının skoru `1e-5` içindeyse (ORT'nin ilk 300 sıralaması işlemciye göre yer
+  değiştirebilir) o iki satır kutu IoU'suyla eşlenir, sonra aynı ≤ 1e-4 uygulanır; yer değiştirme sayısı
+  raporlanır.
+  (b) **değerlendirme katmanı** (`score_raw ≥ 0,001`), takip katmanı (≥ 0,1) ve gösterim katmanı
+  (kalibre ≥ conf) için **pipeline'ın kendi sıralı çıktısı**: satırlar ORT satır indeksiyle eşlenir; iki
+  tarafın kümeleri aynı, eşleşen kutularda IoU ≥ 0,99, ham skor farkı ≤ 1e-3 (H5'teki tolerans), sıra aynı.
+  Sınır kuralı: herhangi bir taraftaki ham skoru katman sınırına (0,001; 0,1; kalibre conf'un geçtiği ham
+  blok sınırı) `1e-4`'ten yakın satır kümede olup olmamakta serbesttir; sırada yalnız kalibre skorları eşit
+  ve ham skorları `1e-4` içinde olan komşular yer değiştirebilir. Serbest satırlar ve yer değiştirmeler
+  sayılır; her fikstürde her katmanda **karşılaştırılan satır oranı ≥ %99**, değilse ❌.
+  (c) kalibrasyon ayrı birim testle: tablo, karşılaştırma ve çıktı **double** (ham skor float32 → double);
+  C++ kalibre skoru = tablo(C++ ham skoru), blok sınırları dahil **birebir**; sınamada her `x`'in float32
+  karşılığı ve iki float32 komşusu. Kalibre skor pipeline düzeyinde ham skordan karşılaştırılmaz
+  (basamaklı fonksiyon: ham 0,2533'te 0,231 → 0,282 sıçrar).
 - **Kabul 2 — letterbox:** fikstürlerde C++ tensörünün baytları Python tensörünün sha256'sıyla aynı.
 - **Kabul 3 — sağlık:** her fikstürde durumlar, kapı kararı ve `reason` **aynı**; `std` / `noise` / `blur` /
   `brightness` göreli fark ≤ 1e-4; `misalign_px`, `dx_px`, `dy_px` mutlak fark ≤ 0,5 px, `response`
