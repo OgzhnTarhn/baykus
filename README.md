@@ -65,9 +65,9 @@ test seti en sonda bir kez kullanıldı.
 - Geç füzyon (E4) bulanıklık ve iki kamera arasındaki kaymaya karşı belirgin olarak daha dayanıklı; E3c'nin
   zayıf noktası bu. Ayrıntı ve güven aralıkları: [docs/robustness.md](docs/robustness.md)
 
-### Edge: format × hassasiyet (laptop CPU, val)
+### Edge: format × hassasiyet × donanım (val)
 
-AMD Ryzen 7 8845HS, prize takılı, ONNX Runtime 1.30 CPU; batch 1, 640×640, 50 ısınma + 500 ölçüm; süre =
+Laptop CPU: AMD Ryzen 7 8845HS, prize takılı, ONNX Runtime 1.30 CPU; batch 1, 640×640, 50 ısınma + 500 ölçüm; süre =
 ön işleme + çıkarım + son işleme (geç füzyonda + WBF). Δ = aynı sistemin ONNX FP32'sine göre puan.
 
 | Sistem | Hassasiyet | Boyut (MB) | mAP50 | Δ | p50 (ms) | p95 (ms) | FPS |
@@ -79,9 +79,23 @@ AMD Ryzen 7 8845HS, prize takılı, ONNX Runtime 1.30 CPU; batch 1, 640×640, 50
 | E4 | FP32 | 76,3 | 83,2 | 0 | 118,1 | 131,6 | 8,5 |
 | E4 | INT8 (başlık FP32) | 23,1 | 83,0 | −0,2 | 203,9 | 224,4 | 4,9 |
 
+GPU'da (Colab Tesla T4, TensorRT 11.4; ön işleme 2 çekirdekli CPU'da):
+
+| Sistem | Hassasiyet | Motor (MB) | mAP50 | Δ | p50 (ms) | p95 (ms) | FPS |
+|---|---|---|---|---|---|---|---|
+| E3c | FP32 | 121,5 | 84,1 | −0,0 | 13,1 | 14,1 | 75,8 |
+| E3c | FP16 | 92,9 | 84,1 | −0,0 | 9,9 | 11,4 | 99,3 |
+| E3c | INT8 | 34,3 | 82,6 | −1,5 | 9,9 | 11,7 | 99,5 |
+| E4 | FP16 | 189,0 | 83,2 | +0,0 | 29,0 | 40,9 | 32,3 |
+| E4 | INT8 | 94,3 | 83,2 | +0,0 | 25,9 | 36,6 | 36,9 |
+
+- **GPU'da iki sistem de gerçek zamanlı:** E3c ≈ 100 FPS, iki modelli E4 ≈ 37 FPS. Ekran kartı olan bir
+  cihazda daha sağlam E4 seçilebilir; sevk kararı ekran kartsız laptop için verildi.
 - **INT8 bu işlemcide hızlandırmadı, yavaşlattı** (VNNI desteğine rağmen): yalnız konvolüsyonlar
   nicemlendiği için katmanlar arasında sürekli INT8 ↔ FP32 dönüşümü var (tahmin, ölçülmedi). Tespit başlığı
   da INT8'e çevrilince doğruluk 3-8 puan düşüyor; başlık FP32 kalınca kayıp 1 puanın altında.
+- TensorRT INT8 (ModelOpt) doğruluğu ORT INT8'den çok daha iyi korudu (E3c −1,5 puan); GPU'da INT8, FP16'dan
+  belirgin hızlı değil, ön işleme artık darboğaz.
 - Tam tablo ve sevk kuralının izi: [docs/results.md](docs/results.md) "Edge (E9)".
 
 ### Veri setleri arası test: M3OT (test, sınıfsız araç AP50)
