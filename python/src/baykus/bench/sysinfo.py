@@ -12,7 +12,9 @@ import psutil
 from baykus.runinfo import hardware_info
 
 # INT8'in CPU'da hızlanması bu komut setlerine bağlı (spec §14 INT8 notları)
-FLAGS = ("avx2", "avx512f", "avx512_vnni", "avx_vnni", "amx_bf16", "amx_int8", "amx_tile")
+# Windows (CPUID) ve Linux (/proc/cpuinfo) adları farklı: avx512vnni / avx512_vnni
+FLAGS = ("avx2", "avx512f", "avx512vnni", "avx512_vnni", "avxvnni", "avx_vnni", "amx_bf16",
+         "amx_int8", "amx_tile")  # fmt: skip
 PACKAGES = ("onnxruntime", "onnxruntime-gpu", "tensorrt", "numpy", "opencv-python")
 
 

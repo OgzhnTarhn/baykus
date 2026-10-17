@@ -174,3 +174,37 @@ def test_parity_and_bench_cli_with_fake_backend(tmp_path: Path, monkeypatch):
     assert rec["stages"]["total"]["n"] == 5 and set(rec["stages"]) >= {"fuse", "infer_ir"}
     assert [m["name"] for m in rec["models"]] == ["e1_rgb", "e2_ir"]
     assert bc.main(run) == 0  # aynı modellerle tekrar: atlanır
+
+
+def test_sysinfo_flag_names_windows_and_linux(monkeypatch):
+    # py-cpuinfo Windows'ta CPUID adlarını (avx512vnni), Linux'ta /proc/cpuinfo adlarını
+    # (avx512_vnni) verir; ikisi de yakalanmalı
+    info = {"brand_raw": "x", "flags": ["avx2", "avx512f", "avx512vnni", "avx_vnni", "sse4_2"]}
+    monkeypatch.setattr("cpuinfo.get_cpu_info", lambda: info)
+    assert sysinfo()["cpu_flags"] == ["avx2", "avx512f", "avx512vnni", "avx_vnni"]
+
+
+def test_bench_cli_prints_on_cp1254_console(tmp_path: Path, monkeypatch):
+    """Windows konsolu (cp1254) ASCII dışı her karakteri basamaz; ölçüm kaydı yazıldıktan sonra
+    yazdırma hatası dönüş kodunu 2 yapmamalı."""
+    import io
+    import sys
+
+    import baykus.bench.cli as bc
+    from baykus.edge.variants import model_file
+
+    _, out = _inputs(tmp_path, monkeypatch)
+    models = tmp_path / "models"
+    f = model_file(models, "2026-10-15_e3c-modality-dropout_s_d4e1280", "onnx_fp32")
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_bytes(b"m")
+    monkeypatch.setattr(bc, "open_backend", lambda p, threads=None: BoxBackend([], imgsz=640))
+    monkeypatch.setattr("baykus.bench.cli.load_input",
+                        lambda *a, **k: np.zeros((SIZE, SIZE, 4), np.uint8))  # fmt: skip
+    console = io.TextIOWrapper(io.BytesIO(), encoding="cp1254")
+    monkeypatch.setattr(sys, "stdout", console)
+    run = ["run", "--config", str(REPO / "configs/edge/e9_edge.yaml"), "--pipeline",
+           "e3c_modality_dropout", "--variant", "onnx_fp32", "--models-dir", str(models),
+           "--inputs", str(out), "--hardware", "laptop-cpu", "--results", str(tmp_path / "r"),
+           "--warmup", "1", "--runs", "2"]  # fmt: skip
+    assert bc.main(run) == 0

@@ -64,7 +64,7 @@ def _cmd_run(a: argparse.Namespace) -> int:
     write_json(out, rec)
     t = rec["stages"]["total"]
     print(f"{a.pipeline} {a.variant} {a.hardware}: p50 {t['p50']:.1f} ms · p95 {t['p95']:.1f} ms"
-          f" · {rec['fps']:.1f} FPS → {out}")  # fmt: skip
+          f" · {rec['fps']:.1f} FPS -> {out}")  # fmt: skip
     return 0
 
 
