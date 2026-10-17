@@ -137,12 +137,12 @@ Mezuniyette (Haziran 2027) **Türk savunma sanayii** şirketlerinde (ASELSAN, HA
 
 ### 2.3 Başarı kriterleri (ölçülebilir)
 
-- [ ] **S1 — Tekrarlanabilirlik:** README'deki her sayı bir config, bir git commit'i ve bir MLflow çalıştırmasına bağlı. `results/` altındaki JSON'dan yeniden üretilebiliyor.
-- [ ] **S2 — Füzyonun katkısı:** Sadece RGB, sadece IR ve en az iki füzyon yöntemi **Gündüz / Gece / Karanlık gece** kırılımlarıyla karşılaştırılmış.
-- [ ] **S3 — Etiket seti etkisi:** Aynı tahminler hem IR hem RGB etiketleriyle ölçülmüş, fark raporlanmış.
-- [ ] **S4 — Sağlamlık:** En az 4 bozulma türünde doğruluk eğrileri çıkarılmış.
-- [ ] **S5 — Veri setleri arası test:** DroneVehicle'da eğitilen RGB, IR ve füzyon modelleri, görmediği M3OT verisinde (RGB-IR, araç) ölçülmüş.
-- [ ] **S6 — Edge tablosu:** En az 3 hassasiyet (FP32/FP16/INT8) × en az 2 donanım (laptop CPU, Colab T4) için doğruluk, boyut ve p50/p95 gecikme. INT8'de head FP32 varyantı dahil. Laptop NPU satırı varsa eklenir (FR-X6).
+- [x] **S1 — Tekrarlanabilirlik:** *(Faz 1: her sayı `results/**/*.json`'da config, commit ve seed'le; raporlar `baykus-report` ile üretiliyor.)* README'deki her sayı bir config, bir git commit'i ve bir MLflow çalıştırmasına bağlı. `results/` altındaki JSON'dan yeniden üretilebiliyor.
+- [x] **S2 — Füzyonun katkısı:** *(E1, E2, E3, E3c, E4, E4b; val ve test, aydınlatma kırılımıyla: `docs/results*.md`.)* Sadece RGB, sadece IR ve en az iki füzyon yöntemi **Gündüz / Gece / Karanlık gece** kırılımlarıyla karşılaştırılmış.
+- [x] **S3 — Etiket seti etkisi:** *(E5: `docs/results*.md`.)* Aynı tahminler hem IR hem RGB etiketleriyle ölçülmüş, fark raporlanmış.
+- [x] **S4 — Sağlamlık:** *(5 bozulma türü, E1-E4: `docs/robustness.md`.)* En az 4 bozulma türünde doğruluk eğrileri çıkarılmış.
+- [x] **S5 — Veri setleri arası test:** *(E7: `docs/data/m3ot.md`.)* DroneVehicle'da eğitilen RGB, IR ve füzyon modelleri, görmediği M3OT verisinde (RGB-IR, araç) ölçülmüş.
+- [ ] **S6 — Edge tablosu:** *(H5: laptop CPU FP32/FP16/INT8 + INT8 head FP32 tamam; Colab T4 TensorRT satırları ölçülüyor.)* En az 3 hassasiyet (FP32/FP16/INT8) × en az 2 donanım (laptop CPU, Colab T4) için doğruluk, boyut ve p50/p95 gecikme. INT8'de head FP32 varyantı dahil. Laptop NPU satırı varsa eklenir (FR-X6).
 - [ ] **S7 — C++/Python eşliği:** C++ motor çıktısı Python referansıyla tolerans içinde aynı. Bu CI'da test ediliyor.
 - [ ] **S8 — Kapalı ağ:** `docker compose up` dış ağa çıkmadan çalışıyor.
 - [ ] **S9 — Sunum:** README, demo videosu ve teknik yazı yayında.
