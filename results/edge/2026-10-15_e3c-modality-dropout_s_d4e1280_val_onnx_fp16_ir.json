@@ -1,0 +1,92 @@
+{
+  "run_id": "2026-10-15_e3c-modality-dropout_s_d4e1280",
+  "git_commit": "33b147af2091824f524a6e3ba01903e50cf082b0",
+  "git_dirty": false,
+  "config": "configs/e3c_modality_dropout.yaml",
+  "config_hash": "sha256:b8c73fd3660f739bf7189ea4eea5acecdef0df18359c56f2503df76407e18659",
+  "mlflow_run_id": null,
+  "train_run_id": null,
+  "seed": 42,
+  "dataset": "dronevehicle",
+  "class_agnostic": false,
+  "split": "val",
+  "label_set": "ir",
+  "model": {
+    "family": "yolo26",
+    "size": "s",
+    "mode": "early_fusion",
+    "params_m": null,
+    "gflops": null
+  },
+  "format": "onnx",
+  "precision": "fp16",
+  "hardware": {
+    "device": "NVIDIA A100-SXM4-40GB",
+    "driver": "13.0",
+    "cpu_count": 12
+  },
+  "software": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu130",
+    "ultralytics": "8.4.177",
+    "numpy": "2.1.3",
+    "pycocotools": "2.0.11"
+  },
+  "weights": "/content/drive/MyDrive/baykus/edge/models/2026-10-15_e3c-modality-dropout_s_d4e1280_onnx_fp16.onnx",
+  "n_boot": 0,
+  "dropped_predictions": 0,
+  "metrics": {
+    "map50": 0.841041179413376,
+    "map50_95": 0.6283861648895971,
+    "precision": 0.8748447789275635,
+    "recall": 0.9493262556145365,
+    "per_class": {
+      "car": 0.976900568947705,
+      "truck": 0.8018135651380993,
+      "bus": 0.9569438025601339,
+      "van": 0.703163662086557,
+      "freight_car": 0.7663842983343848
+    },
+    "per_illumination": {
+      "day": 0.8466410303644767,
+      "night": 0.7813602394455432,
+      "dark_night": 0.867621319788239
+    },
+    "per_size": {
+      "small": 0.5081608663866803,
+      "medium": 0.8492970451204782,
+      "large": 0.9213633171271464
+    },
+    "ci95": {
+      "map50": [
+        null,
+        null
+      ],
+      "per_illumination": {
+        "day": [
+          null,
+          null
+        ],
+        "night": [
+          null,
+          null
+        ],
+        "dark_night": [
+          null,
+          null
+        ]
+      }
+    },
+    "n_images": 1469,
+    "n_dets": 72182
+  },
+  "created_at": "2026-10-17T09:29:17Z",
+  "edge": {
+    "variant": "onnx_fp16",
+    "file_size_mb": 19.157,
+    "sha256": "ea5012693054580a456db677307a5096d753a06e9d849cddc003e757e13266fa",
+    "provider": "cpu",
+    "threads": 12,
+    "seconds_per_image": 0.07814
+  }
+}

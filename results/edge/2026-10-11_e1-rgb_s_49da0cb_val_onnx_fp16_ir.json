@@ -1,0 +1,92 @@
+{
+  "run_id": "2026-10-11_e1-rgb_s_49da0cb",
+  "git_commit": "33b147af2091824f524a6e3ba01903e50cf082b0",
+  "git_dirty": false,
+  "config": "configs/e1_rgb.yaml",
+  "config_hash": "sha256:749df56f9ffcfabb8d638a473702ac77d97fa932c0e9ae60b1c21191453ee6d9",
+  "mlflow_run_id": null,
+  "train_run_id": null,
+  "seed": 42,
+  "dataset": "dronevehicle",
+  "class_agnostic": false,
+  "split": "val",
+  "label_set": "ir",
+  "model": {
+    "family": "yolo26",
+    "size": "s",
+    "mode": "rgb",
+    "params_m": null,
+    "gflops": null
+  },
+  "format": "onnx",
+  "precision": "fp16",
+  "hardware": {
+    "device": "NVIDIA A100-SXM4-40GB",
+    "driver": "13.0",
+    "cpu_count": 12
+  },
+  "software": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu130",
+    "ultralytics": "8.4.177",
+    "numpy": "2.1.3",
+    "pycocotools": "2.0.11"
+  },
+  "weights": "/content/drive/MyDrive/baykus/edge/models/2026-10-11_e1-rgb_s_49da0cb_onnx_fp16.onnx",
+  "n_boot": 0,
+  "dropped_predictions": 0,
+  "metrics": {
+    "map50": 0.7526589915435219,
+    "map50_95": 0.47589011832718014,
+    "precision": 0.8248996616038404,
+    "recall": 0.8560228664761127,
+    "per_class": {
+      "car": 0.9158088337258767,
+      "truck": 0.6978083643675294,
+      "bus": 0.9257919939891691,
+      "van": 0.6121367853530271,
+      "freight_car": 0.6117489802820066
+    },
+    "per_illumination": {
+      "day": 0.808734211871759,
+      "night": 0.741862300727623,
+      "dark_night": 0.7055953284126826
+    },
+    "per_size": {
+      "small": 0.460583846393482,
+      "medium": 0.7581412143744476,
+      "large": 0.8731900730205179
+    },
+    "ci95": {
+      "map50": [
+        null,
+        null
+      ],
+      "per_illumination": {
+        "day": [
+          null,
+          null
+        ],
+        "night": [
+          null,
+          null
+        ],
+        "dark_night": [
+          null,
+          null
+        ]
+      }
+    },
+    "n_images": 1469,
+    "n_dets": 160989
+  },
+  "created_at": "2026-10-17T08:58:14Z",
+  "edge": {
+    "variant": "onnx_fp16",
+    "file_size_mb": 19.157,
+    "sha256": "bcaab1649a6623989c5b8248a6c7fe0618b658c375b589490ebe943e09dcad8b",
+    "provider": "cpu",
+    "threads": 12,
+    "seconds_per_image": 0.06739
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "run_id": "2026-10-11_e1-rgb_s_49da0cb",
+  "git_commit": "33b147af2091824f524a6e3ba01903e50cf082b0",
+  "git_dirty": false,
+  "config": "configs/e1_rgb.yaml",
+  "config_hash": "sha256:749df56f9ffcfabb8d638a473702ac77d97fa932c0e9ae60b1c21191453ee6d9",
+  "mlflow_run_id": null,
+  "train_run_id": null,
+  "seed": 42,
+  "dataset": "dronevehicle",
+  "class_agnostic": false,
+  "split": "val",
+  "label_set": "ir",
+  "model": {
+    "family": "yolo26",
+    "size": "s",
+    "mode": "rgb",
+    "params_m": null,
+    "gflops": null
+  },
+  "format": "onnx",
+  "precision": "int8",
+  "hardware": {
+    "device": "NVIDIA A100-SXM4-40GB",
+    "driver": "13.0",
+    "cpu_count": 12
+  },
+  "software": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu130",
+    "ultralytics": "8.4.177",
+    "numpy": "2.1.3",
+    "pycocotools": "2.0.11"
+  },
+  "weights": "/content/drive/MyDrive/baykus/edge/models/2026-10-11_e1-rgb_s_49da0cb_onnx_int8.onnx",
+  "n_boot": 0,
+  "dropped_predictions": 0,
+  "metrics": {
+    "map50": 0.7114256784095166,
+    "map50_95": 0.44429557365356176,
+    "precision": 0.9618610399929373,
+    "recall": 0.4448754593711719,
+    "per_class": {
+      "car": 0.8792499411300835,
+      "truck": 0.6502148821498724,
+      "bus": 0.9069473172436752,
+      "van": 0.5700015683718104,
+      "freight_car": 0.5507146831521416
+    },
+    "per_illumination": {
+      "day": 0.7803563944349869,
+      "night": 0.701255087120313,
+      "dark_night": 0.6507645623662127
+    },
+    "per_size": {
+      "small": 0.4179242427510236,
+      "medium": 0.7200928395869537,
+      "large": 0.8502840004417487
+    },
+    "ci95": {
+      "map50": [
+        null,
+        null
+      ],
+      "per_illumination": {
+        "day": [
+          null,
+          null
+        ],
+        "night": [
+          null,
+          null
+        ],
+        "dark_night": [
+          null,
+          null
+        ]
+      }
+    },
+    "n_images": 1469,
+    "n_dets": 109899
+  },
+  "created_at": "2026-10-17T09:03:43Z",
+  "edge": {
+    "variant": "onnx_int8",
+    "file_size_mb": 10.276,
+    "sha256": "2170a4ce3845e4458c1a827ad528b8c9bb617b1c84f9ca5f06f4d0c2d890032e",
+    "provider": "cpu",
+    "threads": 12,
+    "seconds_per_image": 0.1722
+  }
+}
