@@ -124,7 +124,7 @@ def _acceptance(gate_val: dict | None, calib: dict | None) -> list[str]:
     k4 = (calib or {}).get("k4")
 
     def pct(k: dict) -> str:
-        return f"{100 * k['value']:.2f}%"
+        return "—" if k["value"] is None else f"{100 * k['value']:.2f}%"
 
     def points(k: dict) -> str:
         return f"{100 * k['value']:.3f}"
@@ -206,7 +206,8 @@ def health_markdown(
     lines += ["## Test kontrolü", ""]
     if gate_test:
         lines += [
-            "Tek sefer, 3 koşul; seçim yapılmadı (tasarım §6.4).",
+            "Tek sefer, 3 koşul; seçim yapılmadı (tasarım §6.4). Bootstrap "
+            f"({gate_test.get('n_boot', '—')}, seed {gate_test.get('seed', '—')}).",
             "",
             *_gate_table(gate_test),
         ]

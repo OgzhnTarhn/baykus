@@ -146,3 +146,12 @@ def test_cli_report_rejects_results_from_other_thresholds(tmp_path: Path, capsys
     write_json(h / "gate_val.json", {**_gate("val", True), "thresholds_sha256": "z" * 64})
     assert main(["report", "--health", str(h), "--out", str(tmp_path / "x.md")]) == 2
     assert "eşik" in capsys.readouterr().err
+
+
+def test_uncomputable_k3_and_test_bootstrap_settings_are_shown():
+    g = _gate("val", True)
+    g["acceptance"]["k3"] = {"value": None, "limit": 0.02, "passed": False}
+    t = {**_gate("test", False), "n_boot": 200, "seed": 3}
+    md = health_markdown(TH, g, t, None, "x.png")
+    assert "| Kabul 3 | temiz val'de kapı alarmı ≤ %2 görüntü | — | ❌ |" in md
+    assert "(200, seed 3)" in md.split("## Test kontrolü")[1]
