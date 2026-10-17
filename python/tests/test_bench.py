@@ -136,8 +136,7 @@ def test_bench_inputs_layout(tmp_path: Path, monkeypatch):
     s = images[0]["stem"]
     assert (out / "rgb/images/val" / f"{s}.jpg").exists()
     assert (out / "ir/images/val" / f"{s}.png").exists()
-    x = np.load(out / "npy/rgb" / f"{s}.npy")
-    assert x.shape == (1, 3, 640, 640) and x.dtype == np.float32
+    assert not (out / "npy").exists()  # .npy yalnız --npy ile (NPU denemesi; 20 görüntüde ≈ 340 MB)
     refs = json.loads((out / "refs/2026-10-11_e1-rgb_s_49da0cb_onnx_int8.json").read_text(
         encoding="utf-8"))  # fmt: skip
     assert refs and {d["image_id"] for d in refs} <= {im["image_id"] for im in images}
@@ -232,3 +231,16 @@ def test_bench_rerun_with_other_protocol_is_error(tmp_path: Path, monkeypatch, c
     assert bc.main([*base, "--warmup", "1", "--runs", "3"]) == 2
     assert bc.main([*base, "--warmup", "1", "--runs", "2", "--threads", "4"]) == 2
     assert "protokol" in capsys.readouterr().err
+
+
+def test_bench_inputs_npy_only_on_request(tmp_path: Path, monkeypatch):
+    from baykus.edge.cli import main
+
+    root = make_synthetic_dataset(tmp_path / "dv", with_ir=True)
+    out = tmp_path / "inputs"
+    args = ["bench-inputs", "--config", str(REPO / "configs/edge/e9_edge.yaml"), "--data-root",
+            str(root), "--split", "val", "--preds-dir", str(tmp_path / "yok"), "--out", str(out),
+            "--modalities", "rgb", "--npy"]  # fmt: skip
+    assert main(args) == 0
+    x = np.load(next((out / "npy/rgb").glob("*.npy")))
+    assert x.shape == (1, 3, 640, 640) and x.dtype == np.float32

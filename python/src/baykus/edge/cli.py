@@ -118,9 +118,10 @@ def _cmd_bench_inputs(a: argparse.Namespace) -> int:
             dst = out / m / "images" / a.split / f"{stem}{EXT[m]}"
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(root / m / "images" / a.split / f"{stem}{EXT[m]}", dst)
-            npy = out / "npy" / m / f"{stem}.npy"
-            npy.parent.mkdir(parents=True, exist_ok=True)
-            np.save(npy, preprocess(load_input(root, a.split, stem, m), cfg.imgsz)[0])
+            if a.npy:  # önceden işlenmiş girdi yalnız NPU denemesi için (görüntü başına ≈ 5-6 MB)
+                npy = out / "npy" / m / f"{stem}.npy"
+                npy.parent.mkdir(parents=True, exist_ok=True)
+                np.save(npy, preprocess(load_input(root, a.split, stem, m), cfg.imgsz)[0])
     index = [{"stem": Path(im["file_name"]).stem, "image_id": im["id"], "width": im["width"],
               "height": im["height"], "split": a.split} for im in chosen]  # fmt: skip
     write_json(out / "images.json", index)
@@ -208,6 +209,7 @@ def build_parser() -> argparse.ArgumentParser:
     bi.add_argument("--out", required=True)
     bi.add_argument("--variants", nargs="+", default=list(ONNX_VARIANTS), choices=list(VARIANTS))
     bi.add_argument("--modalities", nargs="+", default=None, choices=list(EXT))
+    bi.add_argument("--npy", action="store_true", help="önceden işlenmiş .npy girdileri de yaz")
     bi.set_defaults(func=_cmd_bench_inputs)
     pa = sub.add_parser("parity", help="çıktı eşliği: bu makine ↔ Colab referansı")
     pa.add_argument("--config", required=True)
