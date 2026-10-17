@@ -1,7 +1,7 @@
 # Faz 3 Tasarımı — Sistem (yalın)
 
-> **Tarih:** 2026-10-17 (taslak) · 2026-10-18 (inceleme bulguları ve kullanıcı kararları işlendi) ·
-> **Durum:** taslak v2, kullanıcı onayı bekliyor · **Dal:** `f3`
+> **Tarih:** 2026-10-17 (taslak) · 2026-10-18 (inceleme bulguları ve kullanıcı kararları işlendi; ikinci
+> bağımsız inceleme işlendi) · **Durum:** taslak v3, kullanıcı onayı bekliyor · **Dal:** `f3`
 > **Dayanak:** spec §2.3 S7-S8, §7.4 FR-E/FR-U, §7.5 NFR-1/5/6, §15-§18, §22 H6-H9, ADR 0006, ADR 0007;
 > Faz 2 sonuçları (`docs/health.md`, `docs/experiments.md` "Karar: kapı düzeltmesi Faz 3'e").
 > **Kullanıcı yönergesi (2026-10-17):** sorular atlandı, "tasarıma geç"; yalın, boş iş yok (Faz 2 ile aynı ilke).
@@ -16,8 +16,10 @@
    (bozulma türünü ezberledi); görüntüye bakan sinir ağı ve modelin yeniden eğitimi yok (sorun modelde
    değil, tek karede bilgi eksik).
 2. Dikdörtgen (640×512) export **Faz 5'e** (2026-10-17 tarihli "Faz 3'te denenecek" kararı değişti; §3).
-3. M3OT test dizilerindeki sağlık ölçümü **yalnız raporlanır**, hiçbir eşik ona bakılarak değişmez.
-   Demo ölçütünü tutmazsa README'ye sınırlama, demo için M3OT'un test dışı bir dizisi (§4.7).
+3. M3OT **test** dizileri yalnız son ölçüm ve raporlama için; hiçbir eşik, fikstür ya da demo seçimi onlara
+   bakılarak yapılmaz. Geliştirme, CI fikstürleri, demo dizisi ve demo ölçütü M3OT **val** (val yoksa
+   train) dizilerinden (§4.6, §4.7). (İlk hâli "demo test dizisinde, tutmazsa test dışı dizi" idi; ikinci
+   incelemede test sonucuna bağlı sunum seçimi olduğu için daraltıldı.)
 4. **Bu fazda (S) görev yok:** bütün kodu (C++ letterbox dahil) Claude yazar; kullanıcı inceler ve onaylar.
 5. Ucuz ek ölçümler **girer**: motor tespitleriyle M3OT AP50 + ECE, kapının M3OT'ta sentetik bozulmayla
    denenmesi, internetsiz kurulum paketi (`docker save`). Donmuş kare **girmez**.
@@ -131,7 +133,7 @@ Modüller (spec §15.1'in yalın hâli; WBF ve NMS yok):
 |---|---|---|
 | `image_io` | RGB JPG/PNG (BGR uint8) ve IR PNG (`IMREAD_GRAYSCALE`) çözme; boyutlar aynı değilse hata; 4 kanal R, G, B, T birleştirme | **yeni:** `baykus.engine_ref.compose` (mevcut `load_input` 4 kanalı TIFF'ten okur) |
 | `preprocess` | letterbox (gain, yuvarlama, dolgu 114), kanal sırası, `/255`, CHW | `baykus.edge.frames.preprocess` (Faz 1'de Ultralytics'le doğrulanmış). 640×512 girdide gain = 1, yeniden boyutlandırma yok. |
-| `detector` | ORT oturumu, giriş tipi/şekli modelden, uçtan uca `[1, 300, 6]` çözümleme, geri ölçekleme, kırpma, `w, h ≤ 0` atma, **`score_raw ≥ 0,1` taban süzgeci** | `baykus.edge.frames.postprocess` (süzgeç eşiği parametre), `OrtBackend` |
+| `detector` | ORT oturumu, giriş tipi/şekli modelden, uçtan uca `[1, 300, 6]` çözümleme, geri ölçekleme, kırpma, `w, h ≤ 0` atma, **taban süzgeci** (parametre; aşağıdaki çıktı katmanları) | `baykus.edge.frames.postprocess` (süzgeç eşiği parametre), `OrtBackend` |
 | `health` | Faz 2 özellikleri (std, Immerkær gürültü, Laplace varyansı, HSV V parlaklık, yarı çözünürlük Sobel + Hanning + faz korelasyonu, float64) ve durum / kapı kuralı + `r_min`, kayma vektörü `(dx, dy)`; oturum başına zaman kuralı penceresi | `baykus.health.features`, `baykus.health.gate` (`r_min` eklenir), yeni `baykus.health.temporal` (§4.2) |
 | `calibration` | izotonik tablo (`x`, `y`) ile skor eşleme (`searchsorted` sol, kırpma) | `baykus.health.calibrate.apply_isotonic` |
 | `kalman`, `assignment`, `tracker` | ByteTrack (§4.3) | `trackers==2.6.1` |
@@ -144,11 +146,21 @@ Modüller (spec §15.1'in yalın hâli; WBF ve NMS yok):
    `drop` tanımı), parçayı eksik bırakmaz.
 2. Sağlık (her zaman, `gate` modundan bağımsız) → kapı kararı. `gate=auto` ve karar ≠ `none` ise ilgili
    kanal sıfırlanır (`applied=true`).
-3. Letterbox → ORT → çözümleme → `score_raw ≥ 0,1` → kalibre skor.
+3. Letterbox → ORT → çözümleme → taban süzgeci (sunucuda 0,1; aşağıdaki tablo) → kalibre skor.
 4. Takip (açıksa): taban süzgecinden geçen **bütün** tespitler, **ham** skorla (§4.3). `conf` takipçiyi
    etkilemez; kaydırıcı oynadıkça takip davranışı değişmez.
 5. Yanıt: kalibre skoru `≥ conf` olanlar; sıralama (kalibre azalan, ham azalan, çözümleme indeksi artan).
    Faz 2 Kabul 4 bulgusu: eşitlik ham skorla bozulur.
+
+**Çıktı katmanları (hangi ölçüm hangisini kullanır):**
+
+| Katman | Süzgeç | Kullanan |
+|---|---|---|
+| Değerlendirme | `score_raw ≥ 0,001` (spec FR-V9; 300 satırın hepsi pratikte) | `baykus_detect` dosyası → M3OT AP50 / ECE; Kabul 1 (b) bu katmanda |
+| Takip girdisi | `score_raw ≥ 0,1` | takipçi (motor ve `baykus_track`); takip fikstürü değerlendirme dosyasından bu süzgeçle |
+| Gösterim | kalibre `≥ conf` | `/v1/detect` yanıtı, UI |
+
+AP50 hiçbir zaman API yanıtından (conf süzgeçli) hesaplanmaz.
 
 **HTTP API** (spec §15.3'ün güncel hâli):
 
@@ -201,12 +213,15 @@ train'in 500 temiz karesinin 25'inde (%5) hizasızlık alarmı var ve iki ayrı 
 
 **Yapı (ölçümden önce sabit):** Faz 2'nin kuralları ve eşikleri aynen kalır. Hizasızlık iki katmanla:
 
-1. **Kare kuralı:** `misaligned_frame` = Faz 2 kuralı (`misalign_px ≥ 16,158`) **ve** `response ≥ r_min`.
-   Yanıt eşiği yalnız alarm **kaldırabilir**; bu yüzden val ölçümü Faz 2 dosyalarından kurulabilir.
+1. **Kare kuralı:** `misaligned_frame` = Faz 2 kuralı (`misalign_px ≥ thresholds.misaligned`, Faz 2
+   JSON'undan; değeri 16,158) **ve** `response ≥ r_min`. Yanıt eşiği yalnız alarm **kaldırabilir**; bu
+   yüzden val ölçümü Faz 2 dosyalarından kurulabilir.
 2. **Zaman kuralı (videoda; oturum varken):** gerçek kayma kareden kareye aynı yönde ve büyüklükte kalır,
-   anlamsız kestirim her karede başka yöne zıplar. Son **5** karede `misaligned_frame` olan kareler `S`,
-   kayma vektörlerinin bileşen bazında ortancası `v̄`, `C = {i ∈ S : ‖vᵢ − v̄‖ ≤ 3 px}`.
-   `misaligned` = `|C| ≥ 3`. Parametreler (5, 3, 3 px) ölçümden önce sabit, ayarlanmaz.
+   anlamsız kestirim her karede başka yöne zıplar. Pencere: geçerli kare dahil oturumun son **5** karesi
+   (daha az kare varsa olanlar). `S` = penceredeki `misaligned_frame` kareleri; `v̄` = `S`'deki
+   `(dx_px, dy_px)` vektörlerinin bileşen bazında ortancası (`numpy.median` gibi: çift sayıda ortadaki iki
+   değerin ortalaması); `C = {i ∈ S : ‖vᵢ − v̄‖₂ ≤ 3 px}` (sınır dahil, float64). `misaligned` =
+   `|S| ≥ 3` ve `|C| ≥ 3`. Parametreler (5, 3, 3 px) ölçümden önce sabit, ayarlanmaz.
    - Oturum yoksa (tek kare istek, bench, DroneVehicle val) `misaligned` = `misaligned_frame`.
    - Kayıp ve gürültülü kuralları öncelikli ve kare başına (bekleme yok).
    - Kayma başladıktan sonra alarm en erken 3. karede (30 fps'te ≈ 0,1 s); oturum sıfırlanınca pencere boşalır.
@@ -286,9 +301,10 @@ ayrıntılar, uygulama başında sabit sürümde yeniden doğrulanır):
 sınıf `vehicle`), ek NMS yok. Uçtan uca çıktı sınıflı olduğundan aynı araca iki sınıftan kutu düşebilir;
 oranı raporlanır (aynı karede IoU ≥ 0,7 olan farklı sınıf çiftleri).
 
-**Eşlik fikstürü:** `baykus_detect` ile M3OT test 960 karesinden üretilen tespitler
-`fixtures/tracks/m3ot_test_dets.json.gz` olarak **repoya** girer (birkaç MB; M3OT CC BY 4.0). C++
-`baykus_track` ve Python koşucusu aynı dosyayı okur. Takip eşliği böylece CI'da koşar.
+**Eşlik fikstürü:** `baykus_detect` ile M3OT **val** dizilerinden (val yoksa train; §4.6) üretilen
+değerlendirme katmanı tespitleri, takip süzgeciyle (`score_raw ≥ 0,1`) `fixtures/tracks/m3ot_val_dets.json.gz`
+olarak **repoya** girer (birkaç MB; M3OT CC BY 4.0). C++ `baykus_track` ve Python koşucusu aynı dosyayı
+okur. Takip eşliği böylece CI'da koşar; test dizileri eşlikte kullanılmaz.
 
 **Ölçüm (M3OT test, 2 dizi × 480 kare, `vehicle`, IR etiketleri;** `results/track/m3ot_test_{oracle,engine}.json`**):**
 HOTA, MOTA, IDF1 `trackers eval` ile (aynı sabit paket; TrackEval gerekmez). İki satır: (a) **oracle**
@@ -297,8 +313,10 @@ Dizi başına ve iki dizinin birleşiği; bootstrap yok (iki dizi). Makaledeki B
 konmaz (farklı dedektör ve algoritma).
 
 **Motor tespitlerinin M3OT doğruluğu (kullanıcı kararı 5; `results/engine/m3ot_test_detect.json`):**
-AP50 (pycocotools, `maxDets ≥ 1000`, sınıfsız) ve ECE (15 aralık, ham ≥ 0,25). Faz 1'in M3OT AP50'si
-(0,889) PyTorch + `agnostic_nms` ile ölçüldü; yan yana konur, fark yorumlanır. Kalibrasyon tablosu
+AP50 (pycocotools, `maxDets ≥ 1000`, sınıfsız) ve ECE (15 aralık, ham ≥ 0,25), **değerlendirme katmanından**
+(`score_raw ≥ 0,001`). Faz 1'in M3OT AP50'si (0,889) PyTorch + `agnostic_nms` ile ölçüldü; yan yana konur.
+Fark birden çok nedene bağlı (PyTorch → ONNX, uçtan uca çıktının 300 kutu sınırı, sınıflar arası çift
+kutu, NMS yokluğu); tek bir nedene (yalnız export) bağlanmaz. Kalibrasyon tablosu
 DroneVehicle val'den öğrenildi; M3OT ECE'si onun alan dışı davranışını gösterir. Eşik yok, seçim yok.
 
 ### 4.4 Operatör ekranı (`ui/`)
@@ -312,17 +330,25 @@ Tek sayfa, spec §17 düzeni + Faz 3 ekleri. Kullanıcının günlük yığını
 ```
 /data/sequences/<dizi>/rgb/<kare:06d>.jpg
 /data/sequences/<dizi>/ir/<kare:06d>.png
-/data/sequences/<dizi>/index.json   {"name","frames":[...],"fps":30,"size":[640,512],"source":"M3OT test, CC BY 4.0"}
+/data/sequences/<dizi>/index.json   {"name","split","frames":[...],"fps":30,"size":[640,512],"source":"M3OT <split>, CC BY 4.0"}
 ```
 
 **Next sunucu rotaları:** `GET /api/sequences` (dizi listesi), `GET /api/frame/<dizi>/<kare>/<rgb|ir>`
-(görüntü baytları), `POST /api/detect` (gövde: `{dizi, kare, conf, track, gate, session, fault}`).
+(görüntü baytları), `POST /api/detect` (iki biçim, aşağıda).
+
+**`POST /api/detect` biçimleri:**
+- **Arıza yok:** `Content-Type: application/json`, gövde
+  `{"seq","frame","conf","track","gate","session"}`. Next sunucusu iki kanalın **orijinal baytlarını**
+  diskten okuyup motora iletir (tarayıcı JPEG çözümü ve yeniden kodlama pikselleri Python referansından
+  uzaklaştırmasın).
+- **Arıza açık:** `Content-Type: multipart/form-data`; `meta` alanı yukarıdaki JSON + `"fault":{...}`
+  (yalnız kayıt ve gösterim için); bozulan her kanal için bir dosya alanı: `rgb` ve/veya `ir`,
+  `image/png`, kare boyutunda (640×512), parça başına ≤ 10 MB. Gönderilmeyen kanalı Next sunucusu
+  diskteki orijinal baytlardan tamamlar. Boyut ya da tip uymazsa 400 / 413 (motorla aynı).
 
 **Veri akışı kuralları:**
-- **Arıza yokken** Next sunucusu diskteki **orijinal baytları** motora iletir; tarayıcı yalnız kare
-  numarasını gönderir (tarayıcı JPEG çözümü ve yeniden kodlama pikselleri Python referansından uzaklaştırmasın).
-- **Arıza açıkken** tarayıcı canvas'ta bozar ve bozulmuş kareyi PNG olarak gönderir (JPEG yeniden sıkıştırması
-  ek bozulma eklemesin); Next sunucusu motora iletir. Tanımlar spec §12.3 ve
+- **Arıza açıkken** tarayıcı canvas'ta bozar ve bozulmuş kanalı PNG olarak gönderir (JPEG yeniden sıkıştırması
+  ek bozulma eklemesin). Tanımlar spec §12.3 ve
   `baykus.robustness.corruptions` ile aynı (karartma çarpanı, IR gürültü σ, IR kaydırma px ve dolgu değeri,
   bulanıklık çekirdeği, kamerayı kapat = sıfır görüntü); rastgele sayılar numpy ile aynı değil (demo, ölçüm değil).
 - **Akış kontrolü:** aynı anda tek istek; sonraki kare yanıt gelince istenir. Hız ayarı bir üst sınırdır;
@@ -337,12 +363,23 @@ Tek sayfa, spec §17 düzeni + Faz 3 ekleri. Kullanıcının günlük yığını
   ya da hafif bir kütüphane, yerelde paketli) (FR-U3).
 - **Sensör sağlık paneli:** her kamera için durum rozeti (`tamam / kayıp / gürültülü / karanlık / bulanık`)
   ve çift için `hizasız`; son 50 karenin durum şeridi; ölçülen değerler (gürültü σ, kayma px, yanıt).
-- **Alarm:** `kayıp` ya da `gürültülü` **son 5 karenin en az 3'ünde** varsa alarm (tek karelik titremeyi
-  süzer; sabit, yapılandırılmaz). `hizasız` alarmı doğrudan motorun `pair.misaligned`'ı (zaman kuralı
-  zaten 5 karenin 3'ünü ve yön tutarlılığını istiyor; ikinci bir pencere eklenmez). `karanlık` ve `bulanık` yalnız bilgi rozeti.
-  Alarm metni Faz 2'nin `reason`'ı ("IR hizasız" gibi). Kapının ne yaptığı ayrı bir rozette ve **her karenin
-  `applied` alanından**: "IR modele verilmiyor" (yalnız `applied=true` olan karede) / "yalnız uyarı".
-  Alarm temizlenince geçmiş listesinde kalır (oturum boyunca, bellekte).
+- **Alarm sözleşmesi:** her alarm ayrı bir durumdur; aynı anda birden çok alarm açık olabilir.
+
+  | Alarm kimliği | Metin (sabit tablo) | Açık olma koşulu |
+  |---|---|---|
+  | `rgb_lost` | "RGB kamera kayıp" | son 5 karenin en az 3'ünde `"lost" ∈ rgb.flags` |
+  | `ir_lost` | "IR kamera kayıp" | son 5 karenin en az 3'ünde `"lost" ∈ ir.flags` |
+  | `ir_noisy` | "IR gürültülü" | son 5 karenin en az 3'ünde `"noisy" ∈ ir.flags` |
+  | `misaligned` | "IR hizasız" | geçerli karede motorun `pair.misaligned`'ı (zaman kuralı zaten pencereli; ikinci pencere yok) |
+
+  - Metin alarm kimliğinden gelir, motorun kapı `reason`'ından türetilmez (kapı nedeni tek, alarmlar çok).
+  - Koşul her karede yeniden değerlendirilir: koşul tutunca **başlar**, tutmayınca **temizlenir**
+    (histerezis yok). Başlama ve temizlenme kare numarasıyla geçmiş listesine yazılır (oturum boyunca, bellekte).
+  - `session/reset` (dizi değişimi, atlama, geri adım, düğme) pencereleri, açık alarmları ve geçmişi temizler.
+  - `karanlık` ve `bulanık` yalnız bilgi rozeti, alarm değil. Pencere sabit, yapılandırılmaz.
+  - **Kapı rozeti** alarmlardan ayrı ve **her karenin** `gate` / `applied` alanından: "IR modele verilmiyor"
+    / "RGB modele verilmiyor" (yalnız `applied=true` olan karede) ya da "yalnız uyarı". Kapı anında, kayıp
+    ve gürültü alarmı gecikmeli çalışır; bu bilinçli (alarm titremeyi süzer, kapı her kareyi korur).
 - **Skor açıklaması:** "kalibre skor: DroneVehicle val, iki kamera açık; M3OT'ta ve kapalı kanalda
   doğrulanmadı" (bilgi simgesinde).
 - **Atıf:** alt bilgide M3OT atfı ve lisans bağlantısı (CC BY 4.0).
@@ -361,14 +398,21 @@ Tek sayfa, spec §17 düzeni + Faz 3 ekleri. Kullanıcının günlük yığını
      `/v1/model` sha256'larını `models.json` ile karşılaştırır.
   2. Aynı katmanda `ui` ve `engine` konteynerinden dış adrese (ör. `1.1.1.1:443`) bağlantı denemesi
      **başarısız** olmalı.
-  3. İkincil: `.next/` içinde `http(s)://` taraması **izin listesiyle** (React hata bağlantıları,
-     `http://www.w3.org/2000/svg` gibi ad alanları); listede olmayan bir kaynak varsa başarısız.
+  3. **Tarayıcı akışı (normal compose, ağ açık):** Playwright (yalnız CI'da, imaja girmez) başsız Chromium
+     ile `http://127.0.0.1:3000`'ı açar, bir diziyi 30 kare oynatır, arıza simülasyonunu bir kez açar;
+     tarayıcının yaptığı **bütün** istekler kaydedilir. `127.0.0.1:3000` dışına tek bir istek girişimi
+     (başarısız olsa bile) varsa başarısız. Ağ engelliyken çalışmak dış çağrı denenmediğini göstermez; bu
+     kontrol tarayıcı tarafını, kanıt 2 sunucu tarafını kapatır (dış bağlantı denemesi kapalı katmanda zaten
+     başarısız olur; `NEXT_TELEMETRY_DISABLED=1`).
+  4. İkincil: `.next/` içinde `http(s)://` taraması **izin listesiyle** (React hata bağlantıları,
+     `http://www.w3.org/2000/svg` gibi ad alanları); listede olmayan bir kaynak varsa başarısız. Dinamik
+     kurulan adresleri yakalamaz; bu yüzden ikincil.
   Ultralytics ya da Python çalışma zamanında yok.
 - **Elle kanıt (en güçlü):** laptopta Wi-Fi kapalıyken normal `docker compose up`; demo açılıyor ve
   oynatılıyor (deney günlüğüne tarih ve ekran görüntüsü).
 - **CI (`.github/workflows/ci.yml`):** `python` (uv, ruff, pytest — mevcut), `engine` (Dockerfile `build`
   hedefi: CMake, ctest, eşlik testleri; buildx önbelleği `type=gha`, OpenCV katmanı her commit'te yeniden
-  derlenmesin), `ui` (npm ci, eslint, `next build`, tarama), `compose` (imajlar, kanıt 1-2). Model CI'da
+  derlenmesin), `ui` (npm ci, eslint, `next build`, tarama), `compose` (imajlar, kanıt 1-3). Model CI'da
   GitHub Release'ten indirilir (`models.json` ile sha256 denetimli). Takip fikstürü repoda (§4.3).
 - **Kod kalitesi (NFR-4):** `clang-format` (CI'da denetim), pre-commit kancası; `ctest` bir kez ASan/UBSan
   ile (CI'da ayrı yapılandırma).
@@ -379,23 +423,38 @@ Tek sayfa, spec §17 düzeni + Faz 3 ekleri. Kullanıcının günlük yığını
   GitHub Release'e (`models-v1`) eklenir; AGPL ağırlık yayımı spec §7.6 ile uyumlu. CI ve kurulum oradan
   indirir; sha256'lar `configs/engine/models.json`'da.
 - **Eşlik fikstürleri:** DroneVehicle'ın lisansı yeniden dağıtıma izin vermiyor (spec §7.6) → repoya
-  yalnız **M3OT** kareleri girer: her test dizisinden eşit aralıklı 5 RGB-IR çifti (toplam 10), sabit liste.
-  Ek olarak sentetik durumlar (siyah IR, gürültülü IR σ 20, 20 px kaydırılmış IR, siyah RGB; Faz 2 bozulma
-  fonksiyonlarıyla Python'da üretilip **dosya olarak** kaydedilir, C++ rastgele sayı üretmez).
+  yalnız **M3OT val** (val yoksa train) kareleri girer; **test kareleri fikstür olmaz** (kullanıcı kararı 3).
+  - **Tek kareler:** val dizilerinden eşit aralıklı 10 RGB-IR çifti, sabit liste.
+  - **Sentetik durumlar:** siyah IR, gürültülü IR σ 20, 20 px kaydırılmış IR, siyah RGB; Faz 2 bozulma
+    fonksiyonlarıyla Python'da üretilip **dosya olarak** kaydedilir (C++ rastgele sayı üretmez).
+  - **Video klibi (zaman kuralı uçtan uca):** bir val dizisinden ardışık 15 kare (≈ 5 MB), üç değişkeni:
+    temiz, baştan `shift(ir, 20, 0)`, 8. kareden sonra `shift(ir, 20, 0)`. Kaydırma tam sayı ve rastgelesiz
+    (`baykus.robustness.corruptions.shift`: sağa kaydırma, boşalan kenar 0); değişkenler de dosya olarak
+    kaydedilir (≈ 2 × 15 IR PNG ek).
 - **Fikstür kuralı (sınır uzaklığı; üretici denetler):** her sağlık özelliği her eşikten (ve `r_min`'den),
   her ham skor `conf` (kalibre 0,25'in ham karşılığı) ve kalibrasyon blok sınırlarından ile taban süzgecinden
-  (0,1) **en az 10 × tolerans** uzak. Tutmayan kare seçilmez, bir sonraki eşit aralıklı kareye geçilir;
-  sentetik durumlarda değer eşikten zaten uzaktır (denetlenir).
+  (0,1) **en az 10 × tolerans** uzak. Zaman kuralı için klipte `S`'ye giren her karede
+  `|‖vᵢ − v̄‖ − 3| ≥ 2 px` (iki taraftaki 0,5 px'lik bileşen farkının vektör ve ortancada en kötü toplamı
+  ≈ 1,41 px). Tek karede tutmayan kare seçilmez, bir sonraki eşit aralıklı kareye geçilir; klipte başlangıç
+  karesi kaydırılır. Seçim yalnız val karelerinde ve yalnız eşlik testi için (model ya da eşik seçimi değil).
 - **Beklenen çıktılar** Python'dan (`fixtures/expected/*.json`): tespitler (ham, kalibre), ham ORT çıktısı
   `[1, 300, 6]` (fikstür başına 7 KB), sağlık sözlüğü ve letterbox tensörünün **sha256**'sı (tensör repoya
   girmez; 4 × 640 × 640 float32 = 6,5 MB).
 - **Atıf:** `fixtures/m3ot/NOTICE.md` (kaynak, CC BY 4.0 bağlantısı, değişiklikler: PNG → JPEG, IR tek
   kanal, sentetik bozulmalar). Repo AGPL olsa da fikstürler CC BY kalır; README'de yazılır. Zenodo'daki CC0
   kaydı doğrulanmadı; daha katı olan CC BY esas.
-- **Demo verisi:** M3OT test dizileri `1-03` ve `2-03` (`demo-data/`, git'e girmez). Boyut bilinen:
-  RGB 128 MB + IR 180 MB (`docs/data/m3ot.md`). Hazırlık tek bir **Colab CPU** oturumu (adım 1): Drive'daki
-  `m3ot_test.zip` → mevcut `baykus-data m3ot` → demo paketi CLI'ı (§4.4 düzeni) → laptop paketi
-  (`du -sh` ile görülüp indirilir). GPU yok.
+- **M3OT val verisi:** Drive'da yalnız test bölümü var (`m3ot_raw/m3ot_test.zip`). Tek bir **Colab CPU**
+  oturumu (adım 1): kullanıcı figshare'den `M3OT.zip`'i (10 GB) tarayıcıdaki "Copy as cURL" çerezleriyle
+  **Colab'a** indirir (çerezler hiçbir dosyaya yazılmaz; `docs/data/m3ot.md`), `baykus-data m3ot --splits val`
+  (val'de iki modaliteli dizi yoksa `train`) → Drive `m3ot_raw/m3ot_val.zip` + dönüştürülmüş val paketi.
+  Dizi sayısı ve boyut `du -sh` ile görülür, sonra karar: laptopa yalnız demo dizisi ve fikstür kareleri.
+- **Aday dizi kuralı:** Spike 04'e göre ham zipte platform ve modalite başına 9 dizi var (test 1), ama bazı
+  dizilerde kare numaraları **ardışık değil** (örneklenmiş). Zaman kuralı ve takip ardışık kare varsayar:
+  kare numaraları ardışık olmayan dizi demo, klip ve takip fikstürü adayı olamaz (ölçümden önce kural).
+- **Demo verisi:** M3OT val'in kuralı geçen dizilerinden ad sırasıyla **ilk** dizisi (ölçümden önce sabit); §4.7 demo ölçütünü
+  tutmazsa ad sırasıyla sonraki val dizisi; hiçbiri tutmazsa ilk dizi + sınırlama notu. Test dizileri
+  (`1-03`, `2-03`; RGB 128 MB + IR 180 MB) demo paketine ek dizi olarak girebilir ama demo ölçütü ve seçim
+  onlarda yapılmaz. `demo-data/` git'e girmez; demo paketi CLI'ı §4.4 düzenini yazar. GPU yok.
 
 ### 4.7 M3OT'ta sağlık kontrolü (Faz 2 sözü; kullanıcı kararları 3 ve 5)
 
@@ -403,22 +462,36 @@ Tek sayfa, spec §17 düzeni + Faz 3 ekleri. Kullanıcının günlük yığını
 arasında doğal kayma var (dy ortanca 5,5 px, std 10,8; uçlar −103 / +54) ve eşikler DroneVehicle'dan
 seçildi; demo hikâyesi bu yüzden ölçülmeden yazılmaz.
 
-- **Ölçüm (laptop CPU, Python referans pipeline'ı, ONNX; `results/health/m3ot_health.json`):** M3OT test
-  960 çiftinde, kareler dizi sırasıyla (oturum her dizi başında sıfırlanır). Koşullar (Faz 2 bozulma
-  fonksiyonları, seed 42): `clean`, `misalign-20`, `misalign-20@240` (kayma 240. karede başlar), `noise-20`,
-  `drop_ir`. **Video koşullarında kayma yönü dizi başına sabit** (seed dizi adından; Faz 2'deki gibi kare
-  başına değil): gerçek bir kamera kayması böyle davranır. Üç kural yan yana: Faz 2 kuralı, kare kuralı,
-  kare + zaman kuralı:
-  1. kare başına hizasızlık ve diğer durum oranları; alarm oranı (§4.4 tanımıyla);
-  2. `misalign-20@240`'ta gecikme: kaymanın başladığı kareden ilk alarma kadar kare sayısı;
-  3. `gate=auto` ile AP50 (IR etiketleri, sınıfsız) — kapının M3OT'ta bağımsız denenmesi; kapısız AP50
-     ile fark, dizi düzeyinde (bootstrap yok).
-- **Demo ölçütü (ölçümden önce sabit; kare + zaman kuralı, `gate=advise`):** `clean`'de alarm oranı
-  **≤ %2** kare, `misalign-20`'de **≥ %90** kare, `misalign-20@240`'ta gecikme **≤ 10 kare**.
-- **Kurallar:** test dizisi olduğu için sonuç **yalnız raporlanır**; hiçbir eşik ya da zaman kuralı parametresi ona bakılarak
-  değişmez. Demo ölçütü tutmazsa: README ve `docs/system.md`'ye sınırlama notu (sayılarla) ve demo için
-  M3OT'un **test dışı** (train / val) bir dizisi; dönüştürülmesi ek bir Colab CPU oturumu ister ve aynı
-  ölçüm orada da raporlanır.
+**Protokol (laptop CPU, Python referans pipeline'ı, ONNX; iki kez aynı kodla):**
+- **(V) M3OT val dizileri** → `results/health/m3ot_val_health.json`: demo ölçütü ve demo dizisi seçimi
+  burada (§4.6).
+- **(T) M3OT test dizileri** (`1-03`, `2-03`, 960 çift) → `results/health/m3ot_test_health.json`:
+  **yalnız raporlanır**, sistem sabitken bir kez; hiçbir eşik, parametre, fikstür ya da demo seçimi
+  ona bakılarak değişmez. Tutmayan sonuç README ve `docs/system.md`'de olduğu gibi yazılır.
+
+Kareler dizi sırasıyla; oturum her dizi ve her koşul başında sıfırlanır. Koşullar (rastgelesiz olanlar
+Faz 2 fonksiyonlarıyla aynen; gürültü seed 42, Faz 2'deki gibi kare adıyla):
+
+| Koşul | Tanım |
+|---|---|
+| `clean` | bozulmasız |
+| `misalign-20` | her karede `shift(ir, 20, 0)` (Faz 2 tanımı: yatay, +20 px, boşalan kenar 0; vektör her karede aynı) |
+| `misalign-20@K` | `K = ⌊n/2⌋` (dizinin kare sayısının yarısı) karesinden itibaren `shift(ir, 20, 0)`, öncesi temiz |
+| `noise-20` | Faz 2 IR gürültüsü σ 20 |
+| `drop_ir` | IR sıfır |
+
+Üç kural yan yana: Faz 2 kuralı, kare kuralı, kare + zaman kuralı. Ölçüler **dizi başına** (ayrıca birleşik
+de yazılır):
+1. kare başına durum oranları ve §4.4 alarm sözleşmesine göre alarm açık kare oranı (alarm kimliği başına);
+2. `misalign-20@K`'da gecikme = `K` ve sonrasındaki ilk `misaligned` alarm karesinin numarası − `K`; hiç
+   alarm yoksa `null` (gecikme ölçütü tutmamış sayılır); `K − 1` karesinde alarm zaten açıksa bu ayrıca
+   `alarm_before_onset: true` yazılır (gecikme yine aynı tanımla);
+3. `gate=auto` ile AP50 ve aynı bozulmuş girdide `gate=off` ile AP50 (IR etiketleri, sınıfsız,
+   değerlendirme katmanı), farkı; dizi düzeyinde, bootstrap yok.
+
+**Demo ölçütü (ölçümden önce sabit; kare + zaman kuralı, `gate=advise`; (V)'de değerlendirilir, (T)'de
+yalnız raporlanır):** (V)'de demo adayı dizi için, (T)'de her dizi için ayrı ayrı: `clean`'de `misaligned` alarmı açık kare oranı **≤ %2**,
+`misalign-20`'de **≥ %90**, `misalign-20@K`'da gecikme **≤ 10 kare** (`null` değil).
 
 ## 5. Faz 2'den devreden girdiler
 
@@ -443,7 +516,8 @@ Her sayı bir JSON'a bağlı; `docs/system.md`, `docs/health.md` gibi bu dosyala
 | `results/engine/m3ot_test_detect.json` | motor tespitleriyle M3OT AP50 + ECE |
 | `results/bench/e3c_onnx_fp32_engine_laptop-docker.json` | Kabul 5 |
 | `results/track/m3ot_test_oracle.json`, `m3ot_test_engine.json` | takip ölçümü |
-| `results/health/gate_model.json`, `gate_model_val.json`, `m3ot_health.json` | `r_min` ve zaman kuralı, keşif, M3OT kontrolü |
+| `results/health/gate_model.json`, `gate_model_val.json` | `r_min` ve zaman kuralı, val keşfi |
+| `results/health/m3ot_val_health.json`, `m3ot_test_health.json` | M3OT sağlık kontrolü: demo ölçütü (val), son rapor (test) |
 
 ### 6.1 Eşlik (S7, FR-E6) — CI'da, her commit'te
 - **Kabul 1 — tespit:** M3OT + sentetik fikstürlerde C++ ile Python referansı:
@@ -456,25 +530,35 @@ Her sayı bir JSON'a bağlı; `docs/system.md`, `docs/health.md` gibi bu dosyala
 - **Kabul 2 — letterbox:** fikstürlerde C++ tensörünün baytları Python tensörünün sha256'sıyla aynı.
 - **Kabul 3 — sağlık:** her fikstürde durumlar, kapı kararı ve `reason` **aynı**; `std` / `noise` / `blur` /
   `brightness` göreli fark ≤ 1e-4; `misalign_px`, `dx_px`, `dy_px` mutlak fark ≤ 0,5 px, `response`
-  mutlak fark ≤ 0,02. **Zaman kuralı** ayrı birim testle: aynı `pair` dizisinde (Python'da üretilmiş
-  sentetik 50 karelik diziler: sabit kayma, zıplayan kestirim, ortada başlayan kayma, sıfırlama) C++ ve
+  mutlak fark ≤ 0,02. **Zaman kuralı** iki testle:
+  (a) **uçtan uca:** video klibinin (§4.6) üç değişkeni iki tam pipeline'dan (kodlanmış baytlardan,
+  oturumlu, `gate=auto`) geçer; her karede `misaligned_frame`, `misaligned`, `gate`, `applied` ve alarm
+  durumları **aynı**;
+  (b) **birim:** aynı `pair` dizisinde (Python'da üretilmiş sentetik 50 karelik diziler: sabit kayma,
+  zıplayan kestirim, ortada başlayan kayma, tam 3 px sınırında vektör, çift sayıda `S`, sıfırlama) C++ ve
   Python her karede aynı `misaligned`.
   OpenCV sürümü iki tarafta aynı (5.0.0); tolerans laptop (Zen 4, AVX-512) ile CI işlemcisi arasındaki
   SIMD farkı için. Fikstür kuralı (§4.6) eşiğe yakın kareyi dışarıda tuttuğundan durum eşitliği toleransla çelişmez.
-- **Kabul 4 — takip (FR-E4):** `fixtures/tracks/m3ot_test_dets.json.gz` üzerinde C++ ve Python takipçisi.
+- **Kabul 4 — takip (FR-E4):** `fixtures/tracks/m3ot_val_dets.json.gz` üzerinde C++ ve Python takipçisi.
   **Tanım:** tespitler girdi indeksiyle eşlenir; `-1` (`null`) yalnız `-1` ile eşleşir; dizi başına tek bir
   C++ → Python kimlik eşlemesi vardır ve birebirdir. Ölçüt: bu eşlemeyle **farklı kare sayısı 0**.
-  **İstisna (kullanıcı kararı 6, ölçümden önce):** farklı her kare tek tek bir kayan nokta eşitliğine
-  bağlanıp `parity_track.json`'da belgelenirse (`|IoU − 0,1| < 1e-5`, eşik sınırında skor ya da atamada
-  eşit maliyet; ilk farklı karede ve sonraki zincirleme farklar o kareye bağlı sayılır) Kabul 4 ✅
-  "istisnayla" yazılır. Bağlanamayan bir fark varsa Kabul 4 ❌.
+  **İstisna (kullanıcı kararı 6, ölçümden önce):**
+  - Her dizide karşılaştırma **ilk farklı karede durur** (sonraki kareler takipçi durumu ayrıştığı için
+    karşılaştırılmaz; "zincirleme fark" yorumu yok).
+  - O kare istisna sayılır ancak koşucular o karenin girdisini döker (iz kutuları, tespitler, IoU matrisi,
+    iki aşamanın atamaları) ve şu kanıtlardan **biri** mekanik olarak gösterilirse: (i) atamaya giren bir
+    IoU için `|IoU − 0,1| < 1e-5` (float32); (ii) bir tespit skoru için `|score − 0,6| < 1e-6` ya da
+    `|score − 0,7| < 1e-6`; (iii) iki tarafın atamalarının toplam IoU'su `1e-6` içinde eşit (eş optimum)
+    ve ikisi de eşik sonrası geçerli.
+  - Kabul 4 ✅ "istisnayla" ancak **her dizide karşılaştırılan kare oranı ≥ %90** ise (ilk fark dizinin
+    son %10'unda). Kanıtsız fark ya da daha erken fark → Kabul 4 ❌. Hepsi `parity_track.json`'da.
 
 ### 6.2 Kare kuralıyla kapı (val, keşif; §4.2)
 Faz 2 tablosunun aynısı (16 koşul, E3c vs E3c + kapı, eşleştirilmiş bootstrap 1000, seed 42) yeni kuralla,
 kare birleştirmeyle. Faz 2'nin Kabul 1-3 tanımlarıyla değerlendirilir; sonuç **keşif** olarak raporlanır,
 Faz 3'ün kabul ölçütü değildir ve ürün varsayılanını değiştirmez. Gereken dosyalar Drive'da: 16 val
 koşulunun `robust/<run>_val_<koşul>_gate/` (sağlık kaydı + tahminler) ve taban tahminleri
-`robust/<run>_val_<koşul>/` (tahmin ≈ 70 MB; kullanıcı adımı olarak adım 3'te indirilir).
+`robust/<run>_val_<koşul>/` (tahmin ≈ 70 MB; kullanıcı adımı olarak adım 4'te indirilir).
 
 ### 6.3 Takip ve M3OT doğruluğu (M3OT test)
 HOTA, MOTA, IDF1; oracle ve motor tespitleri; dizi başına ve iki dizinin birleşiği. Motor tespitleriyle
@@ -493,17 +577,34 @@ HTTP dahil p95 ayrıca raporlanır (eşik yok), `back` ağındaki bir istemciden
 *Bütçe tahmini (ölçülmedi):* H5 p95 59,9 + sağlık ≈ 11 + çözme ≈ 5 → ≈ 75-80 ms.
 
 ### 6.5 Kapalı ağ (S8, NFR-1)
-**Kabul 6:** §4.5'in otomatik kanıtları (1-3) CI'da yeşil + elle Wi-Fi kapalı demo kaydı.
+**Kabul 6:** §4.5'in otomatik kanıtları (1-4) CI'da yeşil + elle Wi-Fi kapalı demo kaydı.
 
 ### 6.6 Ekran ve sağlamlık
-- **Kabul 7 — ekran:** FR-U1-U4, sağlık paneli, alarm ve kapı rozeti çalışıyor; her biri ekran görüntüsü ya
-  da GIF ile deney günlüğünde (M3OT demo dizisinde, arıza simülasyonu açık / kapalı).
+- **Kabul 7 — ekran:** şu listenin her maddesi çalışıyor ve ekran görüntüsü ya da GIF ile deney günlüğünde
+  (M3OT demo dizisinde, arıza simülasyonu açık / kapalı): FR-U1 oynatıcı (oynat / durdur / kare kare / hız);
+  FR-U2 RGB / IR / yan yana, kutu, sınıf, kalibre skor, iz numarası; FR-U3 conf kaydırıcısı, takip ve kapı
+  modu, canlı gecikme grafiği (**mod seçimi yok**, §3); FR-U4 arıza simülasyonu (karartma, IR gürültü,
+  IR kaydırma, bulanıklık, kamerayı kapat); sağlık paneli; §4.4 alarm sözleşmesi (başlama, temizlenme,
+  sıfırlama); kapı rozeti.
 - **Kabul 8 — API sağlamlığı (CI):** eksik parça → 400, farklı boyut → 400, bozuk PNG → 400, sınır üstü →
   413; ardından 1000 rastgele baytlık istek ve `/health` hâlâ `ok`.
-- **Demo ölçütü** (§4.7): raporlanır; tutmazsa §4.7'deki yol. Fazın kabulünü engellemez.
+- **Demo ölçütü** (§4.7): demo dizisini seçer; tutmazsa §4.6'daki yol. Fazın kabulünü engellemez.
 
 ### 6.7 Faz çıkışı
-S7, S8 işaretli; `docs/system.md` (mimari, API, eşlik ve gecikme tabloları, takip ve M3OT tabloları, keşif
+
+İşe devam etmek ile fazı kapatmak ayrıdır: bir ölçüt tutmasa da sonraki adımlara geçilebilir, ama faz
+aşağıdaki tabloya göre kapanır (spec "tamamlanma tanımı": kabul ölçütleri karşılanır).
+
+| Ölçüt | Etkisi |
+|---|---|
+| Kabul 1, 2, 3 (eşlik) | **çıkışı engeller** (S7) |
+| Kabul 4 (takip eşliği) | **çıkışı engeller**; §6.1'deki tanımlı istisnayla geçer |
+| Kabul 5 (gecikme) | **çıkışı engeller**; aşılırsa faz yalnız kullanıcının yazılı kararıyla (ADR) kapanır, README'de olumsuz sonuç |
+| Kabul 6 (kapalı ağ) | **çıkışı engeller** (S8) |
+| Kabul 7, 8 (ekran, API) | **çıkışı engeller** |
+| Val keşfi (§6.2), M3OT takip ve AP50 / ECE (§6.3), M3OT sağlık (§4.7), demo ölçütü | **yalnız raporlanır** (eşik yok ya da keşif) |
+
+Çıkış: S7, S8 işaretli; `docs/system.md` (mimari, API, eşlik ve gecikme tabloları, takip ve M3OT tabloları, keşif
 kapı tablosu, M3OT sağlık kontrolü); README'ye sistem bölümü, ekran görüntüsü ve internetsiz kurulum
 (üç komut); `v0.2.0`.
 
@@ -515,20 +616,20 @@ plan haftalara böler):
 
 | # | İş | Tahmin |
 |---|---|---|
-| 1 | **Colab CPU** (M3OT demo paketi + fikstür kareleri) · motor iskeleti: Dockerfile (`deps` / `build` / `runtime`, OpenCV 5.0.0 kaynaktan), CMake, GoogleTest, CI `engine` işi ve önbellek · `models.json`, Release `models-v1` | 3-4 gün |
-| 2 | **Python referansı:** `baykus.engine_ref` (birleştirme, pipeline, süzgeç ve sıralama), fikstür üretici (sınır kuralıyla), sürüm sabitleme | 2-3 gün |
+| 1 | **Colab CPU** (M3OT val dönüşümü ve paketi, §4.6; test demo paketi) · motor iskeleti: Dockerfile (`deps` / `build` / `runtime`, OpenCV 5.0.0 kaynaktan), CMake, GoogleTest, CI `engine` işi ve önbellek | 3-4 gün |
+| 2 | **Python referansı ve sağlık sözleşmesi:** `baykus.engine_ref` (birleştirme, pipeline, çıktı katmanları, sıralama) · kayma vektörü, `r_min` seçimi (train), zaman kuralı (`baykus.health.temporal`), `gate_model.json` · fikstür üretici (sınır kuralıyla, `r_min` artık belli) · sürüm sabitleme · **bütün model dosyaları hazır olunca** `models.json` + Release `models-v1` | 3-4 gün |
 | 3 | `preprocess` + `detector` + `calibration` C++ + Kabul 1-2 | 3-4 gün |
-| 4 | `health` C++ + Kabul 3 · `r_min` seçimi, kayma vektörü, zaman kuralı (Python + C++), `gate_model.json`, Python `gate` değişikliği · keşif ölçümü (laptop; Drive'dan ≈ 70 MB) · §4.7 M3OT sağlık kontrolü | 4-5 gün |
-| 5 | `baykus_detect` + takip fikstürü + M3OT AP50 / ECE · Python takip koşucusu · Kalman, `rectangular_lsap` uyarlaması, ByteTrack + Kabul 4 (**zaman kutusu 2 gün**; aşılırsa farklar listelenir ve Kabul 4 ❌ ya da istisnayla raporlanır, iş durdurulmaz) · M3OT takip ölçümü, ADR 0008 | 5-6 gün |
+| 4 | `health` + zaman kuralı C++ + Kabul 3 (a, b) · val keşif ölçümü (laptop; Drive'dan ≈ 70 MB) · §4.7 (V) ölçümü ve demo dizisi | 3-4 gün |
+| 5 | `baykus_detect` + takip fikstürü (val) · Python takip koşucusu · Kalman, `rectangular_lsap` uyarlaması, ByteTrack + Kabul 4 (**zaman kutusu 2 gün**; aşılırsa farklar ve kanıtları listelenir, sonraki adımlara geçilir, Kabul 4 açık kalır ve §6.7'ye göre çıkışı engeller) | 5-6 gün |
 | 6 | HTTP API, oturumlar, hatalar + Kabul 8 · compose iskeleti ve `compose.offline.yml` (kanıt 1-2 erken) · `baykus_bench` + Kabul 5 | 3-4 gün |
 | 7 | UI: rotalar, oynatıcı, kutular, sağlık paneli, alarm, arıza simülasyonu, gecikme grafiği + Kabul 7 | 5-7 gün |
 | 8 | CI `ui` + `compose` işleri, tarama, `scripts/prepare --bundle`, Wi-Fi kapalı elle test (Kabul 6) | 2-3 gün |
-| 9 | `baykus-system report` → `docs/system.md`, README, spec v4.5, `v0.2.0` | 1-2 gün |
+| 9 | **Son ölçümler (sistem sabit, test bir kez):** M3OT test AP50 / ECE, takip (HOTA / MOTA / IDF1), §4.7 (T) · ADR 0008 · `baykus-system report` → `docs/system.md`, README, spec v4.5, `v0.2.0` | 2-3 gün |
 
 **Toplam ≈ 6-7 hafta** (spec'te 8 hafta, 7 Ara – 31 Oca; takvimin ≈ 7 hafta önündeyiz; Ocak final dönemi
 için tampon kalıyor, ADR 0006). En riskli adımlar: 5 (takip eşliği: eşit maliyetler, float32 Kalman) ve
-1 (OpenCV derlemesi, CI süresi). GPU yok; Colab yalnız CPU (adım 1; §4.7 tutmazsa bir oturum daha).
-Laptop'a inecekler: M3OT demo paketi (≈ 310 MB, boyut önce görülür), Faz 2'nin val tahmin ve sağlık
+1 (OpenCV derlemesi, CI süresi). GPU yok; Colab yalnız CPU (adım 1; kullanıcı adımı: figshare çerezleriyle `M3OT.zip` indirme).
+Laptop'a inecekler: M3OT demo paketi (val dizisi + test dizileri; boyut önce görülür, test ≈ 310 MB), fikstür kareleri (≈ 15 MB), Faz 2'nin val tahmin ve sağlık
 dosyaları (≈ 70 MB).
 
 ## 8. Riskler
@@ -539,7 +640,8 @@ dosyaları (≈ 70 MB).
 | OpenCV'yi kaynaktan derlemek CI'ı yavaşlatır | Ayrı `deps` katmanı, buildx `type=gha` önbelleği, yalnız üç modül. |
 | OpenCV aynı sürümde bile işlemciye göre farklı sonuç (SIMD) | Kabul 3 toleransları + fikstür sınır kuralı; derleme bilgisi kayıtta. |
 | `trackers` ByteTrack ayrıntıları ve eşit maliyetli atamalar → sıfır fark tutmaz | SciPy çözücüsünün uyarlaması, float32 Kalman; zaman kutusu ve önceden yazılmış istisna kuralı (§6.1). |
-| M3OT'ta doğal kayma ya da gece kareleri → temiz karede alarm, demo bozulur | §4.7 ölçümü önce; tutmazsa sınırlama + test dışı dizi. |
+| M3OT val'de iki modaliteli, ardışık kareli dizi yok ya da figshare indirmesi engellenir | Önce train bölümü (aynı kural); o da yoksa fikstür ve demo test dizilerinden, bu README ve `docs/system.md`'de "test verisi geliştirmede kullanıldı" diye açıkça yazılır (kullanıcıya sorulur). |
+| M3OT'ta doğal kayma ya da gece kareleri → temiz karede alarm, demo bozulur | §4.7 (V) ölçümü demo dizisini seçer; hiçbir val dizisi tutmazsa sınırlama notu. (T) sonucu ne çıkarsa yazılır. |
 | Docker Desktop (WSL2) gecikmesi yerel ölçümden kötü → Kabul 5 kalır | Olumsuz sonuç raporlanır; aşama kırılımı neyin pahalı olduğunu gösterir (ör. `health` 11 ms). Bütçe aşılırsa `health` her N karede bir çalıştırılabilir (yeni ölçüm gerektirir, bu fazda değil). |
 | `C:\` bağlamaları Docker Desktop'ta yavaş → UI kare okuması takılır | Kabul 5'i etkilemez (bench bellekten). Gerekirse demo verisi bir kez adlandırılmış volume'a kopyalanır. |
 | UI kapsamı büyür | Tek sayfa, §4.4 listesi dışında özellik yok; yeni istek Faz 5'e. |
@@ -552,8 +654,8 @@ dosyaları (≈ 70 MB).
 - Ubuntu temel imajının digest'i; ORT paketi ve OpenCV kaynağının sha256'sı (Dockerfile'da).
 - OpenCV CMake bayraklarının ayrıntısı (varsayılan: wheel'in `getBuildInformation`'ına en yakın).
 - UI'nin grafik bileşeni (varsayılan: düz canvas ya da uPlot, yerelde paketli), canvas ayrıntıları, renkler.
-- Fikstür karelerinin sabit listesi (varsayılan: dizi başına eşit aralıklı 5, sınır kuralıyla kaydırılmış;
-  liste gerekçesiyle `fixtures/m3ot/README.md`'de).
+- Fikstür karelerinin sabit listesi (varsayılan: val dizilerinden eşit aralıklı 10 kare ve 15 karelik klip, sınır
+  kuralıyla kaydırılmış; liste gerekçesiyle `fixtures/m3ot/README.md`'de).
 - Oturum sınırları ve parça boyutu (varsayılan: 8 oturum, 10 dk, 10 MB).
 - Next.js ve paket sürümleri (`package-lock.json`).
 
@@ -565,4 +667,4 @@ dosyaları (≈ 70 MB).
 E8-n eğitilmedi), §16 (Python referansı `model.track` değil `trackers`), §17 düzen (model/mod seçici yok),
 §18 compose ağları, CI işleri (OpenCV apt değil kaynaktan; `compose` işi) ve NFR-1 kanıtları, §22 Faz 3
 satırı (≈ 6-7 hafta) ve H6-H9 tablolarının bu tasarıma göre güncellenmesi (H6 #36 letterbox ve #37'deki
-(S) işaretleri kalkar, kullanıcı kararı 4), §23 risk satırları.
+(S) işaretleri kalkar, kullanıcı kararı 4), §23 risk satırları; §8.4 "eşikler sadece val'de seçilir" kuralına sağlık eşiklerinin istisnası (Faz 2 eşikleri ve `r_min` train'den seçilir, val keşif ve doğrulama için; `docs/design/faz2.md`, bu belge §4.2); FR-V9 ile uyum (değerlendirme katmanı `score_raw ≥ 0,001`, §4.1); M3OT val bölümünün kullanımı (fikstür, demo; §4.6).
