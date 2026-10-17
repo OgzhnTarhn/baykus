@@ -3,6 +3,7 @@
 fit   — kapı eşiklerini train'de bozulmuş görüntülerden seçer (Youden J).
 suite   — sağlamlık paketini kapıyla çalıştırır (E3c + kapı; kaldığı yerden sürer).
 compare — E3c + kapı − E3c eşleştirilmiş bootstrap, kabul ölçütleri (gate_<split>.json).
+calibrate — sevk edilen modelin skorları için izotonik tablo, testte ECE önce / sonra.
 """
 
 from __future__ import annotations
@@ -15,7 +16,10 @@ import sys
 from pathlib import Path
 
 from baykus.edge.calib import calibration_stems
+from baykus.edge.export import sha256_file
 from baykus.eval.cli import load_coco
+from baykus.eval.predictions import load_predictions
+from baykus.health.calibrate import calibrate
 from baykus.health.compare import gate_report
 from baykus.health.features import FEATURES
 from baykus.health.fit import feature_rows, fit_thresholds
@@ -112,6 +116,35 @@ def _cmd_compare(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_calibrate(a: argparse.Namespace) -> int:
+    coco = Path(a.coco_dir)
+    vp, tp = Path(a.val_preds), Path(a.test_preds)
+    rec = calibrate(
+        load_coco(coco / "val_ir.json"),
+        load_predictions(vp),
+        load_coco(coco / "test_ir.json"),
+        load_predictions(tp),
+    )
+    rec["model"] = a.model
+    rec["label_set"] = "ir"
+    rec["sources"] = {
+        "val_preds": str(vp),
+        "test_preds": str(tp),
+        "val_sha256": sha256_file(vp),
+        "test_sha256": sha256_file(tp),
+    }
+    rec["git_commit"] = git_info()["git_commit"]
+    rec["created_at"] = iso(utc_now())
+    print(write_json(Path(a.out), rec))
+    t, k4 = rec["test"], rec["k4"]
+    print(
+        f"test ECE {t['ece_before']:.4f} → {t['ece_after']:.4f} ({t['n_eval']} tespit, skor ≥ 0,25)"
+    )
+    print(f"test mAP50 {t['map50_before']:.4f} → {t['map50_after']:.4f}")
+    print(f"Kabul 4 {_mark(k4['passed'])} |ΔmAP50| {k4['value'] * 100:.3f} puan (≤ 0,1)")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="baykus-health")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -150,6 +183,13 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("--seed", type=int, default=42)
     c.add_argument("--workers", type=int, default=1)
     c.set_defaults(func=_cmd_compare)
+    k = sub.add_parser("calibrate", help="izotonik skor kalibrasyonu ve ECE")
+    k.add_argument("--val-preds", required=True, help="val tahminleri (.json.gz, conf ≥ 0,001)")
+    k.add_argument("--test-preds", required=True)
+    k.add_argument("--coco-dir", required=True, help="val_ir.json ve test_ir.json klasörü")
+    k.add_argument("--out", default="../results/health/calibration_e3c_onnx_fp32.json")
+    k.add_argument("--model", default="e3c_modality_dropout · onnx_fp32")
+    k.set_defaults(func=_cmd_calibrate)
     return p
 
 
