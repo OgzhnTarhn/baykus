@@ -183,3 +183,37 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
   K_E4 − K_E3c = +0,0260 [+0,0182; +0,0338] (`results/compare/e4_late_fusion-vs-e3c_modality_dropout_val_camloss_ir.json`, birleşik bootstrap, 1000 örnek). Aydınlatma dilimlerinin üçünde de anlamlı.
 - **Seçim: E4** (aralık tamamen 0'ın üstünde).
 - **H5'te kontrol:** E4 cihazda iki model çalıştırıyor; gecikme hedefi (ADR 0007) tutmazsa E3c (tek model) seçilir.
+
+## 2026-10-17 · E9 · Edge: format × hassasiyet × donanım (laptop CPU)
+- **Soru:** Sevk adayları (E4, E3c) ONNX'e çevrilip küçültülünce doğruluk ne kadar düşüyor, laptop işlemcisinde ne kadar hızlı?
+- **Kurulum:** `configs/edge/e9_edge.yaml` (`config_hash` sha256:6ceeaee4…) · export Ultralytics 8.4.177, `nms=False` (uçtan uca `(1, 300, 6)`), 640×640, batch 1, opset 18 · FP16: CPU dönüşümü, giriş/çıkış FP32 · INT8: ORT `quantize_static`, QDQ, S8S8, kanal başına, MinMax, 500 train görüntüsü (seed 42); "tam" = Conv/Gemm/MatMul (Ultralytics kuralı), "head FP32" = ek olarak son `/model.N/` (tespit başlığı) FP32 · doğruluk `baykus-edge eval` (val 1469, IR etiketleri, `conf 0,001`, bootstrap yok; Colab A100 oturumunun 12 CPU çekirdeği, ORT 1.31.0 CPU EP) · hız `baykus-bench` (§14: 50 ısınma + 500 ölçüm, toplam = ön işleme + çıkarım + son işleme [+ WBF]; AMD Ryzen 7 8845HS, 8/16 çekirdek, prize takılı, ORT 1.30.0 CPU EP, varsayılan thread) · commit `7dc9f78`.
+- **Sonuç:** `results/edge/*.json` (20), `results/bench/*_laptop-cpu.json` (8), `results/bench/parity_laptop-cpu_*.json` (4); tablo `docs/results.md` "Edge (E9)".
+- **Bulgular (val mAP50 IR; Δ = aynı pipeline'ın ONNX FP32'sine göre puan; laptop p50 / p95 ms):**
+
+  | Pipeline | Varyant | mAP50 | Δ | p50 | p95 | FPS | Boyut (MB) |
+  |---|---|---|---|---|---|---|---|
+  | E4 | PyTorch | 0,8478 | — | — | — | — | — |
+  | E4 | onnx_fp32 | 0,8321 | 0 | 118,1 | 131,6 | 8,5 | 76,3 |
+  | E4 | onnx_fp16 | 0,8322 | +0,0 | 121,4 | 133,0 | 8,3 | 38,3 |
+  | E4 | onnx_int8 | 0,7661 | −6,6 | 216,1 | 241,5 | 4,6 | 20,6 |
+  | E4 | onnx_int8_headfp32 | 0,8296 | −0,2 | 203,9 | 224,4 | 4,9 | 23,1 |
+  | E3c | PyTorch | 0,8506 | — | — | — | — | — |
+  | E3c | onnx_fp32 | 0,8411 | 0 | 46,4 | 59,9 | 21,0 | 38,2 |
+  | E3c | onnx_fp16 | 0,8410 | −0,0 | 49,3 | 62,5 | 19,7 | 19,2 |
+  | E3c | onnx_int8 | 0,8083 | −3,3 | 98,7 | 117,8 | 9,9 | 10,3 |
+  | E3c | onnx_int8_headfp32 | 0,8337 | −0,7 | 90,1 | 108,1 | 10,9 | 11,6 |
+
+  1. **Tam INT8 doğruluğu bozuyor** (−3,3 ile −7,7 puan; E1 −4,1, E2 −7,7): tespit başlığının INT8'e çevrilmesi kaybın çoğu; başlık FP32 kalınca kayıp −0,2 / −0,7 puan (spec §14'teki risk doğrulandı).
+  2. **INT8 laptopta hızlanmadı, ≈ 2 kat yavaşladı** (E3c 46 → 90 ms), işlemci AVX-512 VNNI desteklediği hâlde. Olası neden (ölçülmedi): yalnız konvolüsyonlar nicemlendiği için her katman arasında QuantizeLinear/DequantizeLinear dönüşümü var. **FP16 da işlemcide hızlanmadı** (yalnız dosya yarıya iniyor). NFR-5'teki "INT8 ile daha hızlı" beklentisi bu nicemleme yapısıyla tutmadı.
+  3. **E4 iki modeli sırayla çalıştırıyor:** çıkarım RGB ≈ 50 ms + IR ≈ 57 ms; ön işleme 8 ms, WBF ≈ 3 ms. Paralel çalıştırma ölçülmedi.
+  4. **Eşlik (20 val görüntüsü, `conf ≥ 0,25`):** FP32 ve FP16'da laptop ile Colab birebir (IoU 1,0, skor farkı 0). INT8 iki varyantta da farklı (1-5 kutu eşleşmiyor, skor farkı 0,09-0,47): INT8 doğruluğu Colab'da ölçüldü ve laptopu tam temsil etmiyor; INT8 sevk edilmediği için laptopta yeniden ölçülmedi.
+  5. **PyTorch → ONNX FP32 farkı** −0,9 (E1, E3c) ile −1,6 puan (E4; E2 −1,3). Tahmin (ölçülmedi): uçtan uca çıktının görüntü başına 300 kutu sınırı (PyTorch değerlendirmesi 1000) ve kare 640×640 girdi (PyTorch val dikdörtgen 640×512). Sevk kuralını etkilemiyor (Δ ONNX FP32'ye göre); açık iş.
+  6. Tepe bellek (ölçüm süreci): E3c ≈ 345 MB, E4 ≈ 594 MB.
+
+## 2026-10-17 · Sevk kararı (kural ölçümden önce, ADR 0007)
+- **Kural:** laptop CPU, toplam p95 ≤ 100 ms; varyant ONNX FP32'den en fazla 1,0 puan düşük; aday sırası E4 → E3c.
+- **İz:** E4 → uygun varyantlar onnx_fp32, onnx_fp16, onnx_int8_headfp32; en hızlı onnx_fp32 p95 **131,6 ms → geçmedi**. E3c → uygun varyantlar aynı üçü; en hızlı onnx_fp32 p95 **59,9 ms → geçti**.
+- **Karar: E3c · ONNX FP32** (kullanıcı onayı, 2026-10-17). H4 seçim kuralının 5. maddesiyle de aynı ("E4 cihazda gecikme hedefini tutmazsa E3c").
+- **Bedeli (H4 ölçümleri, val):** kamera kaybı puanı K E3c 0,774 / E4 0,800; hizasızlık 20 px E3c 0,266 / E4 0,485; bulanıklık 11 E3c 0,652 / E4 0,809; M3OT AP50 E3c 0,889 / E4 0,971. Temiz val ONNX FP32'de E3c 0,841 / E4 0,832.
+- **E8 (n boyutu): yapılmadı** — `s` boyutundaki E3c hedefi tuttu (ADR 0007 madde 6 gerekmedi).
+- **Sonra:** E4'ün hızlandırılması (iki modeli paralel çalıştırmak, RTX 4060 GPU) ve E3c'nin hizasızlığa dayanıklılığı Faz 2-3'e.

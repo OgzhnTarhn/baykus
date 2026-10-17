@@ -1,6 +1,6 @@
 # 0007 — Gecikme hedefi ve sevk kuralı
 
-- Durum: Önerildi (hedef ölçümden önce sabitlendi, 2026-10-17)
+- Durum: Kabul edildi (2026-10-17; hedef ölçümden önce sabitlenmişti)
 - Tarih: 2026-10-17
 
 ## Bağlam
@@ -29,4 +29,12 @@ Kural sonradan değişirse bu metin silinmez; değişiklik gerekçesiyle aşağ�
 - Kötü: 100 ms tek bir laptop için konmuş bir sayı; başka donanımda yeniden değerlendirilmeli.
 - Risk: laptopun ısınması ya da arka plan yükü p95'i bozabilir; bench kaydı güç durumunu ve sistem bilgisini yazar.
 
-### Ölçümler (H5 Görev 16'da doldurulur)
+### Ölçümler (H5 Görev 16, 2026-10-17)
+Laptop CPU (Ryzen 7 8845HS, prize takılı, ORT 1.30.0 CPU EP), `results/bench/*_laptop-cpu.json`; doğruluk `results/edge/*.json`; tablo `docs/results.md` "Edge (E9)".
+
+| Aday | Uygun varyantlar (Δ ≤ 1,0 puan) | En hızlı | p95 (ms) | Geçti mi |
+|---|---|---|---|---|
+| E4 (geç füzyon) | onnx_fp32, onnx_fp16, onnx_int8_headfp32 | onnx_fp32 | 131,6 | hayır |
+| E3c | onnx_fp32, onnx_fp16, onnx_int8_headfp32 | onnx_fp32 | 59,9 | evet |
+
+**Sevk: E3c · ONNX FP32** (p50 46,4 ms, p95 59,9 ms, 21 FPS; val mAP50 0,841). E8-n gerekmedi. Ayrıntı ve bedeli: `docs/experiments.md` "Sevk kararı".
