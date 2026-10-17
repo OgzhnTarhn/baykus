@@ -108,6 +108,34 @@ DroneVehicle'da eğitilen modeller hiç görmediği M3OT verisinde. M3OT'ta RGB 
 hizalı değil (ortanca IoU 0,35); iki kamerayı birlikte kullanan modeller bundan etkileniyor. Ayrıntı:
 [docs/data/m3ot.md](docs/data/m3ot.md)
 
+## Faz 2: kamera bozulunca fark etmek (olumsuz sonuç)
+
+Soru: sevk edilen E3c, bir kamera **bozuk veri** verirken çöküyor (IR 40 piksel kayınca val mAP50 9,0),
+ama IR'yi hiç vermemek 72,0 alıyor. Yeniden eğitmeden, her karede iki kameranın sağlığını ölçüp bozuk
+olanı modele vermeyen bir kapı bu farkı kapatır mı?
+
+Yöntem: kare başına kural tabanlı ölçüler (gürültü, bulanıklık, parlaklık, kayıp kamera, RGB–IR kayması),
+eşikler yalnız train'den; kapı zararlı kamerayı ön işlemeden önce sıfırlıyor. Kabul ölçütleri ölçümden
+önce sabitlendi ([tasarım](docs/design/faz2.md) §6).
+
+| mAP50 (IR etiketleri) | E3c | E3c + kapı | Fark [%95 GA] |
+|---|---|---|---|
+| Bozuk IR, val (gürültü σ 20, kayma 20 / 40 px; ortalama) | 29,7 | 70,4 | **+40,7** [+38,3; +43,1] |
+| Bozuk IR, test (gürültü σ 20, kayma 20 px; ortalama) | 41,8 | 67,5 | **+25,7** [+24,6; +26,9] |
+| Temiz val | 85,1 | 82,0 | **−3,1** [−4,4; −1,8] |
+| Temiz test | 82,5 | 79,2 | **−3,3** [−3,9; −2,8] |
+
+Kapı bozuk IR'de çok işe yarıyor, ama temiz karelerin %4'ünde yanlış tetikleniyor ve bu kareler pahalı.
+Önceden yazılan kurala göre bu **başarısızlık**: kapı temiz veride sistemi kötüleştiriyor. Neden
+bulundu: yanlış alarmların hepsi "IR hizasız" ve %80'i karanlık gece karesi; RGB karanlıkken iki
+kameranın kenarları eşleşmiyor (faz korelasyonu yanıtı 0,05; normalde 0,56) ve kayma kestirimi anlamsız
+bir değer buluyor. Düzeltme (zayıf eşleşmede hizasızlık kararı vermemek) Faz 3'e önceden kaydedildi;
+val'e bakılarak bulunduğu için burada ölçülmedi.
+
+Güven kalibrasyonu (sevk edilen ONNX FP32, test): ECE 0,080 → 0,007. Kalibrasyon skorları 80 değere
+indirdiği için eşit skorlar sıralamayı bozup mAP50'yi 0,11 puan düşürüyor (önceden yazılan sınır 0,1);
+eşitlikte ham skorla sıralanınca kayıp sıfır. Ayrıntı: [docs/health.md](docs/health.md).
+
 ## Dürüst ölçüm notları
 
 - **Tek seed:** her model bir kez eğitildi; güven aralıkları görüntü örneklemesinden, seed varyansı dahil
@@ -143,13 +171,14 @@ uv run baykus-report                     # docs/results.md (val)
 uv run baykus-report --split test --out ../docs/results-test.md --fig ../docs/figures/results/illumination-test.png
 ```
 
-Eğitim ve GPU işleri Colab notebook'larıyla (00 → 07). Her sayı `results/**/*.json`'da; her JSON config,
+Eğitim ve GPU işleri Colab notebook'larıyla (00 → 08). Her sayı `results/**/*.json`'da; her JSON config,
 git commit'i ve seed'iyle bağlı.
 
 ## Yol haritası
 
-Faz 2: kare başına kamera güvenilirliği ve uyarlanabilir füzyon · Faz 3: C++ motoru, takip, operatör ekranı,
-internetsiz Docker kurulumu · Faz 4: hareketli hedef · Faz 5: sunum. Ayrıntı: [docs/spec.md](docs/spec.md) §22.
+Faz 2 (bitti, olumsuz sonuç): kare başına sensör sağlığı, kanal kapısı, güven kalibrasyonu · Faz 3: C++
+motoru, takip, operatör ekranı (sensör sağlık paneli), internetsiz Docker kurulumu · Faz 4: hareketli hedef ·
+Faz 5: sunum. Ayrıntı: [docs/spec.md](docs/spec.md) §22.
 
 ## Lisans ve atıflar
 
