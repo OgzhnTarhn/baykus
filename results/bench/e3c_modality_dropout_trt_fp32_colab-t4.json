@@ -1,0 +1,74 @@
+{
+  "pipeline": "e3c_modality_dropout",
+  "variant": "trt_fp32",
+  "hardware": "colab-t4",
+  "models": [
+    {
+      "name": "e3c_modality_dropout",
+      "file": "/content/drive/MyDrive/baykus/edge/models/2026-10-15_e3c-modality-dropout_s_d4e1280_trt_fp32.engine",
+      "size_mb": 121.546,
+      "sha256": "4b72e971b88565c45cb3253b06eae4262671f122a3a75e1c7b2289eda6348dd7"
+    }
+  ],
+  "protocol": {
+    "warmup": 50,
+    "runs": 500,
+    "imgsz": 640,
+    "images": 20,
+    "conf": 0.25,
+    "provider": "tensorrt",
+    "batch": 1
+  },
+  "threads": null,
+  "stages": {
+    "pre": {
+      "p50": 4.714930000000001,
+      "p95": 5.6406882499999975,
+      "mean": 4.833111908,
+      "n": 500
+    },
+    "infer": {
+      "p50": 8.204582,
+      "p95": 8.413322500000001,
+      "mean": 8.22293937,
+      "n": 500
+    },
+    "post": {
+      "p50": 0.123031,
+      "p95": 0.18995299999999996,
+      "mean": 0.129453974,
+      "n": 500
+    },
+    "total": {
+      "p50": 13.077487,
+      "p95": 14.086524349999998,
+      "mean": 13.185505251999999,
+      "n": 500
+    }
+  },
+  "fps": 75.84085561289496,
+  "peak_rss_mb": 1180.096,
+  "system": {
+    "device": "Tesla T4",
+    "driver": "13.0",
+    "cpu_count": 2,
+    "cpu_brand": "Intel(R) Xeon(R) CPU @ 2.00GHz",
+    "cpu_flags": [
+      "avx2",
+      "avx512f"
+    ],
+    "physical_cores": 1,
+    "logical_cores": 2,
+    "ram_gb": 13.6,
+    "power_plugged": null,
+    "software": {
+      "onnxruntime": "1.31.0",
+      "onnxruntime-gpu": "1.24.4",
+      "tensorrt": "11.4.0.106",
+      "numpy": "2.1.3",
+      "opencv-python": "5.0.0.93"
+    }
+  },
+  "git_commit": "9c7133d97197ca0d9e55a083a0d2575fcaaa3bd5",
+  "created_at": "2026-10-17T14:24:19Z"
+}

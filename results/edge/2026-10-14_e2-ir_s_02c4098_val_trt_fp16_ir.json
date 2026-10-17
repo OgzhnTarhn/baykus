@@ -1,0 +1,92 @@
+{
+  "run_id": "2026-10-14_e2-ir_s_02c4098",
+  "git_commit": "9c7133d97197ca0d9e55a083a0d2575fcaaa3bd5",
+  "git_dirty": false,
+  "config": "configs/e2_ir.yaml",
+  "config_hash": "sha256:d7751ab44dbea877993e25a8bfa9402ad20e9f59b09352c108150d6d94c61151",
+  "mlflow_run_id": null,
+  "train_run_id": null,
+  "seed": 42,
+  "dataset": "dronevehicle",
+  "class_agnostic": false,
+  "split": "val",
+  "label_set": "ir",
+  "model": {
+    "family": "yolo26",
+    "size": "s",
+    "mode": "ir",
+    "params_m": null,
+    "gflops": null
+  },
+  "format": "engine",
+  "precision": "fp16",
+  "hardware": {
+    "device": "Tesla T4",
+    "driver": "13.0",
+    "cpu_count": 2
+  },
+  "software": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu130",
+    "ultralytics": "8.4.177",
+    "numpy": "2.1.3",
+    "pycocotools": "2.0.11"
+  },
+  "weights": "/content/drive/MyDrive/baykus/edge/models/2026-10-14_e2-ir_s_02c4098_trt_fp16.engine",
+  "n_boot": 0,
+  "dropped_predictions": 0,
+  "metrics": {
+    "map50": 0.8263636119127665,
+    "map50_95": 0.6109452606490214,
+    "precision": 0.8763199878447162,
+    "recall": 0.9420171498570845,
+    "per_class": {
+      "car": 0.9749279703533125,
+      "truck": 0.7690949298069673,
+      "bus": 0.9607535270968596,
+      "van": 0.6684914624414484,
+      "freight_car": 0.7585501698652447
+    },
+    "per_illumination": {
+      "day": 0.8118453524124636,
+      "night": 0.7897727584970993,
+      "dark_night": 0.8592638739564618
+    },
+    "per_size": {
+      "small": 0.45683113018367366,
+      "medium": 0.8367177934348556,
+      "large": 0.9122851497264365
+    },
+    "ci95": {
+      "map50": [
+        null,
+        null
+      ],
+      "per_illumination": {
+        "day": [
+          null,
+          null
+        ],
+        "night": [
+          null,
+          null
+        ],
+        "dark_night": [
+          null,
+          null
+        ]
+      }
+    },
+    "n_images": 1469,
+    "n_dets": 74577
+  },
+  "created_at": "2026-10-17T14:09:50Z",
+  "edge": {
+    "variant": "trt_fp16",
+    "file_size_mb": 94.471,
+    "sha256": "98043b7bec4b770ee3cf4a7ccfe453ac4b42c922ae3956de8d41532d36b45357",
+    "provider": "tensorrt",
+    "threads": null,
+    "seconds_per_image": 0.0163
+  }
+}

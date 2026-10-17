@@ -1,0 +1,92 @@
+{
+  "run_id": "2026-10-11_e1-rgb_s_49da0cb",
+  "git_commit": "9c7133d97197ca0d9e55a083a0d2575fcaaa3bd5",
+  "git_dirty": false,
+  "config": "configs/e1_rgb.yaml",
+  "config_hash": "sha256:749df56f9ffcfabb8d638a473702ac77d97fa932c0e9ae60b1c21191453ee6d9",
+  "mlflow_run_id": null,
+  "train_run_id": null,
+  "seed": 42,
+  "dataset": "dronevehicle",
+  "class_agnostic": false,
+  "split": "val",
+  "label_set": "ir",
+  "model": {
+    "family": "yolo26",
+    "size": "s",
+    "mode": "rgb",
+    "params_m": null,
+    "gflops": null
+  },
+  "format": "engine",
+  "precision": "int8",
+  "hardware": {
+    "device": "Tesla T4",
+    "driver": "13.0",
+    "cpu_count": 2
+  },
+  "software": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu130",
+    "ultralytics": "8.4.177",
+    "numpy": "2.1.3",
+    "pycocotools": "2.0.11"
+  },
+  "weights": "/content/drive/MyDrive/baykus/edge/models/2026-10-11_e1-rgb_s_49da0cb_trt_int8.engine",
+  "n_boot": 0,
+  "dropped_predictions": 0,
+  "metrics": {
+    "map50": 0.7320632986655994,
+    "map50_95": 0.4583590587527945,
+    "precision": 0.8298587216127595,
+    "recall": 0.8370763576970192,
+    "per_class": {
+      "car": 0.9024472535702435,
+      "truck": 0.6827464359707093,
+      "bus": 0.9149872422989522,
+      "van": 0.5891537617952762,
+      "freight_car": 0.5709817996928154
+    },
+    "per_illumination": {
+      "day": 0.7925432971092872,
+      "night": 0.727139904659813,
+      "dark_night": 0.6777013276275448
+    },
+    "per_size": {
+      "small": 0.4270561899609184,
+      "medium": 0.7366392789190837,
+      "large": 0.856233529543442
+    },
+    "ci95": {
+      "map50": [
+        null,
+        null
+      ],
+      "per_illumination": {
+        "day": [
+          null,
+          null
+        ],
+        "night": [
+          null,
+          null
+        ],
+        "dark_night": [
+          null,
+          null
+        ]
+      }
+    },
+    "n_images": 1469,
+    "n_dets": 90920
+  },
+  "created_at": "2026-10-17T14:07:17Z",
+  "edge": {
+    "variant": "trt_int8",
+    "file_size_mb": 47.126,
+    "sha256": "c5c7da66a999faf58ce297e92aca71aaeafd0daba513b8188a0af171babf0a9f",
+    "provider": "tensorrt",
+    "threads": null,
+    "seconds_per_image": 0.01451
+  }
+}
