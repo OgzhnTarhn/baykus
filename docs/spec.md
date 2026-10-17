@@ -40,6 +40,9 @@
 
 ## 0. v1'den bu yana ne değişti
 
+### v4.4 (2026-10-17) — Faz 2 tasarımı ve planı
+Faz 2 yalın tutuldu (`docs/design/faz2.md`, plan `docs/plans/F2.md`): kare başına kural tabanlı RGB/IR sağlık dedektörü, modele zarar verecek kamerayı sıfırlayan arızaya duyarlı kanal kapısı (uyarlanabilir füzyonun bu fazdaki biçimi) ve sevk edilen E3c · ONNX FP32 skorlarının izotonik kalibrasyonu. Öğrenen güvenilirlik ağı, yeni eğitim ve E4'te kare başına WBF ağırlığı (K4) yok. Takvim ≈ 1,5 hafta, tek Colab oturumu. Değişen yerler: §2.3 (S10), §6.1 (K4), §22 (Faz 2), §23.
+
 ### v4.3 (2026-10-17) — H5 planı
 Gecikme hedefi ölçümden **önce** sabitlendi (ADR 0007, "Önerildi"): laptop CPU'da toplam p95 ≤ 100 ms; varyantın val mAP50'si aynı pipeline'ın ONNX FP32'sinden en fazla 1,0 puan düşük; aday sırası E4 → E3c, hiçbiri tutmazsa E8-n. Edge varyantları: ONNX FP32, FP16 (CPU dönüşümü, FP32 giriş/çıkış), INT8 tam (Conv/Gemm/MatMul, kanal başına QDQ) ve INT8 head FP32; TensorRT FP32, FP16, INT8. ΔmAP50'nin referansı aynı pipeline'ın ONNX FP32'si; PyTorch satırı ayrıca. Final test: E1-E4b ve sevk edilen varyant, test bölümünde bir kez. Değişen yerler: §7.5 (NFR-5), §22 (H5).
 
@@ -146,7 +149,7 @@ Mezuniyette (Haziran 2027) **Türk savunma sanayii** şirketlerinde (ASELSAN, HA
 - [ ] **S7 — C++/Python eşliği:** C++ motor çıktısı Python referansıyla tolerans içinde aynı. Bu CI'da test ediliyor.
 - [ ] **S8 — Kapalı ağ:** `docker compose up` dış ağa çıkmadan çalışıyor.
 - [ ] **S9 — Sunum:** README, demo videosu ve teknik yazı yayında.
-- [ ] **S10 — Güvenilirlik farkındalığı (Faz 2):** Uyarlanabilir füzyon, en iyi sabit füzyona (E3c / E4b) karşı sağlamlık paketinin bozulmaları ve kamera kaybında güven aralığıyla ölçülmüş; güven kalibrasyonu (ECE) önce/sonra raporlanmış; sensör arıza tespitinin doğruluğu ölçülmüş. Sonuç olumsuz çıkarsa o da raporlanır. Ayrıntılı ölçütler Faz 2 tasarımında.
+- [ ] **S10 — Güvenilirlik farkındalığı (Faz 2):** Uyarlanabilir füzyon, en iyi sabit füzyona (E3c / E4b) karşı sağlamlık paketinin bozulmaları ve kamera kaybında güven aralığıyla ölçülmüş; güven kalibrasyonu (ECE) önce/sonra raporlanmış; sensör arıza tespitinin doğruluğu ölçülmüş. Sonuç olumsuz çıkarsa o da raporlanır. Ayrıntılı ölçütler Faz 2 tasarımında. Ölçütler ve kabul eşikleri: `docs/design/faz2.md` §6 (v4.4).
 - [ ] **S11 — Hareketli hedef (Faz 4):** M3OT'ta hareketli/duran ayrımı ölçülmüş (etiketler iz yörüngelerinden türetilmiş, yöntemi belgelenmiş); göreli mozaik harita ve bölge olayları demoda çalışıyor. Ayrıntılı ölçütler Faz 4 tasarımında.
 
 ---
@@ -341,7 +344,7 @@ Faz 1'in kapsamını değiştirmeyen, ama sonradan yeniden iş yapmayı önleyen
 | K1 | Sağlamlık paketi sonuçları **görüntü düzeyinde** de kaydedilir (her görüntü × bozulma × şiddet için tahminler), sadece toplam mAP değil | FR-V4, H3-H4 | Faz 2: güvenilirlik tahmincisinin hedefi ve değerlendirmesi |
 | K2 | Bozulma fonksiyonları deterministik (seed'li) ve bölümden bağımsız; **train bölümünde de** uygulanabilir. Değerlendirme yine sadece val/test'te | `baykus.robustness`, H3 | Faz 2: tahminci eğitimi için bozulmuş train örnekleri |
 | K3 | Değerlendirmede tahminler **düşük eşikle** (ör. conf ≥ 0.001) dosyaya kaydedilir; sadece metrik değil | `baykus.eval`, H2 | Faz 2: kalibrasyon (ECE), çalışma noktası seçimi |
-| K4 | Geç füzyon WBF ağırlıkları **görüntü başına dışarıdan** verilebilir bir arayüzle yazılır (E4b'nin kırılım başına ağırlığı bunun özel hâli) | FR-V7, H4 | Faz 2: kare başına uyarlanabilir ağırlık |
+| K4 | Geç füzyon WBF ağırlıkları **görüntü başına dışarıdan** verilebilir bir arayüzle yazılır (E4b'nin kırılım başına ağırlığı bunun özel hâli) | FR-V7, H4 | Faz 2: kare başına uyarlanabilir ağırlık. Faz 2'de kullanılmadı (E4 CPU'da sevk edilmedi; tasarım §3, v4.4) |
 | K5 | M3OT dönüştürücü **dizi adı, kare numarası ve iz numarasını** korur; RGB-IR eşleşmesi dizi bazında tutulur | FR-D8, H4 | Faz 3 takip ölçümü, Faz 4 hareketli/duran etiketleri |
 
 ### Ek hedefler (zaman kalırsa, bu sırayla)
@@ -1040,7 +1043,7 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 | Faz | Tarih | İçerik | Çıkış | Ayrıntılı tasarım |
 |---|---|---|---|---|
 | **1. Çekirdek** | 5 Eki - 8 Kas 2026 | Aşağıdaki H1-H5 (değişmedi) + kancalar K1-K5 (§6.1) | 🚩 MVP, `v0.1.0` | Bu spec |
-| **2. Güvenilirlik farkındalığı** | 9 Kas - 6 Ara 2026 | Kare başına RGB/IR güvenilirlik tahmini, uyarlanabilir füzyon, güven kalibrasyonu, sensör arıza tespiti | S10 | Faz 2 tasarımı, ~2 Kasım'da (E1-E3 sonuçlarıyla) |
+| **2. Güvenilirlik farkındalığı** | ≈ 1,5 hafta (v4.4) | Kare başına RGB/IR sağlık dedektörü (sensör arıza tespiti), arızaya duyarlı kanal kapısı (uyarlanabilir füzyon), güven kalibrasyonu (ECE) | S10 | `docs/design/faz2.md` (onaylı, 2026-10-17) |
 | **3. Sistem** | 7 Ara 2026 - 31 Oca 2027 | Aşağıdaki H6-H9 içeriği (C++ motor, takip, UI, Docker) + sensör sağlık paneli, güven tabanlı alarmlar | S7, S8; `v0.2.0` | Faz 3 tasarımı, Faz 2 sonunda |
 | **4. Hareketli hedef** | 1 Şub - 28 Mar 2027 | Kamera hareketi telafisi, hareketli/duran ayrımı, göreli mozaik harita, bölge olayları (M3OT) | S11; `v0.3.0` | Faz 4 tasarımı, Faz 3 sonunda |
 | **5. Sunum** | 1-30 Nis 2027 | Aşağıdaki H10 içeriği: README, demo videosu, teknik yazı, CV; isteğe bağlı arXiv | S1-S11; `v1.0.0` | Faz 5 başında |
@@ -1205,7 +1208,7 @@ Hareketli / duran araç v4.0'da ek hedef olmaktan çıktı, Faz 4'ün çekirdeğ
 | Zaman aşımı | Yüksek | Yüksek | H5 MVP kapısı ve §20.6 kesme sırası |
 | AGPL | Düşük | Düşük | Açık portfolyo için uygun. README'de açıkça belirt. |
 | Kodu anlamadan ilerlemek | Orta | **Yüksek (mülakat)** | §21.1 ilkeleri ve DoD |
-| Faz 2 yöntemi sabit füzyona (E3c/E4b) göre anlamlı kazanç sağlamıyor | Orta | Orta | Olumsuz sonuç da raporlanır; yöntem "yenilik" diye değil ölçülmüş deneme olarak sunulur. Kalibrasyon ve arıza tespiti füzyon kazancından bağımsız değer taşır. |
+| Faz 2 yöntemi sabit füzyona (E3c/E4b) göre anlamlı kazanç sağlamıyor | Orta | Orta | Olumsuz sonuç da raporlanır; yöntem "yenilik" diye değil ölçülmüş deneme olarak sunulur. Kalibrasyon ve arıza tespiti füzyon kazancından bağımsız değer taşır. Sentetik bozulmada çalışan dedektörün gerçek arızada çalışmaması sınırlama olarak yazılır; Faz 3'te M3OT dizilerinde niteliksel kontrol (v4.4). |
 | Uzun süre (~7 ay), dönem içi ders yükü, motivasyon kaybı | Orta | Yüksek | Her faz kendi sürümüyle biter (`v0.1.0` → `v1.0.0`); Ocak için Faz 3'e geniş süre; §20.6 kesme sırası |
 | M3OT'tan hareketli/duran etiketi türetilemiyor (iz sayısı az, kamera hareketi telafisi kötü) | Orta | Orta | Faz 4 tasarımında küçük bir alt kümede elle doğrulama; olmazsa niteliksel demo |
 
