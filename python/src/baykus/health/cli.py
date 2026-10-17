@@ -222,6 +222,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Windows konsolu (cp1254) ✅ / ≤ / → yazamaz: kodlanamayan karakter '?' olur, komut çökmez
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(errors="replace")
     a = build_parser().parse_args(argv)
     try:
         return a.func(a)

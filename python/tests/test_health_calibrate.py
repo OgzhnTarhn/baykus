@@ -114,3 +114,21 @@ def test_cli_calibrate(tmp_path: Path):
     rec = json.loads(out.read_text(encoding="utf-8"))
     assert len(rec["sources"]["val_sha256"]) == 64 and rec["table"]["y"] == [0.5]
     assert rec["model"] == "e3c_modality_dropout · onnx_fp32"
+
+
+def test_cli_prints_on_a_cp1254_console(tmp_path: Path, monkeypatch):
+    # Windows konsolu (cp1254) ✅, ≤, → yazamaz: komut sonucu yazdıktan sonra çökmemeli
+    import io
+    import sys
+
+    from baykus.health.cli import main
+
+    coco = tmp_path / "coco"
+    coco.mkdir()
+    for split in ("val", "test"):
+        (coco / f"{split}_ir.json").write_text(json.dumps(GT.dataset), encoding="utf-8")
+    v = save_predictions(tmp_path / "v.json.gz", _overconfident())
+    console = io.TextIOWrapper(io.BytesIO(), encoding="cp1254")
+    monkeypatch.setattr(sys, "stdout", console)
+    args = ["calibrate", "--val-preds", str(v), "--test-preds", str(v), "--coco-dir", str(coco)]
+    assert main([*args, "--out", str(tmp_path / "c.json")]) == 0
