@@ -77,3 +77,11 @@ def test_frame_features_values_are_plain_floats():
     g = scene()
     f = frame_features(cv2.cvtColor(g, cv2.COLOR_GRAY2BGR), 255 - g)
     assert all(type(v) is float for v in f.values())
+
+
+def test_misalign_is_deterministic():
+    # float32 DFT çok iş parçacığında son basamakta oynuyordu: eşikler tekrarlanabilir olmalı
+    g = scene(3)
+    bgr, ir = cv2.cvtColor(g, cv2.COLOR_GRAY2BGR), shift(255 - g, 7)
+    first = misalign(bgr, ir)
+    assert all(misalign(bgr, ir) == first for _ in range(30))

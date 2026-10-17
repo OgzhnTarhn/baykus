@@ -56,15 +56,15 @@ def blur_score(gray: np.ndarray) -> float:
 def _edges(gray: np.ndarray) -> np.ndarray:
     small = cv2.resize(
         gray, (gray.shape[1] // 2, gray.shape[0] // 2), interpolation=cv2.INTER_AREA
-    ).astype(np.float32)
-    gx = cv2.Sobel(small, cv2.CV_32F, 1, 0)
-    gy = cv2.Sobel(small, cv2.CV_32F, 0, 1)
+    ).astype(np.float64)
+    gx = cv2.Sobel(small, cv2.CV_64F, 1, 0)
+    gy = cv2.Sobel(small, cv2.CV_64F, 0, 1)
     return cv2.magnitude(gx, gy)
 
 
 @lru_cache(maxsize=4)
 def _window(w: int, h: int) -> np.ndarray:
-    return cv2.createHanningWindow((w, h), cv2.CV_32F)
+    return cv2.createHanningWindow((w, h), cv2.CV_64F)
 
 
 def misalign(bgr: np.ndarray, ir: np.ndarray) -> tuple[float | None, float | None]:
