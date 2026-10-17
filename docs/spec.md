@@ -149,7 +149,7 @@ Mezuniyette (Haziran 2027) **Türk savunma sanayii** şirketlerinde (ASELSAN, HA
 - [ ] **S7 — C++/Python eşliği:** C++ motor çıktısı Python referansıyla tolerans içinde aynı. Bu CI'da test ediliyor.
 - [ ] **S8 — Kapalı ağ:** `docker compose up` dış ağa çıkmadan çalışıyor.
 - [ ] **S9 — Sunum:** README, demo videosu ve teknik yazı yayında.
-- [ ] **S10 — Güvenilirlik farkındalığı (Faz 2):** Uyarlanabilir füzyon, en iyi sabit füzyona (E3c / E4b) karşı sağlamlık paketinin bozulmaları ve kamera kaybında güven aralığıyla ölçülmüş; güven kalibrasyonu (ECE) önce/sonra raporlanmış; sensör arıza tespitinin doğruluğu ölçülmüş. Sonuç olumsuz çıkarsa o da raporlanır. Ayrıntılı ölçütler Faz 2 tasarımında. Ölçütler ve kabul eşikleri: `docs/design/faz2.md` §6 (v4.4).
+- [x] **S10 — Güvenilirlik farkındalığı (Faz 2):** *(ölçüldü, olumsuz: kapı bozuk IR'de val +40,7 puan [+38,3; +43,1], ama temiz val'de −3,1 puan ve %4,1 yanlış alarm → Kabul 1, 3 ❌, 2 ✅; kalibrasyon ECE 0,080 → 0,007, mAP |Δ| 0,112 puan → Kabul 4 ❌. Kanıt: `docs/health.md`, `results/health/`. Düzeltme Faz 3'e.)* Uyarlanabilir füzyon, en iyi sabit füzyona (E3c / E4b) karşı sağlamlık paketinin bozulmaları ve kamera kaybında güven aralığıyla ölçülmüş; güven kalibrasyonu (ECE) önce/sonra raporlanmış; sensör arıza tespitinin doğruluğu ölçülmüş. Sonuç olumsuz çıkarsa o da raporlanır. Ayrıntılı ölçütler Faz 2 tasarımında. Ölçütler ve kabul eşikleri: `docs/design/faz2.md` §6 (v4.4).
 - [ ] **S11 — Hareketli hedef (Faz 4):** M3OT'ta hareketli/duran ayrımı ölçülmüş (etiketler iz yörüngelerinden türetilmiş, yöntemi belgelenmiş); göreli mozaik harita ve bölge olayları demoda çalışıyor. Ayrıntılı ölçütler Faz 4 tasarımında.
 
 ---
