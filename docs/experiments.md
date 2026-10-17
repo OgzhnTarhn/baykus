@@ -292,13 +292,13 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
   | noise-5 / 10 | 0,8413 / 0,7704 | 0,8106 / 0,7413 | −3,07 / −2,91 | 63 / 69 |
   | **noise-20** | 0,5355 | 0,7195 | **+18,40** | 1469 |
   | blur-3 / 7 / 11 | 0,8307 / 0,7440 / 0,6523 | 0,8078 / 0,7232 / 0,6328 | −2,29 / −2,08 / −1,95 | 61 / 61 / 65 |
-  | misalign-5 / 10 | 0,8337 / 0,6955 | 0,8015 / 0,6613 | −3,22 / −3,42 | 88 / 162 |
-  | **misalign-20 / 40** | 0,2656 / 0,0900 | 0,6820 / 0,7112 | **+41,64 / +62,12** | 1396 / 1464 |
+  | misalign-5 / 10 | 0,8337 / 0,6955 | 0,8015 / 0,6613 | −3,23 / −3,42 | 88 / 162 |
+  | **misalign-20 / 40** | 0,2656 / 0,0900 | 0,6820 / 0,7112 | **+41,63 / +62,13** | 1396 / 1464 |
   | drop_rgb / drop_ir | 0,8287 / 0,7195 | aynı (piksel değişmedi) | 0 / 0 | rgb_off 1469 / ir_off 1469 |
 
   Z birleşik (noise-20, misalign-20, misalign-40): **+40,7 puan [+38,3; +43,1]**.
 - **Kabul ölçütleri (val, ölçümden önce sabit):** Kabul 1 ❌ temiz fark −3,09 puan (sınır ≥ −0,5) · Kabul 2 ✅ Z aralığı tamamen 0'ın üstünde · Kabul 3 ❌ temiz yanlış alarm %4,08 (sınır ≤ %2). Kabul 4 (kalibrasyon) laptopta ölçülecek.
-- **Test kontrolü (tek sefer, 8980 görüntü):** clean 0,8250 → 0,7919 (−3,31; kapı 445 kare, %4,96) · noise-20 0,5401 → 0,6904 (+15,03; 8980) · misalign-20 0,2959 → 0,6604 (+36,45; 8539, %95,1). Z (noise-20, misalign-20): **+25,7 puan [+24,6; +26,9]**. Testteki kapısız temiz değer Faz 1 final testiyle aynı (0,8250): ölçüm yolu tekrarlanabilir.
+- **Test kontrolü (tek sefer, 8980 görüntü):** clean 0,8250 → 0,7919 (−3,32; kapı 445 kare, %4,96) · noise-20 0,5401 → 0,6904 (+15,03; 8980) · misalign-20 0,2959 → 0,6604 (+36,46; 8539, %95,1). Z (noise-20, misalign-20): **+25,7 puan [+24,6; +26,9]**. Testteki kapısız temiz değer Faz 1 final testiyle aynı (0,8250): ölçüm yolu tekrarlanabilir.
 - **İlk okuma:**
   1. Kapı bozuk IR'de büyük kazanç sağlıyor (gürültüde kapalı IR = IR kaybı 0,7195; hizasızlıkta tespit %95-99,7).
   2. Ama her koşulda karelerin ≈ %4-5'inde yanlış tetikleniyor ve bu kareler pahalı: temiz val'de %4 kare 3 puan kaybettiriyor; karartma arttıkça kayıp büyüyor (−3,1 → −6,5). Dal incelemesinin öngördüğü gibi kaynağın karanlık karelerdeki hizasızlık kestirimi olması muhtemel; sağlık kaydıyla doğrulanacak.
@@ -310,8 +310,8 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
 - **Kontroller** (`scripts/analysis/f2_checks.py`; dal incelemesinin önerileri, yeniden Colab yok):
   1. **Yanlış alarmların kaynağı:** temiz val'deki 60 alarmın **60'ı "IR hizasız"**; **48'i karanlık gece** karesi (val'in %28'i karanlık gece; karanlık gecede alarm oranı 48 / 415 = %11,6), 4 gece, 8 gündüz. Alarm karelerinde faz korelasyonu yanıtının medyanı **0,051** (alarm olmayanlarda 0,559), ölçülen kayma medyanı 57,6 px: karanlık RGB'de kenar haritası eşleşmiyor, kestirim anlamsız bir tepe buluyor. Dal incelemesinin öngördüğü neden doğrulandı.
   2. **Tam sayı Youden J** (`81e3ccb`) ile `train_features.csv`'den yeniden hesaplanan altı eşik Colab'dakilerle **birebir aynı**: kayan nokta eşitlik hatası bu ölçümü etkilemedi.
-  3. **Oturumlar arası sapma yok:** temiz val'de kapının dokunmadığı 1409 karenin **1409'unda** kapılı koşunun tahminleri Faz 1 tahminleriyle aynı (kutu 2, skor 4 ondalık): Faz 1 tabanıyla eşleştirme geçerli.
-  4. **Kabul 4'ün kaybı skor eşitliklerinden:** kalibrasyon test skorlarını 359.235 farklı değerden 80'e indiriyor; eşitlik ham skorla bozulunca test mAP50 **0,814391 = kalibrasyon öncesi** (sıralama birebir korunuyor). Bu, ölçümden sonra yapılmış bir analiz: Kabul 4'ün sonucu değişmez (❌); Faz 3 motoru için kural "kalibre skorla sırala, eşitlikte ham skor" olarak önerilir.
+  3. **Oturumlar arası sapma görülmedi:** temiz val'de kapının dokunmadığı 1409 karenin **1409'unda** kapılı koşunun tahminleri Faz 1'in **ana değerlendirme** tahminleriyle (`baykus-eval`, `data/gap/<run>_val`) aynı (kutu 2, skor 4 ondalık). `compare`'in eşleştirdiği sağlamlık tabanı (Drive `robust/<run>_val_clean`) laptopta olmadığı için onunla ayrıca karşılaştırılmadı; iki Faz 1 kaydının mAP50'si aynı (0,8506). Eşleştirmenin geçerliliği için güçlü ama dolaylı kanıt.
+  4. **Kabul 4'ün kaybı skor eşitliklerinden:** kalibrasyon skorları 80 değere indiriyor (val'de 67.455 farklı ham skordan). **Val'de** (tablo val'den, val'e uygulanmış) mAP50 0,841056 → 0,841138; eşitlik ham skorla bozulunca **0,841056 = kalibrasyon öncesi**: sıralama birebir korunuyor (matematiksel özellik, veriyle seçilmiş bir şey değil). Kabul 4'ün sonucu değişmez (❌); Faz 3 motoru için kural "kalibre skorla sırala, eşitlikte ham skor" önerilir. *Not:* bu analiz ilk önce test setinde yapılmıştı (aynı sonuç: 0,814391 = önce); CLAUDE.md'nin "test yalnız final ölçümde" kuralına aykırı olduğu için val'de yeniden yapıldı; test sayısı hiçbir seçimde kullanılmadı.
 - **Faz 2 kabul özeti:** Kabul 1 ❌ (−3,09 puan), Kabul 2 ✅ (+40,7 [+38,3; +43,1]), Kabul 3 ❌ (%4,08), Kabul 4 ❌ (0,112 puan). Rapor `docs/health.md`.
 
 ## 2026-10-17 · F2 · Karar: kapı düzeltmesi Faz 3'e
