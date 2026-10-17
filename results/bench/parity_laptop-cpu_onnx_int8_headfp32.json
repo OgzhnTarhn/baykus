@@ -1,0 +1,30 @@
+{
+  "variant": "onnx_int8_headfp32",
+  "hardware": "laptop-cpu",
+  "models": {
+    "e1_rgb": {
+      "count_a": 330,
+      "count_b": 329,
+      "matched": 327,
+      "min_iou": 0.9163916445284799,
+      "max_score_diff": 0.09181320667266846,
+      "ok": false
+    },
+    "e2_ir": {
+      "count_a": 323,
+      "count_b": 323,
+      "matched": 322,
+      "min_iou": 0.9647034345026636,
+      "max_score_diff": 0.4688853621482849,
+      "ok": false
+    },
+    "e3c_modality_dropout": {
+      "count_a": 330,
+      "count_b": 331,
+      "matched": 330,
+      "min_iou": 0.9197748484201634,
+      "max_score_diff": 0.17225879430770874,
+      "ok": false
+    }
+  }
+}

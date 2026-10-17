@@ -1,0 +1,92 @@
+{
+  "pipeline": "e4_late_fusion",
+  "variant": "onnx_int8",
+  "hardware": "laptop-cpu",
+  "models": [
+    {
+      "name": "e1_rgb",
+      "file": "..\\data\\edge\\models\\2026-10-11_e1-rgb_s_49da0cb_onnx_int8.onnx",
+      "size_mb": 10.276,
+      "sha256": "2170a4ce3845e4458c1a827ad528b8c9bb617b1c84f9ca5f06f4d0c2d890032e"
+    },
+    {
+      "name": "e2_ir",
+      "file": "..\\data\\edge\\models\\2026-10-14_e2-ir_s_02c4098_onnx_int8.onnx",
+      "size_mb": 10.277,
+      "sha256": "3c2da938e722ca005f71a64b74fac780e86f81cb011f7f809c03a28425a91588"
+    }
+  ],
+  "protocol": {
+    "warmup": 50,
+    "runs": 500,
+    "imgsz": 640,
+    "images": 20,
+    "conf": 0.25,
+    "provider": "cpu",
+    "batch": 1
+  },
+  "threads": null,
+  "stages": {
+    "pre": {
+      "p50": 8.1467,
+      "p95": 11.398725,
+      "mean": 8.8712906,
+      "n": 500
+    },
+    "infer_rgb": {
+      "p50": 99.03575000000001,
+      "p95": 115.081005,
+      "mean": 100.64282560000001,
+      "n": 500
+    },
+    "infer_ir": {
+      "p50": 104.4757,
+      "p95": 116.89175,
+      "mean": 105.6364452,
+      "n": 500
+    },
+    "post": {
+      "p50": 0.27154999999999996,
+      "p95": 0.656405,
+      "mean": 0.31346219999999997,
+      "n": 500
+    },
+    "fuse": {
+      "p50": 2.0817,
+      "p95": 7.513435,
+      "mean": 2.8549148,
+      "n": 500
+    },
+    "total": {
+      "p50": 216.13619999999997,
+      "p95": 241.47602999999998,
+      "mean": 218.31893839999998,
+      "n": 500
+    }
+  },
+  "fps": 4.5804546656773235,
+  "peak_rss_mb": 606.96576,
+  "system": {
+    "device": "AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD",
+    "driver": null,
+    "cpu_count": 16,
+    "cpu_brand": "AMD Ryzen 7 8845HS w/ Radeon 780M Graphics",
+    "cpu_flags": [
+      "avx2",
+      "avx512f"
+    ],
+    "physical_cores": 8,
+    "logical_cores": 16,
+    "ram_gb": 16.4,
+    "power_plugged": true,
+    "software": {
+      "onnxruntime": "1.30.0",
+      "onnxruntime-gpu": null,
+      "tensorrt": null,
+      "numpy": "2.4.6",
+      "opencv-python": "5.0.0.93"
+    }
+  },
+  "git_commit": "7dc9f78cb33bf726aedca685cf66357c43ff3a25",
+  "created_at": "2026-10-17T10:01:15Z"
+}

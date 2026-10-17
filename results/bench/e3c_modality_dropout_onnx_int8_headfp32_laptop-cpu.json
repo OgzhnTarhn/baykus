@@ -1,0 +1,74 @@
+{
+  "pipeline": "e3c_modality_dropout",
+  "variant": "onnx_int8_headfp32",
+  "hardware": "laptop-cpu",
+  "models": [
+    {
+      "name": "e3c_modality_dropout",
+      "file": "..\\data\\edge\\models\\2026-10-15_e3c-modality-dropout_s_d4e1280_onnx_int8_headfp32.onnx",
+      "size_mb": 11.571,
+      "sha256": "ea8fe52ecd987d0900d9bd6176fb27a3ec342128dade83428e07373deba37336"
+    }
+  ],
+  "protocol": {
+    "warmup": 50,
+    "runs": 500,
+    "imgsz": 640,
+    "images": 20,
+    "conf": 0.25,
+    "provider": "cpu",
+    "batch": 1
+  },
+  "threads": null,
+  "stages": {
+    "pre": {
+      "p50": 4.087400000000001,
+      "p95": 5.0143,
+      "mean": 4.237566800000001,
+      "n": 500
+    },
+    "infer": {
+      "p50": 85.90635,
+      "p95": 103.16909,
+      "mean": 87.54811,
+      "n": 500
+    },
+    "post": {
+      "p50": 0.0946,
+      "p95": 0.14292,
+      "mean": 0.09726040000000001,
+      "n": 500
+    },
+    "total": {
+      "p50": 90.12254999999999,
+      "p95": 108.14719,
+      "mean": 91.8829372,
+      "n": 500
+    }
+  },
+  "fps": 10.88341350933653,
+  "peak_rss_mb": 351.051776,
+  "system": {
+    "device": "AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD",
+    "driver": null,
+    "cpu_count": 16,
+    "cpu_brand": "AMD Ryzen 7 8845HS w/ Radeon 780M Graphics",
+    "cpu_flags": [
+      "avx2",
+      "avx512f"
+    ],
+    "physical_cores": 8,
+    "logical_cores": 16,
+    "ram_gb": 16.4,
+    "power_plugged": true,
+    "software": {
+      "onnxruntime": "1.30.0",
+      "onnxruntime-gpu": null,
+      "tensorrt": null,
+      "numpy": "2.4.6",
+      "opencv-python": "5.0.0.93"
+    }
+  },
+  "git_commit": "7dc9f78cb33bf726aedca685cf66357c43ff3a25",
+  "created_at": "2026-10-17T10:06:08Z"
+}

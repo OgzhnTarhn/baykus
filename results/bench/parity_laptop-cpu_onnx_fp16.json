@@ -1,0 +1,30 @@
+{
+  "variant": "onnx_fp16",
+  "hardware": "laptop-cpu",
+  "models": {
+    "e1_rgb": {
+      "count_a": 328,
+      "count_b": 328,
+      "matched": 328,
+      "min_iou": 1.0,
+      "max_score_diff": 0.0,
+      "ok": true
+    },
+    "e2_ir": {
+      "count_a": 319,
+      "count_b": 319,
+      "matched": 319,
+      "min_iou": 1.0,
+      "max_score_diff": 0.0,
+      "ok": true
+    },
+    "e3c_modality_dropout": {
+      "count_a": 325,
+      "count_b": 325,
+      "matched": 325,
+      "min_iou": 1.0,
+      "max_score_diff": 0.0,
+      "ok": true
+    }
+  }
+}
