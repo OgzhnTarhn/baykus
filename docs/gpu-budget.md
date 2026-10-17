@@ -62,3 +62,4 @@
 
   E4 RGB etiketleri: fp32 0,7743 · fp16 0,7745 · int8 0,7021 · int8_headfp32 0,7744. Sonuç dosyaları Drive'da `results/edge/` (repoya indirilmeyi bekliyor).
 - **06_edge `PART='onnx'` laptop zip'i** (aynı oturum, 12,6 sn): `bench-inputs` 20 val görüntüsü, 3 modalite, 12 Colab referansı. Boyutlar: `models` 227 MB, `bench_inputs` **341 MB** (tahminim ≈ 30 MB'tı: önceden işlenmiş `.npy` girdileri 640×640 float32, görüntü başına ≈ 5-6,5 MB × 3 modalite; yalnız NPU denemesi için), zip 567 MB. `.npy`'ler laptopta görüntülerden yeniden üretilebildiği için zip'ten çıkarılır.
+- **06_edge laptop zip'i yeniden** (`.npy`'ler hariç): **254 MB** (`MyDrive/baykus/edge/edge_laptop.zip`).
