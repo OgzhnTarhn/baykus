@@ -967,6 +967,116 @@ FINAL_CELLS = [
 ]
 
 
+HEALTH_CELLS = [
+    md(
+        """
+        # 08 — Faz 2: sensör sağlığı kapısı (tek oturum)
+        ⚠️ **Test seti bu notebook'ta bir kez, 3 koşulda ölçülür; sonra eşik ya da kural değişmez.**
+        **Çalışma zamanı → A100** (GPU: Ultralytics val; 12 CPU çekirdeği: koşul üretimi ve
+        bootstrap). Secrets: `KAGGLE_API_TOKEN`, `GITHUB_TOKEN`. Oturum koparsa yeniden
+        **Tümünü çalıştır**: eşik dosyası ve biten koşullar atlanır.
+        Süreler tahmindir (Faz 1'de E6 koşul başına ≈ 1 dk). Bütün çıktıları Claude'a getir.
+        """
+    ),
+    code(
+        """
+        BRANCH = 'f2'
+        DRIVE = '/content/drive/MyDrive/baykus'
+        from google.colab import drive
+        drive.mount('/content/drive')
+        """
+    ),
+    KAGGLE_TOKEN,
+    CLONE_BRANCH,
+    code(
+        """
+        %%time
+        !pip -q install uv kaggle
+        !uv pip install --system -q -e '/content/baykus/python[train]'
+        import sys
+        sys.path.insert(0, '/content/baykus/python/src')
+        !python --version && nproc && (nvidia-smi -L || true)
+        """
+    ),
+    DATA_DOWNLOAD,
+    code(
+        """
+        # Model ve Faz 1 taban tahminleri (kapısız E3c; val, 16 koşul). Eksik varsa dur.
+        import json, os
+        from pathlib import Path
+        from baykus.robustness.corruptions import suite_conditions
+        from baykus.train.checkpoints import find_runs
+        NPROC = os.cpu_count()
+        EXPECT = '2026-10-15_e3c-modality-dropout_s_d4e1280'   # results/robust'taki E3c kayıtları
+        done = find_runs(f'{DRIVE}/runs', 'e3c_modality_dropout', finished=True)
+        assert done, 'E3c tam eğitimi bulunamadı'
+        RUN = json.loads((done[-1] / 'baykus_train.json').read_text(encoding='utf-8'))['run_id']
+        print('E3c →', RUN)
+        assert RUN == EXPECT, f"run kimliği {RUN} ≠ {EXPECT}: Claude'a söyle"
+        MODEL = f'../configs/e3c_modality_dropout.yaml={done[-1]}/weights/best.pt'
+        missing = [c.id for c in suite_conditions()
+                   if not Path(f'{DRIVE}/robust/{RUN}_val_{c.id}/predictions_coco.json.gz').exists()]
+        print('eksik Faz 1 taban tahmini:', missing or 'yok')
+        assert not missing, "eksik koşulları Claude'a söyle (03_robust ile yeniden üretilir)"
+        TH = f'{DRIVE}/results/health/thresholds.json'
+        COMMON = f'--data-root /content/dv_rgbt --meta /content/meta --project {DRIVE}/robust --results {DRIVE}/results --workers {NPROC}'
+        TEST_CONDS = 'clean noise-20 misalign-20'
+        """
+    ),
+    code(
+        """
+        %%time
+        # 1) Eşikler: train'den 500 görüntü (seed 42) × 16 koşul, Youden J (≈ 2-4 dk).
+        # Dosya varsa yeniden üretilmez: değişirse biten koşullar "başka eşik" hatası verir.
+        if Path(TH).exists():
+            print('eşikler zaten var:', TH)
+        else:
+            !cd /content/baykus/python && baykus-health fit --data-root /content/dv_rgbt --meta /content/meta --out {TH} --features-out {DRIVE}/health/train_features.csv --workers {NPROC}
+        print(json.dumps({k: round(v['threshold'], 3) for k, v in json.load(open(TH))['states'].items()}))
+        """
+    ),
+    code(
+        """
+        %%time
+        # 2) Val, kapılı sağlamlık paketi: 16 koşul; yalnız kapının piksel değiştirdiği koşullar
+        # yeniden değerlendirilir (≈ 15-25 dk). Son 20 satırı getir.
+        !cd /content/baykus/python && baykus-health suite --model {MODEL} --thresholds {TH} --split val --work /content/health_work {COMMON}
+        """
+    ),
+    code(
+        """
+        %%time
+        # 3) Test, taban (kapısız E3c): temiz, IR gürültüsü σ 20, hizasızlık 20 px (≈ 12-18 dk).
+        !cd /content/baykus/python && baykus-robust run --model {MODEL} --split test --conditions {TEST_CONDS} --n-boot 0 --work /content/robust_work {COMMON}
+        """
+    ),
+    code(
+        """
+        %%time
+        # 4) Test, kapılı: aynı 3 koşul (≈ 10-15 dk).
+        !cd /content/baykus/python && baykus-health suite --model {MODEL} --thresholds {TH} --split test --conditions {TEST_CONDS} --work /content/health_work {COMMON}
+        """
+    ),
+    code(
+        """
+        %%time
+        # 5) E3c + kapı − E3c: 1000 eşleştirilmiş bootstrap (val ≈ 3-6 dk, test ≈ 5-10 dk).
+        # Kabul satırlarını getir.
+        for SPLIT in ['val', 'test']:
+            !cd /content/baykus/python && baykus-health compare --run-id {RUN} --split {SPLIT} --robust-preds {DRIVE}/robust --data-root /content/dv_rgbt --results {DRIVE}/results --workers {NPROC}
+        """
+    ),
+    code(
+        """
+        # 6) İndirilecekler: sonuç klasörleri ve laptopa inecek ONNX test tahminlerinin boyutu.
+        !du -sh {DRIVE}/results/health {DRIVE}/results/gate
+        !ls {DRIVE}/results/robust | grep _test_
+        ONNX_TEST = f'{DRIVE}/edge/eval/{RUN}_test_onnx_fp32/predictions_coco.json.gz'
+        !ls -la "{ONNX_TEST}"
+        """
+    ),
+]
+
 def build(cells: list[tuple[str, str]], path: Path, gpu: bool) -> None:
     nb = nbf.v4.new_notebook()
     nb.cells = [
@@ -990,4 +1100,5 @@ if __name__ == "__main__":
     build(M3OT_CELLS, Path("notebooks/colab/05_m3ot.ipynb"), gpu=False)  # ilk açılış CPU (inceleme)
     build(EDGE_CELLS, Path("notebooks/colab/06_edge.ipynb"), gpu=True)
     build(FINAL_CELLS, Path("notebooks/colab/07_final_test.ipynb"), gpu=True)
+    build(HEALTH_CELLS, Path("notebooks/colab/08_health.ipynb"), gpu=True)
     print("ok")
