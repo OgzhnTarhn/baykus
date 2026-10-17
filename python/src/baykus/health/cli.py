@@ -1,6 +1,7 @@
 """baykus-health: Faz 2 sensör sağlığı kapısı ve güven kalibrasyonu.
 
-fit — kapı eşiklerini train'de bozulmuş görüntülerden seçer (Youden J).
+fit   — kapı eşiklerini train'de bozulmuş görüntülerden seçer (Youden J).
+suite — sağlamlık paketini kapıyla çalıştırır (E3c + kapı; kaldığı yerden sürer).
 """
 
 from __future__ import annotations
@@ -15,6 +16,9 @@ from pathlib import Path
 from baykus.edge.calib import calibration_stems
 from baykus.health.features import FEATURES
 from baykus.health.fit import feature_rows, fit_thresholds
+from baykus.health.suite import run_gated_suite
+from baykus.robustness.cli import load_model_spec
+from baykus.robustness.corruptions import select_conditions, suite_conditions
 from baykus.runinfo import git_info, iso, utc_now, write_json
 
 
@@ -54,6 +58,27 @@ def _cmd_fit(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_suite(a: argparse.Namespace) -> int:
+    model = load_model_spec(a.model)
+    conds = select_conditions(a.conditions) if a.conditions else suite_conditions()
+    n = run_gated_suite(
+        model,
+        conds,
+        Path(a.thresholds),
+        src=Path(a.data_root),
+        work=Path(a.work),
+        meta=Path(a.meta),
+        split=a.split,
+        project=Path(a.project),
+        results=Path(a.results),
+        seed=a.seed,
+        workers=a.workers,
+        device=a.device,
+    )
+    print(f"kapıyla değerlendirilen koşul: {n}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="baykus-health")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -66,6 +91,22 @@ def build_parser() -> argparse.ArgumentParser:
     f.add_argument("--seed", type=int, default=42)
     f.add_argument("--workers", type=int, default=1)
     f.set_defaults(func=_cmd_fit)
+    s = sub.add_parser("suite", help="sağlamlık paketini kapıyla çalıştır")
+    s.add_argument("--model", required=True, help="CONFIG=AĞIRLIK (4 kanallı model, E3c)")
+    s.add_argument("--thresholds", required=True, help="baykus-health fit çıktısı")
+    s.add_argument("--data-root", required=True)
+    s.add_argument("--meta", required=True, help="slices_<split>.json klasörü")
+    s.add_argument("--split", default="val", choices=["val", "test"])
+    s.add_argument(
+        "--conditions", nargs="+", default=None, help="koşul kimlikleri (varsayılan: hepsi)"
+    )
+    s.add_argument("--work", default="runs/health_work", help="geçici koşul klasörleri")
+    s.add_argument("--project", default="runs/robust", help="tahmin ve sağlık kayıtları")
+    s.add_argument("--results", default="../results")
+    s.add_argument("--seed", type=int, default=42)
+    s.add_argument("--workers", type=int, default=1)
+    s.add_argument("--device", default=None)
+    s.set_defaults(func=_cmd_suite)
     return p
 
 
