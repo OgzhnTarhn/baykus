@@ -1,7 +1,8 @@
 """baykus-health: Faz 2 sensör sağlığı kapısı ve güven kalibrasyonu.
 
 fit   — kapı eşiklerini train'de bozulmuş görüntülerden seçer (Youden J).
-suite — sağlamlık paketini kapıyla çalıştırır (E3c + kapı; kaldığı yerden sürer).
+suite   — sağlamlık paketini kapıyla çalıştırır (E3c + kapı; kaldığı yerden sürer).
+compare — E3c + kapı − E3c eşleştirilmiş bootstrap, kabul ölçütleri (gate_<split>.json).
 """
 
 from __future__ import annotations
@@ -14,6 +15,8 @@ import sys
 from pathlib import Path
 
 from baykus.edge.calib import calibration_stems
+from baykus.eval.cli import load_coco
+from baykus.health.compare import gate_report
 from baykus.health.features import FEATURES
 from baykus.health.fit import feature_rows, fit_thresholds
 from baykus.health.suite import run_gated_suite
@@ -79,6 +82,36 @@ def _cmd_suite(a: argparse.Namespace) -> int:
     return 0
 
 
+def _mark(ok: bool) -> str:
+    return "✅" if ok else "❌"
+
+
+def _cmd_compare(a: argparse.Namespace) -> int:
+    gt = load_coco(Path(a.data_root) / "coco" / f"{a.split}_ir.json")
+    rep = gate_report(
+        run_id=a.run_id,
+        split=a.split,
+        robust_preds=Path(a.robust_preds),
+        gt=gt,
+        results=Path(a.results),
+        n_boot=a.n_boot,
+        seed=a.seed,
+        workers=a.workers,
+    )
+    out = write_json(Path(a.results) / "health" / f"gate_{a.split}.json", rep)
+    print(out)
+    h = rep["harmful"]
+    if h:
+        print(f"Z {h['conditions']}: ort. fark {h['diff'] * 100:+.1f} puan, GA {h['ci95']}")
+    acc = rep["acceptance"]
+    if acc:
+        k1, k2, k3 = acc["k1"], acc["k2"], acc["k3"]
+        print(f"Kabul 1 {_mark(k1['passed'])} temiz fark {k1['value'] * 100:+.2f} puan (≥ −0,5)")
+        print(f"Kabul 2 {_mark(k2['passed'])} Z birleşik GA {k2['ci95']} (alt sınır > 0)")
+        print(f"Kabul 3 {_mark(k3['passed'])} temiz yanlış alarm {k3['value'] * 100:.2f}% (≤ %2)")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="baykus-health")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -107,6 +140,16 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--workers", type=int, default=1)
     s.add_argument("--device", default=None)
     s.set_defaults(func=_cmd_suite)
+    c = sub.add_parser("compare", help="E3c + kapı − E3c ve kabul ölçütleri")
+    c.add_argument("--run-id", required=True)
+    c.add_argument("--split", default="val", choices=["val", "test"])
+    c.add_argument("--robust-preds", required=True, help="Faz 1 ve kapılı tahmin klasörleri")
+    c.add_argument("--data-root", required=True, help="coco/<split>_ir.json kökü")
+    c.add_argument("--results", default="../results")
+    c.add_argument("--n-boot", type=int, default=1000)
+    c.add_argument("--seed", type=int, default=42)
+    c.add_argument("--workers", type=int, default=1)
+    c.set_defaults(func=_cmd_compare)
     return p
 
 
