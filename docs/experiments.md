@@ -277,3 +277,4 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
   1. **300 kutu sınırı farkın küçük bir kısmı:** E3c 0,1 / 0,95 puan, E2 0,25 / 1,3 puan.
   2. **Kayıp küçük nesnelerde:** small AP E3c −9,7, E2 −12,2 puan; medium / large neredeyse aynı. Export'lu model toplamda daha fazla kutu üretiyor (E3c 72.201 / 62.860).
   3. Kalan hipotez (b): ölçek aynı (640×512 görüntü iki yolda da büyütülmüyor), değişen yalnız dolgu ve ızgara boyutu. Doğrulamak için PyTorch modelini Ultralytics val'de `rect=False` (kare girdi) ile ölçmek gerekiyor (Colab, kısa T4 oturumu).
+- **Karar (kullanıcı, 2026-10-17):** Colab doğrulaması yapılmadı; sevk kararını etkilemiyor. Dikdörtgen (640×512) export Faz 3'te C++ motoruyla birlikte denenecek (hem küçük nesne doğruluğu hem ≈ %20 daha az piksel).
