@@ -278,3 +278,29 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
   2. **Kayıp küçük nesnelerde:** small AP E3c −9,7, E2 −12,2 puan; medium / large neredeyse aynı. Export'lu model toplamda daha fazla kutu üretiyor (E3c 72.201 / 62.860).
   3. Kalan hipotez (b): ölçek aynı (640×512 görüntü iki yolda da büyütülmüyor), değişen yalnız dolgu ve ızgara boyutu. Doğrulamak için PyTorch modelini Ultralytics val'de `rect=False` (kare girdi) ile ölçmek gerekiyor (Colab, kısa T4 oturumu).
 - **Karar (kullanıcı, 2026-10-17):** Colab doğrulaması yapılmadı; sevk kararını etkilemiyor. Dikdörtgen (640×512) export Faz 3'te C++ motoruyla birlikte denenecek (hem küçük nesne doğruluğu hem ≈ %20 daha az piksel).
+
+## 2026-10-17 · F2 · Sensör sağlığı kapısı (08_health, tek Colab oturumu) — ham sonuçlar
+- **Kurulum:** `notebooks/colab/08_health.ipynb`, Colab A100-SXM4-40GB, 12 CPU çekirdeği, Python 3.13.15, Ultralytics 8.4.177, `BRANCH=f2` (commit `4fb259e`). Model E3c `2026-10-15_e3c-modality-dropout_s_d4e1280` (PyTorch, Faz 1 sağlamlık yolu; plan F2 Spec yorumları 1). Faz 1 val taban tahminleri 16 koşulun hepsinde Drive'da (eksik yok). Eşikler train'den 500 görüntü (seed 42) × 16 koşul, Youden J. Yeni değerlendirme kayıtları `n_boot = 0`; aralıklar `baykus-health compare` (1000 eşleştirilmiş bootstrap, seed 42, IR etiketleri).
+- **Süreler:** kurulum 6,9 sn · veri 9 dk 30 sn · eşikler 19,4 sn · val kapılı paket 21 dk 44 sn · test taban (3 koşul) 17 dk 48 sn · test kapılı 36 dk 55 sn · karşılaştırma (val + test) 8 dk 7 sn.
+- **Eşikler (train; `results/health/thresholds.json`):** rgb_lost std ≤ 0,086 (TPR 1,000 / FPR 0,000) · ir_lost std ≤ 6,564 (1,000 / 0,000) · ir_noisy gürültü ≥ 15,035 (1,000 / 0,000) · misaligned kayma ≥ 16,158 px (0,979 / 0,067) · rgb_blurry (bilgi) ≤ 32,574 (0,968 / 0,116) · ir_blurry (bilgi) ≤ 64,683 (0,955 / 0,089). Train temiz karelerde kapı oranı **%5,00**.
+- **Val (mAP50, IR; E3c → E3c + kapı; kapının IR'yi kapattığı kare / 1469):**
+
+  | Koşul | E3c | + kapı | Δ puan | Kapı |
+  |---|---|---|---|---|
+  | clean | 0,8506 | 0,8197 | −3,09 | 60 |
+  | darken-0.5 / 0.25 / 0.1 | 0,8411 / 0,8360 / 0,8317 | 0,8102 / 0,7910 / 0,7669 | −3,09 / −4,50 / −6,48 | 67 / 68 / 76 |
+  | noise-5 / 10 | 0,8413 / 0,7704 | 0,8106 / 0,7413 | −3,07 / −2,91 | 63 / 69 |
+  | **noise-20** | 0,5355 | 0,7195 | **+18,40** | 1469 |
+  | blur-3 / 7 / 11 | 0,8307 / 0,7440 / 0,6523 | 0,8078 / 0,7232 / 0,6328 | −2,29 / −2,08 / −1,95 | 61 / 61 / 65 |
+  | misalign-5 / 10 | 0,8337 / 0,6955 | 0,8015 / 0,6613 | −3,22 / −3,42 | 88 / 162 |
+  | **misalign-20 / 40** | 0,2656 / 0,0900 | 0,6820 / 0,7112 | **+41,64 / +62,12** | 1396 / 1464 |
+  | drop_rgb / drop_ir | 0,8287 / 0,7195 | aynı (piksel değişmedi) | 0 / 0 | rgb_off 1469 / ir_off 1469 |
+
+  Z birleşik (noise-20, misalign-20, misalign-40): **+40,7 puan [+38,3; +43,1]**.
+- **Kabul ölçütleri (val, ölçümden önce sabit):** Kabul 1 ❌ temiz fark −3,09 puan (sınır ≥ −0,5) · Kabul 2 ✅ Z aralığı tamamen 0'ın üstünde · Kabul 3 ❌ temiz yanlış alarm %4,08 (sınır ≤ %2). Kabul 4 (kalibrasyon) laptopta ölçülecek.
+- **Test kontrolü (tek sefer, 8980 görüntü):** clean 0,8250 → 0,7919 (−3,31; kapı 445 kare, %4,96) · noise-20 0,5401 → 0,6904 (+15,03; 8980) · misalign-20 0,2959 → 0,6604 (+36,45; 8539, %95,1). Z (noise-20, misalign-20): **+25,7 puan [+24,6; +26,9]**. Testteki kapısız temiz değer Faz 1 final testiyle aynı (0,8250): ölçüm yolu tekrarlanabilir.
+- **İlk okuma:**
+  1. Kapı bozuk IR'de büyük kazanç sağlıyor (gürültüde kapalı IR = IR kaybı 0,7195; hizasızlıkta tespit %95-99,7).
+  2. Ama her koşulda karelerin ≈ %4-5'inde yanlış tetikleniyor ve bu kareler pahalı: temiz val'de %4 kare 3 puan kaybettiriyor; karartma arttıkça kayıp büyüyor (−3,1 → −6,5). Dal incelemesinin öngördüğü gibi kaynağın karanlık karelerdeki hizasızlık kestirimi olması muhtemel; sağlık kaydıyla doğrulanacak.
+  3. Tasarımın anti-hedefi gerçekleşti: kapı temiz veride sistemi kötüleştiriyor. Önceden kaydedilen kurala göre Faz 2 kapısı **olumsuz sonuç**.
+- **Sonuç dosyaları:** Drive `results/health/` (41 KB), `results/gate/` (55 KB), `results/robust/*_test_*` (3); repoya indirilmeyi bekliyor.
