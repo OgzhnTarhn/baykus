@@ -97,6 +97,16 @@ def suite_conditions(only: Iterable[str] | None = None) -> list[Condition]:
     return conds
 
 
+def select_conditions(ids: Iterable[str]) -> list[Condition]:
+    """Koşul kimliğiyle seçim (ör. test kontrolü: clean, noise-20, misalign-20); SUITE sırası."""
+    want = set(ids)
+    conds = suite_conditions()
+    unknown = sorted(want - {c.id for c in conds})
+    if unknown:
+        raise ValueError(f"bilinmeyen koşul: {unknown}; seçenekler: {[c.id for c in conds]}")
+    return [c for c in conds if c.id in want]
+
+
 def applies(cond: Condition, mode: str) -> bool:
     needs = MODE_NEEDS[mode]
     if cond.corruption == "clean":

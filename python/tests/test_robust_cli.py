@@ -209,3 +209,28 @@ def test_cli_ir_misalign_flag_reaches_suite(tmp_path: Path, monkeypatch):
     assert main(["run", "--model", f"{cfg}={w}", "--data-root", str(tmp_path),
                  "--meta", str(tmp_path), "--ir-misalign"]) == 0  # fmt: skip
     assert seen["ir_misalign"] is True
+
+
+def test_conditions_and_only_are_exclusive():
+    from baykus.robustness.cli import build_parser
+
+    base = ["run", "--model", "a=b", "--data-root", "d", "--meta", "m"]
+    with pytest.raises(SystemExit):
+        build_parser().parse_args([*base, "--only", "noise", "--conditions", "noise-20"])
+    a = build_parser().parse_args([*base, "--conditions", "clean", "noise-20"])
+    assert a.conditions == ["clean", "noise-20"]
+
+
+def test_cli_conditions_select_by_id(tmp_path: Path, monkeypatch):
+    import baykus.robustness.cli as rc
+
+    spec = _spec(tmp_path, "early_fusion")
+    got = {}
+    monkeypatch.setattr(rc, "load_model_spec", lambda s: spec)
+    monkeypatch.setattr(
+        rc, "run_suite", lambda models, conds, **kw: got.setdefault("c", conds) and 0
+    )
+    args = ["run", "--model", "x=y", "--data-root", str(tmp_path), "--meta", str(tmp_path)]
+    assert main([*args, "--split", "test", "--conditions", "misalign-20", "clean"]) == 0
+    assert [c.id for c in got["c"]] == ["clean", "misalign-20"]
+    assert main([*args, "--conditions", "noise-7"]) == 2

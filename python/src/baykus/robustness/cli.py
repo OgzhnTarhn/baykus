@@ -16,7 +16,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from baykus.robustness.corruptions import SUITE, Condition, applies, suite_conditions
+from baykus.robustness.corruptions import (
+    SUITE,
+    Condition,
+    applies,
+    select_conditions,
+    suite_conditions,
+)
 from baykus.robustness.dataset import make_condition
 from baykus.train.config import MODALITY_DIR, ConfigError, ExperimentConfig, load_config
 
@@ -169,9 +175,10 @@ def run_suite(
 def _cmd_run(a: argparse.Namespace) -> int:
     try:
         models = [load_model_spec(s) for s in a.model]
+        conds = select_conditions(a.conditions) if a.conditions else suite_conditions(a.only)
         n = run_suite(
             models,
-            suite_conditions(a.only),
+            conds,
             src=Path(a.data_root),
             work=Path(a.work),
             meta=Path(a.meta),
@@ -184,7 +191,7 @@ def _cmd_run(a: argparse.Namespace) -> int:
             workers=a.workers,
             ir_misalign=a.ir_misalign,
         )
-    except (RobustError, ConfigError, FileNotFoundError) as e:
+    except (ValueError, ConfigError, FileNotFoundError) as e:  # RobustError dahil
         print(f"hata: {e}", file=sys.stderr)
         return 2
     print(f"değerlendirilen (model, koşul): {n}")
@@ -224,7 +231,9 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--project", default="runs/robust", help="tahmin dosyaları (K1)")
     r.add_argument("--results", default="../results")
     r.add_argument("--seed", type=int, default=42)
-    r.add_argument("--only", nargs="+", choices=list(SUITE), default=None)
+    sel = r.add_mutually_exclusive_group()
+    sel.add_argument("--only", nargs="+", choices=list(SUITE), default=None)
+    sel.add_argument("--conditions", nargs="+", default=None, help="koşul kimlikleri, ör. noise-20")
     r.add_argument("--n-boot", type=int, default=None)
     r.add_argument("--device", default=None)
     r.add_argument("--workers", type=int, default=1)

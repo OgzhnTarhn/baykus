@@ -119,3 +119,30 @@ def test_parallel_pool_uses_spawn(src: Path, tmp_path: Path, monkeypatch):
     monkeypatch.setattr(ds, "ProcessPoolExecutor", Spy)
     make_condition(src, tmp_path / "p", "val", CLEAN, {"ir"}, seed=42, workers=2)
     assert seen["ctx"] == "spawn"
+
+
+def _zero_ir_hook(bgr: np.ndarray, ir: np.ndarray):  # spawn işçisine gidebilsin: modül düzeyi
+    return bgr, np.zeros_like(ir), {"gate": "ir_off"}
+
+
+@pytest.mark.parametrize("workers", [1, 2])
+def test_make_condition_hook_writes_hooked_pixels_and_log(tmp_path: Path, workers: int):
+    import json
+
+    src = make_synthetic_dataset(tmp_path / "d", with_ir=True)
+    out = tmp_path / "c"
+    n = make_condition(src, out, "val", CLEAN, {"rgbt4"}, 42, workers, hook=_zero_ir_hook)
+    tifs = sorted((out / "rgbt4/images/val").glob("*.tif"))
+    assert len(tifs) == n
+    t = _pages(tifs[0])
+    assert not t[..., 3].any() and t[..., :3].any()
+    lines = (out / "hook.jsonl").read_text(encoding="utf-8").splitlines()
+    recs = [json.loads(x) for x in lines]
+    assert len(recs) == n and all(r["gate"] == "ir_off" for r in recs)
+    assert [r["stem"] for r in recs] == [p.stem for p in tifs]
+
+
+def test_make_condition_without_hook_writes_no_log(tmp_path: Path):
+    src = make_synthetic_dataset(tmp_path / "d", with_ir=True)
+    make_condition(src, tmp_path / "c", "val", CLEAN, {"rgbt4"}, 42)
+    assert not (tmp_path / "c/hook.jsonl").exists()

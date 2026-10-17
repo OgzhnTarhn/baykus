@@ -135,3 +135,12 @@ def test_apply_condition_targets_and_purity():
 def test_late_fusion_sees_every_condition():
     for c in suite_conditions():
         assert applies(c, "late_fusion"), c.id
+
+
+def test_select_conditions_by_id():
+    from baykus.robustness.corruptions import select_conditions
+
+    got = [c.id for c in select_conditions(["misalign-20", "clean", "noise-20"])]
+    assert got == ["clean", "noise-20", "misalign-20"]  # SUITE sırası
+    with pytest.raises(ValueError, match="noise-7"):
+        select_conditions(["noise-7"])
