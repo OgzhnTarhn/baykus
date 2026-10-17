@@ -124,3 +124,12 @@ def test_cli_report_without_thresholds_is_error(tmp_path: Path, capsys):
 
     assert main(["report", "--health", str(tmp_path), "--out", str(tmp_path / "x.md")]) == 2
     assert "thresholds.json" in capsys.readouterr().err
+
+
+def test_k1_shown_with_two_decimals_and_header_from_json():
+    g = _gate("val", True)
+    g["acceptance"]["k1"] = {"value": -0.0054, "limit": -0.005, "passed": False}
+    g["n_boot"], g["seed"] = 500, 7
+    md = health_markdown(TH, g, None, None, "x.png")
+    assert "| -0.54 | ❌ |" in md  # tek ondalıkta "-0.5 ❌" sınırla çelişik görünürdü
+    assert "(500, seed 7)" in md and "(1000, seed 42)" not in md

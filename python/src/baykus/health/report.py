@@ -126,7 +126,7 @@ def _acceptance(gate_val: dict | None, calib: dict | None) -> list[str]:
         return f"{100 * k['value']:.3f}"
 
     items = [
-        ("Kabul 1", "temiz val'de fark ≥ −0,5 puan", k1, lambda k: _diff(k["value"], None)),
+        ("Kabul 1", "temiz val'de fark ≥ −0,5 puan", k1, lambda k: f"{100 * k['value']:+.2f}"),
         ("Kabul 2", "Z birleşik %95 GA tamamen 0'ın üstünde", k2, lambda k: _ci(k["ci95"])),
         ("Kabul 3", "temiz val'de kapı alarmı ≤ %2 görüntü", k3, pct),
         ("Kabul 4", "kalibrasyonla \\|ΔmAP50\\| ≤ 0,1 puan (test)", k4, points),
@@ -173,12 +173,13 @@ def health_markdown(
     calib: dict | None,
     fig_rel: str,
 ) -> str:
+    boot = gate_val or gate_test or {}
     lines = [
         "# Faz 2 — Sensör sağlığı kapısı ve güven kalibrasyonu",
         "",
         "> Bu dosya `baykus-health report` ile `results/health/*.json`'dan üretildi; elle "
         "düzenlenmez. Hepsi IR etiketleri; GA = görüntü düzeyinde eşleştirilmiş bootstrap "
-        "(1000, seed 42). mAP50 ve farklar puan.",
+        f"({boot.get('n_boot', '—')}, seed {boot.get('seed', '—')}). mAP50 ve farklar puan.",
         "",
         "## Yöntem",
         "",
