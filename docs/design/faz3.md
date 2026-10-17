@@ -1,7 +1,7 @@
 # Faz 3 Tasarımı — Sistem (yalın)
 
 > **Tarih:** 2026-10-17 (taslak) · 2026-10-18 (inceleme bulguları ve kullanıcı kararları işlendi; ikinci
-> bağımsız inceleme işlendi) · **Durum:** taslak v3, kullanıcı onayı bekliyor · **Dal:** `f3`
+> bağımsız inceleme işlendi) · **Durum:** v3, onaylı (2026-10-18; plan `docs/plans/F3.md`) · **Dal:** `f3`
 > **Dayanak:** spec §2.3 S7-S8, §7.4 FR-E/FR-U, §7.5 NFR-1/5/6, §15-§18, §22 H6-H9, ADR 0006, ADR 0007;
 > Faz 2 sonuçları (`docs/health.md`, `docs/experiments.md` "Karar: kapı düzeltmesi Faz 3'e").
 > **Kullanıcı yönergesi (2026-10-17):** sorular atlandı, "tasarıma geç"; yalın, boş iş yok (Faz 2 ile aynı ilke).
@@ -638,7 +638,7 @@ plan haftalara böler):
 | 8 | CI `ui` + `compose` işleri, tarama, `scripts/prepare --bundle`, Wi-Fi kapalı elle test (Kabul 6) | 2-3 gün |
 | 9 | **Son ölçümler (sistem sabit, test bir kez):** M3OT test AP50 / ECE, takip (HOTA / MOTA / IDF1), §4.7 (T) · ADR 0008 · `baykus-system report` → `docs/system.md`, README, spec v4.5, `v0.2.0` | 2-3 gün |
 
-**Toplam ≈ 6-7 hafta** (spec'te 8 hafta, 7 Ara – 31 Oca; takvimin ≈ 7 hafta önündeyiz; Ocak final dönemi
+**Toplam ≈ 6-7 hafta; planda 5 günlük tamponla ≈ 7-8 hafta** (spec'te 8 hafta, 7 Ara – 31 Oca; takvimin ≈ 7 hafta önündeyiz; Ocak final dönemi
 için tampon kalıyor, ADR 0006). En riskli adımlar: 5 (takip eşliği: eşit maliyetler, float32 Kalman) ve
 1 (OpenCV derlemesi, CI süresi). GPU yok; Colab yalnız CPU (adım 1; kullanıcı adımı: figshare çerezleriyle `M3OT.zip` indirme).
 Laptop'a inecekler: M3OT demo paketi (val dizisi + test dizileri; boyut önce görülür, test ≈ 310 MB), fikstür kareleri (≈ 15 MB), Faz 2'nin val tahmin ve sağlık
