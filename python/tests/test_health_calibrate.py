@@ -132,3 +132,17 @@ def test_cli_prints_on_a_cp1254_console(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(sys, "stdout", console)
     args = ["calibrate", "--val-preds", str(v), "--test-preds", str(v), "--coco-dir", str(coco)]
     assert main([*args, "--out", str(tmp_path / "c.json")]) == 0
+
+
+def test_match_labels_excludes_detection_on_ignored_gt():
+    # crowd (yok sayılan) GT'ye düşen tespit ne doğru ne yanlış: kalibrasyona girmez
+    gt = make_gt({1: [(1, [10, 10, 20, 20]), (1, [200, 200, 40, 40])]})
+    gt.dataset["annotations"][1]["iscrowd"] = 1
+    gt.createIndex()
+    dets = [
+        {"image_id": 1, "category_id": 1, "bbox": [10, 10, 20, 20], "score": 0.9},  # doğru
+        {"image_id": 1, "category_id": 1, "bbox": [205, 205, 20, 20], "score": 0.8},  # crowd içi
+        {"image_id": 1, "category_id": 1, "bbox": [400, 400, 20, 20], "score": 0.7},  # yanlış
+    ]
+    s, lab = match_labels(gt, dets)
+    assert sorted(zip(s.tolist(), lab.tolist(), strict=True)) == [(0.7, 0), (0.9, 1)]
