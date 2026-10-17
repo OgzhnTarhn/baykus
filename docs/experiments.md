@@ -240,3 +240,22 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
   2. Füzyon modelleri (E3, E3c, E4, E4b) testte birbirinden ayırt edilemiyor (aralıklar örtüşüyor; eşleştirilmiş farklar val'de, testte hesaplanmadı). Füzyon E1'den ≈ 9 puan, E2'den ≈ 1 puan önde; karanlık gecede E1 0,669, füzyon 0,82-0,83.
   3. Sevk edilen ONNX FP32 sürümü PyTorch E3c'den 1,1 puan düşük (val'de 1,0): E9 bulgusu 5'teki fark, testte de aynı.
 - **Yorum (taslak):** Seçim val'de yapıldı, test bunu bozmadı: E3c hızlı (laptop CPU p95 60 ms) ve testte en iyi füzyon modelleriyle aynı düzeyde.
+
+## 2026-10-17 · E9 (ek) · TensorRT, Colab T4
+- **Kurulum:** Ultralytics `format="engine"` (TensorRT 11.4.0.106), FP32 / FP16 (ModelOpt AutoCast; `/model.23/` başlık düğümleri FP32 kaldı) / INT8 (ModelOpt, 500 train kalibrasyon görüntüsü; Conv'un yanında Add, Mul, Resize, MaxPool, TopK da nicemlendi, kalanı FP16) · doğruluk `baykus-edge eval` (TensorRT, Ultralytics AutoBackend) · bench `baykus-bench --hardware colab-t4` (Tesla T4, oturumda 2 CPU çekirdeği; ön işleme CPU'da).
+- **Sonuç:** `results/edge/*_val_trt_*.json` (12), `results/bench/*_colab-t4.json` (6); tablo `docs/results.md` "Edge (E9)".
+- **Bulgular (val mAP50 IR, Δ ONNX FP32'ye göre puan; T4 p50 / p95 ms):**
+
+  | Pipeline | Varyant | mAP50 | Δ | p50 | p95 | FPS | Motor (MB) |
+  |---|---|---|---|---|---|---|---|
+  | E3c | trt_fp32 | 0,8411 | −0,0 | 13,1 | 14,1 | 75,8 | 121,5 |
+  | E3c | trt_fp16 | 0,8409 | −0,0 | 9,9 | 11,4 | 99,3 | 92,9 |
+  | E3c | trt_int8 | 0,8258 | −1,5 | 9,9 | 11,7 | 99,5 | 34,3 |
+  | E4 | trt_fp32 | 0,8321 | −0,0 | 32,9 | 44,0 | 28,7 | 243,1 |
+  | E4 | trt_fp16 | 0,8323 | +0,0 | 29,0 | 40,9 | 32,3 | 189,0 |
+  | E4 | trt_int8 | 0,8322 | +0,0 | 25,9 | 36,6 | 36,9 | 94,3 |
+
+  1. **GPU'da iki sistem de çok hızlı:** E3c FP16 p95 11 ms (≈ 100 FPS), E4 INT8 p95 37 ms (≈ 37 FPS). ADR 0007'nin 100 ms hedefi GPU'da E4 için de rahatça tutuluyor; GPU'lu bir cihazda daha sağlam E4 seçilebilir (sevk kararı CPU için, değişmedi).
+  2. **T4'te çıkarım artık darboğaz değil:** E3c FP16 / INT8'de çıkarım ≈ 4,8 ms, ön işleme ≈ 4,8 ms (CPU, 2 çekirdek); E4'te ön işleme 10-11 ms + WBF 3-5 ms. INT8 FP16'ya göre E3c'de hız kazandırmadı.
+  3. **TensorRT INT8 doğruluğu ORT INT8'den çok daha iyi:** E3c −1,5 puan (ORT tam INT8 −3,3), E1 −2,1, E2 −1,2. E4 INT8'de birleştirme kaybı kapatıyor (−0,0). TensorRT FP32 doğruluğu ONNX FP32 ile aynı.
+  4. Motor dosyaları ONNX'ten büyük (FP32 121 MB / ONNX 38 MB): TensorRT motoru T4'e özgü derlenmiş çekirdekleri de içeriyor.
