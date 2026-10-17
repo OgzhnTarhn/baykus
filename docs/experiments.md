@@ -220,3 +220,23 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
 
 ## 2026-10-17 · NPU denemesi (FR-X6, H5 Görev 18) — yapılmadı
 - **Neden:** kullanıcı kararı (2026-10-17). Ryzen AI Software kurulumu uv ortamından ayrı ve uzun; sevk kararı laptop CPU'yla verildi (ADR 0007), NPU satırı S6 için zorunlu değil (spec FR-X6: "S6'yı engellemez"). Faz 3'te yeniden değerlendirilebilir.
+
+## 2026-10-17 · Final test (test seti, bir kez)
+- **Kurulum:** DroneVehicle test (8980 görüntü, 159.614 kutu), sevk kararından sonra bir kez (`07_final_test`, Colab A100, 12 çekirdek); E1-E3c PyTorch (`baykus-eval run --split test`), E4 / E4b val'de seçilen parametrelerle (`baykus-fusion apply`), sevk edilen E3c · ONNX FP32 (`baykus-edge eval`, ORT CPU); iki etiket seti, 1000 bootstrap. Testten sonra hiçbir seçim değişmedi.
+- **Sonuç:** `results/runs/*_test_*.json` (12), `results/edge/*_test_onnx_fp32_*.json` (2); tablo `docs/results-test.md`.
+- **Bulgular (test mAP50, IR etiketleri [%95 GA]; gündüz / gece / karanlık gece):**
+
+  | Sistem | mAP50 | Gündüz | Gece | Karanlık gece | RGB etiketiyle |
+  |---|---|---|---|---|---|
+  | E1 RGB | 0,733 [0,721; 0,745] | 0,800 | 0,746 | 0,669 | 0,763 |
+  | E2 IR | 0,810 [0,799; 0,821] | 0,798 | 0,785 | 0,825 | 0,699 |
+  | E3 erken füzyon | 0,823 [0,812; 0,834] | 0,832 | 0,790 | 0,829 | 0,722 |
+  | E3c (PyTorch) | 0,825 [0,814; 0,835] | 0,828 | 0,796 | 0,831 | 0,721 |
+  | E4 geç füzyon | 0,820 [0,810; 0,830] | 0,828 | 0,801 | 0,820 | 0,778 |
+  | E4b | 0,823 [0,812; 0,832] | 0,833 | 0,801 | 0,820 | 0,781 |
+  | **E3c · ONNX FP32 (sevk)** | **0,814 [0,804; 0,825]** | 0,820 | 0,789 | 0,819 | 0,711 |
+
+  1. Test değerleri val'den 2-3 puan düşük (E3c 0,851 → 0,825); sıralama RGB < IR < füzyon aynı.
+  2. Füzyon modelleri (E3, E3c, E4, E4b) testte birbirinden ayırt edilemiyor (aralıklar örtüşüyor; eşleştirilmiş farklar val'de, testte hesaplanmadı). Füzyon E1'den ≈ 9 puan, E2'den ≈ 1 puan önde; karanlık gecede E1 0,669, füzyon 0,82-0,83.
+  3. Sevk edilen ONNX FP32 sürümü PyTorch E3c'den 1,1 puan düşük (val'de 1,0): E9 bulgusu 5'teki fark, testte de aynı.
+- **Yorum (taslak):** Seçim val'de yapıldı, test bunu bozmadı: E3c hızlı (laptop CPU p95 60 ms) ve testte en iyi füzyon modelleriyle aynı düzeyde.
