@@ -1,0 +1,28 @@
+{
+  "run_id": "2026-10-15_e3c-modality-dropout_s_d4e1280",
+  "split": "val",
+  "condition": "drop_ir",
+  "seed": 42,
+  "thresholds_sha256": "bf3d4c93660cc226e583360b16934c7d2a3877fe9abdc069e30aff62566a4c33",
+  "evaluated": false,
+  "n_images": 1469,
+  "gate": {
+    "none": 0,
+    "ir_off": 1469,
+    "rgb_off": 0
+  },
+  "changed": 0,
+  "rgb": {
+    "lost": 0,
+    "noisy": 0,
+    "dark": 415,
+    "blurry": 18
+  },
+  "ir": {
+    "lost": 1469,
+    "noisy": 0,
+    "dark": 0,
+    "blurry": 1469
+  },
+  "misaligned": 0
+}

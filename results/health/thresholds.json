@@ -1,0 +1,133 @@
+{
+  "states": {
+    "rgb_lost": {
+      "feature": "rgb_std",
+      "direction": "below",
+      "positives": [
+        "drop_rgb"
+      ],
+      "negatives": null,
+      "threshold": 0.08633651385176637,
+      "train": {
+        "threshold": 0.08633651385176637,
+        "tpr": 1.0,
+        "fpr": 0.0,
+        "j": 1.0,
+        "n_pos": 500,
+        "n_neg": 7500
+      }
+    },
+    "ir_lost": {
+      "feature": "ir_std",
+      "direction": "below",
+      "positives": [
+        "drop_ir"
+      ],
+      "negatives": null,
+      "threshold": 6.564274124196341,
+      "train": {
+        "threshold": 6.564274124196341,
+        "tpr": 1.0,
+        "fpr": 0.0,
+        "j": 1.0,
+        "n_pos": 500,
+        "n_neg": 7500
+      }
+    },
+    "ir_noisy": {
+      "feature": "ir_noise",
+      "direction": "above",
+      "positives": [
+        "noise-20"
+      ],
+      "negatives": [
+        "clean",
+        "noise-5",
+        "noise-10"
+      ],
+      "threshold": 15.035347405876596,
+      "train": {
+        "threshold": 15.035347405876596,
+        "tpr": 1.0,
+        "fpr": 0.0,
+        "j": 1.0,
+        "n_pos": 500,
+        "n_neg": 1500
+      }
+    },
+    "misaligned": {
+      "feature": "misalign_px",
+      "direction": "above",
+      "positives": [
+        "misalign-20",
+        "misalign-40"
+      ],
+      "negatives": [
+        "clean",
+        "misalign-5",
+        "misalign-10"
+      ],
+      "threshold": 16.157510751560288,
+      "train": {
+        "threshold": 16.157510751560288,
+        "tpr": 0.979,
+        "fpr": 0.06733333333333333,
+        "j": 0.9116666666666666,
+        "n_pos": 1000,
+        "n_neg": 1500
+      }
+    },
+    "rgb_blurry": {
+      "feature": "rgb_blur",
+      "direction": "below",
+      "positives": [
+        "blur-7",
+        "blur-11"
+      ],
+      "negatives": [
+        "clean",
+        "blur-3"
+      ],
+      "threshold": 32.57386712110602,
+      "train": {
+        "threshold": 32.57386712110602,
+        "tpr": 0.968,
+        "fpr": 0.116,
+        "j": 0.852,
+        "n_pos": 1000,
+        "n_neg": 1000
+      }
+    },
+    "ir_blurry": {
+      "feature": "ir_blur",
+      "direction": "below",
+      "positives": [
+        "blur-7",
+        "blur-11"
+      ],
+      "negatives": [
+        "clean",
+        "blur-3"
+      ],
+      "threshold": 64.68329935575836,
+      "train": {
+        "threshold": 64.68329935575836,
+        "tpr": 0.955,
+        "fpr": 0.089,
+        "j": 0.866,
+        "n_pos": 1000,
+        "n_neg": 1000
+      }
+    }
+  },
+  "dark_brightness": 48.655,
+  "train_clean_gate_rate": 0.05,
+  "source": {
+    "split": "train",
+    "n": 500,
+    "seed": 42,
+    "stems_sha256": "10f429d993119eb2e73dae439d8686da22b253b316e519f590ea055ec2137f01"
+  },
+  "git_commit": "4fb259e2d3f094eee57a94b6ad96c5664cda1121",
+  "created_at": "2026-10-17T16:48:24Z"
+}

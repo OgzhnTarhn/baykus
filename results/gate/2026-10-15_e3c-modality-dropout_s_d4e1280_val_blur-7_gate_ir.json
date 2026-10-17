@@ -1,0 +1,104 @@
+{
+  "run_id": "2026-10-15_e3c-modality-dropout_s_d4e1280",
+  "git_commit": "4fb259e2d3f094eee57a94b6ad96c5664cda1121",
+  "git_dirty": false,
+  "config": "../configs/e3c_modality_dropout.yaml",
+  "config_hash": "sha256:b8c73fd3660f739bf7189ea4eea5acecdef0df18359c56f2503df76407e18659",
+  "mlflow_run_id": "07b9556171ee4edd84078c4788e5699c",
+  "train_run_id": "2026-10-15_e3c-modality-dropout_s_d4e1280",
+  "seed": 42,
+  "dataset": "dronevehicle",
+  "class_agnostic": false,
+  "split": "val",
+  "label_set": "ir",
+  "model": {
+    "family": "yolo26",
+    "size": "s",
+    "mode": "early_fusion",
+    "params_m": null,
+    "gflops": null
+  },
+  "format": "pytorch",
+  "precision": "fp32",
+  "hardware": {
+    "device": "NVIDIA A100-SXM4-40GB",
+    "driver": "13.0",
+    "cpu_count": 12
+  },
+  "software": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu130",
+    "ultralytics": "8.4.177",
+    "numpy": "2.1.3",
+    "pycocotools": "2.0.11"
+  },
+  "weights": "/content/drive/MyDrive/baykus/runs/2026-10-15_e3c-modality-dropout_s_d4e1280/weights/best.pt",
+  "n_boot": 0,
+  "dropped_predictions": 0,
+  "metrics": {
+    "map50": 0.7232229602583378,
+    "map50_95": 0.5147698178906036,
+    "precision": 0.8920442593293786,
+    "recall": 0.8657819518170682,
+    "per_class": {
+      "car": 0.94001651410265,
+      "truck": 0.6831225587740347,
+      "bus": 0.931130987474351,
+      "van": 0.5048815614073761,
+      "freight_car": 0.556963179533277
+    },
+    "per_illumination": {
+      "day": 0.8017303687737559,
+      "night": 0.7288194875073,
+      "dark_night": 0.6668447847547333
+    },
+    "per_size": {
+      "small": 0.5305019125556935,
+      "medium": 0.721486516244605,
+      "large": 0.8525351435199275
+    },
+    "ci95": {
+      "map50": [
+        null,
+        null
+      ],
+      "per_illumination": {
+        "day": [
+          null,
+          null
+        ],
+        "night": [
+          null,
+          null
+        ],
+        "dark_night": [
+          null,
+          null
+        ]
+      }
+    },
+    "n_images": 1469,
+    "n_dets": 114803
+  },
+  "created_at": "2026-10-17T17:01:06Z",
+  "robustness": {
+    "id": "blur-7_gate",
+    "base": "blur-7",
+    "corruption": "blur",
+    "severity": 7.0,
+    "target": "both",
+    "seed": 42,
+    "thresholds_sha256": "bf3d4c93660cc226e583360b16934c7d2a3877fe9abdc069e30aff62566a4c33",
+    "gate": {
+      "none": 1408,
+      "ir_off": 61,
+      "rgb_off": 0
+    }
+  },
+  "crosscheck": {
+    "label_set": "ir",
+    "ultralytics_map50": 0.7254772163466862,
+    "pycocotools_map50": 0.7232229602583378,
+    "abs_diff": 0.002254256088348394
+  }
+}

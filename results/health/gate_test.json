@@ -1,0 +1,115 @@
+{
+  "run_id": "2026-10-15_e3c-modality-dropout_s_d4e1280",
+  "split": "test",
+  "label_set": "ir",
+  "n_boot": 1000,
+  "seed": 42,
+  "thresholds_sha256": "bf3d4c93660cc226e583360b16934c7d2a3877fe9abdc069e30aff62566a4c33",
+  "rows": [
+    {
+      "condition": "clean",
+      "n_images": 8980,
+      "gate_rate": 0.04955456570155902,
+      "changed": 445,
+      "base_map50": 0.8250485820905709,
+      "gate_map50": 0.7918926031500881,
+      "diff": -0.03315597894048272,
+      "ci95": [
+        -0.03947978650834061,
+        -0.028011027420295178
+      ],
+      "significant": true
+    },
+    {
+      "condition": "noise-20",
+      "n_images": 8980,
+      "gate_rate": 1.0,
+      "changed": 8980,
+      "base_map50": 0.540068520049698,
+      "gate_map50": 0.6903547165305288,
+      "diff": 0.15028619648083086,
+      "ci95": [
+        0.13887303444424576,
+        0.16062852204181827
+      ],
+      "significant": true
+    },
+    {
+      "condition": "misalign-20",
+      "n_images": 8980,
+      "gate_rate": 0.950890868596882,
+      "changed": 8539,
+      "base_map50": 0.29585719554510365,
+      "gate_map50": 0.6604287330658443,
+      "diff": 0.3645715375207406,
+      "ci95": [
+        0.3470889671853922,
+        0.38161772558653473
+      ],
+      "significant": true
+    }
+  ],
+  "harmful": {
+    "conditions": [
+      "noise-20",
+      "misalign-20"
+    ],
+    "diff": 0.2574288670007857,
+    "ci95": [
+      0.2464023069410598,
+      0.26854704949463926
+    ],
+    "significant": true
+  },
+  "detection": {
+    "clean": {
+      "gate_rate": 0.04955456570155902,
+      "rgb": {
+        "lost": 0.0,
+        "noisy": 0.0,
+        "dark": 0.31469933184855237,
+        "blurry": 0.014365256124721604
+      },
+      "ir": {
+        "lost": 0.0,
+        "noisy": 0.0,
+        "dark": 0.0,
+        "blurry": 0.0025612472160356347
+      },
+      "misaligned": 0.04955456570155902
+    },
+    "noise-20": {
+      "gate_rate": 1.0,
+      "rgb": {
+        "lost": 0.0,
+        "noisy": 0.0,
+        "dark": 0.31469933184855237,
+        "blurry": 0.014365256124721604
+      },
+      "ir": {
+        "lost": 0.0,
+        "noisy": 1.0,
+        "dark": 0.0,
+        "blurry": 0.0
+      },
+      "misaligned": 0.05601336302895323
+    },
+    "misalign-20": {
+      "gate_rate": 0.950890868596882,
+      "rgb": {
+        "lost": 0.0,
+        "noisy": 0.0,
+        "dark": 0.31469933184855237,
+        "blurry": 0.014365256124721604
+      },
+      "ir": {
+        "lost": 0.0,
+        "noisy": 0.0,
+        "dark": 0.0,
+        "blurry": 0.0
+      },
+      "misaligned": 0.950890868596882
+    }
+  },
+  "acceptance": null
+}
