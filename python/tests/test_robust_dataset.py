@@ -112,13 +112,14 @@ def test_parallel_pool_uses_spawn(src: Path, tmp_path: Path, monkeypatch):
     seen = {}
 
     class Spy(ThreadPoolExecutor):  # bağlamı kaydet, işi iş parçacığında yap
-        def __init__(self, max_workers=None, mp_context=None):
+        def __init__(self, max_workers=None, mp_context=None, initializer=None):
             seen["ctx"] = mp_context.get_start_method() if mp_context else None
+            seen["init"] = initializer
             super().__init__(max_workers)
 
     monkeypatch.setattr(ds, "ProcessPoolExecutor", Spy)
     make_condition(src, tmp_path / "p", "val", CLEAN, {"ir"}, seed=42, workers=2)
-    assert seen["ctx"] == "spawn"
+    assert seen["ctx"] == "spawn" and seen["init"] is ds.cv2_single_thread
 
 
 def _zero_ir_hook(bgr: np.ndarray, ir: np.ndarray):  # spawn işçisine gidebilsin: modül düzeyi
@@ -146,3 +147,15 @@ def test_make_condition_without_hook_writes_no_log(tmp_path: Path):
     src = make_synthetic_dataset(tmp_path / "d", with_ir=True)
     make_condition(src, tmp_path / "c", "val", CLEAN, {"rgbt4"}, 42)
     assert not (tmp_path / "c/hook.jsonl").exists()
+
+
+def test_worker_init_limits_opencv_threads():
+    # spawn işçisi başına tam OpenCV havuzu: 12 işçi × 12 iş parçacığı aşırı abonelik
+    from baykus.robustness.dataset import cv2_single_thread
+
+    before = cv2.getNumThreads()
+    try:
+        cv2_single_thread()
+        assert cv2.getNumThreads() == 1
+    finally:
+        cv2.setNumThreads(before)

@@ -29,6 +29,11 @@ MODALITIES = ("rgb", "ir", "rgbt4")
 Hook = Callable[[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray, dict]]
 
 
+def cv2_single_thread() -> None:
+    """spawn işçisi başlatıcısı: süreçler zaten paralel, her biri tam OpenCV havuzu açmasın."""
+    cv2.setNumThreads(1)
+
+
 def _read(path: Path, flag: int) -> np.ndarray:
     img = imread_any(path, flag)
     if img is None:
@@ -97,7 +102,9 @@ def make_condition(
     else:
         # torch/CUDA başlamış süreçte (sağlamlık paketi) fork güvensiz
         ctx = multiprocessing.get_context("spawn")
-        with ProcessPoolExecutor(max_workers=workers, mp_context=ctx) as ex:
+        with ProcessPoolExecutor(
+            max_workers=workers, mp_context=ctx, initializer=cv2_single_thread
+        ) as ex:
             recs = list(ex.map(_write_one, jobs, chunksize=32))
     if hook is not None:
         out.mkdir(parents=True, exist_ok=True)

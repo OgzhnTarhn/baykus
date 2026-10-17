@@ -22,6 +22,7 @@ from baykus.health.features import frame_features
 from baykus.health.gate import Thresholds, assess
 from baykus.io import imread_any
 from baykus.robustness.corruptions import apply_condition, suite_conditions
+from baykus.robustness.dataset import cv2_single_thread
 
 
 @dataclass(frozen=True)
@@ -115,7 +116,9 @@ def feature_rows(
         parts = [_stem_rows(j) for j in jobs]
     else:
         ctx = multiprocessing.get_context("spawn")
-        with ProcessPoolExecutor(max_workers=workers, mp_context=ctx) as ex:
+        with ProcessPoolExecutor(
+            max_workers=workers, mp_context=ctx, initializer=cv2_single_thread
+        ) as ex:
             parts = list(ex.map(_stem_rows, jobs, chunksize=8))
     return [r for part in parts for r in part]
 
