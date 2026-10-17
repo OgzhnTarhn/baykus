@@ -66,15 +66,18 @@ def youden(pos: Sequence[float | None], neg: Sequence[float | None], direction: 
         raise ValueError("bütün değerler aynı; eşik seçilemez")
     cands = (u[:-1] + u[1:]) / 2
     if direction == "above":
-        tpr = (p[None, :] >= cands[:, None]).mean(axis=1)
-        fpr = (n[None, :] >= cands[:, None]).mean(axis=1)
+        tp = (p[None, :] >= cands[:, None]).sum(axis=1)
+        fp = (n[None, :] >= cands[:, None]).sum(axis=1)
         far = cands  # büyük eşik = daha az alarm
     else:
-        tpr = (p[None, :] <= cands[:, None]).mean(axis=1)
-        fpr = (n[None, :] <= cands[:, None]).mean(axis=1)
+        tp = (p[None, :] <= cands[:, None]).sum(axis=1)
+        fp = (n[None, :] <= cands[:, None]).sum(axis=1)
         far = -cands
+    tpr, fpr = tp / len(p), fp / len(n)
+    # J · n_pos · n_neg tam sayıyla: kayan nokta yuvarlaması eşitlik kuralını bozmasın
+    j_int = tp.astype(np.int64) * len(n) - fp.astype(np.int64) * len(p)
     j = tpr - fpr
-    best = max(range(len(cands)), key=lambda i: (j[i], -fpr[i], far[i]))
+    best = max(range(len(cands)), key=lambda i: (int(j_int[i]), -int(fp[i]), far[i]))
     return {
         "threshold": float(cands[best]),
         "tpr": float(tpr[best]),

@@ -123,3 +123,12 @@ def test_cli_fit_without_illumination_thresholds_is_error(tmp_path: Path, capsys
     args = ["fit", "--data-root", str(root), "--meta", str(root / "meta")]
     assert main([*args, "--out", str(tmp_path / "t.json"), "--n", "3"]) == 2
     assert capsys.readouterr().err.startswith("hata: ")
+
+
+def test_youden_exact_tie_is_not_broken_by_float_rounding():
+    # İki aday matematikte J = 0,3: (tpr 1/2, fpr 2/10) ve (tpr 2/2, fpr 7/10).
+    # Kayan noktada ikincisi 0,30000000000000004 çıkar; kural: eşitlikte düşük FPR.
+    pos = [100.0, 50.0]
+    neg = [100.0] * 2 + [50.0] * 5 + [0.0] * 3
+    r = youden(pos, neg, "above")
+    assert r["threshold"] == 75.0 and r["fpr"] == 0.2 and r["tpr"] == 0.5
