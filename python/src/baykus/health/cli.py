@@ -4,6 +4,7 @@ fit   — kapı eşiklerini train'de bozulmuş görüntülerden seçer (Youden J
 suite   — sağlamlık paketini kapıyla çalıştırır (E3c + kapı; kaldığı yerden sürer).
 compare — E3c + kapı − E3c eşleştirilmiş bootstrap, kabul ölçütleri (gate_<split>.json).
 calibrate — sevk edilen modelin skorları için izotonik tablo, testte ECE önce / sonra.
+report  — results/health/*.json → docs/health.md + güvenilirlik diyagramı.
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ import argparse
 import csv
 import hashlib
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -23,6 +25,7 @@ from baykus.health.calibrate import calibrate
 from baykus.health.compare import gate_report
 from baykus.health.features import FEATURES
 from baykus.health.fit import feature_rows, fit_thresholds
+from baykus.health.report import calibration_plot, health_markdown
 from baykus.health.suite import run_gated_suite
 from baykus.robustness.cli import load_model_spec
 from baykus.robustness.corruptions import select_conditions, suite_conditions
@@ -145,6 +148,26 @@ def _cmd_calibrate(a: argparse.Namespace) -> int:
     return 0
 
 
+def _read(path: Path) -> dict | None:
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+
+
+def _cmd_report(a: argparse.Namespace) -> int:
+    h, out, fig = Path(a.health), Path(a.out), Path(a.fig)
+    th = _read(h / "thresholds.json")
+    if th is None:
+        raise FileNotFoundError(f"{h / 'thresholds.json'} yok (önce baykus-health fit)")
+    calib = _read(h / "calibration_e3c_onnx_fp32.json")
+    rel = Path(os.path.relpath(fig, out.parent)).as_posix()
+    text = health_markdown(th, _read(h / "gate_val.json"), _read(h / "gate_test.json"), calib, rel)
+    if calib:
+        calibration_plot(calib, fig)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(text, encoding="utf-8")
+    print(out)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="baykus-health")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -190,6 +213,11 @@ def build_parser() -> argparse.ArgumentParser:
     k.add_argument("--out", default="../results/health/calibration_e3c_onnx_fp32.json")
     k.add_argument("--model", default="e3c_modality_dropout · onnx_fp32")
     k.set_defaults(func=_cmd_calibrate)
+    r = sub.add_parser("report", help="docs/health.md ve güvenilirlik diyagramı")
+    r.add_argument("--health", default="../results/health")
+    r.add_argument("--out", default="../docs/health.md")
+    r.add_argument("--fig", default="../docs/figures/results/calibration.png")
+    r.set_defaults(func=_cmd_report)
     return p
 
 
