@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pycocotools.coco import COCO
 
-from baykus.eval.bootstrap import bootstrap_ci, collect_matches, precision_recall, subset
+from baykus.eval.bootstrap import ap50, bootstrap_ci, collect_matches, precision_recall, subset
 from baykus.eval.coco_eval import evaluate_coco
 
 ILLUMINATION = ("day", "night", "dark_night")
@@ -25,8 +25,11 @@ def build_metrics(
     for name in ILLUMINATION:
         ids = (illumination or {}).get(name) or []
         if ids:
-            per_ill[name] = evaluate_coco(gt, dets, ids)["map50"]
-            ci_ill[name] = list(bootstrap_ci(subset(m, ids), n_boot, seed, workers))
+            # Dilimi pycocotools'la yeniden değerlendirmek yerine eşleştirmelerden (aynı değer,
+            # tests/test_bootstrap.py::test_subset_matches_slice_evaluation): süre ≈ yarıya iner
+            sm = subset(m, ids)
+            per_ill[name] = ap50(sm)
+            ci_ill[name] = list(bootstrap_ci(sm, n_boot, seed, workers))
         else:
             per_ill[name], ci_ill[name] = None, [None, None]
     return {

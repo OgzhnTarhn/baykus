@@ -52,3 +52,27 @@ def test_precision_recall_present():
     gt, dets = _case()
     m = build_metrics(gt, dets, None, n_boot=10)
     assert m["precision"] == pytest.approx(1.0) and m["recall"] == pytest.approx(11 / 12)
+
+
+def test_slices_reuse_matches_instead_of_reevaluating(monkeypatch):
+    """pycocotools bir kez çalışır; dilim mAP50'si eşleştirmelerden (val/test'te süre ≈ yarıya)
+    ve değeri dilimi ayrıca değerlendirmekle aynı."""
+    import baykus.eval.metrics as bm
+    from baykus.eval.coco_eval import evaluate_coco
+    from tests.test_bootstrap import _random_case
+
+    gt, dets = _random_case(9, n_img=16)
+    slices = {"day": [1, 2, 3, 5, 8], "night": [4, 6, 7, 9, 10, 11], "dark_night": [12, 13, 16]}
+    calls = []
+
+    def counting(*a, **kw):
+        calls.append(a[2] if len(a) > 2 else kw.get("img_ids"))
+        return evaluate_coco(*a, **kw)
+
+    monkeypatch.setattr(bm, "evaluate_coco", counting)
+    m = bm.build_metrics(gt, dets, slices, n_boot=10)
+    assert calls == [None]  # yalnız tam değerlendirme
+    for name, ids in slices.items():
+        assert m["per_illumination"][name] == pytest.approx(
+            evaluate_coco(gt, dets, ids)["map50"], abs=1e-12
+        )
