@@ -61,3 +61,31 @@
 | 2026-10-14_e3-early-fusion_s_67ace37 | early_fusion | ir | 97.1 [96.5, 98.0] | 50.1 |
 | 2026-10-15_e3c-modality-dropout_s_d4e1280 | early_fusion | ir | 88.9 [87.7, 90.2] | 43.3 |
 | 2026-10-16_e4-late-fusion_s_b346199 | late_fusion | ir | 97.1 [96.5, 97.7] | 57.1 |
+
+## Edge (E9)
+
+> `baykus-edge eval` (val, IR etiketleri, bootstrap yok) ve `baykus-bench` (§14: batch 1, 640×640, 50 ısınma + 500 ölçüm; toplam = ön işleme + çıkarım + son işleme [+ WBF]). ΔmAP50 aynı pipeline'ın ONNX FP32'sine göre; PyTorch satırı ana değerlendirme (dikdörtgen girdi, max_det 1000).
+
+| Pipeline | Donanım | Format | Hassasiyet | Boyut (MB) | mAP50 | ΔmAP50 (puan) | p50 (ms) | p95 (ms) | FPS |
+|---|---|---|---|---|---|---|---|---|---|
+| e4_late_fusion | — | pytorch | fp32 | — | 84.8 | — | — | — | — |
+| e4_late_fusion | laptop-cpu | onnx | fp32 | 76.3 | 83.2 | +0.0 | 118.1 | 131.6 | 8.5 |
+| e4_late_fusion | laptop-cpu | onnx | fp16 | 38.3 | 83.2 | +0.0 | 121.4 | 133.0 | 8.3 |
+| e4_late_fusion | laptop-cpu | onnx | int8 | 20.6 | 76.6 | -6.6 | 216.1 | 241.5 | 4.6 |
+| e4_late_fusion | laptop-cpu | onnx | int8 (head FP32) | 23.1 | 83.0 | -0.2 | 203.9 | 224.4 | 4.9 |
+| e3c_modality_dropout | — | pytorch | fp32 | — | 85.1 | — | — | — | — |
+| e3c_modality_dropout | laptop-cpu | onnx | fp32 | 38.2 | 84.1 | +0.0 | 46.4 | 59.9 | 21.0 |
+| e3c_modality_dropout | laptop-cpu | onnx | fp16 | 19.2 | 84.1 | -0.0 | 49.3 | 62.5 | 19.7 |
+| e3c_modality_dropout | laptop-cpu | onnx | int8 | 10.3 | 80.8 | -3.3 | 98.7 | 117.8 | 9.9 |
+| e3c_modality_dropout | laptop-cpu | onnx | int8 (head FP32) | 11.6 | 83.4 | -0.7 | 90.1 | 108.1 | 10.9 |
+
+### Sevk kuralı (ADR 0007)
+
+> Hedef: laptop CPU, toplam p95 ≤ 100 ms; varyant ONNX FP32'den en fazla 1.0 puan düşük (ADR 0007).
+
+| Aday | Uygun varyantlar | En hızlı | p95 (ms) | Geçti mi |
+|---|---|---|---|---|
+| e4_late_fusion | onnx_fp32, onnx_fp16, onnx_int8_headfp32 | onnx_fp32 | 131.6 | hayır |
+| e3c_modality_dropout | onnx_fp32, onnx_fp16, onnx_int8_headfp32 | onnx_fp32 | 59.9 | evet |
+
+**Sevk:** e3c_modality_dropout · onnx_fp32
