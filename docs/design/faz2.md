@@ -1,6 +1,6 @@
 # Faz 2 Tasarımı — Güvenilirlik Farkındalığı (yalın)
 
-> **Tarih:** 2026-10-17 · **Durum:** taslak, kullanıcı onayı bekliyor · **Dal:** `f2`
+> **Tarih:** 2026-10-17 · **Durum:** onaylandı (2026-10-17) · **Dal:** `f2`
 > **Dayanak:** spec §2.3 S10, §6.1 kancalar K1-K3, §22 Faz 2, ADR 0006; Faz 1 sonuçları (`docs/experiments.md`,
 > `docs/robustness.md`, ADR 0007).
 > **Kullanıcı yönergesi (2026-10-17):** "Boş işleri çıkar, iş yoğunluğunu arttırmadan tasarla."
@@ -156,6 +156,8 @@ oturumu.
 - Kapı kararında birden fazla arıza aynı anda varsa öncelik (öneri: `kayıp` > `hizasız` > `gürültülü`).
 - Kalibrasyon tablosunun dosya biçimi (Faz 3 C++ motoru okuyacak: düz JSON, eşik/değer çiftleri).
 - Sürüm: Faz 2 sonunda `v0.1.1` mi `v0.2.0` mı (spec `v0.2.0`'ı Faz 3'e ayırmış; öneri `v0.1.1`).
+
+Uygulama kararları: `docs/plans/F2.md` Spec yorumları 3-11.
 
 ## 10. Spec'e yansıyacaklar (onaydan sonra, v4.4)
 
