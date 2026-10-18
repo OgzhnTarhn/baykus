@@ -1,0 +1,4 @@
+# Docker derleme bağlamı: yalnız motorun ihtiyacı (veri, modeller, venv girmez)
+*
+!engine/
+!configs/engine/
