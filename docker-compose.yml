@@ -1,0 +1,17 @@
+# Baykuş çalışma ortamı (Faz 3 tasarımı §4.5). Motor yalnız iç ağda (`back`, dışarıya çıkışı yok);
+# operatör ekranı (`ui`, `back` + `front`, 127.0.0.1:3000) Görev 33'te eklenir. İmajlar yerelde
+# derlenir, hiçbir zaman çekilmez (pull_policy: never).
+name: baykus
+
+services:
+  engine:
+    image: baykus-engine
+    pull_policy: never
+    networks: [back]
+    volumes:
+      - ./models:/models:ro
+    restart: unless-stopped
+
+networks:
+  back:
+    internal: true
