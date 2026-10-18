@@ -61,6 +61,10 @@ std::vector<Frame> run_frames(baykus::Detector& det) {
     f.out = det.infer(baykus::letterbox(baykus::stack_rgbt(p.bgr, p.ir), det.imgsz(), &f.lb));
     frames.push_back(std::move(f));
   }
+  // kabul testi boş fikstür listesinde karşılaştırmasız geçmesin (CI'da atlanamaz)
+  if (frames.empty()) {
+    ADD_FAILURE() << "index.json'da 'frame' fikstürü yok";
+  }
   return frames;
 }
 

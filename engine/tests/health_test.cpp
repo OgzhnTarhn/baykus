@@ -55,7 +55,10 @@ class HealthParity : public ::testing::Test {
   template <typename F>
   void each_frame(F f) {
     const auto root = bt::fixtures_root();
-    for (const auto& e : bt::fixtures_of("frame")) {
+    const auto frames = bt::fixtures_of("frame");
+    // kabul testi boş fikstür listesinde karşılaştırmasız geçmesin (CI'da atlanamaz)
+    ASSERT_FALSE(frames.empty()) << "index.json'da 'frame' fikstürü yok";
+    for (const auto& e : frames) {
       SCOPED_TRACE(e.at("name").get<std::string>());
       const auto exp = bt::read_json(root / e.at("path").get<std::string>());
       const auto& in = exp.at("inputs");
