@@ -63,8 +63,8 @@ RUN apt-get update \
 COPY --from=build /opt/opencv/lib/*.so* /usr/local/lib/
 COPY --from=build /opt/onnxruntime/lib/*.so* /usr/local/lib/
 COPY --from=build /build/bin/ /usr/local/bin/
-COPY configs/engine/tracker.json /etc/baykus/tracker.json
+COPY configs/engine/tracker.json configs/engine/models.json /etc/baykus/
 RUN ldconfig
 USER baykus
 EXPOSE 8080
-CMD ["baykus_buildinfo"]
+CMD ["baykus_server", "--models", "/models", "--manifest", "/etc/baykus/models.json", "--port", "8080"]
