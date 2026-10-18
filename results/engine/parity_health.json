@@ -1,0 +1,120 @@
+{
+  "clip": {
+    "gate": "auto",
+    "passed": true,
+    "variants": {
+      "clean": {
+        "equal": 15,
+        "errors": [],
+        "frames": 15,
+        "max_px": 2.7853275241795927e-12,
+        "max_rel": 1.2272079933321493e-16,
+        "max_response": 3.122502256758253e-17,
+        "misaligned_frame_count": 0,
+        "passed": true
+      },
+      "shift_all": {
+        "equal": 15,
+        "errors": [],
+        "frames": 15,
+        "max_px": 3.524291969370097e-12,
+        "max_rel": 1.2272079933321493e-16,
+        "max_response": 2.0816681711721685e-17,
+        "misaligned_frame_count": 0,
+        "passed": true
+      },
+      "shift_from8": {
+        "equal": 15,
+        "errors": [],
+        "frames": 15,
+        "max_px": 3.524291969370097e-12,
+        "max_rel": 1.2272079933321493e-16,
+        "max_response": 1.805196617188365e-17,
+        "misaligned_frame_count": 0,
+        "passed": true
+      }
+    }
+  },
+  "kabul": "3 (tek kare + zaman kuralı a uçtan uca, b birim)",
+  "onnxruntime_version": "1.30.0",
+  "opencv_version": "5.0.0",
+  "passed": true,
+  "single_frames": {
+    "equal": 17,
+    "errors": [],
+    "frames": 17,
+    "max_px": 3.4638958368304884e-13,
+    "max_rel": 1.3570787970466066e-16,
+    "max_response": 5.551115123125783e-17,
+    "passed": true
+  },
+  "temporal": {
+    "min_frames": 3,
+    "tol_px": 3.0,
+    "window": 5
+  },
+  "temporal_unit": {
+    "passed": true,
+    "scenarios": [
+      {
+        "equal": 50,
+        "frames": 50,
+        "misaligned_expected": 48,
+        "name": "constant"
+      },
+      {
+        "equal": 50,
+        "frames": 50,
+        "misaligned_expected": 0,
+        "name": "jumping"
+      },
+      {
+        "equal": 50,
+        "frames": 50,
+        "misaligned_expected": 23,
+        "name": "onset_mid"
+      },
+      {
+        "equal": 50,
+        "frames": 50,
+        "misaligned_expected": 35,
+        "name": "boundary_3px"
+      },
+      {
+        "equal": 50,
+        "frames": 50,
+        "misaligned_expected": 25,
+        "name": "even_S"
+      },
+      {
+        "equal": 50,
+        "frames": 50,
+        "misaligned_expected": 35,
+        "name": "unflagged_keeps"
+      },
+      {
+        "equal": 50,
+        "frames": 50,
+        "misaligned_expected": 44,
+        "name": "lost_overrides"
+      },
+      {
+        "equal": 50,
+        "frames": 50,
+        "misaligned_expected": 48,
+        "name": "noisy_priority"
+      },
+      {
+        "equal": 50,
+        "frames": 50,
+        "misaligned_expected": 43,
+        "name": "reset"
+      }
+    ]
+  },
+  "tolerances": {
+    "px": 0.5,
+    "relative": 0.0001,
+    "response": 0.02
+  }
+}
