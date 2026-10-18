@@ -43,6 +43,7 @@ target_include_directories(baykus_httplib SYSTEM INTERFACE third_party)
 target_link_libraries(baykus_httplib INTERFACE Threads::Threads)
 
 add_library(baykus_core STATIC
+  src/bench.cpp
   src/calibration.cpp
   src/detections.cpp
   src/detector.cpp
@@ -91,7 +92,8 @@ add_executable(baykus_tests
   tests/tracker_test.cpp
   tests/sessions_test.cpp
   tests/runtime_test.cpp
-  tests/server_test.cpp)
+  tests/server_test.cpp
+  tests/bench_test.cpp)
 target_link_libraries(baykus_tests PRIVATE baykus_test_support GTest::gtest_main baykus_warnings
                                            baykus_httplib)
 include(GoogleTest)
@@ -122,3 +124,6 @@ target_link_libraries(baykus_detect PRIVATE baykus_core baykus_warnings)
 
 add_executable(baykus_server apps/server.cpp)
 target_link_libraries(baykus_server PRIVATE baykus_core baykus_warnings Threads::Threads)
+
+add_executable(baykus_bench apps/bench.cpp)
+target_link_libraries(baykus_bench PRIVATE baykus_core baykus_warnings baykus_httplib)
