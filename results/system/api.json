@@ -61,6 +61,12 @@
       "status": 413
     },
     {
+      "expected": 413,
+      "name": "image_too_large",
+      "ok": true,
+      "status": 413
+    },
+    {
       "expected": 400,
       "name": "not_multipart",
       "ok": true,
