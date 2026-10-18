@@ -2,8 +2,11 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
+      # dış kod (engine/third_party) bayt bayt kaynaktaki gibi kalır
       - id: trailing-whitespace
+        exclude: ^engine/third_party/
       - id: end-of-file-fixer
+        exclude: ^engine/third_party/
       - id: check-yaml
       - id: check-added-large-files
         args: ["--maxkb=1024"]
