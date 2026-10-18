@@ -4,7 +4,7 @@ Bu klasör C++ motoruna kopyalanan dış kodu ve lisans notlarını tutar (Faz 3
 
 | Bileşen | Kaynak | Lisans | Görev |
 |---|---|---|---|
-| `httplib.h` | cpp-httplib (tek başlık) | MIT | 25 |
+| `httplib.h` | [cpp-httplib](https://github.com/yhirose/cpp-httplib) `v0.58.0` (tek başlık, değiştirilmeden; sha256 `aa14e7e7bd2703694e0a6b6855af3b8c406102ab1fc56ac905fe33619b31faa5`) | MIT, `httplib.LICENSE` | 25 |
 | `lsap/` | SciPy `rectangular_lsap` C kodunun C++ uyarlaması | BSD-3-Clause | 22 |
 
 Derleme bağımlılıkları (kopyalanmaz; Docker `build` aşamasında): OpenCV 5.0.0 (Apache-2.0, kaynaktan),
