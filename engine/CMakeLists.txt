@@ -30,6 +30,8 @@ if(BAYKUS_SANITIZE)
 endif()
 
 add_library(baykus_core STATIC
+  src/image_io.cpp
+  src/preprocess.cpp
   src/version.cpp)
 target_include_directories(baykus_core PUBLIC include)
 target_link_libraries(baykus_core
@@ -44,7 +46,10 @@ enable_testing()
 add_library(baykus_test_support STATIC tests/fixtures.cpp)
 target_link_libraries(baykus_test_support PUBLIC baykus_core GTest::gtest PRIVATE baykus_warnings)
 
-add_executable(baykus_tests tests/smoke_test.cpp)
+add_executable(baykus_tests
+  tests/smoke_test.cpp
+  tests/image_io_test.cpp
+  tests/preprocess_test.cpp)
 target_link_libraries(baykus_tests PRIVATE baykus_test_support GTest::gtest_main baykus_warnings)
 include(GoogleTest)
 gtest_discover_tests(baykus_tests DISCOVERY_MODE PRE_TEST)
