@@ -55,6 +55,8 @@ Bütün zip Colab'a indirilip üç bölüm dönüştürüldü (`--splits val tra
 - Dönüştürücü dizi adındaki `-`'yi `_` yapar (`1-03` → `1_03`); stem `<dizi>_<kare:06d>`.
 - Bütün dizilerde kare numaraları ardışık (`baykus-data m3ot-seqs`).
 - Geliştirme bölümü `configs/m3ot_dev.json`: `val`, `1_08` + `2_08`. Test dizileri ayrı pakette, yalnız son ölçümde.
+- Paketler (`baykus-data demo-pack`, Drive `m3ot/`): `dev_pack.zip` 339 MB (`1_08`, `2_08`), `test_pack.zip` 305 MB
+  (`1_03`, `2_03`); her biri `sequences/<dizi>/{rgb,ir,index.json}` + `labels/`.
 - İndirme: figshare Colab'dan gelen istekleri bot doğrulamasına takıyor (HTTP 202/403); tarayıcıdan kopyalanan
   cURL ile `-L` (yönlendirmeyi izle) gerekli. Yönlendirilen S3 adresi 10 sn geçerli.
 
