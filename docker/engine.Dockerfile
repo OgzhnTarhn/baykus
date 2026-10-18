@@ -47,6 +47,8 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends libgtest-dev libeigen3-dev nlohmann-json3-dev libssl-dev \
  && rm -rf /var/lib/apt/lists/*
 COPY engine /src/engine
+# Sanitizer'lı derlemede ORT'nin kendi sızıntısı bastırılır; sanitizer'sız derlemede etkisiz
+ENV LSAN_OPTIONS=suppressions=/src/engine/tests/lsan.supp:print_suppressions=0
 ARG BAYKUS_SANITIZE=OFF
 RUN cmake -S /src/engine -B /build -G Ninja -DCMAKE_BUILD_TYPE=Release \
       -DBAYKUS_SANITIZE=${BAYKUS_SANITIZE} -DCMAKE_PREFIX_PATH="/opt/opencv;/opt/onnxruntime" \

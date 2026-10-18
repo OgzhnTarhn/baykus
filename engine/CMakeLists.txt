@@ -25,7 +25,8 @@ set_target_properties(onnxruntime::onnxruntime PROPERTIES
 add_library(baykus_warnings INTERFACE)
 target_compile_options(baykus_warnings INTERFACE -Wall -Wextra -Werror)
 if(BAYKUS_SANITIZE)
-  target_compile_options(baykus_warnings INTERFACE -fsanitize=address,undefined -fno-omit-frame-pointer)
+  target_compile_options(baykus_warnings INTERFACE -fsanitize=address,undefined -fno-sanitize-recover=all
+    -fno-omit-frame-pointer)
   target_link_options(baykus_warnings INTERFACE -fsanitize=address,undefined)
 endif()
 

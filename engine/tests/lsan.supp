@@ -1,0 +1,3 @@
+# LeakSanitizer bastırmaları (BAYKUS_SANITIZE=ON). Yalnız kaynağı bizde olmayan hazır kütüphaneler.
+# ORT 1.30.0 oturum kurulumunda 14 baytlık tek bir ayırmayı serbest bırakmıyor (bizim kodumuz değil).
+leak:libonnxruntime.so
