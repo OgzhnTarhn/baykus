@@ -1,0 +1,99 @@
+{
+  "cases": [
+    {
+      "expected": 200,
+      "name": "detect_ok",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "expected": 400,
+      "name": "missing_part",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "expected": 400,
+      "name": "size_mismatch",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "expected": 400,
+      "name": "corrupt_png",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "expected": 400,
+      "name": "unknown_gate",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "expected": 400,
+      "name": "conf_out_of_range",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "expected": 400,
+      "name": "conf_not_a_number",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "expected": 400,
+      "name": "bad_track_flag",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "expected": 400,
+      "name": "track_without_session",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "expected": 413,
+      "name": "part_too_large",
+      "ok": true,
+      "status": 413
+    },
+    {
+      "expected": 400,
+      "name": "not_multipart",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "expected": 400,
+      "name": "reset_without_session",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "expected": 200,
+      "name": "reset_ok",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "expected": 404,
+      "name": "unknown_path",
+      "ok": true,
+      "status": 404
+    }
+  ],
+  "fuzz": {
+    "healthy_after": true,
+    "n": 1000,
+    "seed": 42,
+    "server_errors": 0,
+    "statuses": {
+      "400": 782,
+      "404": 218
+    }
+  },
+  "kabul": "8"
+}
