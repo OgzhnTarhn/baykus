@@ -284,7 +284,8 @@ def _pick_clip(frames, m: Models) -> tuple[list, list[str]]:
                 continue  # ardışık değil
             issues = _clip_ok(window, m)
             if not issues:
-                return window, notes
+                summary = [f"klip: {len(notes)} başlangıç karesi sınır kuralını geçmedi"]
+                return window, summary + [f"  örnek {n}" for n in notes[:3]]
             notes.append(f"klip {seq} {nums[0]}: {issues[0]}")
     raise ValueError("sınır kuralını geçen 15 karelik klip yok: " + "; ".join(notes[-3:]))
 
