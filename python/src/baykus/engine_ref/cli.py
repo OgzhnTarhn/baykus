@@ -4,6 +4,7 @@ detect — bir dizi klasöründen (operatör ekranı düzeni: rgb/, ir/, index.j
          (değerlendirme katmanı, varsayılan ham skor ≥ 0,001). Test dizisi bayraksız okunmaz.
 measure — tespit dosyaları + pack_labels etiketleri → sınıfsız AP50, ECE (ham / kalibre),
           çift sınıf oranı (dizi başına ve birleşik).
+fixtures — C++ eşlik fikstürleri (M3OT geliştirme bölümü; test reddedilir) ve fixtures/index.json.
 """
 
 from __future__ import annotations
@@ -77,6 +78,21 @@ def _cmd_measure(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_fixtures(a: argparse.Namespace) -> int:
+    from baykus.engine_ref.fixtures import generate
+
+    cfg = json.loads(Path(a.config).read_text(encoding="utf-8"))
+    models = load_models(Path(a.models), Path(a.manifest) if a.manifest else None)
+    index = generate(models, Path(a.dev_root), cfg, Path(a.out))
+    out = Path(a.out)
+    total = sum(p.stat().st_size for p in out.rglob("*") if p.is_file())
+    kinds: dict[str, int] = {}
+    for e in index:
+        kinds[e["kind"]] = kinds.get(e["kind"], 0) + 1
+    print(f"{out / 'index.json'}: {kinds} · toplam {total / 1e6:.1f} MB")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="baykus-engine")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -95,6 +111,13 @@ def build_parser() -> argparse.ArgumentParser:
     m.add_argument("--out", required=True)
     m.add_argument(TEST_FLAG, action="store_true", help="test bölümü (yalnız son ölçüm)")
     m.set_defaults(func=_cmd_measure)
+    f = sub.add_parser("fixtures", help="C++ eşlik fikstürleri")
+    f.add_argument("--models", required=True)
+    f.add_argument("--manifest", default=None)
+    f.add_argument("--config", default="../configs/m3ot_dev.json")
+    f.add_argument("--dev-root", default="../data/m3ot_dev")
+    f.add_argument("--out", default="../fixtures")
+    f.set_defaults(func=_cmd_fixtures)
     return p
 
 
