@@ -4,6 +4,9 @@ on:
     branches: [main, "f[0-9]*"]
   pull_request:
 
+env:
+  ORT_DISABLE_TELEMETRY: "1"  # ONNX Runtime telemetrisi (HTTPS gönderim denemesi) kapalı
+
 jobs:
   python:
     runs-on: ubuntu-latest
