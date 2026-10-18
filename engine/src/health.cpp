@@ -29,7 +29,8 @@ std::string sha256_hex(const std::string& data) {
     throw std::runtime_error("sha256 hesaplanamadı");
   }
   std::ostringstream ss;
-  for (unsigned int i = 0; i < n; ++i) ss << std::hex << std::setw(2) << std::setfill('0') << int(d[i]);
+  for (unsigned int i = 0; i < n; ++i)
+    ss << std::hex << std::setw(2) << std::setfill('0') << int(d[i]);
   return ss.str();
 }
 
@@ -133,8 +134,13 @@ Thresholds Thresholds::load(const std::string& path) {
   const auto j = nlohmann::json::parse(bytes);
   const auto& s = j.at("states");
   auto t = [&](const char* name) { return s.at(name).at("threshold").get<double>(); };
-  return Thresholds{t("rgb_lost"),   t("ir_lost"),   t("ir_noisy"), t("misaligned"),
-                    t("rgb_blurry"), t("ir_blurry"), j.at("dark_brightness").get<double>(),
+  return Thresholds{t("rgb_lost"),
+                    t("ir_lost"),
+                    t("ir_noisy"),
+                    t("misaligned"),
+                    t("rgb_blurry"),
+                    t("ir_blurry"),
+                    j.at("dark_brightness").get<double>(),
                     sha256_hex(bytes)};
 }
 
@@ -142,9 +148,12 @@ GateModel GateModel::load(const std::string& path) {
   const std::string bytes = read_bytes(path);
   const auto j = nlohmann::json::parse(bytes);
   const auto& t = j.at("temporal");
-  return GateModel{j.at("r_min").get<double>(),       t.at("window").get<int>(),
-                   t.at("min_frames").get<int>(),     t.at("tol_px").get<double>(),
-                   j.at("thresholds_sha256").get<std::string>(), sha256_hex(bytes)};
+  return GateModel{j.at("r_min").get<double>(),
+                   t.at("window").get<int>(),
+                   t.at("min_frames").get<int>(),
+                   t.at("tol_px").get<double>(),
+                   j.at("thresholds_sha256").get<std::string>(),
+                   sha256_hex(bytes)};
 }
 
 std::pair<std::string, std::optional<std::string>> decide_gate(bool rgb_lost, bool ir_lost,
@@ -173,9 +182,9 @@ nlohmann::json assess(const Features& f, const Thresholds& th, std::optional<dou
   const bool ir_noisy = !ir_lost && above(f.ir_noise, th.ir_noisy);
   const bool misaligned = !(rgb_lost || ir_lost) && above(f.misalign_px, th.misaligned) &&
                           (!r_min.has_value() || above(f.misalign_response, *r_min));
-  nlohmann::json rgb = camera(rgb_lost, false,
-                              f.rgb_brightness.has_value() && *f.rgb_brightness < th.dark,
-                              below(f.rgb_blur, th.rgb_blurry));
+  nlohmann::json rgb =
+      camera(rgb_lost, false, f.rgb_brightness.has_value() && *f.rgb_brightness < th.dark,
+             below(f.rgb_blur, th.rgb_blurry));
   rgb["std"] = opt(f.rgb_std);
   rgb["noise"] = opt(f.rgb_noise);
   rgb["blur"] = opt(f.rgb_blur);

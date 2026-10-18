@@ -30,7 +30,8 @@ TEST(Letterbox, MatchesPythonSha) {
     EXPECT_EQ(lb.gain, want.at("gain").get<double>());
     EXPECT_EQ(lb.pad_x, want.at("pad_x").get<int>());
     EXPECT_EQ(lb.pad_y, want.at("pad_y").get<int>());
-    EXPECT_EQ(bt::sha256_hex(x.data(), x.size() * sizeof(float)), want.at("sha256").get<std::string>());
+    EXPECT_EQ(bt::sha256_hex(x.data(), x.size() * sizeof(float)),
+              want.at("sha256").get<std::string>());
     resized += lb.gain != 1.0;
   }
   EXPECT_GE(resized, 2);  // resize_800x600 ve tiny_33x17: yeniden boyutlandırma yolu sınandı

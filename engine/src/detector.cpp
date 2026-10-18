@@ -39,7 +39,8 @@ Detector::Detector(const std::string& onnx_path, int threads)
 }
 
 std::vector<float> Detector::infer(const std::vector<float>& chw) {
-  const std::size_t want = static_cast<std::size_t>(input_shape_[1] * input_shape_[2] * input_shape_[3]);
+  const std::size_t want =
+      static_cast<std::size_t>(input_shape_[1] * input_shape_[2] * input_shape_[3]);
   if (chw.size() != want) {
     throw std::invalid_argument("giriş tensörü boyutu modelle uyuşmuyor");
   }

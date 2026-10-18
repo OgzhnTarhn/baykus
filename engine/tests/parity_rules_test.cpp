@@ -1,4 +1,5 @@
-// Kabul 1 kurallarının kendisi (sentetik listeler): kurallar yanlışsa eşlik testi bir şey kanıtlamaz.
+// Kabul 1 kurallarının kendisi (sentetik listeler): kurallar yanlışsa eşlik testi bir şey
+// kanıtlamaz.
 #include <gtest/gtest.h>
 
 #include <vector>

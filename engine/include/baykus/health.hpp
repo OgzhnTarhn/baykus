@@ -1,7 +1,8 @@
 #pragma once
 
-// Sensör sağlığı (Faz 2 + Faz 3 kare kuralı): Python `baykus.health.features` ve `baykus.health.gate`
-// ile aynı ölçüler, durumlar ve kapı kuralı. Hesaplanamayan değer boş optional (JSON'da null).
+// Sensör sağlığı (Faz 2 + Faz 3 kare kuralı): Python `baykus.health.features` ve
+// `baykus.health.gate` ile aynı ölçüler, durumlar ve kapı kuralı. Hesaplanamayan değer boş optional
+// (JSON'da null).
 #include <nlohmann/json.hpp>
 #include <opencv2/core.hpp>
 #include <optional>

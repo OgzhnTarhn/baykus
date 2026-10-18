@@ -80,9 +80,9 @@ std::vector<Det> dets_from_json(const json& j) {
   for (const auto& d : j) {
     const auto& b = d.at("box");
     out.push_back(Det{d.at("index").get<int>(), d.at("cls_id").get<int>(),
-                      static_cast<float>(d.at("score_raw").get<double>()), d.at("score").get<double>(),
-                      b.at(0).get<double>(), b.at(1).get<double>(), b.at(2).get<double>(),
-                      b.at(3).get<double>()});
+                      static_cast<float>(d.at("score_raw").get<double>()),
+                      d.at("score").get<double>(), b.at(0).get<double>(), b.at(1).get<double>(),
+                      b.at(2).get<double>(), b.at(3).get<double>()});
   }
   return out;
 }

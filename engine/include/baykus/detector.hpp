@@ -8,8 +8,8 @@
 
 namespace baykus {
 
-// ONNX Runtime oturumu (CPU). Giriş adı, şekli ve tipi modelden okunur; çıktı uçtan uca [1, 300, 6].
-// threads = 0: ORT varsayılanı (Python OrtBackend gibi).
+// ONNX Runtime oturumu (CPU). Giriş adı, şekli ve tipi modelden okunur; çıktı uçtan uca [1, 300,
+// 6]. threads = 0: ORT varsayılanı (Python OrtBackend gibi).
 class Detector {
  public:
   explicit Detector(const std::string& onnx_path, int threads = 0);

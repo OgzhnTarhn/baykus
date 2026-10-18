@@ -50,8 +50,10 @@ std::vector<Frame> run_frames(baykus::Detector& det) {
   const auto root = bt::fixtures_root();
   std::vector<Frame> frames;
   for (const auto& e : bt::fixtures_of("frame")) {
-    Frame f{e.at("name").get<std::string>(), bt::read_json(root / e.at("path").get<std::string>()),
-            {}, {}};
+    Frame f{e.at("name").get<std::string>(),
+            bt::read_json(root / e.at("path").get<std::string>()),
+            {},
+            {}};
     const auto& in = f.expected.at("inputs");
     auto p = baykus::decode_pair(bt::read_file(root / in.at("rgb").get<std::string>()),
                                  bt::read_file(root / in.at("ir").get<std::string>()));
@@ -67,7 +69,8 @@ class DetectorParity : public ::testing::Test {
  protected:
   void SetUp() override {
     const auto m = bt::models_root();
-    BAYKUS_REQUIRE_FILES({bt::fixtures_root() / "index.json", m / "e3c.onnx", m / "calibration.json"});
+    BAYKUS_REQUIRE_FILES(
+        {bt::fixtures_root() / "index.json", m / "e3c.onnx", m / "calibration.json"});
   }
 };
 
@@ -98,7 +101,8 @@ TEST_F(DetectorParity, LayerParity) {
       const char* name;
       const std::vector<baykus::Det>& got;
       double boundary;
-    } layers[] = {{"eval", eval, 0.001}, {"track", track, 0.1},
+    } layers[] = {{"eval", eval, 0.001},
+                  {"track", track, 0.1},
                   {"display", display, cal.display_boundary(0.25)}};
     for (const auto& l : layers) {
       const auto r = bp::compare_layer(bt::dets_from_json(want.at(l.name)), l.got, l.boundary);

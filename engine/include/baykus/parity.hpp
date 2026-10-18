@@ -9,13 +9,13 @@
 
 namespace baykus::parity {
 
-constexpr double kRawTol = 1e-4;        // (a) 6 bileşen mutlak fark
-constexpr double kRawTieTol = 1e-5;     // (a) ardışık Python skorları bu kadar yakınsa IoU eşlemesi
-constexpr double kLayerIoU = 0.99;      // (b) eşleşen kutularda IoU
-constexpr double kLayerRawTol = 1e-3;   // (b) ham skor farkı
-constexpr double kBoundaryTol = 1e-4;   // (b) katman sınırına yakın satır serbest
-constexpr double kSwapRawTol = 1e-4;    // (b) eşit kalibreli komşunun ham farkı
-constexpr double kMinRatio = 0.99;      // (b) karşılaştırılan satır oranı
+constexpr double kRawTol = 1e-4;       // (a) 6 bileşen mutlak fark
+constexpr double kRawTieTol = 1e-5;    // (a) ardışık Python skorları bu kadar yakınsa IoU eşlemesi
+constexpr double kLayerIoU = 0.99;     // (b) eşleşen kutularda IoU
+constexpr double kLayerRawTol = 1e-3;  // (b) ham skor farkı
+constexpr double kBoundaryTol = 1e-4;  // (b) katman sınırına yakın satır serbest
+constexpr double kSwapRawTol = 1e-4;   // (b) eşit kalibreli komşunun ham farkı
+constexpr double kMinRatio = 0.99;     // (b) karşılaştırılan satır oranı
 
 using Row = std::array<float, kCols>;
 
@@ -27,7 +27,8 @@ struct RawCompare {
   std::vector<std::string> errors;
 };
 
-// (a) Satır satır; ardışık Python skorları kRawTieTol içindeki gruplarda satırlar kutu IoU'suyla eşlenir.
+// (a) Satır satır; ardışık Python skorları kRawTieTol içindeki gruplarda satırlar kutu IoU'suyla
+// eşlenir.
 RawCompare compare_raw(const std::vector<Row>& py, const std::vector<Row>& cpp);
 
 struct LayerCompare {

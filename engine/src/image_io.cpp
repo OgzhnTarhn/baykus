@@ -14,8 +14,7 @@ cv::Mat decode(const std::string& bytes, int flag, const char* name) {
   }
   cv::Mat img;
   try {
-    const cv::Mat buf(1, static_cast<int>(bytes.size()), CV_8UC1,
-                      const_cast<char*>(bytes.data()));
+    const cv::Mat buf(1, static_cast<int>(bytes.size()), CV_8UC1, const_cast<char*>(bytes.data()));
     img = cv::imdecode(buf, flag);
   } catch (const cv::Exception&) {
     img.release();  // kütüphane istisnası sınırda yakalanır (tasarım §4.1)

@@ -20,7 +20,9 @@ double iou(double ax1, double ay1, double ax2, double ay2, double bx1, double by
 
 namespace {
 
-double row_iou(const Row& a, const Row& b) { return iou(a[0], a[1], a[2], a[3], b[0], b[1], b[2], b[3]); }
+double row_iou(const Row& a, const Row& b) {
+  return iou(a[0], a[1], a[2], a[3], b[0], b[1], b[2], b[3]);
+}
 
 double row_diff(const Row& a, const Row& b) {
   double d = 0.0;
@@ -41,7 +43,8 @@ RawCompare compare_raw(const std::vector<Row>& py, const std::vector<Row>& cpp) 
   const std::size_t n = py.size();
   std::size_t i = 0;
   while (i < n) {
-    // Ardışık Python skorları 1e-5 içindeyse bir grup: ORT'nin sıralaması işlemciye göre değişebilir
+    // Ardışık Python skorları 1e-5 içindeyse bir grup: ORT'nin sıralaması işlemciye göre
+    // değişebilir
     std::size_t j = i + 1;
     while (j < n && std::fabs(static_cast<double>(py[j][4]) - py[j - 1][4]) < kRawTieTol) ++j;
     std::vector<bool> used(j - i, false);
@@ -80,26 +83,33 @@ LayerCompare compare_layer(const std::vector<Det>& py, const std::vector<Det>& c
   std::map<int, const Det*> pm, cm;
   for (const auto& d : py) pm[d.index] = &d;
   for (const auto& d : cpp) cm[d.index] = &d;
-  auto near = [&](float raw) { return std::fabs(static_cast<double>(raw) - boundary_raw) < kBoundaryTol; };
+  auto near = [&](float raw) {
+    return std::fabs(static_cast<double>(raw) - boundary_raw) < kBoundaryTol;
+  };
   // Serbestlik yalnız üyelikte: sınıra yakın satır bir tarafta olmayabilir. İki tarafta da varsa
   // normal karşılaştırılır (tasarım §6.1 Kabul 1 b: "kümede olup olmamakta serbest").
   std::set<int> free;
-  for (const auto& d : py) if (near(d.score_raw) && !cm.count(d.index)) free.insert(d.index);
-  for (const auto& d : cpp) if (near(d.score_raw) && !pm.count(d.index)) free.insert(d.index);
+  for (const auto& d : py)
+    if (near(d.score_raw) && !cm.count(d.index)) free.insert(d.index);
+  for (const auto& d : cpp)
+    if (near(d.score_raw) && !pm.count(d.index)) free.insert(d.index);
   r.free_rows = static_cast<int>(free.size());
 
   auto err = [&](const std::string& s) { r.errors.push_back(s); };
   for (const auto& [idx, d] : pm) {
     (void)d;
-    if (!free.count(idx) && !cm.count(idx)) err("satır " + std::to_string(idx) + " yalnız Python'da");
+    if (!free.count(idx) && !cm.count(idx))
+      err("satır " + std::to_string(idx) + " yalnız Python'da");
   }
   for (const auto& [idx, d] : cm) {
     (void)d;
     if (!free.count(idx) && !pm.count(idx)) err("satır " + std::to_string(idx) + " yalnız C++'ta");
   }
   std::vector<int> py_seq, cpp_seq;
-  for (const auto& d : py) if (!free.count(d.index) && cm.count(d.index)) py_seq.push_back(d.index);
-  for (const auto& d : cpp) if (!free.count(d.index) && pm.count(d.index)) cpp_seq.push_back(d.index);
+  for (const auto& d : py)
+    if (!free.count(d.index) && cm.count(d.index)) py_seq.push_back(d.index);
+  for (const auto& d : cpp)
+    if (!free.count(d.index) && pm.count(d.index)) cpp_seq.push_back(d.index);
   for (int idx : py_seq) {
     const Det& a = *pm[idx];
     const Det& b = *cm[idx];
@@ -116,8 +126,8 @@ LayerCompare compare_layer(const std::vector<Det>& py, const std::vector<Det>& c
       ++k;
       continue;
     }
-    const bool adjacent = k + 1 < py_seq.size() && py_seq[k] == cpp_seq[k + 1] &&
-                          py_seq[k + 1] == cpp_seq[k];
+    const bool adjacent =
+        k + 1 < py_seq.size() && py_seq[k] == cpp_seq[k + 1] && py_seq[k + 1] == cpp_seq[k];
     const Det& a = *pm[py_seq[k]];
     const Det& b = *pm[adjacent ? py_seq[k + 1] : py_seq[k]];
     if (adjacent && a.score == b.score &&

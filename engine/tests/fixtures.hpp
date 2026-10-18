@@ -38,14 +38,14 @@ std::vector<Det> dets_from_json(const json& j);
 }  // namespace baykus::test
 
 // Test gövdesinin başında: dosyalar yoksa zorunluysa FAIL, değilse SKIP.
-#define BAYKUS_REQUIRE_FILES(...)                                          \
-  do {                                                                     \
+#define BAYKUS_REQUIRE_FILES(...)                                             \
+  do {                                                                        \
     const std::string baykus_missing_ = ::baykus::test::missing(__VA_ARGS__); \
-    if (!baykus_missing_.empty()) {                                        \
-      if (::baykus::test::fixtures_required()) {                           \
-        FAIL() << "fikstür eksik: " << baykus_missing_;                    \
-      } else {                                                             \
-        GTEST_SKIP() << "fikstür yok: " << baykus_missing_;                \
-      }                                                                    \
-    }                                                                      \
+    if (!baykus_missing_.empty()) {                                           \
+      if (::baykus::test::fixtures_required()) {                              \
+        FAIL() << "fikstür eksik: " << baykus_missing_;                       \
+      } else {                                                                \
+        GTEST_SKIP() << "fikstür yok: " << baykus_missing_;                   \
+      }                                                                       \
+    }                                                                         \
   } while (0)

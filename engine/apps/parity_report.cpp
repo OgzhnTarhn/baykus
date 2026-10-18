@@ -22,9 +22,15 @@ using json = nlohmann::json;
 namespace {
 
 json layer_json(const bp::LayerCompare& r) {
-  return {{"ok", r.ok},         {"py_rows", r.py_rows},       {"cpp_rows", r.cpp_rows},
-          {"compared", r.compared}, {"free_rows", r.free_rows}, {"swaps", r.swaps},
-          {"ratio", r.ratio},   {"max_raw_diff", r.max_raw_diff}, {"min_iou", r.min_iou},
+  return {{"ok", r.ok},
+          {"py_rows", r.py_rows},
+          {"cpp_rows", r.cpp_rows},
+          {"compared", r.compared},
+          {"free_rows", r.free_rows},
+          {"swaps", r.swaps},
+          {"ratio", r.ratio},
+          {"max_raw_diff", r.max_raw_diff},
+          {"min_iou", r.min_iou},
           {"errors", r.errors}};
 }
 
@@ -75,14 +81,21 @@ int main(int argc, char** argv) {
     const auto& want = mod.at("dets");
     const auto le = bp::compare_layer(bt::dets_from_json(want.at("eval")), eval, 0.001);
     const auto lt = bp::compare_layer(bt::dets_from_json(want.at("track")), track, 0.1);
-    const auto ld = bp::compare_layer(bt::dets_from_json(want.at("display")), display, display_boundary);
+    const auto ld =
+        bp::compare_layer(bt::dets_from_json(want.at("display")), display, display_boundary);
     const bool ok = lb_ok && raw.ok && le.ok && lt.ok && ld.ok;
     all_ok = all_ok && ok;
-    frames.push_back({{"name", e.at("name")},
-                      {"ok", ok},
-                      {"letterbox_sha_equal", lb_ok},
-                      {"raw", {{"ok", raw.ok}, {"max_diff", raw.max_diff}, {"swaps", raw.swaps}, {"errors", raw.errors}}},
-                      {"layers", {{"eval", layer_json(le)}, {"track", layer_json(lt)}, {"display", layer_json(ld)}}}});
+    frames.push_back(
+        {{"name", e.at("name")},
+         {"ok", ok},
+         {"letterbox_sha_equal", lb_ok},
+         {"raw",
+          {{"ok", raw.ok},
+           {"max_diff", raw.max_diff},
+           {"swaps", raw.swaps},
+           {"errors", raw.errors}}},
+         {"layers",
+          {{"eval", layer_json(le)}, {"track", layer_json(lt)}, {"display", layer_json(ld)}}}});
   }
   const json rec = {
       {"kabul", "1 (a, b modül düzeyi) + 2"},
@@ -92,12 +105,16 @@ int main(int argc, char** argv) {
       {"opencv_version", baykus::opencv_version()},
       {"onnxruntime_version", baykus::onnxruntime_version()},
       {"tolerances",
-       {{"raw", bp::kRawTol}, {"raw_tie", bp::kRawTieTol}, {"layer_iou", bp::kLayerIoU},
-        {"layer_raw", bp::kLayerRawTol}, {"boundary", bp::kBoundaryTol}, {"min_ratio", bp::kMinRatio}}},
+       {{"raw", bp::kRawTol},
+        {"raw_tie", bp::kRawTieTol},
+        {"layer_iou", bp::kLayerIoU},
+        {"layer_raw", bp::kLayerRawTol},
+        {"boundary", bp::kBoundaryTol},
+        {"min_ratio", bp::kMinRatio}}},
       {"frames", frames},
   };
   std::ofstream(argv[1]) << rec.dump(2) << "\n";
-  std::cout << argv[1] << ": " << frames.size() << " kare, Kabul 1-2 " << (all_ok ? "geçti" : "GEÇMEDİ")
-            << "\n";
+  std::cout << argv[1] << ": " << frames.size() << " kare, Kabul 1-2 "
+            << (all_ok ? "geçti" : "GEÇMEDİ") << "\n";
   return all_ok ? 0 : 1;
 }
