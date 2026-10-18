@@ -1,0 +1,110 @@
+"""Motorun işlem sırasının referansı (Faz 3 tasarımı §4.1):
+
+çöz → sağlık (her modda) → kapı (`auto` ve karar ≠ none ise kanal sıfırlanır) → 4 kanal →
+letterbox → ORT → çözümleme + taban süzgeci (ham skor ≥ floor) → kalibre skor → sıralama.
+Ham skor float32 (model çıktısı), kalibre skor double. Sıralama: kalibre azalan, ham azalan,
+ORT satır indeksi artan.
+"""
+
+from __future__ import annotations
+
+import hashlib
+from dataclasses import dataclass
+
+import numpy as np
+
+from baykus.data.multichannel import stack_rgbt
+from baykus.edge.frames import Letterbox, preprocess
+from baykus.engine_ref.compose import decode_pair
+from baykus.engine_ref.models import Models
+from baykus.health.calibrate import apply_isotonic
+from baykus.health.features import frame_features
+from baykus.health.gate import apply_gate, assess
+from baykus.health.temporal import MisalignWindow
+
+GATE_MODES = ("off", "advise", "auto")
+
+
+@dataclass(frozen=True)
+class Det:
+    index: int  # ORT çıktısındaki satır
+    cls_id: int
+    score_raw: float  # float32 değeri
+    score: float  # kalibre, double
+    box: tuple[float, float, float, float]  # x1, y1, x2, y2 (görüntü pikseli)
+
+
+def decode_rows(
+    out: np.ndarray,
+    lb: Letterbox,
+    floor: float,
+    calib: tuple[np.ndarray, np.ndarray] | None = None,
+) -> list[Det]:
+    """`[1, N, 6]` → Det (satır sırasıyla). Geri ölçekleme, kırpma ve `w, h ≤ 0` atma
+    `baykus.edge.frames.postprocess` ile aynı. `calib` yoksa `score` = `score_raw`."""
+    dets: list[Det] = []
+    for i, row in enumerate(out[0]):
+        raw = float(row[4])
+        if raw < floor:
+            continue
+        x1 = (float(row[0]) - lb.pad_x) / lb.gain
+        y1 = (float(row[1]) - lb.pad_y) / lb.gain
+        x2 = (float(row[2]) - lb.pad_x) / lb.gain
+        y2 = (float(row[3]) - lb.pad_y) / lb.gain
+        x1, x2 = min(max(x1, 0.0), float(lb.width)), min(max(x2, 0.0), float(lb.width))
+        y1, y2 = min(max(y1, 0.0), float(lb.height)), min(max(y2, 0.0), float(lb.height))
+        if x2 - x1 <= 0 or y2 - y1 <= 0:
+            continue
+        score = raw if calib is None else float(apply_isotonic(np.float64(raw), *calib))
+        dets.append(Det(i, int(row[5]), raw, score, (x1, y1, x2, y2)))
+    return dets
+
+
+def order(dets: list[Det]) -> list[Det]:
+    return sorted(dets, key=lambda d: (-d.score, -d.score_raw, d.index))
+
+
+def display(dets_all: list[Det], conf: float) -> list[Det]:
+    """Gösterim katmanı: kalibre skor ≥ conf (sıra korunur)."""
+    return [d for d in dets_all if d.score >= conf]
+
+
+class Pipeline:
+    def __init__(self, models: Models, backend=None) -> None:
+        if backend is None:
+            from baykus.edge.backends import OrtBackend
+
+            backend = OrtBackend(models.onnx)
+        self.models, self.backend = models, backend
+
+    def run(
+        self,
+        rgb_bytes: bytes,
+        ir_bytes: bytes,
+        *,
+        gate: str = "advise",
+        floor: float = 0.1,
+        window: MisalignWindow | None = None,
+    ) -> dict:
+        if gate not in GATE_MODES:
+            raise ValueError(f"bilinmeyen gate modu: {gate!r}; seçenekler: {GATE_MODES}")
+        m = self.models
+        bgr, ir = decode_pair(rgb_bytes, ir_bytes)
+        health = assess(frame_features(bgr, ir, vector=True), m.thresholds, m.gate.r_min)
+        if window is not None:
+            health = window.update(health)
+        if gate == "off":  # sağlık yine ölçülür; yalnız kapı kararı "none" sayılır
+            health["gate"] = "none"
+        health["applied"] = gate == "auto" and health["gate"] != "none"
+        if health["applied"]:
+            bgr, ir = apply_gate(bgr, ir, health["gate"])
+        x, lb = preprocess(stack_rgbt(bgr, ir), imgsz=getattr(self.backend, "imgsz", 640))
+        raw = self.backend.infer(x)
+        dets = decode_rows(raw, lb, floor, (m.calib_x, m.calib_y))
+        return {
+            "dets_all": order(dets),
+            "health": health,
+            "tensor_sha256": hashlib.sha256(x.tobytes()).hexdigest(),
+            "raw": raw,
+            "lb": lb,
+        }
