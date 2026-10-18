@@ -357,3 +357,21 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
 - **Düzeltme:** notebook hücre 7 test dizilerini `1-03 2-03` diye yazıyordu; dönüştürücü adları `1_03 2_03`.
 - **Paketler (hücre 7, 22 sn):** `demo-pack` geliştirme `1_08`, `2_08` → `dev_pack` 344 MB (zip 339 MB); test `1_03`, `2_03` (`--allow-test`) → `test_pack` 308 MB (zip 305 MB). Drive `MyDrive/baykus/m3ot/{dev_pack,test_pack}.zip`.
 - **Laptop:** `data/m3ot_dev/` (val 1200 kare, 13.474 IR kutusu), `data/m3ot_test/` (960 kare, 2465 IR kutusu: E7'deki sayıyla aynı), `demo-data/sequences/` = `1_08`, `2_08` (test dizileri demo-data'ya girmedi). Her dizide kareler 1..N, 640×512, `index.json` fps 30. Hiçbiri git'te değil.
+
+## 2026-10-18 · F3 · Kare kuralı, val keşfi (PyTorch E3c)
+- **Etiket:** val'de keşif. Kural (`r_min`) train'de seçildi ama tasarım val sonuçlarına bakılarak kuruldu; kapılı koşular Faz 2'deki **PyTorch** E3c (sevk edilen ONNX değil). Test kullanılmadı. Kaynak `results/health/gate_model_val.json`.
+- **Kurulum:** `r_min` = 0,2450 (`results/health/gate_model.json`, train: temiz alarm %2,0, misalign-20/40 yakalama %85,5 · karanlık %61,7 · aydınlık %95,7). Faz 2 dosyaları (Drive `robust/`, 46 dosya, 69,6 MB) kare kuralıyla birleştirildi: `reason == "IR hizasız"` ve `response < r_min` olan karelerin tahmini taban koşudan, diğerleri kapılı koşudan. Ön koşul (kapının dokunmadığı karelerde kapılı = taban tahmin) **16 koşulun 16'sında tuttu**. Eşleştirilmiş bootstrap 1000, seed 42; Faz 2'nin Kabul 1-3 tanımları. Laptop, `baykus-health guard-val`.
+- **Sonuç (Faz 2 kapısı → kare kuralıyla kapı):**
+
+| | Faz 2 | Kare kuralı |
+|---|---|---|
+| Kabul 1: temiz fark (≥ −0,5 puan) | −3,09 ❌ | **−0,22** ✅ (GA −0,50 / −0,01) |
+| Kabul 2: Z birleşik fark, GA alt sınır > 0 | +40,7 [38,3; 43,1] ✅ | **+33,8 [31,3; 36,7]** ✅ |
+| Kabul 3: temiz yanlış alarm (≤ %2) | %4,08 ❌ | **%0,68** ✅ |
+| misalign-20 kapı oranı / fark | %95,0 / +41,6 | %83,6 / +35,7 |
+| misalign-40 kapı oranı / fark | %99,7 / +62,1 | %86,7 / +47,4 |
+| noise-20 fark | +18,4 | +18,4 (gürültü kuralı değişmedi) |
+
+  - Kaldırılan alarm: temiz 50 (60 alarmın 50'si), karartma 57-68, bulanık 52-60, misalign-20 168, misalign-40 191 kare.
+  - misalign-20 yakalama: tümü %83,6, **karanlık %58,8**, aydınlık %93,4 (misalign-40: %86,7 · %61,4 · %96,6). Tasarımda yazılan bilinen risk ölçüldü: gece gerçek kaymada da yanıt düşük, kare kuralı o alarmı da iptal ediyor.
+- **Yorum:** kare kuralı Faz 2'nin ana sorununu (temiz val'de %4 yanlış alarm, −3,1 puan) val'de gideriyor; bedeli karanlıkta gerçek kaymanın ≈ %40'ını kaçırmak. Zaman kuralı tek karelik DroneVehicle'da ölçülemez (M3OT videolarında, Görev 12). Ürün varsayılanı değişmez: `gate=advise` (tasarım §4.2; testte doğrulanmadı).
