@@ -425,6 +425,12 @@ Tek sayfa, spec §17 düzeni + Faz 3 ekleri. Kullanıcının günlük yığını
      `http://www.w3.org/2000/svg` gibi ad alanları); listede olmayan bir kaynak varsa başarısız. Dinamik
      kurulan adresleri yakalamaz; bu yüzden ikincil.
   Ultralytics ya da Python çalışma zamanında yok.
+  **Bulgu (2026-10-18, plan F3 Görev 26):** ONNX Runtime 1.30.0'ın Linux paketi açılışta telemetri
+  başlatıyor ve HTTPS ile gönderim deniyor (runtime imajında CA paketi olmadığı için gönderemiyordu:
+  "No readable CA bundle was found; telemetry HTTPS uploads will be unavailable"). Kapatıldı:
+  imajda `ORT_DISABLE_TELEMETRY=1` (ORT ortamı kurulurken okunur; açılış logunda telemetri satırı 0),
+  kodda `Ort::Env::DisableTelemetryEvents()`, CI iş akışında aynı değişken; testi
+  `Offline.OrtTelemetryDisabledInImage`.
 - **Elle kanıt (en güçlü):** laptopta Wi-Fi kapalıyken normal `docker compose up`; demo açılıyor ve
   oynatılıyor (deney günlüğüne tarih ve ekran görüntüsü).
 - **CI (`.github/workflows/ci.yml`):** `python` (uv, ruff, pytest — mevcut), `engine` (Dockerfile `build`
