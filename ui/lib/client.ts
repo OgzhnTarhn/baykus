@@ -93,6 +93,11 @@ export async function postDetect(
   return json<DetectResponse>(res);
 }
 
+// Arıza açık: multipart (meta + bozulan kanallar, lib/faults buildFaultForm).
+export async function postDetectForm(form: FormData): Promise<DetectResponse> {
+  return json<DetectResponse>(await send("/api/detect", { method: "POST", body: form }));
+}
+
 export async function postReset(session: string): Promise<void> {
   const res = await send("/api/session/reset", {
     method: "POST",

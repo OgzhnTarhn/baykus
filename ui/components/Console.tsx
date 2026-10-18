@@ -5,15 +5,28 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { AlarmList } from "@/components/AlarmList";
+import { FaultPanel } from "@/components/FaultPanel";
 import { GateBadge } from "@/components/GateBadge";
 import { HealthPanel, STRIP_LEN, type StripEntry } from "@/components/HealthPanel";
 import { Player, type FrameView, type View } from "@/components/Player";
 import { TopBar } from "@/components/TopBar";
 import { Alarms, type AlarmEvent, type AlarmId } from "@/lib/alarms";
 import {
+  applyFaults,
+  buildFaultForm,
+  encodePng,
+  faultedChannels,
+  faultSummary,
+  mulberry32,
+  NO_FAULTS,
+  type FaultConfig,
+  type Pixels,
+} from "@/lib/faults";
+import {
   fetchSequences,
   frameUrl,
   postDetect,
+  postDetectForm,
   postReset,
   type DetectSettings,
   type Gate,
@@ -24,7 +37,7 @@ import { newSessionId } from "@/lib/session";
 
 const DEFAULT_CONF = 0.25;
 
-async function preload(src: string): Promise<void> {
+async function preload(src: string): Promise<HTMLImageElement> {
   const img = new Image();
   img.src = src;
   try {
@@ -32,12 +45,34 @@ async function preload(src: string): Promise<void> {
   } catch {
     throw new Error("kare görüntüsü yüklenemedi");
   }
+  return img;
+}
+
+function toPixels(img: HTMLImageElement): Pixels {
+  const c = document.createElement("canvas");
+  c.width = img.naturalWidth;
+  c.height = img.naturalHeight;
+  const ctx = c.getContext("2d", { willReadFrequently: true });
+  if (!ctx) throw new Error("canvas açılamadı");
+  ctx.drawImage(img, 0, 0);
+  const d = ctx.getImageData(0, 0, c.width, c.height);
+  return { width: d.width, height: d.height, data: d.data };
+}
+
+function toPng(p: Pixels): Promise<Blob> {
+  const c = document.createElement("canvas");
+  c.width = p.width;
+  c.height = p.height;
+  const ctx = c.getContext("2d");
+  if (!ctx) throw new Error("canvas açılamadı");
+  ctx.putImageData(new ImageData(new Uint8ClampedArray(p.data), p.width, p.height), 0, 0);
+  return encodePng(c);
 }
 
 // Oynatıcı ve istek ayarları bileşen dışında kurulur: ayarlar render sırasında okunmaz, yalnız
 // istek anında (sonraki kare) okunur.
 // Oturum kimliği ilk istekte üretilir (tarayıcıda; sunucu ön-render'ında rastgele değer yok).
-type Settings = Omit<DetectSettings, "session">;
+type Settings = Omit<DetectSettings, "session"> & { faults: FaultConfig };
 
 export type Monitor = { active: AlarmId[]; history: AlarmEvent[]; strip: StripEntry[] };
 const EMPTY_MONITOR: Monitor = { active: [], history: [], strip: [] };
@@ -48,7 +83,8 @@ function makeConsole(
   onChange: (s: PlayerSnapshot<FrameView>) => void,
   onMonitor: (m: Monitor) => void,
 ) {
-  let current: Settings = { conf: DEFAULT_CONF, track: true, gate: "auto" };
+  let current: Settings = { conf: DEFAULT_CONF, track: true, gate: "auto", faults: NO_FAULTS };
+  const blobUrls: string[][] = []; // bozulmuş karelerin nesne URL'leri; iki kare sonra bırakılır
   let session: string | null = null;
   const sid = () => (session ??= newSessionId());
   const settings = { set: (v: Settings) => (current = v) };
@@ -61,13 +97,33 @@ function makeConsole(
   };
   const player = createPlayer<FrameView>({
     detect: async (seq, frame) => {
-      const rgbSrc = frameUrl(seq, frame, "rgb");
-      const irSrc = frameUrl(seq, frame, "ir");
-      const [response] = await Promise.all([
-        postDetect(seq, frame, { ...current, session: sid() }),
-        preload(rgbSrc),
-        preload(irSrc),
-      ]);
+      const { faults, ...rest } = current;
+      const params = { ...rest, session: sid() };
+      let rgbSrc = frameUrl(seq, frame, "rgb");
+      let irSrc = frameUrl(seq, frame, "ir");
+      const ch = faultedChannels(faults);
+      let response;
+      if (!ch.rgb && !ch.ir) {
+        [response] = await Promise.all([
+          postDetect(seq, frame, params),
+          preload(rgbSrc),
+          preload(irSrc),
+        ]);
+      } else {
+        // Bozulan kanal canvas'ta üretilir ve PNG gider; gürültü kare başına tohumlu (tekrarlanabilir).
+        const rng = mulberry32(frame);
+        const [rgbImg, irImg] = await Promise.all([preload(rgbSrc), preload(irSrc)]);
+        const parts: { rgb?: Blob; ir?: Blob } = {};
+        const urls: string[] = [];
+        if (ch.rgb) parts.rgb = await toPng(applyFaults(toPixels(rgbImg), "rgb", faults, rng));
+        if (ch.ir) parts.ir = await toPng(applyFaults(toPixels(irImg), "ir", faults, rng));
+        if (parts.rgb) urls.push((rgbSrc = URL.createObjectURL(parts.rgb)));
+        if (parts.ir) urls.push((irSrc = URL.createObjectURL(parts.ir)));
+        blobUrls.push(urls);
+        if (blobUrls.length > 2) blobUrls.shift()!.forEach((u) => URL.revokeObjectURL(u));
+        const meta = { seq, frame, ...params, fault: faultSummary(faults) };
+        response = await postDetectForm(buildFaultForm(meta, parts));
+      }
       if (response.session_new) clearMonitor();
       const h = response.health;
       alarms.update(h, frame);
@@ -95,14 +151,15 @@ export function Console() {
   const [track, setTrack] = useState(true);
   const [gate, setGate] = useState<Gate>("auto");
   const [view, setView] = useState<View>("both");
+  const [faults, setFaults] = useState<FaultConfig>(NO_FAULTS);
   const [snapState, setSnap] = useState<PlayerSnapshot<FrameView> | null>(null);
   const [monitor, setMonitor] = useState<Monitor>(EMPTY_MONITOR);
   const [{ player, settings }] = useState(() => makeConsole(setSnap, setMonitor));
   const snap = snapState ?? player.snapshot();
 
   useEffect(() => {
-    settings.set({ conf, track, gate });
-  }, [settings, conf, track, gate]);
+    settings.set({ conf, track, gate, faults });
+  }, [settings, conf, track, gate, faults]);
 
   useEffect(() => {
     let alive = true;
@@ -194,6 +251,7 @@ export function Console() {
         <aside className="flex flex-col gap-4" aria-label="Durum">
           <AlarmList active={monitor.active} history={monitor.history} />
           <HealthPanel health={health} strip={monitor.strip} />
+          <FaultPanel faults={faults} onChange={setFaults} />
         </aside>
       </main>
     </div>
