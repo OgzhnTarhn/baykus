@@ -33,6 +33,7 @@ add_library(baykus_core STATIC
   src/calibration.cpp
   src/detections.cpp
   src/detector.cpp
+  src/health.cpp
   src/image_io.cpp
   src/parity.cpp
   src/preprocess.cpp
@@ -56,7 +57,8 @@ add_executable(baykus_tests
   tests/preprocess_test.cpp
   tests/parity_rules_test.cpp
   tests/calibration_test.cpp
-  tests/detector_test.cpp)
+  tests/detector_test.cpp
+  tests/health_test.cpp)
 target_link_libraries(baykus_tests PRIVATE baykus_test_support GTest::gtest_main baykus_warnings)
 include(GoogleTest)
 gtest_discover_tests(baykus_tests DISCOVERY_MODE PRE_TEST)
