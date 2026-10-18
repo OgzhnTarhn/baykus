@@ -99,4 +99,18 @@ std::vector<Det> dets_from_json(const json& j) {
   return out;
 }
 
+std::string png_header(std::uint32_t width, std::uint32_t height) {
+  std::string b("\x89PNG\r\n\x1a\n", 8);
+  const auto u32 = [&b](std::uint32_t v) {
+    for (int s = 24; s >= 0; s -= 8) b.push_back(static_cast<char>((v >> s) & 0xff));
+  };
+  u32(13);
+  b += "IHDR";
+  u32(width);
+  u32(height);
+  b += std::string("\x08\x02\x00\x00\x00", 5);  // 8 bit, RGB
+  u32(0);                                       // CRC (denetlenmez; gövde zaten yok)
+  return b;
+}
+
 }  // namespace baykus::test

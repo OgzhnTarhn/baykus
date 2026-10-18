@@ -8,6 +8,7 @@
 #include <stdexcept>
 
 #include "baykus/classes.hpp"
+#include "baykus/image_io.hpp"
 
 namespace baykus {
 
@@ -77,6 +78,8 @@ void guarded(httplib::Response& res, F f) {
   try {
     f();
   } catch (const TooLarge& e) {
+    send_error(res, 413, e.what());
+  } catch (const ImageTooLarge& e) {
     send_error(res, 413, e.what());
   } catch (const std::invalid_argument& e) {
     send_error(res, 400, e.what());

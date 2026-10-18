@@ -85,6 +85,7 @@ class ServerTest : public ::testing::Test {
         bt::read_file(bt::fixtures_root() / "synthetic" / "tiny_33x17_rgb.png");
     const std::string corrupt = ir_.substr(0, ir_.size() / 2);
     const std::string huge(baykus::kMaxPartBytes + 1, '\x01');
+    const std::string big = bt::png_header(30000, 30000);  // birkaç bayt, açılınca GB'lar
     const std::vector<std::tuple<std::string, int, int>> list = {
         {"detect_ok", 200, post_detect("?track=true&session=k8", parts(rgb_, ir_))},
         {"missing_part", 400, post_detect("", parts(rgb_, ""))},
@@ -96,6 +97,7 @@ class ServerTest : public ::testing::Test {
         {"bad_track_flag", 400, post_detect("?track=maybe", parts(rgb_, ir_))},
         {"track_without_session", 400, post_detect("?track=true", parts(rgb_, ir_))},
         {"part_too_large", 413, post_detect("", parts(huge, ir_))},
+        {"image_too_large", 413, post_detect("", parts(big, big))},
         {"not_multipart", 400,
          [&] {
            const auto r = client_->Post("/v1/detect", "xyz", "application/octet-stream");
