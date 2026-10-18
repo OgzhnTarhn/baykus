@@ -1,0 +1,21 @@
+{
+  "r_min": 0.24504129436349326,
+  "criterion": "clean_alarm*50<=n",
+  "train_clean_alarm_rate": 0.02,
+  "train_tpr": {
+    "all": 0.855,
+    "dark": 0.6166666666666667,
+    "bright": 0.9571428571428572
+  },
+  "n_clean": 500,
+  "n_pos": 1000,
+  "temporal": {
+    "window": 5,
+    "min_frames": 3,
+    "tol_px": 3.0
+  },
+  "thresholds_sha256": "bf3d4c93660cc226e583360b16934c7d2a3877fe9abdc069e30aff62566a4c33",
+  "train_features_sha256": "9e514b4c03f98de7d4d9dce33e73189e43df1b4ca52a148496337e58fb6afa6c",
+  "git_commit": "144fc9ffcc3c81352f46f112b46fbc4c5cef270f",
+  "created_at": "2026-10-18T11:02:28Z"
+}
