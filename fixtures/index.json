@@ -1,0 +1,272 @@
+[
+ {
+  "name": "1_08_000061",
+  "kind": "frame",
+  "path": "expected/1_08_000061.json",
+  "files": [
+   "m3ot/frames/1_08_000061_rgb.jpg",
+   "m3ot/frames/1_08_000061_ir.png"
+  ]
+ },
+ {
+  "name": "1_08_000181",
+  "kind": "frame",
+  "path": "expected/1_08_000181.json",
+  "files": [
+   "m3ot/frames/1_08_000181_rgb.jpg",
+   "m3ot/frames/1_08_000181_ir.png"
+  ]
+ },
+ {
+  "name": "1_08_000301",
+  "kind": "frame",
+  "path": "expected/1_08_000301.json",
+  "files": [
+   "m3ot/frames/1_08_000301_rgb.jpg",
+   "m3ot/frames/1_08_000301_ir.png"
+  ]
+ },
+ {
+  "name": "1_08_000421",
+  "kind": "frame",
+  "path": "expected/1_08_000421.json",
+  "files": [
+   "m3ot/frames/1_08_000421_rgb.jpg",
+   "m3ot/frames/1_08_000421_ir.png"
+  ]
+ },
+ {
+  "name": "1_08_000542",
+  "kind": "frame",
+  "path": "expected/1_08_000542.json",
+  "files": [
+   "m3ot/frames/1_08_000542_rgb.jpg",
+   "m3ot/frames/1_08_000542_ir.png"
+  ]
+ },
+ {
+  "name": "2_08_000061",
+  "kind": "frame",
+  "path": "expected/2_08_000061.json",
+  "files": [
+   "m3ot/frames/2_08_000061_rgb.jpg",
+   "m3ot/frames/2_08_000061_ir.png"
+  ]
+ },
+ {
+  "name": "2_08_000187",
+  "kind": "frame",
+  "path": "expected/2_08_000187.json",
+  "files": [
+   "m3ot/frames/2_08_000187_rgb.jpg",
+   "m3ot/frames/2_08_000187_ir.png"
+  ]
+ },
+ {
+  "name": "2_08_000301",
+  "kind": "frame",
+  "path": "expected/2_08_000301.json",
+  "files": [
+   "m3ot/frames/2_08_000301_rgb.jpg",
+   "m3ot/frames/2_08_000301_ir.png"
+  ]
+ },
+ {
+  "name": "2_08_000422",
+  "kind": "frame",
+  "path": "expected/2_08_000422.json",
+  "files": [
+   "m3ot/frames/2_08_000422_rgb.jpg",
+   "m3ot/frames/2_08_000422_ir.png"
+  ]
+ },
+ {
+  "name": "2_08_000541",
+  "kind": "frame",
+  "path": "expected/2_08_000541.json",
+  "files": [
+   "m3ot/frames/2_08_000541_rgb.jpg",
+   "m3ot/frames/2_08_000541_ir.png"
+  ]
+ },
+ {
+  "name": "black_ir",
+  "kind": "frame",
+  "path": "expected/black_ir.json",
+  "files": [
+   "synthetic/black_ir_rgb.png",
+   "synthetic/black_ir_ir.png"
+  ]
+ },
+ {
+  "name": "noise_ir",
+  "kind": "frame",
+  "path": "expected/noise_ir.json",
+  "files": [
+   "synthetic/noise_ir_rgb.png",
+   "synthetic/noise_ir_ir.png"
+  ]
+ },
+ {
+  "name": "shift_ir",
+  "kind": "frame",
+  "path": "expected/shift_ir.json",
+  "files": [
+   "synthetic/shift_ir_rgb.png",
+   "synthetic/shift_ir_ir.png"
+  ]
+ },
+ {
+  "name": "black_rgb",
+  "kind": "frame",
+  "path": "expected/black_rgb.json",
+  "files": [
+   "synthetic/black_rgb_rgb.png",
+   "synthetic/black_rgb_ir.png"
+  ]
+ },
+ {
+  "name": "darken_rgb",
+  "kind": "frame",
+  "path": "expected/darken_rgb.json",
+  "files": [
+   "synthetic/darken_rgb_rgb.png",
+   "synthetic/darken_rgb_ir.png"
+  ]
+ },
+ {
+  "name": "resize_800x600",
+  "kind": "frame",
+  "path": "expected/resize_800x600.json",
+  "files": [
+   "synthetic/resize_800x600_rgb.png",
+   "synthetic/resize_800x600_ir.png"
+  ]
+ },
+ {
+  "name": "tiny_33x17",
+  "kind": "frame",
+  "path": "expected/tiny_33x17.json",
+  "files": [
+   "synthetic/tiny_33x17_rgb.png",
+   "synthetic/tiny_33x17_ir.png"
+  ]
+ },
+ {
+  "name": "clip_clean",
+  "kind": "clip",
+  "path": "expected/clip_clean.json",
+  "files": [
+   "m3ot/clip/sequences/clip/index.json",
+   "m3ot/clip/sequences/clip/rgb/000001.jpg",
+   "m3ot/clip/sequences/clip/ir/000001.png",
+   "m3ot/clip/sequences/clip/rgb/000002.jpg",
+   "m3ot/clip/sequences/clip/ir/000002.png",
+   "m3ot/clip/sequences/clip/rgb/000003.jpg",
+   "m3ot/clip/sequences/clip/ir/000003.png",
+   "m3ot/clip/sequences/clip/rgb/000004.jpg",
+   "m3ot/clip/sequences/clip/ir/000004.png",
+   "m3ot/clip/sequences/clip/rgb/000005.jpg",
+   "m3ot/clip/sequences/clip/ir/000005.png",
+   "m3ot/clip/sequences/clip/rgb/000006.jpg",
+   "m3ot/clip/sequences/clip/ir/000006.png",
+   "m3ot/clip/sequences/clip/rgb/000007.jpg",
+   "m3ot/clip/sequences/clip/ir/000007.png",
+   "m3ot/clip/sequences/clip/rgb/000008.jpg",
+   "m3ot/clip/sequences/clip/ir/000008.png",
+   "m3ot/clip/sequences/clip/rgb/000009.jpg",
+   "m3ot/clip/sequences/clip/ir/000009.png",
+   "m3ot/clip/sequences/clip/rgb/000010.jpg",
+   "m3ot/clip/sequences/clip/ir/000010.png",
+   "m3ot/clip/sequences/clip/rgb/000011.jpg",
+   "m3ot/clip/sequences/clip/ir/000011.png",
+   "m3ot/clip/sequences/clip/rgb/000012.jpg",
+   "m3ot/clip/sequences/clip/ir/000012.png",
+   "m3ot/clip/sequences/clip/rgb/000013.jpg",
+   "m3ot/clip/sequences/clip/ir/000013.png",
+   "m3ot/clip/sequences/clip/rgb/000014.jpg",
+   "m3ot/clip/sequences/clip/ir/000014.png",
+   "m3ot/clip/sequences/clip/rgb/000015.jpg",
+   "m3ot/clip/sequences/clip/ir/000015.png"
+  ]
+ },
+ {
+  "name": "clip_shift_all",
+  "kind": "clip",
+  "path": "expected/clip_shift_all.json",
+  "files": [
+   "m3ot/clip/variants/shift_all/000001.png",
+   "m3ot/clip/variants/shift_all/000002.png",
+   "m3ot/clip/variants/shift_all/000003.png",
+   "m3ot/clip/variants/shift_all/000004.png",
+   "m3ot/clip/variants/shift_all/000005.png",
+   "m3ot/clip/variants/shift_all/000006.png",
+   "m3ot/clip/variants/shift_all/000007.png",
+   "m3ot/clip/variants/shift_all/000008.png",
+   "m3ot/clip/variants/shift_all/000009.png",
+   "m3ot/clip/variants/shift_all/000010.png",
+   "m3ot/clip/variants/shift_all/000011.png",
+   "m3ot/clip/variants/shift_all/000012.png",
+   "m3ot/clip/variants/shift_all/000013.png",
+   "m3ot/clip/variants/shift_all/000014.png",
+   "m3ot/clip/variants/shift_all/000015.png"
+  ]
+ },
+ {
+  "name": "clip_shift_from8",
+  "kind": "clip",
+  "path": "expected/clip_shift_from8.json",
+  "files": [
+   "m3ot/clip/variants/shift_from8/000008.png",
+   "m3ot/clip/variants/shift_from8/000009.png",
+   "m3ot/clip/variants/shift_from8/000010.png",
+   "m3ot/clip/variants/shift_from8/000011.png",
+   "m3ot/clip/variants/shift_from8/000012.png",
+   "m3ot/clip/variants/shift_from8/000013.png",
+   "m3ot/clip/variants/shift_from8/000014.png",
+   "m3ot/clip/variants/shift_from8/000015.png"
+  ]
+ },
+ {
+  "name": "calibration_probe",
+  "kind": "calibration_probe",
+  "path": "expected/calibration_probe.json",
+  "files": []
+ },
+ {
+  "name": "temporal_unit",
+  "kind": "temporal_unit",
+  "path": "expected/temporal_unit.json",
+  "files": []
+ },
+ {
+  "name": "alarm_sequences",
+  "kind": "alarm_sequences",
+  "path": "expected/alarm_sequences.json",
+  "files": []
+ },
+ {
+  "name": "lsap_cases",
+  "kind": "lsap",
+  "path": "expected/lsap_cases.json",
+  "files": []
+ },
+ {
+  "name": "kalman_steps",
+  "kind": "kalman",
+  "path": "expected/kalman_steps.json",
+  "files": []
+ },
+ {
+  "name": "dev_dets",
+  "kind": "tracks",
+  "path": "tracks/dev_dets.json.gz",
+  "files": []
+ },
+ {
+  "name": "dev_tracks_py",
+  "kind": "tracks",
+  "path": "tracks/dev_tracks_py.json.gz",
+  "files": []
+ }
+]

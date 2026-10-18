@@ -1,0 +1,578 @@
+{
+ "variant": "shift_all",
+ "gate": "auto",
+ "inputs": [
+  {
+   "frame": 1,
+   "rgb": "m3ot/clip/sequences/clip/rgb/000001.jpg",
+   "ir": "m3ot/clip/variants/shift_all/000001.png"
+  },
+  {
+   "frame": 2,
+   "rgb": "m3ot/clip/sequences/clip/rgb/000002.jpg",
+   "ir": "m3ot/clip/variants/shift_all/000002.png"
+  },
+  {
+   "frame": 3,
+   "rgb": "m3ot/clip/sequences/clip/rgb/000003.jpg",
+   "ir": "m3ot/clip/variants/shift_all/000003.png"
+  },
+  {
+   "frame": 4,
+   "rgb": "m3ot/clip/sequences/clip/rgb/000004.jpg",
+   "ir": "m3ot/clip/variants/shift_all/000004.png"
+  },
+  {
+   "frame": 5,
+   "rgb": "m3ot/clip/sequences/clip/rgb/000005.jpg",
+   "ir": "m3ot/clip/variants/shift_all/000005.png"
+  },
+  {
+   "frame": 6,
+   "rgb": "m3ot/clip/sequences/clip/rgb/000006.jpg",
+   "ir": "m3ot/clip/variants/shift_all/000006.png"
+  },
+  {
+   "frame": 7,
+   "rgb": "m3ot/clip/sequences/clip/rgb/000007.jpg",
+   "ir": "m3ot/clip/variants/shift_all/000007.png"
+  },
+  {
+   "frame": 8,
+   "rgb": "m3ot/clip/sequences/clip/rgb/000008.jpg",
+   "ir": "m3ot/clip/variants/shift_all/000008.png"
+  },
+  {
+   "frame": 9,
+   "rgb": "m3ot/clip/sequences/clip/rgb/000009.jpg",
+   "ir": "m3ot/clip/variants/shift_all/000009.png"
+  },
+  {
+   "frame": 10,
+   "rgb": "m3ot/clip/sequences/clip/rgb/000010.jpg",
+   "ir": "m3ot/clip/variants/shift_all/000010.png"
+  },
+  {
+   "frame": 11,
+   "rgb": "m3ot/clip/sequences/clip/rgb/000011.jpg",
+   "ir": "m3ot/clip/variants/shift_all/000011.png"
+  },
+  {
+   "frame": 12,
+   "rgb": "m3ot/clip/sequences/clip/rgb/000012.jpg",
+   "ir": "m3ot/clip/variants/shift_all/000012.png"
+  },
+  {
+   "frame": 13,
+   "rgb": "m3ot/clip/sequences/clip/rgb/000013.jpg",
+   "ir": "m3ot/clip/variants/shift_all/000013.png"
+  },
+  {
+   "frame": 14,
+   "rgb": "m3ot/clip/sequences/clip/rgb/000014.jpg",
+   "ir": "m3ot/clip/variants/shift_all/000014.png"
+  },
+  {
+   "frame": 15,
+   "rgb": "m3ot/clip/sequences/clip/rgb/000015.jpg",
+   "ir": "m3ot/clip/variants/shift_all/000015.png"
+  }
+ ],
+ "frames": [
+  {
+   "frame": 1,
+   "health": {
+    "rgb": {
+     "state": "ok",
+     "flags": [],
+     "std": 40.94956787788483,
+     "noise": 1.2552535425282925,
+     "blur": 464.3678488876577,
+     "brightness": 115.80354309082031
+    },
+    "ir": {
+     "state": "ok",
+     "flags": [],
+     "std": 82.69216220614366,
+     "noise": 2.4309349775688687,
+     "blur": 1158.8828450888025
+    },
+    "pair": {
+     "misalign_px": 39.01702261715648,
+     "dx_px": 38.870819980247575,
+     "dy_px": -3.374523369438407,
+     "response": 0.008945171769818341,
+     "misaligned_frame": false,
+     "misaligned": false
+    },
+    "gate": "none",
+    "reason_code": null,
+    "reason": "",
+    "applied": false
+   },
+   "alarms": []
+  },
+  {
+   "frame": 2,
+   "health": {
+    "rgb": {
+     "state": "ok",
+     "flags": [],
+     "std": 40.99442731829557,
+     "noise": 1.2641474583899357,
+     "blur": 471.6900632725656,
+     "brightness": 115.818212890625
+    },
+    "ir": {
+     "state": "ok",
+     "flags": [],
+     "std": 82.65356081861526,
+     "noise": 2.9414164739862447,
+     "blur": 1276.1279617154505
+    },
+    "pair": {
+     "misalign_px": 36.108629521116505,
+     "dx_px": 35.760596108834875,
+     "dy_px": -5.001289017246506,
+     "response": 0.0245866795111749,
+     "misaligned_frame": false,
+     "misaligned": false
+    },
+    "gate": "none",
+    "reason_code": null,
+    "reason": "",
+    "applied": false
+   },
+   "alarms": []
+  },
+  {
+   "frame": 3,
+   "health": {
+    "rgb": {
+     "state": "ok",
+     "flags": [],
+     "std": 40.96165938061579,
+     "noise": 1.2435099014963131,
+     "blur": 457.3847164463625,
+     "brightness": 116.00593566894531
+    },
+    "ir": {
+     "state": "ok",
+     "flags": [],
+     "std": 82.65626059414105,
+     "noise": 2.582929521622465,
+     "blur": 1179.442646346604
+    },
+    "pair": {
+     "misalign_px": 52.09034204098798,
+     "dx_px": 52.07600085221401,
+     "dy_px": -1.2222394148960234,
+     "response": 0.004049661253160164,
+     "misaligned_frame": false,
+     "misaligned": false
+    },
+    "gate": "none",
+    "reason_code": null,
+    "reason": "",
+    "applied": false
+   },
+   "alarms": []
+  },
+  {
+   "frame": 4,
+   "health": {
+    "rgb": {
+     "state": "ok",
+     "flags": [],
+     "std": 40.9628908573486,
+     "noise": 1.3248256119492543,
+     "blur": 500.0636954840646,
+     "brightness": 115.79187622070313
+    },
+    "ir": {
+     "state": "ok",
+     "flags": [],
+     "std": 82.73156069006703,
+     "noise": 2.497076976797196,
+     "blur": 1163.717586746067
+    },
+    "pair": {
+     "misalign_px": 6.728378978793925,
+     "dx_px": -4.601549801944145,
+     "dy_px": 4.908851505444403,
+     "response": 0.012949852399128974,
+     "misaligned_frame": false,
+     "misaligned": false
+    },
+    "gate": "none",
+    "reason_code": null,
+    "reason": "",
+    "applied": false
+   },
+   "alarms": []
+  },
+  {
+   "frame": 5,
+   "health": {
+    "rgb": {
+     "state": "ok",
+     "flags": [],
+     "std": 40.97043752655166,
+     "noise": 1.2732468061178794,
+     "blur": 470.4723934410512,
+     "brightness": 116.12440185546875
+    },
+    "ir": {
+     "state": "ok",
+     "flags": [],
+     "std": 82.7184983275095,
+     "noise": 2.4997084306095876,
+     "blur": 1169.8058735297618
+    },
+    "pair": {
+     "misalign_px": 66.03021576867947,
+     "dx_px": 60.729305921371235,
+     "dy_px": -25.921820861329763,
+     "response": -0.02456593697150266,
+     "misaligned_frame": false,
+     "misaligned": false
+    },
+    "gate": "none",
+    "reason_code": null,
+    "reason": "",
+    "applied": false
+   },
+   "alarms": []
+  },
+  {
+   "frame": 6,
+   "health": {
+    "rgb": {
+     "state": "ok",
+     "flags": [],
+     "std": 40.993632094569364,
+     "noise": 1.2630349164390027,
+     "blur": 470.97577803841796,
+     "brightness": 116.18466491699219
+    },
+    "ir": {
+     "state": "ok",
+     "flags": [],
+     "std": 82.64236059489227,
+     "noise": 2.4486887846392986,
+     "blur": 1148.5677396386022
+    },
+    "pair": {
+     "misalign_px": 42.42768670335162,
+     "dx_px": 41.785873454538375,
+     "dy_px": 7.35182825146677,
+     "response": 0.01108721728326587,
+     "misaligned_frame": false,
+     "misaligned": false
+    },
+    "gate": "none",
+    "reason_code": null,
+    "reason": "",
+    "applied": false
+   },
+   "alarms": []
+  },
+  {
+   "frame": 7,
+   "health": {
+    "rgb": {
+     "state": "ok",
+     "flags": [],
+     "std": 40.98322804493479,
+     "noise": 1.2445993323622875,
+     "blur": 461.865101895025,
+     "brightness": 116.30982971191406
+    },
+    "ir": {
+     "state": "ok",
+     "flags": [],
+     "std": 82.63525437949538,
+     "noise": 2.482284598474402,
+     "blur": 1158.3807689628654
+    },
+    "pair": {
+     "misalign_px": 41.68851237573167,
+     "dx_px": 41.68851227497322,
+     "dy_px": -0.002898437462476977,
+     "response": 0.011448473269001922,
+     "misaligned_frame": false,
+     "misaligned": false
+    },
+    "gate": "none",
+    "reason_code": null,
+    "reason": "",
+    "applied": false
+   },
+   "alarms": []
+  },
+  {
+   "frame": 8,
+   "health": {
+    "rgb": {
+     "state": "ok",
+     "flags": [],
+     "std": 40.95187029177162,
+     "noise": 1.3228842808127153,
+     "blur": 501.1290867265221,
+     "brightness": 116.14114379882812
+    },
+    "ir": {
+     "state": "ok",
+     "flags": [],
+     "std": 82.6146254097027,
+     "noise": 2.4485404885108135,
+     "blur": 1141.5278984426618
+    },
+    "pair": {
+     "misalign_px": 32.360772970524415,
+     "dx_px": 29.73337873760829,
+     "dy_px": -12.772854657270898,
+     "response": -0.016317268273556382,
+     "misaligned_frame": false,
+     "misaligned": false
+    },
+    "gate": "none",
+    "reason_code": null,
+    "reason": "",
+    "applied": false
+   },
+   "alarms": []
+  },
+  {
+   "frame": 9,
+   "health": {
+    "rgb": {
+     "state": "ok",
+     "flags": [],
+     "std": 40.92881686538303,
+     "noise": 1.2872771606116151,
+     "blur": 477.5780663011969,
+     "brightness": 116.2951873779297
+    },
+    "ir": {
+     "state": "ok",
+     "flags": [],
+     "std": 82.72723212661845,
+     "noise": 2.4526850764134243,
+     "blur": 1147.535474018892
+    },
+    "pair": {
+     "misalign_px": 63.713697068153614,
+     "dx_px": 59.79462744598777,
+     "dy_px": -22.000857317113173,
+     "response": 0.018034928357211606,
+     "misaligned_frame": false,
+     "misaligned": false
+    },
+    "gate": "none",
+    "reason_code": null,
+    "reason": "",
+    "applied": false
+   },
+   "alarms": []
+  },
+  {
+   "frame": 10,
+   "health": {
+    "rgb": {
+     "state": "ok",
+     "flags": [],
+     "std": 40.878867096422454,
+     "noise": 1.2684717991755592,
+     "blur": 471.3949002529588,
+     "brightness": 116.1970428466797
+    },
+    "ir": {
+     "state": "ok",
+     "flags": [],
+     "std": 82.73260545673885,
+     "noise": 2.4311705822405316,
+     "blur": 1137.6534685431423
+    },
+    "pair": {
+     "misalign_px": 38.12255115963931,
+     "dx_px": 38.1219008348404,
+     "dy_px": 0.22267388241809272,
+     "response": 0.0201459215542605,
+     "misaligned_frame": false,
+     "misaligned": false
+    },
+    "gate": "none",
+    "reason_code": null,
+    "reason": "",
+    "applied": false
+   },
+   "alarms": []
+  },
+  {
+   "frame": 11,
+   "health": {
+    "rgb": {
+     "state": "ok",
+     "flags": [],
+     "std": 40.8320416968187,
+     "noise": 1.254027371076312,
+     "blur": 462.4979705752339,
+     "brightness": 116.1788116455078
+    },
+    "ir": {
+     "state": "ok",
+     "flags": [],
+     "std": 82.7042713677194,
+     "noise": 2.456085615775278,
+     "blur": 1148.0773680114748
+    },
+    "pair": {
+     "misalign_px": 62.87163099301066,
+     "dx_px": 57.73566293153999,
+     "dy_px": -24.888455347347247,
+     "response": 0.01618474512230463,
+     "misaligned_frame": false,
+     "misaligned": false
+    },
+    "gate": "none",
+    "reason_code": null,
+    "reason": "",
+    "applied": false
+   },
+   "alarms": []
+  },
+  {
+   "frame": 12,
+   "health": {
+    "rgb": {
+     "state": "ok",
+     "flags": [],
+     "std": 40.84960975488247,
+     "noise": 1.333510244097104,
+     "blur": 507.250899160048,
+     "brightness": 115.79825744628906
+    },
+    "ir": {
+     "state": "ok",
+     "flags": [],
+     "std": 82.70594282582425,
+     "noise": 2.9055551318505977,
+     "blur": 1232.1578100010383
+    },
+    "pair": {
+     "misalign_px": 35.963167271720565,
+     "dx_px": 35.91951189933542,
+     "dy_px": -1.77145847460622,
+     "response": 0.034338925943200475,
+     "misaligned_frame": false,
+     "misaligned": false
+    },
+    "gate": "none",
+    "reason_code": null,
+    "reason": "",
+    "applied": false
+   },
+   "alarms": []
+  },
+  {
+   "frame": 13,
+   "health": {
+    "rgb": {
+     "state": "ok",
+     "flags": [],
+     "std": 40.883971818642685,
+     "noise": 1.269436686972589,
+     "blur": 469.2434688639269,
+     "brightness": 116.017919921875
+    },
+    "ir": {
+     "state": "ok",
+     "flags": [],
+     "std": 82.6830562555596,
+     "noise": 2.5312191110017417,
+     "blur": 1131.1093593265766
+    },
+    "pair": {
+     "misalign_px": 51.48170963766071,
+     "dx_px": 51.34396546046861,
+     "dy_px": 3.7634609086071293,
+     "response": 0.005778158249863129,
+     "misaligned_frame": false,
+     "misaligned": false
+    },
+    "gate": "none",
+    "reason_code": null,
+    "reason": "",
+    "applied": false
+   },
+   "alarms": []
+  },
+  {
+   "frame": 14,
+   "health": {
+    "rgb": {
+     "state": "ok",
+     "flags": [],
+     "std": 40.91887967759509,
+     "noise": 1.2593949205579922,
+     "blur": 468.9390530786571,
+     "brightness": 115.96340942382812
+    },
+    "ir": {
+     "state": "ok",
+     "flags": [],
+     "std": 82.65652692014626,
+     "noise": 2.431257248809127,
+     "blur": 1120.3092061081436
+    },
+    "pair": {
+     "misalign_px": 257.5618263486024,
+     "dx_px": 237.54111433065168,
+     "dy_px": 99.56060161820983,
+     "response": 0.00044698520987022163,
+     "misaligned_frame": false,
+     "misaligned": false
+    },
+    "gate": "none",
+    "reason_code": null,
+    "reason": "",
+    "applied": false
+   },
+   "alarms": []
+  },
+  {
+   "frame": 15,
+   "health": {
+    "rgb": {
+     "state": "ok",
+     "flags": [],
+     "std": 40.91943062863439,
+     "noise": 1.2416911875049723,
+     "blur": 456.84256472638816,
+     "brightness": 115.99229431152344
+    },
+    "ir": {
+     "state": "ok",
+     "flags": [],
+     "std": 82.65686163824437,
+     "noise": 2.445269628014562,
+     "blur": 1129.0187713533544
+    },
+    "pair": {
+     "misalign_px": 54.318678035536394,
+     "dx_px": 54.19605688865232,
+     "dy_px": 3.6477666112602094,
+     "response": 0.00698474791602541,
+     "misaligned_frame": false,
+     "misaligned": false
+    },
+    "gate": "none",
+    "reason_code": null,
+    "reason": "",
+    "applied": false
+   },
+   "alarms": []
+  }
+ ]
+}

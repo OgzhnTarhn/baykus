@@ -1,0 +1,442 @@
+[
+ {
+  "name": "lost_open_clear",
+  "steps": [
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": [
+       "lost"
+      ]
+     },
+     "pair": {
+      "misaligned": false
+     }
+    },
+    "expected": []
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": [
+       "lost"
+      ]
+     },
+     "pair": {
+      "misaligned": false
+     }
+    },
+    "expected": []
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": [
+       "lost"
+      ]
+     },
+     "pair": {
+      "misaligned": false
+     }
+    },
+    "expected": [
+     "ir_lost"
+    ]
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned": false
+     }
+    },
+    "expected": [
+     "ir_lost"
+    ]
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned": false
+     }
+    },
+    "expected": [
+     "ir_lost"
+    ]
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned": false
+     }
+    },
+    "expected": []
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned": false
+     }
+    },
+    "expected": []
+   }
+  ]
+ },
+ {
+  "name": "noise",
+  "steps": [
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": [
+       "noisy"
+      ]
+     },
+     "pair": {
+      "misaligned": false
+     }
+    },
+    "expected": []
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": [
+       "noisy"
+      ]
+     },
+     "pair": {
+      "misaligned": false
+     }
+    },
+    "expected": []
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": [
+       "noisy"
+      ]
+     },
+     "pair": {
+      "misaligned": false
+     }
+    },
+    "expected": [
+     "ir_noisy"
+    ]
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": [
+       "noisy"
+      ]
+     },
+     "pair": {
+      "misaligned": false
+     }
+    },
+    "expected": [
+     "ir_noisy"
+    ]
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned": false
+     }
+    },
+    "expected": [
+     "ir_noisy"
+    ]
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned": false
+     }
+    },
+    "expected": [
+     "ir_noisy"
+    ]
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned": false
+     }
+    },
+    "expected": []
+   }
+  ]
+ },
+ {
+  "name": "multi",
+  "steps": [
+   {
+    "input": {
+     "rgb": {
+      "flags": [
+       "lost"
+      ]
+     },
+     "ir": {
+      "flags": [
+       "noisy"
+      ]
+     },
+     "pair": {
+      "misaligned": true
+     }
+    },
+    "expected": [
+     "misaligned"
+    ]
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": [
+       "lost"
+      ]
+     },
+     "ir": {
+      "flags": [
+       "noisy"
+      ]
+     },
+     "pair": {
+      "misaligned": true
+     }
+    },
+    "expected": [
+     "misaligned"
+    ]
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": [
+       "lost"
+      ]
+     },
+     "ir": {
+      "flags": [
+       "noisy"
+      ]
+     },
+     "pair": {
+      "misaligned": true
+     }
+    },
+    "expected": [
+     "rgb_lost",
+     "ir_noisy",
+     "misaligned"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "misaligned_current_frame",
+  "steps": [
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned": true
+     }
+    },
+    "expected": [
+     "misaligned"
+    ]
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned": false
+     }
+    },
+    "expected": []
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned": true
+     }
+    },
+    "expected": [
+     "misaligned"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "reset",
+  "steps": [
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": [
+       "lost"
+      ]
+     },
+     "pair": {
+      "misaligned": false
+     }
+    },
+    "expected": []
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": [
+       "lost"
+      ]
+     },
+     "pair": {
+      "misaligned": false
+     }
+    },
+    "expected": []
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": [
+       "lost"
+      ]
+     },
+     "pair": {
+      "misaligned": false
+     }
+    },
+    "expected": [
+     "ir_lost"
+    ]
+   },
+   {
+    "reset": true
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": [
+       "lost"
+      ]
+     },
+     "pair": {
+      "misaligned": false
+     }
+    },
+    "expected": []
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned": false
+     }
+    },
+    "expected": []
+   }
+  ]
+ }
+]
