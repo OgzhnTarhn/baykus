@@ -66,6 +66,13 @@ jobs:
               -v "$PWD/fixtures:/fixtures:ro" -v "$PWD/configs:/configs:ro" \
               -v "$PWD/evidence:/out" baykus-engine-build "/build/bin/baykus_$1" "/out/$2.json"
           done
+          # Kabul 4: C++ izleri + Python karşılaştırıcısı (aynı tanım, baykus.track.parity)
+          docker run --rm -v "$PWD/fixtures:/fixtures:ro" -v "$PWD/configs:/configs:ro" \
+            -v "$PWD/evidence:/out" baykus-engine-build /build/bin/baykus_track \
+            --dets /fixtures/tracks/dev_dets.json.gz --config /configs/engine/tracker.json \
+            --out /out/dev_tracks_cpp.json.gz
+          cd python && uv run baykus-track compare --py ../fixtures/tracks/dev_tracks_py.json.gz \
+            --cpp ../evidence/dev_tracks_cpp.json.gz --out ../evidence/parity_track.json
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: engine-evidence
