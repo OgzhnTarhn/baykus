@@ -8,6 +8,7 @@ from baykus.engine_ref.fixtures import (
     check_margins,
     clip_violations,
     generate,
+    temporal_unit,
 )
 from baykus.health.gate import assess
 from baykus.health.guard import GateModel
@@ -140,3 +141,22 @@ def test_misalign_margin_irrelevant_when_response_far_below_r_min():
     assert check_margins(low, GM, TH) == []
     edge = _h(misalign_px=TH.misaligned + 0.5, misalign_response=GM.r_min - 0.2 + 1e-3)
     assert any("misalign_px" in s for s in check_margins(edge, GM, TH))
+
+
+def _mis(sc: dict) -> list[bool]:
+    return [st["expected"]["misaligned"] for st in sc["steps"] if "input" in st]
+
+
+def test_temporal_unit_has_design_scenarios_of_50_frames():  # tasarım §6.1 Kabul 3 b
+    sc = {s["name"]: s for s in temporal_unit(GM)}
+    need = {"constant", "jumping", "onset_mid", "boundary_3px", "even_S", "reset"}
+    assert need <= set(sc)
+    for name, s in sc.items():
+        assert sum("input" in st for st in s["steps"]) == 50, name
+    assert not any(_mis(sc["jumping"]))
+    assert all(_mis(sc["constant"])[2:]) and not any(_mis(sc["constant"])[:2])
+    mid = _mis(sc["onset_mid"])
+    assert mid.index(True) == 27  # 25 temiz kare, kaymanın 3. karesi
+    for name in ("boundary_3px", "even_S"):  # sınırın iki yanı da sınanır
+        assert set(_mis(sc[name])) == {True, False}, name
+    assert sum("reset" in st for st in sc["reset"]["steps"]) >= 2

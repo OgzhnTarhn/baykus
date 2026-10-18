@@ -16,6 +16,7 @@ listeler.
 from __future__ import annotations
 
 import json
+import math
 import shutil
 from collections import deque
 from dataclasses import asdict
@@ -300,16 +301,38 @@ def temporal_unit(gm: GateModel) -> list[dict]:
             "pair": {"misaligned_frame": flag, "dx_px": dx, "dy_px": dy, "misaligned": flag},
         }
 
+    def cycle(pattern: list, n: int = 50) -> list:
+        return [pattern[i % len(pattern)] for i in range(n)]
+
+    def golden(k: int) -> dict:  # 40 px yarıçapta altın açı adımı: penceredeki iki vektör ≥ 35 px
+        a = math.radians(137.5 * k)
+        return h(dx=40.0 * math.cos(a), dy=40.0 * math.sin(a))
+
+    off = h(flag=False, dx=0.0)
+    # Tasarım §6.1 Kabul 3 b: 50 karelik diziler (sıfırlama adımları kare sayılmaz)
     scenarios = {
-        "constant": [h() for _ in range(6)],
-        "jumping": [h(dx=dx, dy=dy) for dx, dy in [(40, 0), (0, 40), (-40, 0), (0, -40), (30, 30)]],
-        "onset_mid": [h(flag=False, dx=0.0) for _ in range(3)] + [h() for _ in range(5)],
-        "boundary_3px": [h(dx=0.0), h(dx=0.0), h(dx=3.0)],
-        "even_S": [h(dx=0.0), h(dx=0.0), h(dx=6.0), h(dx=6.0)],
-        "unflagged_keeps": [h(), h(), h(), h(flag=False, dx=0.0)],
-        "lost_overrides": [h(), h(), h(ir_lost=True)],
-        "noisy_priority": [h(), h(), h(ir_noisy=True)],
-        "reset": [h(), h(), None, h(), h(), h()],  # None = oturum sıfırlama
+        "constant": [h() for _ in range(50)],
+        "jumping": [golden(k) for k in range(50)],
+        "onset_mid": [h(flag=False, dx=None, dy=None) for _ in range(10)]
+        + [off for _ in range(15)]
+        + [h() for _ in range(25)],
+        # ortanca (0, 0); (3, 0) ve (1,8, 2,4) tam 3 px (sınır dahil), 3,000001 px dışarıda
+        "boundary_3px": cycle([h(dx=0.0), h(dx=0.0), h(dx=3.0), off, off], 20)
+        + cycle([h(dx=0.0), h(dx=0.0), h(dx=1.8, dy=2.4), off, off], 15)
+        + cycle([h(dx=0.0), h(dx=0.0), h(dx=3.000001), off, off], 15),
+        # |S| = 4: ortanca ortadaki iki değerin ortalaması (3 / 3,25 px)
+        "even_S": cycle([h(dx=0.0), h(dx=0.0), h(dx=6.0), h(dx=6.0), off], 25)
+        + cycle([h(dx=0.0), h(dx=0.0), h(dx=6.5), h(dx=6.5), off], 25),
+        "unflagged_keeps": cycle([h(), h(), h(), off, off], 25) + cycle([h(), off], 25),
+        "lost_overrides": [h(ir_lost=k in (10, 11), rgb_lost=k in (30, 41)) for k in range(50)],
+        "noisy_priority": [h(ir_noisy=k in (5, 6, 7, 8, 9, 40)) for k in range(50)],
+        "reset": [h() for _ in range(12)]
+        + [None]  # None = oturum sıfırlama
+        + [h() for _ in range(18)]
+        + [None]
+        + [h()]
+        + [None, None]
+        + [h() for _ in range(19)],
     }
     out = []
     for name, steps in scenarios.items():

@@ -133,6 +133,974 @@
      "reason_code": "misaligned",
      "reason": "IR hizasız"
     }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
    }
   ]
  },
@@ -149,8 +1117,8 @@
      },
      "pair": {
       "misaligned_frame": true,
-      "dx_px": 40,
-      "dy_px": 0,
+      "dx_px": 40.0,
+      "dy_px": 0.0,
       "misaligned": true
      }
     },
@@ -171,8 +1139,8 @@
      },
      "pair": {
       "misaligned_frame": true,
-      "dx_px": 0,
-      "dy_px": 40,
+      "dx_px": -29.49109347240496,
+      "dy_px": 27.023608304626414,
       "misaligned": true
      }
     },
@@ -193,8 +1161,8 @@
      },
      "pair": {
       "misaligned_frame": true,
-      "dx_px": -40,
-      "dy_px": 0,
+      "dx_px": 3.4862297099063158,
+      "dy_px": -39.84778792366982,
       "misaligned": true
      }
     },
@@ -215,8 +1183,8 @@
      },
      "pair": {
       "misaligned_frame": true,
-      "dx_px": 0,
-      "dy_px": -40,
+      "dx_px": 24.35045716034884,
+      "dy_px": 31.734133611649398,
       "misaligned": true
      }
     },
@@ -237,8 +1205,998 @@
      },
      "pair": {
       "misaligned_frame": true,
-      "dx_px": 30,
-      "dy_px": 30,
+      "dx_px": -39.392310120488325,
+      "dy_px": -6.945927106677191,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 33.735657832515415,
+      "dy_px": -21.491984333872978,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -10.352761804100796,
+      "dy_px": 38.63703305156274,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -18.46994452940133,
+      "dy_px": -35.48043332712888,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 37.58770483143635,
+      "dy_px": 13.680805733026705,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -36.95518130045148,
+      "dy_px": 15.307337294603574,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 16.90473046962793,
+      "dy_px": -36.25231148146602,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 12.028231980170919,
+      "dy_px": 38.14867802992908,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -34.64101615137758,
+      "dy_px": -19.99999999999994,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 39.051840284797336,
+      "dy_px": -8.657584557524117,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -22.943057454041895,
+      "dy_px": 32.766081771559634,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -5.221047688802079,
+      "dy_px": -39.657794454952416,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 30.64177772475918,
+      "dy_px": 25.711504387461503,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -39.9619288632743,
+      "dy_px": 1.744775494613608,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 28.28427124746193,
+      "dy_px": -28.284271247461874,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -1.7447754946134024,
+      "dy_px": 39.96192886327431,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -25.71150438746166,
+      "dy_px": -30.64177772475905,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 39.65779445495241,
+      "dy_px": 5.221047688802156,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -32.76608177155968,
+      "dy_px": 22.943057454041828,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 8.657584557524057,
+      "dy_px": -39.05184028479735,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.00000000000012,
+      "dy_px": 34.64101615137748,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -38.14867802992906,
+      "dy_px": -12.028231980170991,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 36.252311481465995,
+      "dy_px": -16.904730469627985,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -15.307337294603776,
+      "dy_px": 36.95518130045139,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -13.680805733026633,
+      "dy_px": -37.587704831436376,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 35.48043332712885,
+      "dy_px": 18.4699445294014,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -38.637033051562724,
+      "dy_px": 10.352761804100858,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 21.491984333872864,
+      "dy_px": -33.735657832515486,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 6.945927106677394,
+      "dy_px": 39.39231012048829,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -31.73413361164957,
+      "dy_px": -24.350457160348622,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 39.84778792366979,
+      "dy_px": -3.486229709906662,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -27.023608304626524,
+      "dy_px": 29.491093472404856,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 7.84516728218212e-14,
+      "dy_px": -40.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 27.02360830462641,
+      "dy_px": 29.491093472404962,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -39.84778792366983,
+      "dy_px": -3.4862297099062522,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 31.734133611649312,
+      "dy_px": -24.350457160348945,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -6.945927106676989,
+      "dy_px": 39.39231012048836,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -21.49198433387321,
+      "dy_px": -33.735657832515265,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 38.63703305156268,
+      "dy_px": 10.352761804101009,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -35.48043332712892,
+      "dy_px": 18.46994452940126,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 13.68080573302678,
+      "dy_px": -37.58770483143633,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 15.30733729460363,
+      "dy_px": 36.95518130045145,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -36.25231148146605,
+      "dy_px": -16.904730469627868,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 38.148678029929016,
+      "dy_px": -12.028231980171114,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -19.999999999999762,
+      "dy_px": 34.641016151377684,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": -8.657584557524459,
+      "dy_px": -39.05184028479726,
       "misaligned": true
      }
     },
@@ -264,6 +2222,490 @@
      },
      "pair": {
       "misaligned_frame": false,
+      "dx_px": null,
+      "dy_px": null,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": null,
+      "dy_px": null,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": null,
+      "dy_px": null,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": null,
+      "dy_px": null,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": null,
+      "dy_px": null,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": null,
+      "dy_px": null,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": null,
+      "dy_px": null,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": null,
+      "dy_px": null,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": null,
+      "dy_px": null,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": null,
+      "dy_px": null,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
       "dx_px": 0.0,
       "dy_px": 0.0,
       "misaligned": false
@@ -362,6 +2804,446 @@
      "gate": "none",
      "reason_code": null,
      "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
     }
    },
    {
@@ -500,6 +3382,1040 @@
      "reason_code": "misaligned",
      "reason": "IR hizasız"
     }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 3.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 3.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 3.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 1.8,
+      "dy_px": 2.4,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 1.8,
+      "dy_px": 2.4,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 1.8,
+      "dy_px": 2.4,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 3.000001,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 3.000001,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 3.000001,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
    }
   ]
  },
@@ -592,6 +4508,1018 @@
      "gate": "ir_off",
      "reason_code": "misaligned",
      "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 6.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 6.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 6.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 6.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 6.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 6.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 6.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 6.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 6.5,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 6.5,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 6.5,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 6.5,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 6.5,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 6.5,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 6.5,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 6.5,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 6.5,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 6.5,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
     }
    }
   ]
@@ -686,6 +5614,1018 @@
      "reason_code": "misaligned",
      "reason": "IR hizasız"
     }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": false,
+      "dx_px": 0.0,
+      "dy_px": 0.0,
+      "misaligned": false
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
    }
   ]
  },
@@ -742,6 +6682,182 @@
       "flags": []
      },
      "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
       "flags": [
        "lost"
       ]
@@ -758,6 +6874,870 @@
      "gate": "ir_off",
      "reason_code": "ir_lost",
      "reason": "IR kayıp"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": [
+       "lost"
+      ]
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "ir_off",
+     "reason_code": "ir_lost",
+     "reason": "IR kayıp"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": [
+       "lost"
+      ]
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "rgb_off",
+     "reason_code": "rgb_lost",
+     "reason": "RGB kayıp"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": [
+       "lost"
+      ]
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "rgb_off",
+     "reason_code": "rgb_lost",
+     "reason": "RGB kayıp"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
     }
    }
   ]
@@ -815,6 +7795,72 @@
       "flags": []
      },
      "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
       "flags": [
        "noisy"
       ]
@@ -831,6 +7877,984 @@
      "gate": "ir_off",
      "reason_code": "ir_noisy",
      "reason": "IR gürültülü"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": [
+       "noisy"
+      ]
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "ir_noisy",
+     "reason": "IR gürültülü"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": [
+       "noisy"
+      ]
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "ir_noisy",
+     "reason": "IR gürültülü"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": [
+       "noisy"
+      ]
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "ir_noisy",
+     "reason": "IR gürültülü"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": [
+       "noisy"
+      ]
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "ir_noisy",
+     "reason": "IR gürültülü"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": [
+       "noisy"
+      ]
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "ir_noisy",
+     "reason": "IR gürültülü"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
     }
    }
   ]
@@ -883,6 +8907,226 @@
     }
    },
    {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
     "reset": true
    },
    {
@@ -927,6 +9171,785 @@
      "gate": "none",
      "reason_code": null,
      "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "reset": true
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "reset": true
+   },
+   {
+    "reset": true
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": false,
+     "gate": "none",
+     "reason_code": null,
+     "reason": ""
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
+    }
+   },
+   {
+    "input": {
+     "rgb": {
+      "flags": []
+     },
+     "ir": {
+      "flags": []
+     },
+     "pair": {
+      "misaligned_frame": true,
+      "dx_px": 20.0,
+      "dy_px": 0.0,
+      "misaligned": true
+     }
+    },
+    "expected": {
+     "misaligned": true,
+     "gate": "ir_off",
+     "reason_code": "misaligned",
+     "reason": "IR hizasız"
     }
    },
    {
