@@ -30,6 +30,11 @@ if(BAYKUS_SANITIZE)
   target_link_options(baykus_warnings INTERFACE -fsanitize=address,undefined)
 endif()
 
+# SciPy rectangular_lsap (BSD-3, değiştirilmeden; third_party/lsap/README.md)
+add_library(baykus_lsap STATIC third_party/lsap/rectangular_lsap.cpp)
+target_include_directories(baykus_lsap PUBLIC third_party/lsap)
+target_link_libraries(baykus_lsap PRIVATE baykus_warnings)
+
 add_library(baykus_core STATIC
   src/calibration.cpp
   src/detections.cpp
@@ -37,6 +42,8 @@ add_library(baykus_core STATIC
   src/files.cpp
   src/health.cpp
   src/image_io.cpp
+  src/kalman.cpp
+  src/lsap.cpp
   src/models.cpp
   src/parity.cpp
   src/pipeline.cpp
@@ -47,7 +54,7 @@ target_include_directories(baykus_core PUBLIC include)
 target_link_libraries(baykus_core
   PUBLIC ${OpenCV_LIBS} onnxruntime::onnxruntime Eigen3::Eigen nlohmann_json::nlohmann_json
          OpenSSL::Crypto
-  PRIVATE baykus_warnings)
+  PRIVATE baykus_warnings baykus_lsap)
 
 add_executable(baykus_buildinfo apps/buildinfo.cpp)
 target_link_libraries(baykus_buildinfo PRIVATE baykus_core baykus_warnings)
@@ -67,7 +74,9 @@ add_executable(baykus_tests
   tests/temporal_test.cpp
   tests/models_test.cpp
   tests/pipeline_test.cpp
-  tests/clip_test.cpp)
+  tests/clip_test.cpp
+  tests/lsap_test.cpp
+  tests/kalman_test.cpp)
 target_link_libraries(baykus_tests PRIVATE baykus_test_support GTest::gtest_main baykus_warnings)
 include(GoogleTest)
 gtest_discover_tests(baykus_tests DISCOVERY_MODE PRE_TEST)
