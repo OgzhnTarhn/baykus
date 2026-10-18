@@ -18,6 +18,14 @@ elif [ -n "${1:-}" ]; then
   exit 2
 fi
 
+if [ -n "$bundle" ] && [ -d "$bundle" ] && [ -n "$(ls -A "$bundle")" ] &&
+  [ ! -f "$bundle/README-offline.md" ]; then
+  # paket adımı klasördeki models/ ve demo-data/'yı yeniler; depo kökü ya da başka bir klasör
+  # verilirse gerçek veri silinmesin
+  echo "HATA: $bundle boş değil ve bir Baykuş paketi değil; boş ya da yeni bir klasör verin" >&2
+  exit 2
+fi
+
 echo "== 1/3 imajlar"
 docker build -f docker/engine.Dockerfile --target runtime -t baykus-engine .
 docker build -f docker/ui.Dockerfile -t baykus-ui .
