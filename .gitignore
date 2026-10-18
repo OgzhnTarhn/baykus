@@ -28,3 +28,6 @@ kaggle.json
 
 # kapalı ağ kanıtlarının ara dosyaları (offline_proof.sh); sonuç results/system/offline.json
 /evidence/
+
+# taşınabilir paket (scripts/prepare.sh --bundle out/)
+/out/
