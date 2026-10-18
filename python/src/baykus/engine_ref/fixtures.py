@@ -359,6 +359,26 @@ def temporal_unit(gm: GateModel) -> list[dict]:
     return out
 
 
+def raw_reference(pipe: Pipeline, fixtures: Path) -> dict:
+    """Kare fikstürlerinin ham ORT çıktısı (`modules.raw` ile aynı yol: kapı off, özgün pikseller),
+    bu makinede yeniden. CI Kabul 1 a'yı C++ ile aynı işlemcide karşılaştırır (ONNX Runtime'ın
+    işlemciye göre yuvarlama farkı bizim kodumuz değil)."""
+    import onnxruntime
+
+    fixtures = Path(fixtures)
+    index = json.loads((fixtures / "index.json").read_text(encoding="utf-8"))
+    frames = {}
+    for e in index:
+        if e["kind"] != "frame":
+            continue
+        inputs = json.loads((fixtures / e["path"]).read_text(encoding="utf-8"))["inputs"]
+        bgr, ir = decode_pair(
+            (fixtures / inputs["rgb"]).read_bytes(), (fixtures / inputs["ir"]).read_bytes()
+        )
+        frames[e["name"]] = pipe.detect(bgr, ir, EVAL_FLOOR)["raw"][0].astype(np.float64).tolist()
+    return {"onnxruntime": onnxruntime.__version__, "frames": frames}
+
+
 def alarm_sequences() -> list[dict]:
     """§4.4 alarm sözleşmesi senaryoları (UI `lib/alarms.ts` ve motor aynı sonucu vermeli)."""
 

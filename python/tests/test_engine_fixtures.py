@@ -8,8 +8,10 @@ from baykus.engine_ref.fixtures import (
     check_margins,
     clip_violations,
     generate,
+    raw_reference,
     temporal_unit,
 )
+from baykus.engine_ref.pipeline import Pipeline
 from baykus.health.gate import assess
 from baykus.health.guard import GateModel
 from tests.test_engine_ref import CALIB_X, CALIB_Y, ROWS, FakeBackend, _raw
@@ -97,6 +99,17 @@ def test_frame_fixture_has_modules_and_pipeline(generated):
     assert len(m["raw"]) == 300 and len(m["raw"][0]) == 6
     assert set(m["dets"]) == {"eval", "track", "display"}
     assert set(m["letterbox"]) == {"gain", "pad_x", "pad_y", "sha256"}
+
+
+def test_raw_reference_reproduces_modules_raw(generated):  # CI: aynı makinede Kabul 1 a
+    out, index = generated
+    pipe = Pipeline(_models(), backend=FakeBackend(_raw(ROWS)))
+    ref = raw_reference(pipe, out)
+    frames = {e["name"]: e for e in index if e["kind"] == "frame"}
+    assert set(ref["frames"]) == set(frames)
+    for name, e in frames.items():
+        rec = json.loads((out / e["path"]).read_text(encoding="utf-8"))
+        assert ref["frames"][name] == rec["modules"]["raw"], name
 
 
 def test_index_lists_every_file_with_kind(generated):

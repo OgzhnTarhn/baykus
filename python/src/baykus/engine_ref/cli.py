@@ -5,6 +5,7 @@ detect — bir dizi klasöründen (operatör ekranı düzeni: rgb/, ir/, index.j
 measure — tespit dosyaları + pack_labels etiketleri → sınıfsız AP50, ECE (ham / kalibre),
           çift sınıf oranı (dizi başına ve birleşik).
 fixtures — C++ eşlik fikstürleri (M3OT geliştirme bölümü; test reddedilir) ve fixtures/index.json.
+raw-ref — kare fikstürlerinin ham ORT çıktısı bu makinede (CI'da Kabul 1 a aynı işlemcide).
 """
 
 from __future__ import annotations
@@ -93,6 +94,16 @@ def _cmd_fixtures(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_raw_ref(a: argparse.Namespace) -> int:
+    from baykus.engine_ref.fixtures import raw_reference
+
+    models = load_models(Path(a.models), Path(a.manifest) if a.manifest else None)
+    rec = raw_reference(Pipeline(models, backend=OrtBackend(models.onnx)), Path(a.fixtures))
+    print(write_json(Path(a.out), rec))
+    print(f"{len(rec['frames'])} kare, onnxruntime {rec['onnxruntime']}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="baykus-engine")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -118,6 +129,12 @@ def build_parser() -> argparse.ArgumentParser:
     f.add_argument("--dev-root", default="../data/m3ot_dev")
     f.add_argument("--out", default="../fixtures")
     f.set_defaults(func=_cmd_fixtures)
+    r = sub.add_parser("raw-ref", help="kare fikstürlerinin ham ORT çıktısı (bu makinede)")
+    r.add_argument("--models", required=True)
+    r.add_argument("--manifest", default=None)
+    r.add_argument("--fixtures", default="../fixtures")
+    r.add_argument("--out", required=True)
+    r.set_defaults(func=_cmd_raw_ref)
     return p
 
 
