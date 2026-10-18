@@ -229,4 +229,46 @@ std::vector<std::pair<int, int>> ByteTrack::update(const std::vector<Det>& dets,
   return out;
 }
 
+json track_file(const json& dets, const TrackerConfig& cfg, const std::set<int>& dump_frames,
+                bool allow_test) {
+  const json seqs = dets.contains("sequences") ? dets.at("sequences") : json::array({dets});
+  for (const auto& s : seqs) {
+    if (s.at("split") == "test" && !allow_test) {
+      throw std::invalid_argument(s.at("seq").get<std::string>() +
+                                  ": test dizisi; yalnız son ölçümde --i-know-this-is-test ile");
+    }
+  }
+  constexpr double kTrackFloor = 0.1;  // takip katmanı (tasarım §4.1)
+  ByteTrack tracker(cfg);
+  json out = json::array();
+  for (const auto& s : seqs) {
+    tracker.reset();
+    json frames = json::array();
+    json dumps = json::object();
+    for (const auto& fr : s.at("frames")) {
+      std::vector<Det> in;
+      for (const auto& d : fr.at("dets")) {
+        if (d.at("score_raw").get<double>() < kTrackFloor) continue;
+        const auto& b = d.at("box");
+        in.push_back(Det{d.at("index").get<int>(), d.at("cls_id").get<int>(),
+                         static_cast<float>(d.at("score_raw").get<double>()),
+                         d.at("score").get<double>(), b.at(0).get<double>(), b.at(1).get<double>(),
+                         b.at(2).get<double>(), b.at(3).get<double>()});
+      }
+      const int frame = fr.at("frame").get<int>();
+      json dump;
+      const bool want_dump = dump_frames.count(frame) > 0;
+      json tracks = json::array();
+      for (const auto& [index, id] : tracker.update(in, want_dump ? &dump : nullptr)) {
+        tracks.push_back({{"index", index}, {"track_id", id}});
+      }
+      frames.push_back({{"frame", frame}, {"tracks", tracks}});
+      if (want_dump) dumps[std::to_string(frame)] = dump;
+    }
+    out.push_back(
+        {{"seq", s.at("seq")}, {"split", s.at("split")}, {"frames", frames}, {"dumps", dumps}});
+  }
+  return {{"tracker", "baykus_track"}, {"cfg", cfg.to_json()}, {"sequences", out}};
+}
+
 }  // namespace baykus

@@ -5,6 +5,7 @@
 // skor eşikleri double, IoU eşiği float32'de (NumPy 2: float32 IoU ile Python float'ı float32'de
 // karşılaştırılır). Kimlik sayacı nesne başına, 0'dan; `reset()` sıfırlar.
 #include <nlohmann/json.hpp>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -57,5 +58,12 @@ class ByteTrack {
   std::vector<Track> tracks_;
   int next_id_ = 0;
 };
+
+// Tespit dosyası (`baykus-engine detect` çıktısı ya da `sequences` fikstürü) → iz dosyası
+// (Python `baykus-track run` biçimi: tracker, cfg, sequences[seq, split, frames, dumps]). Takip
+// katmanı ham ≥ 0,1; her dizi yeni takipçi durumuyla. Test dizisi allow_test olmadan
+// std::invalid_argument (yalnız son ölçüm).
+nlohmann::json track_file(const nlohmann::json& dets, const TrackerConfig& cfg,
+                          const std::set<int>& dump_frames, bool allow_test);
 
 }  // namespace baykus

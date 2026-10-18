@@ -173,6 +173,71 @@ TEST(Tracker, FixtureParity) {
   }
 }
 
+TEST(Tracker, TrackFileMatchesPythonRun) {  // baykus_track'in yolu (iz dosyası biçimi + Kabul 4)
+  const auto root = bt::fixtures_root();
+  BAYKUS_REQUIRE_FILES({root / "tracks" / "dev_dets.json.gz",
+                        root / "tracks" / "dev_tracks_py.json.gz", tracker_json()});
+  const auto cfg = baykus::TrackerConfig::load(tracker_json().string());
+  const auto dets = read_gz_json(root / "tracks" / "dev_dets.json.gz");
+  const auto want = read_gz_json(root / "tracks" / "dev_tracks_py.json.gz");
+  const json out = baykus::track_file(dets, cfg, {37}, false);
+  EXPECT_EQ(out.at("cfg"), cfg.to_json());
+  ASSERT_EQ(out.at("sequences").size(), want.at("sequences").size());
+  for (std::size_t i = 0; i < want.at("sequences").size(); ++i) {
+    const auto& py = want.at("sequences")[i];
+    const auto& cpp = out.at("sequences")[i];
+    SCOPED_TRACE(py.at("seq").get<std::string>());
+    EXPECT_EQ(cpp.at("seq"), py.at("seq"));
+    EXPECT_EQ(cpp.at("split"), py.at("split"));
+    ASSERT_EQ(cpp.at("frames").size(), py.at("frames").size());
+    std::map<int, int> fwd, back;
+    for (std::size_t k = 0; k < py.at("frames").size(); ++k) {
+      const auto& fc = cpp.at("frames")[k];
+      ASSERT_EQ(fc.at("frame"), py.at("frames")[k].at("frame"));
+      std::vector<std::pair<int, int>> got;
+      for (const auto& t : fc.at("tracks")) {
+        got.emplace_back(t.at("index").get<int>(), t.at("track_id").get<int>());
+      }
+      ASSERT_TRUE(frame_ok(py.at("frames")[k].at("tracks"), got, fwd, back))
+          << "kare " << fc.at("frame");
+    }
+    const auto& dump = cpp.at("dumps").at("37");
+    for (const char* k :
+         {"tracks_before", "tracks_after", "dets", "iou1", "assign1", "iou2", "assign2"}) {
+      EXPECT_TRUE(dump.contains(k)) << k;
+    }
+  }
+}
+
+TEST(Tracker, TrackFileRefusesTestSplit) {
+  const json rec = {{"seq", "2-01"}, {"split", "test"}, {"frames", json::array()}};
+  EXPECT_THROW(baykus::track_file(rec, baykus::TrackerConfig{}, {}, false), std::invalid_argument);
+  EXPECT_EQ(baykus::track_file(rec, baykus::TrackerConfig{}, {}, true).at("sequences").size(), 1u);
+}
+
+TEST(Tracker, TrackFileSingleSequenceAppliesTrackFloor) {  // `baykus-engine detect` çıktısı
+  const json d_hi = {{"index", 3},
+                     {"cls_id", 0},
+                     {"score_raw", 0.9},
+                     {"score", 0.9},
+                     {"box", {10.0, 10.0, 50.0, 50.0}}};
+  const json d_lo = {{"index", 5},
+                     {"cls_id", 1},
+                     {"score_raw", 0.05},
+                     {"score", 0.05},
+                     {"box", {100.0, 100.0, 120.0, 120.0}}};
+  const json rec = {
+      {"seq", "1_08"},
+      {"split", "val"},
+      {"floor", 0.001},
+      {"frames", {{{"frame", 1}, {"dets", {d_hi, d_lo}}}, {{"frame", 2}, {"dets", {d_hi}}}}}};
+  const json out = baykus::track_file(rec, baykus::TrackerConfig{}, {}, false);
+  const auto& frames = out.at("sequences").at(0).at("frames");
+  EXPECT_EQ(frames.at(0).at("tracks"), json::parse(R"([{"index": 3, "track_id": -1}])"));
+  EXPECT_EQ(frames.at(1).at("tracks"), json::parse(R"([{"index": 3, "track_id": 0}])"));
+  EXPECT_TRUE(out.at("sequences").at(0).at("dumps").empty());
+}
+
 TEST(Files, GzipRoundTrip) {
   const auto p = (fs::temp_directory_path() / "baykus_roundtrip.json.gz").string();
   const std::string text = "{\"a\": [1, 2, 3], \"ş\": \"ğüİ\"}";

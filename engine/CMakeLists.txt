@@ -100,3 +100,6 @@ set_tests_properties(Fixtures.SkipWhenNotRequired PROPERTIES
 
 add_executable(baykus_parity_health apps/parity_health.cpp)
 target_link_libraries(baykus_parity_health PRIVATE baykus_test_support baykus_warnings)
+
+add_executable(baykus_track apps/track.cpp)
+target_link_libraries(baykus_track PRIVATE baykus_core baykus_warnings)
