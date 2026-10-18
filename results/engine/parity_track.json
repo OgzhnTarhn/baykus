@@ -1,0 +1,20 @@
+{
+  "verdict": "pass",
+  "per_seq": {
+    "1_08": {
+      "frames": 600,
+      "compared": 600,
+      "first_diff": null,
+      "ratio": 1.0
+    },
+    "2_08": {
+      "frames": 600,
+      "compared": 600,
+      "first_diff": null,
+      "ratio": 1.0
+    }
+  },
+  "evidence": {},
+  "git_commit": "01e16d2587c68f8692bdf474df90e2a46d27b5c6",
+  "created_at": "2026-10-18T16:59:57Z"
+}
