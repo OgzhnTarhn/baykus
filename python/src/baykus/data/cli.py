@@ -189,6 +189,22 @@ def _cmd_m3ot(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_m3ot_seqs(a: argparse.Namespace) -> int:
+    from baykus.data.demo import consecutive_sequences
+
+    seqs = consecutive_sequences(Path(a.root) / "meta/m3ot_index.csv", a.split)
+    print(json.dumps(seqs, ensure_ascii=False, indent=2))
+    return 0
+
+
+def _cmd_demo_pack(a: argparse.Namespace) -> int:
+    from baykus.data.demo import pack
+
+    dirs = pack(Path(a.root), a.split, a.seqs, Path(a.out), allow_test=a.allow_test)
+    print(json.dumps([str(d) for d in dirs], ensure_ascii=False))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="baykus-data")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -244,6 +260,17 @@ def build_parser() -> argparse.ArgumentParser:
     m.add_argument("--splits", nargs="+", default=["test"], choices=list(SPLITS))
     m.add_argument("--workers", type=int, default=1)
     m.set_defaults(func=_cmd_m3ot)
+    ms = sub.add_parser("m3ot-seqs", help="M3OT dizileri: kare sayısı ve ardışıklık (JSON)")
+    ms.add_argument("--root", required=True, help="baykus-data m3ot --out klasörü")
+    ms.add_argument("--split", required=True, choices=list(SPLITS))
+    ms.set_defaults(func=_cmd_m3ot_seqs)
+    dp = sub.add_parser("demo-pack", help="M3OT dizileri → operatör ekranı düzeni + etiketler")
+    dp.add_argument("--root", required=True, help="baykus-data m3ot --out klasörü")
+    dp.add_argument("--split", required=True, choices=list(SPLITS))
+    dp.add_argument("--seqs", nargs="+", required=True)
+    dp.add_argument("--out", required=True)
+    dp.add_argument("--allow-test", action="store_true", help="test bölümü (yalnız son ölçüm için)")
+    dp.set_defaults(func=_cmd_demo_pack)
     return p
 
 
