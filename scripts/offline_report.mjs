@@ -3,9 +3,23 @@
 // scan: {violations}, browser, passed}.
 // Kullanım: node scripts/offline_report.mjs <kanıt klasörü> <çıktı>
 //   klasörde: offline_check.json, egress_ui.json, egress_engine.json, browser.json, scan.json
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+
+export const EVIDENCE = ["offline_check", "egress_ui", "egress_engine", "browser", "scan"];
+
+// Eksik dosya hatadır (adım düşmüş demektir); offline_proof.sh eski dosyaları baştan siler, bayat bir
+// "geçti" okunmaz.
+export function readEvidence(dir) {
+  const out = {};
+  for (const name of EVIDENCE) {
+    const file = join(dir, `${name}.json`);
+    if (!existsSync(file)) throw new Error(`kanıt dosyası yok: ${name}.json (o adım düştü)`);
+    out[name] = JSON.parse(readFileSync(file, "utf-8"));
+  }
+  return out;
+}
 
 export function assemble({ offline_check, egress_ui, egress_engine, browser, scan }) {
   const external = browser.external.length;
@@ -31,14 +45,13 @@ function main() {
     console.error("kullanım: node offline_report.mjs <kanıt klasörü> <çıktı>");
     process.exit(2);
   }
-  const read = (name) => JSON.parse(readFileSync(join(dir, `${name}.json`), "utf-8"));
-  const r = assemble({
-    offline_check: read("offline_check"),
-    egress_ui: read("egress_ui"),
-    egress_engine: read("egress_engine"),
-    browser: read("browser"),
-    scan: read("scan"),
-  });
+  let r;
+  try {
+    r = assemble(readEvidence(dir));
+  } catch (e) {
+    console.error(`offline.json: DÜŞTÜ — ${e instanceof Error ? e.message : e}`);
+    process.exit(1);
+  }
   writeFileSync(out, `${JSON.stringify(r, null, 2)}\n`, "utf-8");
   console.log(`offline.json: ${r.passed ? "geçti" : "DÜŞTÜ"}`);
   process.exit(r.passed ? 0 : 1);

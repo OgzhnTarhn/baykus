@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { probeTcp, verdict, EXPECTED } from "../../../scripts/egress_check.mjs";
 import { loadAllow, scan } from "../../../scripts/scan_next.mjs";
 import { compareShas } from "../../../scripts/offline_check.mjs";
-import { assemble } from "../../../scripts/offline_report.mjs";
+import { assemble, readEvidence } from "../../../scripts/offline_report.mjs";
 
 describe("egress_check", () => {
   let server: Server;
@@ -142,5 +142,15 @@ describe("offline_report", () => {
       false,
     );
     expect(assemble({ ...parts, offline_check: { ok: false } }).passed).toBe(false);
+  });
+});
+
+describe("offline_report evidence", () => {
+  it("a missing evidence file fails with its name (no stale pass)", () => {
+    const dir = mkdtempSync(join(tmpdir(), "ev-"));
+    for (const n of ["offline_check", "egress_ui", "egress_engine", "scan"]) {
+      writeFileSync(join(dir, `${n}.json`), "{}");
+    }
+    expect(() => readEvidence(dir)).toThrow("browser.json");
   });
 });

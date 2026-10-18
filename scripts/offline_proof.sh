@@ -9,6 +9,8 @@ cd "$(dirname "$0")/.."
 ev="${1:?kullanım: offline_proof.sh <kanıt klasörü> [offline.json]}"
 out="${2:-$ev/offline.json}"
 mkdir -p "$ev"
+# önceki koşunun kanıtları silinir: düşen adım dosya yazmazsa rapor eski "geçti"yi okumasın
+for f in offline_check egress_ui egress_engine browser scan; do rm -f "$ev/$f.json"; done
 export BAYKUS_DATA="${BAYKUS_DATA:-./fixtures/m3ot/clip}" MSYS_NO_PATHCONV=1
 offline=(-f docker-compose.yml -f compose.offline.yml)
 
