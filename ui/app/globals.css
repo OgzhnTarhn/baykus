@@ -1,26 +1,69 @@
 @import "tailwindcss";
 
+/* Operatör ekranı: gece izleme odası. Kanal renkleri sabit: RGB camgöbeği, IR termal kehribar;
+   alarm kırmızı, tamam yeşil. Sayılar Geist Mono, tabular. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #121922;
+  --panel: #19222d;
+  --panel-2: #202b38;
+  --line: #2b3746;
+  --text: #d8e1ea;
+  --muted: #8a9aab;
+  --rgb: #67c6e3;
+  --ir: #f0a23b;
+  --alarm: #ef5a5a;
+  --ok: #4cc38a;
+  --warn: #e8c547;
+  --cls-car: #67c6e3;
+  --cls-truck: #f0a23b;
+  --cls-bus: #b48cf0;
+  --cls-van: #7bd88f;
+  --cls-freight_car: #f07fa8;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-rgb: var(--rgb);
+  --color-ir: var(--ir);
+  --color-alarm: var(--alarm);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.num {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--rgb);
+  outline-offset: 2px;
+}
+
+input[type="range"] {
+  accent-color: var(--rgb);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
 }
