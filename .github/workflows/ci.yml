@@ -55,7 +55,7 @@ jobs:
           uv run baykus-engine raw-ref --models ../models --manifest ../configs/engine/models.json \
             --out ../evidence/raw_ref.json
       - name: test
-        run: RAW_REF=evidence/raw_ref.json REQ=1 bash scripts/engine_test.sh
+        run: RAW_REF=evidence/raw_ref.json EVIDENCE=evidence REQ=1 bash scripts/engine_test.sh
       - name: evidence
         run: |
           for app in "parity_report parity_detect" "parity_health parity_health"; do
