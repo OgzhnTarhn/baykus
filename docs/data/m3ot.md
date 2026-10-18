@@ -40,6 +40,24 @@ baykus-data rgbt4 --out /content/m3ot --splits test --workers N
 - Koordinatlar 0 tabanlı kabul edilir (resmi araç gibi), görüntüye kırpılır; çizimle doğrulandı (KAPI M, 241. kare).
 - Kare eşleşmesi dosya adındaki numarayla; yalnız iki modalitede de olan kareler alınır.
 
+## Geliştirme bölümü (Faz 3, 2026-10-18, Colab CPU, `09_m3ot_val`)
+
+Bütün zip Colab'a indirilip üç bölüm dönüştürüldü (`--splits val train test`); ayrıntı `docs/experiments.md`
+"F3 · M3OT dönüşümü".
+
+| Bölüm | Diziler (kare) |
+|---|---|
+| val | `1_08` (600), `2_08` (600) |
+| train | `1_01`, `2_01` (1365) · `1_02`, `2_02` (700) · `1_04`, `2_04` (300) · `1_05`, `2_05` (300) · `1_06`, `2_06` (600) · `1_07`, `2_07` (450) · `1_09`, `2_09` (600) |
+| test | `1_03` (480), `2_03` (480) |
+
+- Toplam 10.790 çift, 18 dizi; kutu RGB 127.932, IR 126.832; yalnız RGB'de 1 kare; süzülen satır yok.
+- Dönüştürücü dizi adındaki `-`'yi `_` yapar (`1-03` → `1_03`); stem `<dizi>_<kare:06d>`.
+- Bütün dizilerde kare numaraları ardışık (`baykus-data m3ot-seqs`).
+- Geliştirme bölümü `configs/m3ot_dev.json`: `val`, `1_08` + `2_08`. Test dizileri ayrı pakette, yalnız son ölçümde.
+- İndirme: figshare Colab'dan gelen istekleri bot doğrulamasına takıyor (HTTP 202/403); tarayıcıdan kopyalanan
+  cURL ile `-L` (yönlendirmeyi izle) gerekli. Yönlendirilen S3 adresi 10 sn geçerli.
+
 ## Değerlendirme (E7, spec §8.3)
 
 - DroneVehicle'da eğitilen her model M3OT **test** bölümünde, sınıfsız `vehicle` AP: `baykus-eval run ... --dataset m3ot --class-agnostic` (Ultralytics `single_cls=True`, `agnostic_nms=True`; pycocotools'ta bütün tahminler kategori 1).
