@@ -260,3 +260,80 @@ describe("player", () => {
     expect(p.snapshot().frame).toBe(1);
   });
 });
+
+// İnceleme bulguları (Ö1, Ö2, Ö5, S2): kareler arası bekleme elle çözülen sözle.
+function manualSleep(h: ReturnType<typeof harness>) {
+  const wakes: (() => void)[] = [];
+  h.deps.sleep = () => new Promise<void>((r) => wakes.push(r));
+  return wakes;
+}
+
+describe("player review fixes", () => {
+  it("seek during the frame wait does not start a second loop", async () => {
+    const h = harness({ autoResolve: true });
+    const wakes = manualSleep(h);
+    const p = createPlayer(h.deps);
+    p.load("a", [1, 2, 3, 4, 5, 6, 7, 8]);
+    p.play();
+    await flush();
+    expect(h.log).toEqual(["detect a 1"]);
+    p.seek(4); // döngü beklemede
+    await flush();
+    expect(h.log).toEqual(["detect a 1"]);
+    wakes[0]();
+    await flush();
+    expect(h.log).toEqual(["detect a 1", "reset", "detect a 5"]);
+    expect(wakes).toHaveLength(2); // tek döngü: bir bekleme daha, ikinci döngü yok
+    wakes[1]();
+    await flush();
+    expect(h.log.slice(3)).toEqual(["detect a 6"]);
+    p.pause();
+  });
+
+  it("a stale response after a sequence change keeps playing the new sequence", async () => {
+    const h = harness();
+    const p = createPlayer(h.deps);
+    p.load("a", [1, 2]);
+    p.step();
+    await flush();
+    p.load("b", [7, 8]);
+    p.play(); // istek yolda
+    h.calls[0].resolve("old");
+    await flush();
+    expect(h.log).toEqual(["detect a 1", "reset", "detect b 7"]);
+    expect(p.snapshot().state).toBe("playing");
+    expect(p.snapshot().result).toBeNull(); // eski dizinin yanıtı gösterilmez
+    p.pause();
+  });
+
+  it("after an error the next request resets the session", async () => {
+    const h = harness();
+    const p = createPlayer(h.deps);
+    p.load("a", [1, 2, 3]);
+    p.step();
+    await flush();
+    h.calls[0].resolve("r1");
+    await flush();
+    p.step();
+    await flush();
+    h.calls[1].reject(new Error("kare görüntüsü yüklenemedi")); // motor kareyi işlemiş olabilir
+    await flush();
+    p.step();
+    await flush();
+    expect(h.log).toEqual(["detect a 1", "detect a 2", "reset", "detect a 2"]);
+  });
+
+  it("reset pressed after pausing during the frame wait is sent", async () => {
+    const h = harness({ autoResolve: true });
+    const wakes = manualSleep(h);
+    const p = createPlayer(h.deps);
+    p.load("a", [1, 2, 3]);
+    p.play();
+    await flush();
+    p.pause();
+    p.requestReset();
+    wakes[0]();
+    await flush();
+    expect(h.log).toEqual(["detect a 1", "reset"]);
+  });
+});

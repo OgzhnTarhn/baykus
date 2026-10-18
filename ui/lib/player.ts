@@ -95,42 +95,59 @@ export function createPlayer<R>(deps: PlayerDeps<R>): Player<R> {
     busy = true;
     emit();
     const pos = { seq, index: target };
+    const requested = frames;
     const started = deps.now();
     try {
       if (resetRequested || shouldReset(last, pos)) await doReset();
-      const r = await deps.detect(seq, frames[target]);
-      if (pos.seq !== seq) return; // bu arada başka dizi yüklendi
-      last = pos;
-      index = target;
-      result = r;
-      error = null;
+      const r = await deps.detect(pos.seq, requested[target]);
+      last = pos; // motorun gördüğü son kare (yanıt gösterilmese de)
+      if (pos.seq === seq) {
+        // başka dizi yüklendiyse eski yanıt gösterilmez; oynatma yeni diziyle sürer
+        index = target;
+        result = r;
+        error = null;
+      }
     } catch (e) {
       state = "paused";
       error = e instanceof Error ? e.message : String(e);
       pendingSeek = null;
+      // motor kareyi işlemiş olabilir (ör. yanıttan sonra görüntü yüklenemedi): takipçi aynı kareyi
+      // iki kez görmesin diye sonraki istekten önce oturum sıfırlanır
+      resetRequested = true;
       return;
     } finally {
       busy = false;
       emit();
     }
-    if (pendingSeek !== null) {
-      const t = pendingSeek;
-      pendingSeek = null;
-      return run(t);
+    return proceed(started);
+  }
+
+  // Bir istekten sonra tek devam yolu: bekleyen atlama, oynatırken kare aralığının kalanı, sonraki
+  // kare; durmuşsa bekleyen sıfırlama. Bekleme sırasında gelen atlama / sıfırlama da buradan geçer
+  // (ikinci döngü açılmaz).
+  async function proceed(started: number): Promise<void> {
+    let waited = false;
+    for (;;) {
+      if (pendingSeek !== null) {
+        const t = pendingSeek;
+        pendingSeek = null;
+        return run(t);
+      }
+      if (state !== "playing" || frames.length === 0) {
+        if (resetRequested) await resetOnly();
+        return;
+      }
+      if (waited) return run(nextIndex());
+      waiting = true;
+      await deps.sleep(Math.max(0, 1000 / fps - (deps.now() - started)));
+      waiting = false;
+      waited = true;
     }
-    if (state !== "playing") {
-      if (resetRequested) await resetOnly();
-      return;
-    }
-    waiting = true;
-    await deps.sleep(Math.max(0, 1000 / fps - (deps.now() - started)));
-    waiting = false;
-    if (state === "playing" && !busy && frames.length > 0) return run(nextIndex());
   }
 
   const start = (target: number) => {
     if (frames.length === 0) return;
-    if (busy) {
+    if (busy || waiting) {
       pendingSeek = target;
       return;
     }
