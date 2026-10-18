@@ -549,6 +549,13 @@ Her sayı bir JSON'a bağlı; `docs/system.md`, `docs/health.md` gibi bu dosyala
   ardışık iki Python satırının skoru `1e-5` içindeyse (ORT'nin ilk 300 sıralaması işlemciye göre yer
   değiştirebilir) o iki satır kutu IoU'suyla eşlenir, sonra aynı ≤ 1e-4 uygulanır; yer değiştirme sayısı
   raporlanır.
+  **Referans aynı makinede (kullanıcı kararı, 2026-10-18; eşik değişmedi):** ilk CI koşusunda (a) yalnız
+  işlemci farkından düştü: laptopta üretilmiş fikstüre karşı GitHub makinesinde ORT'nin 300'lük
+  kuyruğunda son 5 satır (skor 5e-6-4e-5, değerlendirme tabanının çok altı) değişti ve kutu köşelerinde
+  1,22e-4 fark (≈ 4 float32 adımı) çıktı; (b), Kabul 2 ve 3 geçti. Bu fark ne bizim kodumuz ne de iki
+  taraf arasındaki fark. Bu yüzden CI, Python referansının ham çıktısını aynı makinede yeniden üretir
+  (`baykus-engine raw-ref`) ve (a)'yı ona karşı aynı ≤ 1e-4 ve aynı eşleme kuralıyla sınar; laptopta
+  fikstürün kendisi referanstır (fark 0,0). Kanıt dosyası referans kaynağını yazar (`raw_reference`).
   (b) **değerlendirme katmanı** (`score_raw ≥ 0,001`), takip katmanı (≥ 0,1) ve gösterim katmanı
   (kalibre ≥ conf) için **pipeline'ın kendi sıralı çıktısı**: satırlar ORT satır indeksiyle eşlenir; iki
   tarafın kümeleri aynı, eşleşen kutularda IoU ≥ 0,99, ham skor farkı ≤ 1e-3 (H5'teki tolerans), sıra aynı.
