@@ -6,5 +6,8 @@
 ui/node_modules/
 ui/.next/
 ui/tsconfig.tsbuildinfo
+# testler imaja girmez (next build tip denetimi ../scripts'i imajda bulamaz)
+ui/tests/
+ui/test-results/
 !scripts/offline_check.mjs
 !scripts/egress_check.mjs
