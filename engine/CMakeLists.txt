@@ -30,7 +30,11 @@ if(BAYKUS_SANITIZE)
 endif()
 
 add_library(baykus_core STATIC
+  src/calibration.cpp
+  src/detections.cpp
+  src/detector.cpp
   src/image_io.cpp
+  src/parity.cpp
   src/preprocess.cpp
   src/version.cpp)
 target_include_directories(baykus_core PUBLIC include)
@@ -49,10 +53,16 @@ target_link_libraries(baykus_test_support PUBLIC baykus_core GTest::gtest PRIVAT
 add_executable(baykus_tests
   tests/smoke_test.cpp
   tests/image_io_test.cpp
-  tests/preprocess_test.cpp)
+  tests/preprocess_test.cpp
+  tests/parity_rules_test.cpp
+  tests/calibration_test.cpp
+  tests/detector_test.cpp)
 target_link_libraries(baykus_tests PRIVATE baykus_test_support GTest::gtest_main baykus_warnings)
 include(GoogleTest)
 gtest_discover_tests(baykus_tests DISCOVERY_MODE PRE_TEST)
+
+add_executable(baykus_parity_report apps/parity_report.cpp)
+target_link_libraries(baykus_parity_report PRIVATE baykus_test_support baykus_warnings)
 
 # Fikstür zorunluluğu (BAYKUS_REQUIRE_FIXTURES=1): eksik dosya testi başarısız kılmalı.
 add_executable(baykus_fixture_probe tests/fixture_probe.cpp)

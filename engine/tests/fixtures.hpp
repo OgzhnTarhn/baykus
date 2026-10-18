@@ -13,6 +13,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "baykus/detections.hpp"
+
 namespace baykus::test {
 
 using json = nlohmann::json;
@@ -29,6 +31,9 @@ std::vector<json> fixtures_of(const std::string& kind);
 std::string read_file(const std::filesystem::path& path);
 json read_json(const std::filesystem::path& path);
 std::string sha256_hex(const void* data, std::size_t size);
+
+// Python `asdict(Det)` listesi (index, cls_id, score_raw, score, box) → Det.
+std::vector<Det> dets_from_json(const json& j);
 
 }  // namespace baykus::test
 

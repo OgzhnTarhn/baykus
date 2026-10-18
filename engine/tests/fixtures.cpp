@@ -75,4 +75,16 @@ std::string sha256_hex(const void* data, std::size_t size) {
   return ss.str();
 }
 
+std::vector<Det> dets_from_json(const json& j) {
+  std::vector<Det> out;
+  for (const auto& d : j) {
+    const auto& b = d.at("box");
+    out.push_back(Det{d.at("index").get<int>(), d.at("cls_id").get<int>(),
+                      static_cast<float>(d.at("score_raw").get<double>()), d.at("score").get<double>(),
+                      b.at(0).get<double>(), b.at(1).get<double>(), b.at(2).get<double>(),
+                      b.at(3).get<double>()});
+  }
+  return out;
+}
+
 }  // namespace baykus::test
