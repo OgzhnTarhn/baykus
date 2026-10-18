@@ -392,3 +392,22 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
 - **`gate=auto` AP'si:** kapı IR'yi kapatınca AP50 ≈ 0 (temizde Faz 2 kuralıyla 0,396 → 0,148, noise-20'de 0,162 → 0,001). IR etiketiyle ölçüldüğü ve M3OT'ta RGB-IR etiketleri ≈ 12 px'lik kutular ölçeğinde hizasız olduğu için (`docs/data/m3ot.md`) RGB'ye kalan tespitler IR etiketiyle eşleşmez; bu sütun kapının kalitesini değil etiket hizasını ölçer.
 - **Demo ölçütü** (kare + zaman, ölçümden önce sabit): iki dizide de temiz ≤ %2 ✅, misalign-20 ≥ %90 ❌, gecikme ≤ 10 ❌. Kural (tasarım §4.6): hiçbiri tutmazsa ad sırasıyla ilk dizi + sınırlama notu → **demo `1_08`** (`configs/m3ot_dev.json`). Sınırlama: M3OT demosunda hizasızlık alarmı (IR kaydırma arıza simülasyonu) görünmez; kayıp ve gürültü alarmları görünür. README ve `docs/system.md`'de böyle yazılacak.
 - **Yorum:** eşikler DroneVehicle'da seçildi; M3OT'ta hizasızlık kestirimi (kenar faz korelasyonu) bu iki dizide güvenilir değil. Tasarım bunu öngörmüştü ("demo hikâyesi ölçülmeden yazılmaz"); eşik ya da kural M3OT'a göre değiştirilmez (test'e sızma olmasın, (T) yalnız raporlanır).
+
+## 2026-10-18 · F3 · Motor gecikmesi, laptop Docker (Kabul 5)
+- **Kurulum:** `baykus_bench` (plan F3 Görev 27), runtime imajı `baykus-engine`, bellek içi kip (`Runtime`, HTTP hariç) ve `--http` kipi (compose `back` iç ağı, kapalı ağ katmanı). Girdi `data/edge/bench_inputs` (H5'teki 20 DroneVehicle val çifti, döngüde), `gate=advise`, takip açık, tek oturum, conf 0,25; 50 ısınma + 500 ölçüm; ORT iş parçacığı varsayılan. Laptop prizde (Win32_Battery durumu 2), Docker Desktop 4.62.0 (219486), `.wslconfig` yok (WSL varsayılanı: Docker sanal makinesi 16 çekirdek, 7,96 GB). Kaynak `results/bench/e3c_onnx_fp32_engine_laptop-docker.json` ve `..._laptop-docker-http.json`.
+- **Sonuç (ms, p50 / p95):**
+
+| Aşama | Bellek içi | HTTP kipi (sunucudaki süreler) |
+|---|---|---|
+| decode | 6,51 / 7,68 | 6,71 / 7,60 |
+| health | 8,72 / 10,77 | 7,56 / 9,43 |
+| pre | 3,18 / 4,39 | 3,25 / 4,44 |
+| infer | 45,88 / 62,11 | 45,72 / 62,06 |
+| post | 0,00 / 0,01 | 0,00 / 0,01 |
+| track | 0,13 / 0,20 | 0,12 / 0,18 |
+| **total** | **64,81 / 82,19** | 63,31 / 80,80 |
+| HTTP dahil gidiş-dönüş | — | 65,84 / 84,68 |
+
+  - Bellek içi: 14,8 FPS (1000 / ortalama total), tepe RSS 287 MB.
+- **Kabul 5 (motor p95 ≤ 100 ms, Docker): ✅ 82,2 ms.**
+- **Yorum:** H5'te aynı model Python ORT ile laptop CPU'da (Docker'sız) pre + infer + post p95 59,9 ms'ti; burada infer p95 62,1 ms (Docker / WSL katmanı ve kuyruk), üstüne Faz 3'te eklenen decode (≈ 7,7) ve sağlık (≈ 10,8) geliyor. HTTP katmanı p95'e ≈ 4 ms ekliyor (eşik yok). Ek ölçüm yapılmadı (yalnız sevk edilen yol).
