@@ -7,7 +7,9 @@ repos:
         exclude: ^engine/third_party/
       - id: end-of-file-fixer
         exclude: ^engine/third_party/
+      # --unsafe: yalnız sözdizimi; Compose'un `!reset` etiketi (compose.offline.yml) bilinmeyen etiket
       - id: check-yaml
+        args: ["--unsafe"]
       - id: check-added-large-files
         args: ["--maxkb=1024"]
       - id: detect-private-key

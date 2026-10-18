@@ -1,0 +1,43 @@
+# Kapalı ağ kanıtı 4 izin listesi (scripts/scan_next.mjs). Satır önek eşleşmesi; `=` ile başlayan
+# satır birebir. Buradaki adreslere istek yapılmaz: hepsi ad alanı, iç ağ, belge bağlantısı (hata
+# iletileri ve yorumlar) ya da kod içindeki örnek / yer tutucu dizedir. Yeni satır gerekçesiyle eklenir.
+
+# XML / SVG / MathML ad alanları
+http://www.w3.org/
+
+# iç ağ: motor (compose `back` ağı, ENGINE_URL varsayılanı)
+=http://engine:8080
+
+# React / Next / Node / web standartları belgeleri (hata iletilerindeki ve yorumlardaki bağlantılar)
+https://react.dev/errors/
+https://react.dev/reference/
+https://nextjs.org/docs/
+https://nextjs.org/blog/
+https://preview.nextjs.org/docs/
+https://vercel.com/docs/
+https://github.com/
+https://gist.github.com/
+https://developer.mozilla.org/
+https://nodejs.org/api/
+https://datatracker.ietf.org/doc/
+https://tools.ietf.org/html/
+https://httpwg.org/specs/
+https://url.spec.whatwg.org/
+https://wicg.github.io/
+https://opentelemetry.io/docs/
+https://developers.google.com/search/
+http://www.cse.yorku.ca/~oz/hash.html
+
+# Next içi URL ayrıştırma örnekleri ve şablon parçaları (ör. `https://${host}`); istek değil
+https://example.com/path?
+https://example.com/search?
+=https://localhost
+=https://blank
+=https://$
+=http://n
+=https://a
+=https://a/c%20d?a=1&c=3
+=https://a@b
+=https://a#б
+=https://x
+=https://тест

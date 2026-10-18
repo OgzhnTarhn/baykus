@@ -1,6 +1,13 @@
 # Kapalı ağ kanıt katmanı (Faz 3 tasarımı §4.5): bütün ağlar `internal: true`, port yayını yok.
+# Docker belgesine göre `internal` yalnız o ağı yalıtır; dışa açık ağa da bağlı servis oradan
+# çıkabilir. Bu katmanda dışa açık ağ kalmaz.
 # Kullanım: docker compose -f docker-compose.yml -f compose.offline.yml up -d
-# Görev 33'te `front` ağı ve `ui` servisinin port yayınının kaldırılması buraya eklenir.
+services:
+  ui:
+    ports: !reset []
+
 networks:
   back:
+    internal: true
+  front:
     internal: true

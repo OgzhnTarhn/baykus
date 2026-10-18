@@ -1,6 +1,7 @@
 # Baykuş çalışma ortamı (Faz 3 tasarımı §4.5). Motor yalnız iç ağda (`back`, dışarıya çıkışı yok);
-# operatör ekranı (`ui`, `back` + `front`, 127.0.0.1:3000) Görev 33'te eklenir. İmajlar yerelde
-# derlenir, hiçbir zaman çekilmez (pull_policy: never).
+# operatör ekranı `ui` (`back` + `front`) yalnız bu makineye açık: http://127.0.0.1:3000. İmajlar
+# yerelde derlenir, hiçbir zaman çekilmez (pull_policy: never).
+# Demo verisi: BAYKUS_DATA (varsayılan ./demo-data; içinde sequences/<dizi>/...).
 name: baykus
 
 services:
@@ -12,6 +13,22 @@ services:
       - ./models:/models:ro
     restart: unless-stopped
 
+  ui:
+    image: baykus-ui
+    pull_policy: never
+    networks: [back, front]
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      DATA_DIR: /data
+      ENGINE_URL: http://engine:8080
+      NEXT_TELEMETRY_DISABLED: "1"
+    volumes:
+      - ${BAYKUS_DATA:-./demo-data}:/data:ro
+    depends_on: [engine]
+    restart: unless-stopped
+
 networks:
   back:
     internal: true
+  front: {}

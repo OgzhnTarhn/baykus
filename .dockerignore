@@ -1,4 +1,10 @@
-# Docker derleme bağlamı: yalnız motorun ihtiyacı (veri, modeller, venv girmez)
+# Docker derleme bağlamı: yalnız motorun ve arayüzün ihtiyacı (veri, modeller, venv girmez)
 *
 !engine/
 !configs/engine/
+!ui/
+ui/node_modules/
+ui/.next/
+ui/tsconfig.tsbuildinfo
+!scripts/offline_check.mjs
+!scripts/egress_check.mjs
