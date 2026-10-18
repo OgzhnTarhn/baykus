@@ -6,7 +6,7 @@ license = "AGPL-3.0-only"
 requires-python = ">=3.11,<3.14"  # Colab T4 oturumu Python 3.13 (Spike C)
 dependencies = [
   "numpy>=1.26",
-  "opencv-python>=4.9",
+  "opencv-python==5.0.0.93",  # C++ motoru 5.0.0 kaynaktan (Faz 3 eşlik)
   "tifffile>=2024.1.30",
   "pycocotools>=2.0.8",
   "pyyaml>=6.0",
@@ -14,7 +14,8 @@ dependencies = [
   "tqdm>=4.66",
   "ensemble-boxes==1.0.9",
   "onnx>=1.23.1",
-  "onnxruntime>=1.30.0",
+  "onnxruntime==1.30.0",  # C++ motoru aynı sürümün hazır paketi
+  "trackers==2.6.1",  # ByteTrack referansı; C++ bu sürümü izler (tasarım §4.3)
   "py-cpuinfo>=9.0.0",
   "psutil>=7.2.2",
 ]
