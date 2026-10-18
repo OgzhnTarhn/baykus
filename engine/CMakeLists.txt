@@ -34,10 +34,14 @@ add_library(baykus_core STATIC
   src/calibration.cpp
   src/detections.cpp
   src/detector.cpp
+  src/files.cpp
   src/health.cpp
   src/image_io.cpp
+  src/models.cpp
   src/parity.cpp
+  src/pipeline.cpp
   src/preprocess.cpp
+  src/temporal.cpp
   src/version.cpp)
 target_include_directories(baykus_core PUBLIC include)
 target_link_libraries(baykus_core
@@ -59,7 +63,11 @@ add_executable(baykus_tests
   tests/parity_rules_test.cpp
   tests/calibration_test.cpp
   tests/detector_test.cpp
-  tests/health_test.cpp)
+  tests/health_test.cpp
+  tests/temporal_test.cpp
+  tests/models_test.cpp
+  tests/pipeline_test.cpp
+  tests/clip_test.cpp)
 target_link_libraries(baykus_tests PRIVATE baykus_test_support GTest::gtest_main baykus_warnings)
 include(GoogleTest)
 gtest_discover_tests(baykus_tests DISCOVERY_MODE PRE_TEST)
@@ -77,3 +85,6 @@ set_tests_properties(Fixtures.RequireFailsWhenMissing PROPERTIES
 add_test(NAME Fixtures.SkipWhenNotRequired COMMAND baykus_fixture_probe)
 set_tests_properties(Fixtures.SkipWhenNotRequired PROPERTIES
   ENVIRONMENT "BAYKUS_REQUIRE_FIXTURES=0;BAYKUS_FIXTURES=/nonexistent-fixtures")
+
+add_executable(baykus_parity_health apps/parity_health.cpp)
+target_link_libraries(baykus_parity_health PRIVATE baykus_test_support baykus_warnings)

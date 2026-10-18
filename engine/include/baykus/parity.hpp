@@ -2,6 +2,7 @@
 
 // Kabul 1 eşlik kuralları (Faz 3 tasarımı §6.1; ölçümden önce sabit).
 #include <array>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
 
@@ -50,5 +51,23 @@ LayerCompare compare_layer(const std::vector<Det>& py, const std::vector<Det>& c
 
 double iou(double ax1, double ay1, double ax2, double ay2, double bx1, double by1, double bx2,
            double by2);
+
+// Kabul 3 toleransları: std / noise / blur / brightness göreli; kayma px mutlak; yanıt mutlak.
+constexpr double kHealthRel = 1e-4;
+constexpr double kHealthPx = 0.5;
+constexpr double kHealthResp = 0.02;
+
+struct HealthCompare {
+  bool ok = true;
+  double max_rel = 0.0;   // std / noise / blur / brightness
+  double max_px = 0.0;    // misalign_px, dx_px, dy_px
+  double max_resp = 0.0;  // response
+  std::vector<std::string> errors;
+};
+
+// İki sağlık sözlüğü: sayısal alanlar toleransla, durumlar, işaretler, `misaligned_frame`,
+// `misaligned`, kapı, `reason_code`, `reason` (ve Python'da varsa `applied`) birebir. null yalnız
+// null'la eşleşir.
+HealthCompare compare_health(const nlohmann::json& py, const nlohmann::json& cpp);
 
 }  // namespace baykus::parity

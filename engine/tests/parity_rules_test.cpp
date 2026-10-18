@@ -123,3 +123,88 @@ TEST(ParityRules, BoundaryRowPresentOnBothSidesStillChecksIoU) {
   cpp.back().x1 += 5.0;
   EXPECT_FALSE(bp::compare_layer(py, cpp, 0.1).ok);
 }
+
+namespace {
+
+nlohmann::json health_dict() {
+  return {{"rgb",
+           {{"state", "ok"},
+            {"flags", nlohmann::json::array()},
+            {"std", 40.0},
+            {"noise", 1.5},
+            {"blur", 400.0},
+            {"brightness", 120.0}}},
+          {"ir",
+           {{"state", "ok"},
+            {"flags", nlohmann::json::array()},
+            {"std", 80.0},
+            {"noise", 2.0},
+            {"blur", 900.0}}},
+          {"pair",
+           {{"misalign_px", 20.0},
+            {"dx_px", 20.0},
+            {"dy_px", 0.0},
+            {"response", 0.5},
+            {"misaligned_frame", true},
+            {"misaligned", false}}},
+          {"gate", "none"},
+          {"reason_code", nullptr},
+          {"reason", ""},
+          {"applied", false}};
+}
+
+}  // namespace
+
+TEST(ParityRules, HealthEqualPasses) {
+  const auto h = health_dict();
+  EXPECT_TRUE(bp::compare_health(h, h).ok);
+}
+
+TEST(ParityRules, HealthWithinTolerancesPasses) {
+  auto c = health_dict();
+  c["rgb"]["std"] = 40.0 * (1 + 0.5e-4);
+  c["pair"]["dx_px"] = 20.4;
+  c["pair"]["response"] = 0.515;
+  const auto r = bp::compare_health(health_dict(), c);
+  EXPECT_TRUE(r.ok) << (r.errors.empty() ? "" : r.errors.front());
+  EXPECT_NEAR(r.max_px, 0.4, 1e-9);
+  EXPECT_NEAR(r.max_resp, 0.015, 1e-9);
+}
+
+TEST(ParityRules, HealthOutsideTolerancesFails) {
+  const auto base = health_dict();
+  auto rel = base;
+  rel["ir"]["noise"] = 2.0 * (1 + 2e-4);
+  EXPECT_FALSE(bp::compare_health(base, rel).ok);
+  auto px = base;
+  px["pair"]["dy_px"] = 0.6;
+  EXPECT_FALSE(bp::compare_health(base, px).ok);
+  auto resp = base;
+  resp["pair"]["response"] = 0.53;
+  EXPECT_FALSE(bp::compare_health(base, resp).ok);
+}
+
+TEST(ParityRules, HealthDecisionFieldsMustBeEqual) {
+  const auto base = health_dict();
+  for (const auto& [path, value] :
+       std::vector<std::pair<std::string, nlohmann::json>>{{"/ir/flags", {"noisy"}},
+                                                           {"/rgb/state", "dark"},
+                                                           {"/pair/misaligned", true},
+                                                           {"/pair/misaligned_frame", false},
+                                                           {"/gate", "ir_off"},
+                                                           {"/reason_code", "misaligned"},
+                                                           {"/reason", "IR hizasız"},
+                                                           {"/applied", true}}) {
+    auto c = base;
+    c[nlohmann::json::json_pointer(path)] = value;
+    EXPECT_FALSE(bp::compare_health(base, c).ok) << path;
+  }
+}
+
+TEST(ParityRules, HealthNullMatchesOnlyNull) {
+  auto py = health_dict();
+  py["pair"]["dx_px"] = nullptr;
+  EXPECT_FALSE(bp::compare_health(py, health_dict()).ok);
+  EXPECT_FALSE(bp::compare_health(health_dict(), py).ok);
+  EXPECT_TRUE(bp::compare_health(py, py).ok);
+}

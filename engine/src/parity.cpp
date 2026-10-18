@@ -5,6 +5,7 @@
 #include <map>
 #include <set>
 #include <sstream>
+#include <string>
 
 namespace baykus::parity {
 
@@ -146,6 +147,69 @@ LayerCompare compare_layer(const std::vector<Det>& py, const std::vector<Det>& c
     ss << "karşılaştırılan oran " << r.ratio << " < " << kMinRatio;
     err(ss.str());
   }
+  r.ok = r.errors.empty();
+  return r;
+}
+
+HealthCompare compare_health(const nlohmann::json& py, const nlohmann::json& cpp) {
+  using json = nlohmann::json;
+  HealthCompare r;
+  auto fail = [&r](const std::string& msg) { r.errors.push_back(msg); };
+  auto field = [](const json& j, const char* ptr) -> const json* {
+    const json::json_pointer p(ptr);
+    return j.contains(p) ? &j.at(p) : nullptr;
+  };
+  enum class Kind { kRel, kPx, kResp };
+  auto number = [&](const char* ptr, Kind kind) {
+    const json* a = field(py, ptr);
+    const json* b = field(cpp, ptr);
+    if (a == nullptr || b == nullptr) return fail(std::string(ptr) + ": alan yok");
+    if (a->is_null() || b->is_null()) {
+      if (a->is_null() != b->is_null()) {
+        fail(std::string(ptr) + ": py=" + a->dump() + " cpp=" + b->dump());
+      }
+      return;
+    }
+    const double x = a->get<double>();
+    const double y = b->get<double>();
+    const double d = std::fabs(x - y);
+    bool ok = true;
+    if (kind == Kind::kRel) {
+      const double scale = std::max(std::fabs(x), std::fabs(y));
+      r.max_rel = std::max(r.max_rel, scale > 0 ? d / scale : 0.0);
+      ok = d <= kHealthRel * scale + 1e-12;
+    } else if (kind == Kind::kPx) {
+      r.max_px = std::max(r.max_px, d);
+      ok = d <= kHealthPx;
+    } else {
+      r.max_resp = std::max(r.max_resp, d);
+      ok = d <= kHealthResp;
+    }
+    if (!ok) {
+      std::ostringstream ss;
+      ss.precision(17);
+      ss << ptr << ": py=" << x << " cpp=" << y;
+      fail(ss.str());
+    }
+  };
+  auto same = [&](const char* ptr) {
+    const json* a = field(py, ptr);
+    const json* b = field(cpp, ptr);
+    if (a == nullptr || b == nullptr) return fail(std::string(ptr) + ": alan yok");
+    if (*a != *b) fail(std::string(ptr) + ": py=" + a->dump() + " cpp=" + b->dump());
+  };
+  for (const char* p : {"/rgb/std", "/rgb/noise", "/rgb/blur", "/rgb/brightness", "/ir/std",
+                        "/ir/noise", "/ir/blur"}) {
+    number(p, Kind::kRel);
+  }
+  for (const char* p : {"/pair/misalign_px", "/pair/dx_px", "/pair/dy_px"}) number(p, Kind::kPx);
+  number("/pair/response", Kind::kResp);
+  for (const char* p :
+       {"/rgb/state", "/rgb/flags", "/ir/state", "/ir/flags", "/pair/misaligned_frame",
+        "/pair/misaligned", "/gate", "/reason_code", "/reason"}) {
+    same(p);
+  }
+  if (py.contains("applied")) same("/applied");
   r.ok = r.errors.empty();
   return r;
 }
