@@ -5,7 +5,10 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { AlarmList } from "@/components/AlarmList";
+import { DetectionList } from "@/components/DetectionList";
 import { FaultPanel } from "@/components/FaultPanel";
+import { Footer } from "@/components/Footer";
+import { LatencyChart, type LatencyView } from "@/components/LatencyChart";
 import { GateBadge } from "@/components/GateBadge";
 import { HealthPanel, STRIP_LEN, type StripEntry } from "@/components/HealthPanel";
 import { Player, type FrameView, type View } from "@/components/Player";
@@ -32,6 +35,7 @@ import {
   type Gate,
   type SequenceIndex,
 } from "@/lib/client";
+import { LatencyWindow } from "@/lib/latency";
 import { createPlayer, type PlayerSnapshot } from "@/lib/player";
 import { newSessionId } from "@/lib/session";
 
@@ -74,11 +78,22 @@ function toPng(p: Pixels): Promise<Blob> {
 // Oturum kimliği ilk istekte üretilir (tarayıcıda; sunucu ön-render'ında rastgele değer yok).
 type Settings = Omit<DetectSettings, "session"> & { faults: FaultConfig };
 
-export type Monitor = { active: AlarmId[]; history: AlarmEvent[]; strip: StripEntry[] };
-const EMPTY_MONITOR: Monitor = { active: [], history: [], strip: [] };
+export type Monitor = {
+  active: AlarmId[];
+  history: AlarmEvent[];
+  strip: StripEntry[];
+  latency: LatencyView;
+};
+const EMPTY_MONITOR: Monitor = {
+  active: [],
+  history: [],
+  strip: [],
+  latency: { totals: [], stats: null, breakdown: [] },
+};
 
 // Alarmlar ve durum şeridi motor oturumunu izler: oturum sıfırlanınca (ya da motor oturumu
-// kendiliğinden yeniden açınca, session_new) pencereler ve geçmiş temizlenir.
+// kendiliğinden yeniden açınca, session_new) pencereler ve geçmiş temizlenir. Gecikme penceresi
+// oturumdan bağımsızdır (son 100 kare).
 function makeConsole(
   onChange: (s: PlayerSnapshot<FrameView>) => void,
   onMonitor: (m: Monitor) => void,
@@ -89,11 +104,19 @@ function makeConsole(
   const sid = () => (session ??= newSessionId());
   const settings = { set: (v: Settings) => (current = v) };
   const alarms = new Alarms();
+  const latency = new LatencyWindow();
   let strip: StripEntry[] = [];
+  const emit = () =>
+    onMonitor({
+      active: alarms.active(),
+      history: alarms.history(),
+      strip,
+      latency: { totals: latency.totals(), stats: latency.stats(), breakdown: latency.breakdown() },
+    });
   const clearMonitor = () => {
     alarms.reset();
     strip = [];
-    onMonitor(EMPTY_MONITOR);
+    emit();
   };
   const player = createPlayer<FrameView>({
     detect: async (seq, frame) => {
@@ -131,7 +154,8 @@ function makeConsole(
         ...strip,
         { frame, rgb: h.rgb.state, ir: h.ir.state, misaligned: h.pair.misaligned },
       ].slice(-STRIP_LEN);
-      onMonitor({ active: alarms.active(), history: alarms.history(), strip });
+      latency.push(response.timing_ms);
+      emit();
       return { seq, frame, rgbSrc, irSrc, response };
     },
     reset: () => postReset(sid()),
@@ -251,9 +275,12 @@ export function Console() {
         <aside className="flex flex-col gap-4" aria-label="Durum">
           <AlarmList active={monitor.active} history={monitor.history} />
           <HealthPanel health={health} strip={monitor.strip} />
+          <DetectionList detections={snap.result?.response.detections ?? null} />
+          <LatencyChart view={monitor.latency} />
           <FaultPanel faults={faults} onChange={setFaults} />
         </aside>
       </main>
+      <Footer />
     </div>
   );
 }
