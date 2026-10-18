@@ -38,8 +38,8 @@ import {
 import { LatencyWindow } from "@/lib/latency";
 import { createPlayer, type PlayerSnapshot } from "@/lib/player";
 import { newSessionId } from "@/lib/session";
+import { DEFAULT_SETTINGS } from "@/lib/settings";
 
-const DEFAULT_CONF = 0.25;
 
 async function preload(src: string): Promise<HTMLImageElement> {
   const img = new Image();
@@ -98,7 +98,7 @@ function makeConsole(
   onChange: (s: PlayerSnapshot<FrameView>) => void,
   onMonitor: (m: Monitor) => void,
 ) {
-  let current: Settings = { conf: DEFAULT_CONF, track: true, gate: "auto", faults: NO_FAULTS };
+  let current: Settings = { ...DEFAULT_SETTINGS, faults: NO_FAULTS };
   const blobUrls: string[][] = []; // bozulmuş karelerin nesne URL'leri; iki kare sonra bırakılır
   let session: string | null = null;
   const sid = () => (session ??= newSessionId());
@@ -171,9 +171,9 @@ export function Console() {
   const [sequences, setSequences] = useState<SequenceIndex[]>([]);
   const [listError, setListError] = useState<string | null>(null);
   const [seq, setSeq] = useState("");
-  const [conf, setConf] = useState(DEFAULT_CONF);
-  const [track, setTrack] = useState(true);
-  const [gate, setGate] = useState<Gate>("auto");
+  const [conf, setConf] = useState(DEFAULT_SETTINGS.conf);
+  const [track, setTrack] = useState(DEFAULT_SETTINGS.track);
+  const [gate, setGate] = useState<Gate>(DEFAULT_SETTINGS.gate);
   const [view, setView] = useState<View>("both");
   const [faults, setFaults] = useState<FaultConfig>(NO_FAULTS);
   const [snapState, setSnap] = useState<PlayerSnapshot<FrameView> | null>(null);
