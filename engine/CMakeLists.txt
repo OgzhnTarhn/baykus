@@ -15,6 +15,7 @@ find_package(nlohmann_json REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(GTest REQUIRED)
 find_package(ZLIB REQUIRED)
+find_package(Threads REQUIRED)
 
 find_path(ORT_INCLUDE_DIR onnxruntime_cxx_api.h PATHS /opt/onnxruntime/include REQUIRED)
 find_library(ORT_LIBRARY onnxruntime PATHS /opt/onnxruntime/lib REQUIRED)
@@ -36,6 +37,11 @@ add_library(baykus_lsap STATIC third_party/lsap/rectangular_lsap.cpp)
 target_include_directories(baykus_lsap PUBLIC third_party/lsap)
 target_link_libraries(baykus_lsap PRIVATE baykus_warnings)
 
+# cpp-httplib (MIT, tek başlık, değiştirilmeden; third_party/README.md): SYSTEM, uyarıları -Werror'a girmez
+add_library(baykus_httplib INTERFACE)
+target_include_directories(baykus_httplib SYSTEM INTERFACE third_party)
+target_link_libraries(baykus_httplib INTERFACE Threads::Threads)
+
 add_library(baykus_core STATIC
   src/calibration.cpp
   src/detections.cpp
@@ -50,6 +56,7 @@ add_library(baykus_core STATIC
   src/pipeline.cpp
   src/preprocess.cpp
   src/runtime.cpp
+  src/server.cpp
   src/sessions.cpp
   src/temporal.cpp
   src/tracker.cpp
@@ -58,7 +65,7 @@ target_include_directories(baykus_core PUBLIC include)
 target_link_libraries(baykus_core
   PUBLIC ${OpenCV_LIBS} onnxruntime::onnxruntime Eigen3::Eigen nlohmann_json::nlohmann_json
          OpenSSL::Crypto
-  PRIVATE baykus_warnings baykus_lsap ZLIB::ZLIB)
+  PRIVATE baykus_warnings baykus_lsap baykus_httplib ZLIB::ZLIB)
 
 add_executable(baykus_buildinfo apps/buildinfo.cpp)
 target_link_libraries(baykus_buildinfo PRIVATE baykus_core baykus_warnings)
@@ -83,8 +90,10 @@ add_executable(baykus_tests
   tests/kalman_test.cpp
   tests/tracker_test.cpp
   tests/sessions_test.cpp
-  tests/runtime_test.cpp)
-target_link_libraries(baykus_tests PRIVATE baykus_test_support GTest::gtest_main baykus_warnings)
+  tests/runtime_test.cpp
+  tests/server_test.cpp)
+target_link_libraries(baykus_tests PRIVATE baykus_test_support GTest::gtest_main baykus_warnings
+                                           baykus_httplib)
 include(GoogleTest)
 gtest_discover_tests(baykus_tests DISCOVERY_MODE PRE_TEST)
 
@@ -110,3 +119,6 @@ target_link_libraries(baykus_track PRIVATE baykus_core baykus_warnings)
 
 add_executable(baykus_detect apps/detect.cpp)
 target_link_libraries(baykus_detect PRIVATE baykus_core baykus_warnings)
+
+add_executable(baykus_server apps/server.cpp)
+target_link_libraries(baykus_server PRIVATE baykus_core baykus_warnings Threads::Threads)

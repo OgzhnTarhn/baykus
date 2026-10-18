@@ -45,6 +45,9 @@ class Runtime {
   // std::invalid_argument.
   Response process(const Request& req);
 
+  int imgsz() const { return pipeline_.imgsz(); }
+  int channels() const { return pipeline_.channels(); }
+
  private:
   Pipeline pipeline_;
   TrackerConfig tracker_cfg_;

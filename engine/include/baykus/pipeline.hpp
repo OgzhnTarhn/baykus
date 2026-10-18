@@ -33,6 +33,9 @@ class Pipeline {
   FrameResult run(const std::string& rgb, const std::string& ir, const std::string& gate_mode,
                   float floor, MisalignWindow* window);
 
+  int imgsz() const { return detector_.imgsz(); }
+  int channels() const { return detector_.channels(); }
+
  private:
   Models models_;
   Detector detector_;
