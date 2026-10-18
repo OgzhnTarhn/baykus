@@ -1,0 +1,331 @@
+{
+  "label": "val keşfi, PyTorch E3c",
+  "run_id": "2026-10-15_e3c-modality-dropout_s_d4e1280",
+  "split": "val",
+  "label_set": "ir",
+  "r_min": 0.24504129436349326,
+  "gate_model_sha256": "eb2807e2f32f20444322a680eaab821da025d67085ac6e887918a42646d5fd78",
+  "thresholds_sha256": "bf3d4c93660cc226e583360b16934c7d2a3877fe9abdc069e30aff62566a4c33",
+  "n_boot": 1000,
+  "seed": 42,
+  "rows": [
+    {
+      "condition": "clean",
+      "n_images": 1469,
+      "removed": 50,
+      "precondition_ok": true,
+      "source": "spliced",
+      "gate_rate": 0.0068073519400953025,
+      "changed": 10,
+      "base_map50": 0.8505970626892081,
+      "gate_map50": 0.8483858971457143,
+      "diff": -0.002211165543493765,
+      "ci95": [
+        -0.005040989335682142,
+        -8.436062789820844e-05
+      ],
+      "significant": true
+    },
+    {
+      "condition": "darken-0.5",
+      "n_images": 1469,
+      "removed": 57,
+      "precondition_ok": true,
+      "source": "spliced",
+      "gate_rate": 0.0068073519400953025,
+      "changed": 10,
+      "base_map50": 0.8411451529976398,
+      "gate_map50": 0.8386486113487759,
+      "diff": -0.002496541648863926,
+      "ci95": [
+        -0.006043698734508038,
+        -9.438655134094423e-05
+      ],
+      "significant": true
+    },
+    {
+      "condition": "darken-0.25",
+      "n_images": 1469,
+      "removed": 58,
+      "precondition_ok": true,
+      "source": "spliced",
+      "gate_rate": 0.0068073519400953025,
+      "changed": 10,
+      "base_map50": 0.8359780824192204,
+      "gate_map50": 0.8346623890890227,
+      "diff": -0.0013156933301977647,
+      "ci95": [
+        -0.002892120908524548,
+        -0.0001676098782610631
+      ],
+      "significant": true
+    },
+    {
+      "condition": "darken-0.1",
+      "n_images": 1469,
+      "removed": 68,
+      "precondition_ok": true,
+      "source": "spliced",
+      "gate_rate": 0.005445881552076242,
+      "changed": 8,
+      "base_map50": 0.8317279541490816,
+      "gate_map50": 0.8305119710094931,
+      "diff": -0.0012159831395884835,
+      "ci95": [
+        -0.0028947267634838875,
+        -0.00014426833878982697
+      ],
+      "significant": true
+    },
+    {
+      "condition": "noise-5",
+      "n_images": 1469,
+      "removed": 54,
+      "precondition_ok": true,
+      "source": "spliced",
+      "gate_rate": 0.006126616746085773,
+      "changed": 9,
+      "base_map50": 0.8412782024136618,
+      "gate_map50": 0.839392450413016,
+      "diff": -0.0018857520006457795,
+      "ci95": [
+        -0.00439575637480189,
+        -7.7518831145837e-05
+      ],
+      "significant": true
+    },
+    {
+      "condition": "noise-10",
+      "n_images": 1469,
+      "removed": 61,
+      "precondition_ok": true,
+      "source": "spliced",
+      "gate_rate": 0.005445881552076242,
+      "changed": 8,
+      "base_map50": 0.770386568341866,
+      "gate_map50": 0.7691838355388734,
+      "diff": -0.0012027328029926565,
+      "ci95": [
+        -0.003568563932909374,
+        -2.1495638919849543e-05
+      ],
+      "significant": true
+    },
+    {
+      "condition": "noise-20",
+      "n_images": 1469,
+      "removed": 0,
+      "precondition_ok": true,
+      "source": "spliced",
+      "gate_rate": 1.0,
+      "changed": 1469,
+      "base_map50": 0.5354820388972787,
+      "gate_map50": 0.7195170878981878,
+      "diff": 0.18403504900090906,
+      "ci95": [
+        0.15953469965983325,
+        0.20980314313726814
+      ],
+      "significant": true
+    },
+    {
+      "condition": "blur-3",
+      "n_images": 1469,
+      "removed": 52,
+      "precondition_ok": true,
+      "source": "spliced",
+      "gate_rate": 0.006126616746085773,
+      "changed": 9,
+      "base_map50": 0.8307063496782359,
+      "gate_map50": 0.8300987657324941,
+      "diff": -0.0006075839457417853,
+      "ci95": [
+        -0.0017027081271975802,
+        -3.40683961289973e-05
+      ],
+      "significant": true
+    },
+    {
+      "condition": "blur-7",
+      "n_images": 1469,
+      "removed": 55,
+      "precondition_ok": true,
+      "source": "spliced",
+      "gate_rate": 0.0040844111640571815,
+      "changed": 6,
+      "base_map50": 0.7440368235661022,
+      "gate_map50": 0.7439463137507399,
+      "diff": -9.050981536229408e-05,
+      "ci95": [
+        -0.0009546224664522985,
+        -6.221018328964049e-06
+      ],
+      "significant": true
+    },
+    {
+      "condition": "blur-11",
+      "n_images": 1469,
+      "removed": 60,
+      "precondition_ok": true,
+      "source": "spliced",
+      "gate_rate": 0.0034036759700476512,
+      "changed": 5,
+      "base_map50": 0.6522708479991065,
+      "gate_map50": 0.6521995587598439,
+      "diff": -7.128923926258413e-05,
+      "ci95": [
+        -0.0001722114769136196,
+        3.782710053135107e-06
+      ],
+      "significant": false
+    },
+    {
+      "condition": "misalign-5",
+      "n_images": 1469,
+      "removed": 60,
+      "precondition_ok": true,
+      "source": "spliced",
+      "gate_rate": 0.01906058543226685,
+      "changed": 28,
+      "base_map50": 0.8337301937019799,
+      "gate_map50": 0.8306819003485376,
+      "diff": -0.003048293353442255,
+      "ci95": [
+        -0.00624372514183272,
+        0.0002706250713816497
+      ],
+      "significant": false
+    },
+    {
+      "condition": "misalign-10",
+      "n_images": 1469,
+      "removed": 60,
+      "precondition_ok": true,
+      "source": "spliced",
+      "gate_rate": 0.06943498978897208,
+      "changed": 102,
+      "base_map50": 0.6955231761694007,
+      "gate_map50": 0.6901665389894837,
+      "diff": -0.005356637179917079,
+      "ci95": [
+        -0.009385970287567224,
+        -0.0009027976453766079
+      ],
+      "significant": true
+    },
+    {
+      "condition": "misalign-20",
+      "n_images": 1469,
+      "removed": 168,
+      "precondition_ok": true,
+      "source": "spliced",
+      "gate_rate": 0.8359428182437032,
+      "changed": 1228,
+      "base_map50": 0.26562557520492225,
+      "gate_map50": 0.6222188866306726,
+      "diff": 0.35659331142575035,
+      "ci95": [
+        0.319408531536215,
+        0.3957046133833212
+      ],
+      "significant": true
+    },
+    {
+      "condition": "misalign-40",
+      "n_images": 1469,
+      "removed": 191,
+      "precondition_ok": true,
+      "source": "spliced",
+      "gate_rate": 0.866575901974132,
+      "changed": 1273,
+      "base_map50": 0.0899808573076121,
+      "gate_map50": 0.5643975366743241,
+      "diff": 0.47441667936671206,
+      "ci95": [
+        0.43387103877508437,
+        0.5181502235548144
+      ],
+      "significant": true
+    },
+    {
+      "condition": "drop_rgb",
+      "n_images": 1469,
+      "removed": 0,
+      "precondition_ok": true,
+      "source": "base",
+      "gate_rate": 1.0,
+      "changed": 0,
+      "base_map50": 0.8287132549717698,
+      "gate_map50": 0.8287132549717698,
+      "diff": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "significant": false
+    },
+    {
+      "condition": "drop_ir",
+      "n_images": 1469,
+      "removed": 0,
+      "precondition_ok": true,
+      "source": "base",
+      "gate_rate": 1.0,
+      "changed": 0,
+      "base_map50": 0.7195170878981878,
+      "gate_map50": 0.7195170878981878,
+      "diff": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "significant": false
+    }
+  ],
+  "harmful": {
+    "conditions": [
+      "noise-20",
+      "misalign-20",
+      "misalign-40"
+    ],
+    "diff": 0.3383483465977905,
+    "ci95": [
+      0.3126101383544248,
+      0.36691454251627464
+    ],
+    "significant": true
+  },
+  "misaligned_catch": {
+    "misalign-20": {
+      "all": 0.8359428182437032,
+      "dark": 0.5879518072289157,
+      "bright": 0.9335863377609108
+    },
+    "misalign-40": {
+      "all": 0.866575901974132,
+      "dark": 0.6144578313253012,
+      "bright": 0.9658444022770398
+    }
+  },
+  "acceptance": {
+    "k1": {
+      "value": -0.002211165543493765,
+      "limit": -0.005,
+      "passed": true
+    },
+    "k2": {
+      "ci95": [
+        0.3126101383544248,
+        0.36691454251627464
+      ],
+      "passed": true
+    },
+    "k3": {
+      "value": 0.0068073519400953025,
+      "limit": 0.02,
+      "passed": true
+    }
+  },
+  "git_commit": "17749485076a078f0fc5cb75dceee2e850721834",
+  "created_at": "2026-10-18T14:20:02Z"
+}
