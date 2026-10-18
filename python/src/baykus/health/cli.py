@@ -5,6 +5,9 @@ suite   — sağlamlık paketini kapıyla çalıştırır (E3c + kapı; kaldığ
 compare — E3c + kapı − E3c eşleştirilmiş bootstrap, kabul ölçütleri (gate_<split>.json).
 calibrate — sevk edilen modelin skorları için izotonik tablo, testte ECE önce / sonra.
 report  — results/health/*.json → docs/health.md + güvenilirlik diyagramı.
+guard   — Faz 3 kare kuralı: train'de r_min seçimi (gate_model.json).
+guard-files — val keşfi için Drive'dan inecek dosyaların listesi.
+guard-val — val keşfi: Faz 2 kapılı ve taban tahminlerinin kare kuralıyla birleştirilmesi.
 """
 
 from __future__ import annotations
@@ -25,6 +28,14 @@ from baykus.health.calibrate import calibrate
 from baykus.health.compare import check_thresholds, gate_report
 from baykus.health.features import FEATURES
 from baykus.health.fit import feature_rows, fit_thresholds
+from baykus.health.gate import load_thresholds
+from baykus.health.guard import (
+    download_list,
+    guard_val_report,
+    load_gate_model,
+    select_r_min,
+    write_gate_model,
+)
 from baykus.health.report import calibration_plot, health_markdown
 from baykus.health.suite import run_gated_suite
 from baykus.robustness.cli import load_model_spec
@@ -181,6 +192,65 @@ def _cmd_report(a: argparse.Namespace) -> int:
     return 0
 
 
+E3C_RUN = "2026-10-15_e3c-modality-dropout_s_d4e1280"  # sevk edilen model (ADR 0007)
+
+
+def _pct2(v: float | None) -> str:
+    return "—" if v is None else f"{v * 100:.1f}%"
+
+
+def _cmd_guard(a: argparse.Namespace) -> int:
+    th = load_thresholds(Path(a.thresholds))
+    with Path(a.features).open(encoding="utf-8", newline="") as f:
+        rows = list(csv.DictReader(f))
+    sel = select_r_min(rows, th)
+    print(write_gate_model(Path(a.out), sel, th, Path(a.features)))
+    t = sel["train_tpr"]
+    print(
+        f"r_min={sel['r_min']:.4f} ({sel['criterion']}) · train temiz alarm "
+        f"{_pct2(sel['train_clean_alarm_rate'])} ({sel['n_clean']} kare)"
+    )
+    print(
+        f"train misalign-20/40 yakalama: tümü {_pct2(t['all'])}, karanlık {_pct2(t['dark'])}, "
+        f"aydınlık {_pct2(t['bright'])} ({sel['n_pos']} kare)"
+    )
+    return 0
+
+
+def _cmd_guard_files(a: argparse.Namespace) -> int:
+    for path in download_list(Path(a.results), a.run_id):
+        print(path)
+    return 0
+
+
+def _cmd_guard_val(a: argparse.Namespace) -> int:
+    th = load_thresholds(Path(a.thresholds))
+    rep = guard_val_report(
+        run_id=a.run_id,
+        robust_preds=Path(a.robust_preds),
+        gt=load_coco(Path(a.gt)),
+        results=Path(a.results),
+        gate_model=load_gate_model(Path(a.gate_model)),
+        th=th,
+        n_boot=a.n_boot,
+        seed=a.seed,
+        workers=a.workers,
+    )
+    rep["git_commit"] = git_info()["git_commit"]
+    rep["created_at"] = iso(utc_now())
+    print(write_json(Path(a.out), rep))
+    acc = rep["acceptance"]
+    if acc:
+        k1, k2, k3 = acc["k1"], acc["k2"], acc["k3"]
+        print(f"({rep['label']}) r_min={rep['r_min']:.4f}")
+        print(f"Kabul 1 {_mark(k1['passed'])} temiz fark {k1['value'] * 100:+.2f} puan (≥ −0,5)")
+        print(f"Kabul 2 {_mark(k2['passed'])} Z birleşik GA {k2['ci95']} (alt sınır > 0)")
+        print(f"Kabul 3 {_mark(k3['passed'])} temiz yanlış alarm {_pct2(k3['value'])} (≤ %2)")
+    else:
+        print("kabul ölçütleri hesaplanamadı (temiz ya da Z koşulu birleştirilemedi)")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="baykus-health")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -234,6 +304,27 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--out", default="../docs/health.md")
     r.add_argument("--fig", default="../docs/figures/results/calibration.png")
     r.set_defaults(func=_cmd_report)
+    g = sub.add_parser("guard", help="kare kuralı: train'de r_min seç (gate_model.json)")
+    g.add_argument("--features", default="../data/health/train_features.csv")
+    g.add_argument("--thresholds", default="../results/health/thresholds.json")
+    g.add_argument("--out", default="../results/health/gate_model.json")
+    g.set_defaults(func=_cmd_guard)
+    gf = sub.add_parser("guard-files", help="val keşfi için Drive'dan inecek dosyalar")
+    gf.add_argument("--results", default="../results")
+    gf.add_argument("--run-id", default=E3C_RUN)
+    gf.set_defaults(func=_cmd_guard_files)
+    gv = sub.add_parser("guard-val", help="val keşfi: kare kuralıyla birleştirilmiş kapı")
+    gv.add_argument("--gate-model", default="../results/health/gate_model.json")
+    gv.add_argument("--robust-preds", required=True, help="Faz 1 ve kapılı tahmin klasörleri")
+    gv.add_argument("--gt", required=True, help="val_ir.json (Faz 2 compare'deki COCO)")
+    gv.add_argument("--thresholds", default="../results/health/thresholds.json")
+    gv.add_argument("--results", default="../results")
+    gv.add_argument("--run-id", default=E3C_RUN)
+    gv.add_argument("--out", default="../results/health/gate_model_val.json")
+    gv.add_argument("--n-boot", type=int, default=1000)
+    gv.add_argument("--seed", type=int, default=42)
+    gv.add_argument("--workers", type=int, default=1)
+    gv.set_defaults(func=_cmd_guard_val)
     return p
 
 
