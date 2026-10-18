@@ -63,7 +63,9 @@ def write_json(path: Path, data: dict) -> Path:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + ".tmp")
-    tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    # Windows'ta da LF: sha256 her platformda ve git'teki baytlarla aynı
+    text = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
+    tmp.write_text(text, encoding="utf-8", newline="\n")
     try:
         os.replace(tmp, path)
     except OSError:

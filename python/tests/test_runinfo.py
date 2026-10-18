@@ -100,3 +100,8 @@ def test_write_json_is_atomic(tmp_path: Path, monkeypatch):
         ri.write_json(p, {"a": 2})
     assert json.loads(p.read_text(encoding="utf-8")) == {"a": 1}
     assert [f.name for f in tmp_path.iterdir()] == ["r.json"]
+
+
+def test_write_json_uses_lf_on_every_platform(tmp_path):
+    p = write_json(tmp_path / "x.json", {"a": 1})
+    assert b"\r" not in p.read_bytes()
