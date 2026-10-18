@@ -1,5 +1,7 @@
 # veri ve çıktılar
 /data/
+/models/
+/demo-data/
 datasets/
 runs/
 !/results/runs/
