@@ -296,6 +296,23 @@ ayrıntılar, uygulama başında sabit sürümde yeniden doğrulanır):
   `track_activation_threshold=0.7`, `minimum_consecutive_frames=2`, `minimum_iou_threshold=0.1`,
   `high_conf_det_threshold=0.6`); `configs/engine/tracker.yaml`'da sabit. Eşikler **ham** skora uygulanır.
   M3OT'un kare hızı doğrulanmadı; `frame_rate=30` varsayım olarak yazılır.
+- **Sabit sürümde doğrulama (2026-10-18, `trackers==2.6.1` kaynağı, plan F3 Görev 13):** yukarıdaki maddeler
+  `main` dalından okunmuştu; 2.6.1'de dört fark var ve **C++ 2.6.1'i izler** (bu madde yukarıdakilerin önüne geçer):
+  1. **Kalman float64**, ayrı `KalmanFilter` (`trackers/utils/kalman_filter.py`), XYXY durum tahmincisi; P₀ = I,
+     Q = 0,01·I (sabit hızlı kipte `frame_step = 1`), R = 0,1·I, H = I₄ₓ₈, F sabit hız (dt = 1); kazanç
+     `P Hᵀ inv(S)`; kovaryans güncellemesi **Joseph biçimi** `(I−KH) P (I−KH)ᵀ + K R Kᵀ`. C++ Eigen `double`.
+  2. **IoU:** `supervision.box_iou_batch`: köşeler float64'te, oran float32'ye yazılır (`np.divide(..., out=float32)`);
+     atama ve eşik bu float32 matris üzerinde.
+  3. **Kimlik sayacı takipçi nesnesi başına** (0'dan; `reset()` sıfırlar); sınıf düzeyinde ortak değil.
+     Yeni iz `number_of_successful_consecutive_updates = 1` ile başlar; eşleşmeyen her yüksek skorlu tespit
+     `-1` döner, yalnız `≥ track_activation_threshold` olanı iz açar. Kaçırılan karede sayaç 0'a iner.
+     Yaşayan iz: `time_since_update ≤ maximum_frames_without_update` (30) ve (kimliği var ya da sayaç ≥ 2 ya da bu
+     karede güncellendi). Zaman damgasız kipte eşleşme öncesi budama yok (yalnız eşleşme sonrası, kare sayısıyla).
+  4. **Çıktı girdi indeksiyle kurulur** (`detections[idx]`): sıra 1. aşama eşleşmeleri, 2. aşama eşleşmeleri,
+     eşleşmeyen düşük skorlular (`-1`), eşleşmeyen yüksek skorlular (`-1`). Python koşucusu girdi indeksini
+     `sv.Detections.data` ile taşır; kutu eşitliğiyle eşlemeye gerek yok.
+  Parametre varsayılanları 2.6.1'de aynı (`frame_rate` float `30.0`). Kalman ve atama birim fikstürleri
+  (`fixtures/expected/{kalman_steps,lsap_cases}.json`) bu sürümden üretilir.
 
 **Girdi:** taban süzgecinden (`score_raw ≥ 0,1`) geçen bütün tespitler, sınıflar birleştirilmiş (M3OT tek
 sınıf `vehicle`), ek NMS yok. Uçtan uca çıktı sınıflı olduğundan aynı araca iki sınıftan kutu düşebilir;
