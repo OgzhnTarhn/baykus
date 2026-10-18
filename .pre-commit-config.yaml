@@ -17,3 +17,10 @@ repos:
         files: ^python/
       - id: ruff-format
         files: ^python/
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v23.1.3
+    hooks:
+      # CI ile aynı sürüm (ci.yml engine işi); yalnız motor kaynakları
+      - id: clang-format
+        files: ^engine/
+        types_or: [c++]

@@ -1,7 +1,7 @@
 name: ci
 on:
   push:
-    branches: [main]
+    branches: [main, "f[0-9]*"]
   pull_request:
 
 jobs:
@@ -22,3 +22,53 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest -q -m "not slow"
+
+  # C++ motoru (Faz 3 Görev 17): biçim, derleme, kabul testleri (atlanamaz), sanitizer'lı tekrar.
+  engine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+      - name: clang-format
+        run: pipx run --spec clang-format==23.1.3 clang-format --dry-run --Werror $(git ls-files 'engine/*.cpp' 'engine/*.hpp')
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: docker/engine.Dockerfile
+          target: build
+          load: true
+          tags: baykus-engine-build
+          cache-from: type=gha,scope=engine
+          cache-to: type=gha,scope=engine,mode=max
+      - name: models
+        run: bash scripts/fetch_models.sh models
+      - name: test
+        run: REQ=1 bash scripts/engine_test.sh
+      - name: evidence
+        run: |
+          mkdir -p evidence
+          docker run --rm -e BAYKUS_MODELS=/models -e BAYKUS_FIXTURES=/fixtures \
+            -v "$PWD/models:/models:ro" -v "$PWD/fixtures:/fixtures:ro" -v "$PWD/evidence:/out" \
+            baykus-engine-build /build/bin/baykus_parity_report /out/parity_detect.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: engine-evidence
+          path: evidence/
+          if-no-files-found: error
+      - name: build (sanitize)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: docker/engine.Dockerfile
+          target: build
+          load: true
+          tags: baykus-engine-asan
+          build-args: BAYKUS_SANITIZE=ON
+          cache-from: |
+            type=gha,scope=engine
+            type=gha,scope=engine-asan
+          cache-to: type=gha,scope=engine-asan,mode=max
+      - name: test (sanitize)
+        run: IMAGE=baykus-engine-asan REQ=1 bash scripts/engine_test.sh
