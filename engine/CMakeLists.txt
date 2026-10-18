@@ -47,6 +47,7 @@ add_library(baykus_core STATIC
   src/calibration.cpp
   src/detections.cpp
   src/detector.cpp
+  src/egress.cpp
   src/files.cpp
   src/health.cpp
   src/image_io.cpp
@@ -93,7 +94,8 @@ add_executable(baykus_tests
   tests/sessions_test.cpp
   tests/runtime_test.cpp
   tests/server_test.cpp
-  tests/bench_test.cpp)
+  tests/bench_test.cpp
+  tests/egress_test.cpp)
 target_link_libraries(baykus_tests PRIVATE baykus_test_support GTest::gtest_main baykus_warnings
                                            baykus_httplib)
 include(GoogleTest)

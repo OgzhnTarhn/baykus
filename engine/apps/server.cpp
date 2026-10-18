@@ -3,12 +3,14 @@
 // düzgün durma (docker stop).
 // Kullanım: baykus_server [--models /models] [--manifest /etc/baykus/models.json]
 //                         [--tracker /etc/baykus/tracker.json] [--host 0.0.0.0] [--port 8080]
+//           baykus_server --egress-check  (kanıt 2: JSON stdout, çıkış 0 = dış ağ kapalı)
 #include <csignal>
 #include <exception>
 #include <iostream>
 #include <string>
 #include <thread>
 
+#include "baykus/egress.hpp"
 #include "baykus/models.hpp"
 #include "baykus/runtime.hpp"
 #include "baykus/server.hpp"
@@ -19,13 +21,20 @@ namespace {
 
 int usage() {
   std::cerr << "kullanım: baykus_server [--models DIR] [--manifest M] [--tracker T] [--host H] "
-               "[--port P]\n";
+               "[--port P] | --egress-check\n";
   return 2;
 }
 
 }  // namespace
 
 int main(int argc, char** argv) {
+  if (argc == 2 && std::string(argv[1]) == "--egress-check") {
+    namespace eg = baykus::egress;
+    const auto v = eg::verdict(eg::probe_tcp(eg::kTcpHost, eg::kTcpPort, eg::kTimeoutMs),
+                               eg::probe_dns(eg::kDnsHost));
+    std::cout << v.dump() << "\n";
+    return v.at("blocked").get<bool>() ? 0 : 1;
+  }
   std::string models_dir = "/models", manifest = "/etc/baykus/models.json",
               tracker = "/etc/baykus/tracker.json", host = "0.0.0.0";
   int port = 8080;
