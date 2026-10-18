@@ -49,6 +49,8 @@ add_library(baykus_core STATIC
   src/parity.cpp
   src/pipeline.cpp
   src/preprocess.cpp
+  src/runtime.cpp
+  src/sessions.cpp
   src/temporal.cpp
   src/tracker.cpp
   src/version.cpp)
@@ -79,7 +81,9 @@ add_executable(baykus_tests
   tests/clip_test.cpp
   tests/lsap_test.cpp
   tests/kalman_test.cpp
-  tests/tracker_test.cpp)
+  tests/tracker_test.cpp
+  tests/sessions_test.cpp
+  tests/runtime_test.cpp)
 target_link_libraries(baykus_tests PRIVATE baykus_test_support GTest::gtest_main baykus_warnings)
 include(GoogleTest)
 gtest_discover_tests(baykus_tests DISCOVERY_MODE PRE_TEST)
@@ -103,3 +107,6 @@ target_link_libraries(baykus_parity_health PRIVATE baykus_test_support baykus_wa
 
 add_executable(baykus_track apps/track.cpp)
 target_link_libraries(baykus_track PRIVATE baykus_core baykus_warnings)
+
+add_executable(baykus_detect apps/detect.cpp)
+target_link_libraries(baykus_detect PRIVATE baykus_core baykus_warnings)
