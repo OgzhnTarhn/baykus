@@ -6,6 +6,7 @@ import pytest
 
 from baykus.engine_ref.cli import main as engine_main
 from baykus.engine_ref.measure import (
+    DUP_FLOOR,
     ap50_sequence,
     duplicate_rate,
     ece_calibrated,
@@ -14,6 +15,7 @@ from baykus.engine_ref.measure import (
     measure,
     to_coco,
 )
+from baykus.track.runner import TRACK_FLOOR
 
 GT_BOXES = {1: [[10, 20, 30, 40]], 2: [[100, 100, 20, 20], [300, 200, 40, 30]]}
 
@@ -108,9 +110,19 @@ def test_duplicate_rate_cross_class():
     assert duplicate_rate(_dets(frames)) == pytest.approx(1 / 5)
 
 
-def test_duplicate_rate_ignores_low_scores():
+def test_duplicate_rate_counts_tracking_input():
+    # tasarım §4.3: oran takip girdisinde (ham ≥ 0,1); 0,1-0,25 arası kopyalar da takipçiye gider
     frames = {1: [_det([10, 10, 20, 20], cls_id=0), _det([10, 10, 20, 20], raw=0.1, cls_id=1)]}
+    assert duplicate_rate(_dets(frames)) == pytest.approx(1 / 2)
+
+
+def test_duplicate_rate_ignores_below_track_floor():
+    frames = {1: [_det([10, 10, 20, 20], cls_id=0), _det([10, 10, 20, 20], raw=0.09, cls_id=1)]}
     assert duplicate_rate(_dets(frames)) == 0.0
+
+
+def test_duplicate_floor_is_track_floor():
+    assert DUP_FLOOR == TRACK_FLOOR
 
 
 def test_measure_refuses_test(tmp_path: Path):

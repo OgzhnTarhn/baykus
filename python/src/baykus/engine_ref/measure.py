@@ -21,6 +21,7 @@ from baykus.health.calibrate import CONF_MIN, ece, match_labels
 
 TEST_FLAG = "--i-know-this-is-test"
 DUP_IOU = 0.7
+DUP_FLOOR = 0.1  # takip girdisi (tasarım §4.3; baykus.track.runner.TRACK_FLOOR)
 
 
 def load_gt(labels_dir: Path, split: str) -> COCO:
@@ -93,9 +94,10 @@ def _iou(a: list[float], b: list[float]) -> float:
     return inter / union
 
 
-def duplicate_rate(dets: dict, iou: float = DUP_IOU, conf: float = CONF_MIN) -> float:
-    """Aynı karede IoU ≥ iou olan farklı sınıflı tespit çiftleri / tespit (ham ≥ conf).
-    Sınıfsız değerlendirmede aynı aracın iki sınıflı kopyası yanlış pozitif olur."""
+def duplicate_rate(dets: dict, iou: float = DUP_IOU, conf: float = DUP_FLOOR) -> float:
+    """Aynı karede IoU ≥ iou olan farklı sınıflı tespit çiftleri / tespit (ham ≥ conf; varsayılan
+    takip girdisi, tasarım §4.3). Takipçi sınıfları birleştirdiği için aynı aracın iki sınıflı
+    kopyası takipte çift iz, sınıfsız değerlendirmede yanlış pozitif olur."""
     pairs = n = 0
     for fr in dets["frames"]:
         ds = [d for d in fr["dets"] if d["score_raw"] >= conf]
