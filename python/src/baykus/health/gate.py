@@ -68,11 +68,35 @@ def _camera(flags: dict[str, bool], **values) -> dict:
     return {"state": on[0] if on else "ok", "flags": on, **values}
 
 
-def assess(f: dict[str, float | None], th: Thresholds) -> dict:
+def decide_gate(
+    rgb_lost: bool, ir_lost: bool, ir_noisy: bool, misaligned: bool
+) -> tuple[str, str | None]:
+    """(kapı, neden kodu); öncelik kayıp > gürültülü > hizasız, iki kanal birden kapanmaz."""
+    if rgb_lost and ir_lost:
+        return "none", "both_lost"
+    if rgb_lost:
+        return "rgb_off", "rgb_lost"
+    if ir_lost:
+        return "ir_off", "ir_lost"
+    if ir_noisy:
+        return "ir_off", "ir_noisy"
+    if misaligned:
+        return "ir_off", "misaligned"
+    return "none", None
+
+
+def assess(f: dict[str, float | None], th: Thresholds, r_min: float | None = None) -> dict:
+    """Özellikler → durumlar → kapı. `r_min` (Faz 3 kare kuralı) yalnız hizasızlık alarmını
+    kaldırabilir: `response < r_min` (ya da yanıt yok) ise kare hizasız sayılmaz. None = Faz 2."""
     rgb_lost = _below(f["rgb_std"], th.rgb_lost)
     ir_lost = _below(f["ir_std"], th.ir_lost)
     ir_noisy = not ir_lost and _above(f["ir_noise"], th.ir_noisy)
-    misaligned = not (rgb_lost or ir_lost) and _above(f["misalign_px"], th.misaligned)
+    response = f["misalign_response"]
+    misaligned = (
+        not (rgb_lost or ir_lost)
+        and _above(f["misalign_px"], th.misaligned)
+        and (r_min is None or _above(response, r_min))
+    )
     rgb = _camera(
         {
             "lost": rgb_lost,
@@ -90,27 +114,21 @@ def assess(f: dict[str, float | None], th: Thresholds) -> dict:
         noise=f["ir_noise"],
         blur=f["ir_blur"],
     )
-    if rgb_lost and ir_lost:
-        gate, why = "none", "both_lost"
-    elif rgb_lost:
-        gate, why = "rgb_off", "rgb_lost"
-    elif ir_lost:
-        gate, why = "ir_off", "ir_lost"
-    elif ir_noisy:
-        gate, why = "ir_off", "ir_noisy"
-    elif misaligned:
-        gate, why = "ir_off", "misaligned"
-    else:
-        gate, why = "none", None
+    gate, why = decide_gate(rgb_lost, ir_lost, ir_noisy, misaligned)
     return {
         "rgb": rgb,
         "ir": ir,
         "pair": {
             "misalign_px": f["misalign_px"],
-            "response": f["misalign_response"],
+            "dx_px": f.get("misalign_dx"),
+            "dy_px": f.get("misalign_dy"),
+            "response": response,
+            # zaman kuralı (baykus.health.temporal) `misaligned`'ı yeniden yazar; tek karede eşit
+            "misaligned_frame": misaligned,
             "misaligned": misaligned,
         },
         "gate": gate,
+        "reason_code": why,
         "reason": REASONS[why] if why else "",
     }
 
@@ -126,10 +144,10 @@ def apply_gate(bgr: np.ndarray, ir: np.ndarray, gate: str) -> tuple[np.ndarray, 
 
 
 def check_frame(
-    bgr: np.ndarray, ir: np.ndarray, th: Thresholds
+    bgr: np.ndarray, ir: np.ndarray, th: Thresholds, r_min: float | None = None
 ) -> tuple[np.ndarray, np.ndarray, dict]:
     """Özellikler → durumlar → kapı. `changed`: kapatılan kanalda sıfır olmayan piksel vardı."""
-    h = assess(frame_features(bgr, ir), th)
+    h = assess(frame_features(bgr, ir, vector=True), th, r_min)
     closed = {"ir_off": ir, "rgb_off": bgr}.get(h["gate"])
     h["changed"] = bool(closed is not None and closed.any())
     out_bgr, out_ir = apply_gate(bgr, ir, h["gate"])

@@ -67,24 +67,37 @@ def _window(w: int, h: int) -> np.ndarray:
     return cv2.createHanningWindow((w, h), cv2.CV_64F)
 
 
-def misalign(bgr: np.ndarray, ir: np.ndarray) -> tuple[float | None, float | None]:
-    """RGB ve IR kenar haritaları arasındaki kayma (tam çözünürlük pikseli) ve faz korelasyonu
-    tepe yanıtı. Kenar büyüklüğü kullanıldığı için termal kutup tersi sonucu değiştirmez.
-    Kameralardan biri sabitse (kayıp) (None, None)."""
+def misalign_vector(bgr: np.ndarray, ir: np.ndarray) -> tuple[float, float, float] | None:
+    """IR'nin RGB'ye göre kayma vektörü (dx sağa, dy aşağı; tam çözünürlük pikseli = yarı
+    çözünürlük × 2) ve faz korelasyonu tepe yanıtı. Kenar büyüklüğü kullanıldığı için termal
+    kutup tersi sonucu değiştirmez. Kameralardan biri sabitse (kayıp) None."""
     a, b = _edges(_gray(bgr)), _edges(ir)
     if pixel_std(a) == 0 or pixel_std(b) == 0:
-        return None, None
+        return None
     (dx, dy), response = cv2.phaseCorrelate(a, b, _window(a.shape[1], a.shape[0]))
-    px, r = 2.0 * math.hypot(dx, dy), float(response)
-    if not (math.isfinite(px) and math.isfinite(r)):
+    dx, dy, r = 2.0 * float(dx), 2.0 * float(dy), float(response)
+    if not all(math.isfinite(v) for v in (dx, dy, r)):
+        return None
+    return dx, dy, r
+
+
+def misalign(bgr: np.ndarray, ir: np.ndarray) -> tuple[float | None, float | None]:
+    """Kayma büyüklüğü ‖(dx, dy)‖ ve yanıt; kayıpta (None, None)."""
+    v = misalign_vector(bgr, ir)
+    if v is None:
         return None, None
-    return float(px), r
+    return math.hypot(v[0], v[1]), v[2]
 
 
-def frame_features(bgr: np.ndarray, ir: np.ndarray) -> dict[str, float | None]:
+def frame_features(
+    bgr: np.ndarray, ir: np.ndarray, vector: bool = False
+) -> dict[str, float | None]:
+    """`FEATURES` sözlüğü; `vector=True` iken ayrıca `misalign_dx`, `misalign_dy` (Faz 3 zaman
+    kuralı). `train_features.csv` biçimi değişmez (varsayılan False)."""
     g = _gray(bgr)
-    px, response = misalign(bgr, ir)
-    return {
+    v = misalign_vector(bgr, ir)
+    px, response = (None, None) if v is None else (math.hypot(v[0], v[1]), v[2])
+    f = {
         "rgb_std": pixel_std(g),
         "rgb_noise": noise_sigma(g),
         "rgb_blur": blur_score(g),
@@ -95,3 +108,6 @@ def frame_features(bgr: np.ndarray, ir: np.ndarray) -> dict[str, float | None]:
         "misalign_px": px,
         "misalign_response": response,
     }
+    if vector:
+        f["misalign_dx"], f["misalign_dy"] = (None, None) if v is None else (v[0], v[1])
+    return f

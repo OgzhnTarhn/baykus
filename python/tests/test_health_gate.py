@@ -74,7 +74,15 @@ def test_flags_in_priority_order():
 
 def test_misaligned_flag_in_pair():
     assert assess({**OK, "misalign_px": 14.0}, TH)["pair"]["misaligned"] is True
-    assert assess(OK, TH)["pair"] == {"misalign_px": 3.0, "response": 0.3, "misaligned": False}
+    assert assess(OK, TH)["pair"] == {
+        "misalign_px": 3.0,
+        "dx_px": None,
+        "dy_px": None,
+        "response": 0.3,
+        "misaligned_frame": False,
+        "misaligned": False,
+    }
+    assert assess(OK, TH)["reason_code"] is None
 
 
 def test_misalignment_not_judged_when_a_camera_is_lost():
