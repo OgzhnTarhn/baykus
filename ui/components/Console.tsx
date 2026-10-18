@@ -4,8 +4,12 @@
 // Ayarlar (conf, takip, kapı) bir sonraki kareden geçerli olur; oturum sayfa açılışında UUID.
 import { useCallback, useEffect, useState } from "react";
 
+import { AlarmList } from "@/components/AlarmList";
+import { GateBadge } from "@/components/GateBadge";
+import { HealthPanel, STRIP_LEN, type StripEntry } from "@/components/HealthPanel";
 import { Player, type FrameView, type View } from "@/components/Player";
 import { TopBar } from "@/components/TopBar";
+import { Alarms, type AlarmEvent, type AlarmId } from "@/lib/alarms";
 import {
   fetchSequences,
   frameUrl,
@@ -35,11 +39,26 @@ async function preload(src: string): Promise<void> {
 // Oturum kimliği ilk istekte üretilir (tarayıcıda; sunucu ön-render'ında rastgele değer yok).
 type Settings = Omit<DetectSettings, "session">;
 
-function makeConsole(onChange: (s: PlayerSnapshot<FrameView>) => void) {
+export type Monitor = { active: AlarmId[]; history: AlarmEvent[]; strip: StripEntry[] };
+const EMPTY_MONITOR: Monitor = { active: [], history: [], strip: [] };
+
+// Alarmlar ve durum şeridi motor oturumunu izler: oturum sıfırlanınca (ya da motor oturumu
+// kendiliğinden yeniden açınca, session_new) pencereler ve geçmiş temizlenir.
+function makeConsole(
+  onChange: (s: PlayerSnapshot<FrameView>) => void,
+  onMonitor: (m: Monitor) => void,
+) {
   let current: Settings = { conf: DEFAULT_CONF, track: true, gate: "auto" };
   let session: string | null = null;
   const sid = () => (session ??= newSessionId());
   const settings = { set: (v: Settings) => (current = v) };
+  const alarms = new Alarms();
+  let strip: StripEntry[] = [];
+  const clearMonitor = () => {
+    alarms.reset();
+    strip = [];
+    onMonitor(EMPTY_MONITOR);
+  };
   const player = createPlayer<FrameView>({
     detect: async (seq, frame) => {
       const rgbSrc = frameUrl(seq, frame, "rgb");
@@ -49,9 +68,18 @@ function makeConsole(onChange: (s: PlayerSnapshot<FrameView>) => void) {
         preload(rgbSrc),
         preload(irSrc),
       ]);
+      if (response.session_new) clearMonitor();
+      const h = response.health;
+      alarms.update(h, frame);
+      strip = [
+        ...strip,
+        { frame, rgb: h.rgb.state, ir: h.ir.state, misaligned: h.pair.misaligned },
+      ].slice(-STRIP_LEN);
+      onMonitor({ active: alarms.active(), history: alarms.history(), strip });
       return { seq, frame, rgbSrc, irSrc, response };
     },
     reset: () => postReset(sid()),
+    onReset: clearMonitor,
     sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
     now: () => performance.now(),
     onChange,
@@ -68,7 +96,8 @@ export function Console() {
   const [gate, setGate] = useState<Gate>("auto");
   const [view, setView] = useState<View>("both");
   const [snapState, setSnap] = useState<PlayerSnapshot<FrameView> | null>(null);
-  const [{ player, settings }] = useState(() => makeConsole(setSnap));
+  const [monitor, setMonitor] = useState<Monitor>(EMPTY_MONITOR);
+  const [{ player, settings }] = useState(() => makeConsole(setSnap, setMonitor));
   const snap = snapState ?? player.snapshot();
 
   useEffect(() => {
@@ -122,6 +151,7 @@ export function Console() {
 
   const current = sequences.find((s) => s.name === seq);
   const size: [number, number] = current?.size ?? [640, 512];
+  const health = snap.result?.response.health ?? null;
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -149,6 +179,7 @@ export function Console() {
           </p>
         ) : (
           <Player
+            badge={<GateBadge health={health} />}
             snap={snap}
             size={size}
             view={view}
@@ -160,7 +191,10 @@ export function Console() {
             onSpeed={(v) => player.setSpeed(v)}
           />
         )}
-        <aside className="flex flex-col gap-4" aria-label="Durum" />
+        <aside className="flex flex-col gap-4" aria-label="Durum">
+          <AlarmList active={monitor.active} history={monitor.history} />
+          <HealthPanel health={health} strip={monitor.strip} />
+        </aside>
       </main>
     </div>
   );

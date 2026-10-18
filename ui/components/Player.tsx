@@ -1,5 +1,7 @@
 // Oynatıcı (FR-U1, FR-U2): oynat / durdur / kare kare / konum / hız; RGB, IR ya da yan yana görünüm.
 // Görüntü ve kutular aynı yanıttan gelir (kare önce yüklenir, sonra birlikte gösterilir).
+import type { ReactNode } from "react";
+
 import type { DetectResponse } from "@/lib/client";
 import type { PlayerSnapshot } from "@/lib/player";
 import { Overlay } from "@/components/Overlay";
@@ -58,6 +60,7 @@ function Pane({
 }
 
 export type PlayerProps = {
+  badge?: ReactNode;
   snap: PlayerSnapshot<FrameView>;
   size: [number, number];
   view: View;
@@ -76,6 +79,7 @@ export function Player(p: PlayerProps) {
   const total = snap.frames.length;
   return (
     <section className="flex min-w-0 flex-col gap-3" aria-label="Oynatıcı">
+      <div className="flex min-h-6 items-center gap-2">{p.badge}</div>
       <div className="flex flex-col gap-3 lg:flex-row">
         {p.view !== "ir" && (
           <Pane title="RGB" color="var(--rgb)" src={fv?.rgbSrc ?? null} fv={fv} size={p.size} />
