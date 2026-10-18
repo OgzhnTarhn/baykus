@@ -2,7 +2,9 @@
 
 Yalnız M3OT geliştirme bölümünden (val; test asla). Sınır kuralı (üretici denetler): her sağlık
 özelliği eşiğinden göreli ≥ 1e-3 uzak; `misalign_px` eşikten ≥ 5 px; `misalign_px ≥ t − 5` ise
-`|response − r_min| ≥ 0,2`; klipte `S` karelerinde `|‖vᵢ − v̄‖ − 3| ≥ 2`. Tutmayan tek kare
+`|response − r_min| ≥ 0,2`; klipte `S` karelerinde `|‖vᵢ − v̄‖ − 3| ≥ 2`. Yanıt `r_min − 0,2`'nin
+altındaysa kayma kararı (`misaligned_frame`) hiçbir `misalign_px`'te değişmez: o karede kayma payı
+aranmaz (karar güvenliği; M3OT'ta yanıt hep düşük, 2026-10-18 deney günlüğü). Tutmayan tek kare
 yerine sonraki kare, tutmayan klip yerine bir sonraki başlangıç karesi seçilir. Ham skorlar için
 eleme yok (Kabul 1'in satır düzeyindeki sınır kuralı). Seçim yalnız eşlik testi içindir.
 
@@ -68,6 +70,8 @@ def check_margins(h: dict, gm: GateModel, th: Thresholds) -> list[str]:
         if v is not None and abs(v - t) < REL_MARGIN * abs(t)
     ]
     px, resp = pair["misalign_px"], pair["response"]
+    if resp is not None and resp + RESPONSE_MARGIN < gm.r_min:
+        return out  # kare kuralı kaymayı her durumda reddeder: px kararı değiştiremez
     if px is not None and abs(px - th.misaligned) < PX_MARGIN:
         out.append(f"misalign_px {px:.3f} eşiğe ({th.misaligned:.3f}) {PX_MARGIN:g} px'ten yakın")
     if (

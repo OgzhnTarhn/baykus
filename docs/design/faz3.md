@@ -456,6 +456,10 @@ Tek sayfa, spec §17 düzeni + Faz 3 ekleri. Kullanıcının günlük yığını
   `|‖vᵢ − v̄‖ − 3| ≥ 2 px` (iki taraftaki 0,5 px'lik bileşen farkının vektör ve ortancada en kötü toplamı
   ≈ 1,41 px). Tek karede tutmayan kare seçilmez, bir sonraki eşit aralıklı kareye geçilir; klipte başlangıç
   karesi kaydırılır. Seçim yalnız val karelerinde ve yalnız eşlik testi için (model ya da eşik seçimi değil).
+  - **Karar güvenliği (2026-10-18, fikstür üretiminde):** yanıt `r_min − 0,2`'nin altındaysa kare kuralı
+    kaymayı her `misalign_px`'te reddeder; o karede `misalign_px` payı aranmaz (pay 10 × tolerans kalır).
+    Gerekçe: M3OT val'de yanıt hep düşük (p95 0,18), doğal kayma kareden kareye eşik çevresinde dolaşıyor;
+    kelimesi kelimesine kuralla 15 karelik hiçbir klip penceresi geçmiyordu (0 / 1172), bu ayrıntıyla 9 geçiyor.
 - **Beklenen çıktılar** Python'dan (`fixtures/expected/*.json`): tespitler (ham, kalibre), ham ORT çıktısı
   `[1, 300, 6]` (fikstür başına 7 KB), sağlık sözlüğü ve letterbox tensörünün **sha256**'sı (tensör repoya
   girmez; 4 × 640 × 640 float32 = 6,5 MB).

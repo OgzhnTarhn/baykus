@@ -131,3 +131,12 @@ def test_generate_refuses_test_split(tmp_path):
 
 def test_calib_tables_from_engine_ref_models():
     assert CALIB_X.dtype == np.float64 and CALIB_Y.dtype == np.float64
+
+
+def test_misalign_margin_irrelevant_when_response_far_below_r_min():
+    # yanıt r_min − 0,2'nin altında: kayma ne olursa olsun karar "hizalı", sınır payı gerekmez
+    low = _h(misalign_px=TH.misaligned + 0.5, misalign_response=GM.r_min - 0.2 - 1e-6)
+    assert low["pair"]["misaligned_frame"] is False
+    assert check_margins(low, GM, TH) == []
+    edge = _h(misalign_px=TH.misaligned + 0.5, misalign_response=GM.r_min - 0.2 + 1e-3)
+    assert any("misalign_px" in s for s in check_margins(edge, GM, TH))
