@@ -98,12 +98,16 @@ class Pipeline:
         health["applied"] = gate == "auto" and health["gate"] != "none"
         if health["applied"]:
             bgr, ir = apply_gate(bgr, ir, health["gate"])
+        return {"health": health, **self.detect(bgr, ir, floor)}
+
+    def detect(self, bgr: np.ndarray, ir: np.ndarray, floor: float = 0.1) -> dict:
+        """Çözülmüş (ve gerekirse kapılanmış) çiftten tespit: 4 kanal → letterbox → ORT."""
+        m = self.models
         x, lb = preprocess(stack_rgbt(bgr, ir), imgsz=getattr(self.backend, "imgsz", 640))
         raw = self.backend.infer(x)
         dets = decode_rows(raw, lb, floor, (m.calib_x, m.calib_y))
         return {
             "dets_all": order(dets),
-            "health": health,
             "tensor_sha256": hashlib.sha256(x.tobytes()).hexdigest(),
             "raw": raw,
             "lb": lb,

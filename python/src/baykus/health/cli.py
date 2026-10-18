@@ -8,6 +8,7 @@ report  — results/health/*.json → docs/health.md + güvenilirlik diyagramı.
 guard   — Faz 3 kare kuralı: train'de r_min seçimi (gate_model.json).
 guard-files — val keşfi için Drive'dan inecek dosyaların listesi.
 guard-val — val keşfi: Faz 2 kapılı ve taban tahminlerinin kare kuralıyla birleştirilmesi.
+m3ot    — M3OT dizilerinde sağlık protokolü (V: geliştirme bölümü, demo dizisi; T: yalnız rapor).
 """
 
 from __future__ import annotations
@@ -251,6 +252,61 @@ def _cmd_guard_val(a: argparse.Namespace) -> int:
     return 0
 
 
+TEST_FLAG = "--i-know-this-is-test"
+
+
+def _cmd_m3ot(a: argparse.Namespace) -> int:
+    from baykus.engine_ref.models import load_models
+    from baykus.health.m3ot import CONDITIONS, RULES, combine, pick_demo, run_sequence
+
+    if a.test and not a.i_know_this_is_test:
+        raise ValueError(f"M3OT test yalnız son ölçümde {TEST_FLAG} ile ölçülür")
+    if a.test and a.pick_demo:
+        raise ValueError("demo dizisi test'te seçilmez (--pick-demo yalnız --dev)")
+    cfg_path = Path(a.config)
+    if a.dev:
+        cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+        data = Path(a.data or "../data/m3ot_dev")
+        split, seqs = cfg["split"], list(cfg["sequences"])
+    else:
+        data = Path(a.data or "../data/m3ot_test")
+        split, seqs = "test", sorted(p.name for p in (data / "sequences").iterdir())
+    models = load_models(Path(a.models), Path(a.manifest) if a.manifest else None)
+    results = []
+    for s in seqs:
+        r = run_sequence(data / "sequences" / s, data / "labels", models, keep_coco=True)
+        if r["split"] != split:
+            raise ValueError(f"{s}: index.json split {r['split']!r}, beklenen {split!r}")
+        results.append(r)
+        t = r["rules"]["frame+temporal"]
+        print(
+            f"[{s}] kare+zaman: temiz hizasız {t['clean']['alarm_rates']['misaligned']:.4f} · "
+            f"misalign-20 {t['misalign-20']['alarm_rates']['misaligned']:.4f} · "
+            f"gecikme {t['misalign-20@K']['delay']} · demo ölçütü {_mark(r['demo']['passed'])}",
+            flush=True,
+        )
+    rec = {
+        "protocol": "V" if a.dev else "T",
+        "split": split,
+        "label_set": "ir",
+        "class_agnostic": True,
+        "rules": list(RULES),
+        "conditions": list(CONDITIONS),
+        "r_min": models.gate.r_min,
+        "gate_model_sha256": models.gate.sha256,
+        "thresholds_sha256": models.thresholds.sha256,
+        "combined": combine(results, data / "labels", split),
+        "sequences": [{k: v for k, v in r.items() if not k.startswith("_")} for r in results],
+    }
+    if a.pick_demo:
+        rec["demo_choice"] = pick_demo(results, cfg_path)
+        print(f"demo dizisi: {rec['demo_choice']['demo']} (ölçüt {rec['demo_choice']})")
+    rec["git_commit"] = git_info()["git_commit"]
+    rec["created_at"] = iso(utc_now())
+    print(write_json(Path(a.out), rec))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="baykus-health")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -325,6 +381,20 @@ def build_parser() -> argparse.ArgumentParser:
     gv.add_argument("--seed", type=int, default=42)
     gv.add_argument("--workers", type=int, default=1)
     gv.set_defaults(func=_cmd_guard_val)
+    m = sub.add_parser("m3ot", help="M3OT sağlık protokolü (dizi başına, üç kural)")
+    which = m.add_mutually_exclusive_group(required=True)
+    which.add_argument(
+        "--dev", action="store_true", help="geliştirme bölümü (configs/m3ot_dev.json)"
+    )
+    which.add_argument("--test", action="store_true", help="M3OT test (yalnız son ölçüm)")
+    m.add_argument(TEST_FLAG, action="store_true")
+    m.add_argument("--models", required=True, help="model dizini")
+    m.add_argument("--manifest", default=None, help="configs/engine/models.json")
+    m.add_argument("--config", default="../configs/m3ot_dev.json")
+    m.add_argument("--data", default=None, help="paket kökü (sequences/, labels/)")
+    m.add_argument("--out", required=True)
+    m.add_argument("--pick-demo", action="store_true", help="demo dizisini config'e yaz (--dev)")
+    m.set_defaults(func=_cmd_m3ot)
     return p
 
 
