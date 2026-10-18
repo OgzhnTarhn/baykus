@@ -23,4 +23,5 @@ repos:
       # CI ile aynı sürüm (ci.yml engine işi); yalnız motor kaynakları
       - id: clang-format
         files: ^engine/
+        exclude: ^engine/third_party/  # dış kod değiştirilmeden kalır
         types_or: [c++]
