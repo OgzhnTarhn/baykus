@@ -375,3 +375,20 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
   - Kaldırılan alarm: temiz 50 (60 alarmın 50'si), karartma 57-68, bulanık 52-60, misalign-20 168, misalign-40 191 kare.
   - misalign-20 yakalama: tümü %83,6, **karanlık %58,8**, aydınlık %93,4 (misalign-40: %86,7 · %61,4 · %96,6). Tasarımda yazılan bilinen risk ölçüldü: gece gerçek kaymada da yanıt düşük, kare kuralı o alarmı da iptal ediyor.
 - **Yorum:** kare kuralı Faz 2'nin ana sorununu (temiz val'de %4 yanlış alarm, −3,1 puan) val'de gideriyor; bedeli karanlıkta gerçek kaymanın ≈ %40'ını kaçırmak. Zaman kuralı tek karelik DroneVehicle'da ölçülemez (M3OT videolarında, Görev 12). Ürün varsayılanı değişmez: `gate=advise` (tasarım §4.2; testte doğrulanmadı).
+
+## 2026-10-18 · F3 · M3OT sağlık kontrolü (V, geliştirme bölümü) ve demo dizisi
+- **Kurulum:** tasarım §4.7 protokolü, `baykus-health m3ot --dev --pick-demo`, laptop CPU, Python referans pipeline'ı (ONNX FP32, `models/`, manifest denetimli). Val `1_08`, `2_08` (600'er kare); koşullar `clean`, `misalign-20`, `misalign-20@K` (K = 300), `noise-20`, `drop_ir`; üç kural; AP50 IR etiketiyle, sınıfsız, ham ≥ 0,001. Kaynak `results/health/m3ot_dev_health.json`. **Yalnız raporlanır.**
+- **Sonuç (birleşik, 1200 kare):**
+
+| Kural | temiz hizasız alarm | misalign-20 alarm | gecikme (@K) | temiz AP50 auto / off | noise-20 AP50 auto / off |
+|---|---|---|---|---|---|
+| Faz 2 | %39,7 | %74,8 | 1 / 0 kare (1_08 / 2_08; 2_08'de K−1'de alarm zaten açık) | 0,148 / 0,396 | 0,001 / 0,162 |
+| kare (`r_min`) | %0 | %0 | yok | 0,396 / 0,396 | 0,001 / 0,162 |
+| kare + zaman | %0 | %0 | yok | 0,396 / 0,396 | 0,001 / 0,162 |
+
+  - Kayıp ve gürültü kuralları M3OT'ta da çalışıyor: `drop_ir` IR kayıp alarmı %99,7, `noise-20` IR gürültülü alarmı %99,7 (pencerenin ilk iki karesi hariç).
+  - `misalign-20` E3c'yi M3OT'ta çökertiyor (AP50 0,396 → 0,001); kapı kararı yok, AP aynı.
+- **Neden (kare örnekleri, laptop):** M3OT'ta temiz karelerde ölçülen RGB-IR kayması büyük ve değişken (1_08'den 5 kare: 4-44 px), faz korelasyonu yanıtı hep düşük (0,03-0,17; DroneVehicle'da temiz ortanca 0,56), kareler aydınlık (parlaklık ≈ 107). `r_min` = 0,245 bu yüzden bütün hizasızlık alarmlarını kaldırıyor; sentetik kayma vektörde doğru görünüyor (dx her karede +20) ama alarm üretmiyor. Faz 2 kuralı ise temiz karelerin %40'ında yanlış alarm veriyor.
+- **`gate=auto` AP'si:** kapı IR'yi kapatınca AP50 ≈ 0 (temizde Faz 2 kuralıyla 0,396 → 0,148, noise-20'de 0,162 → 0,001). IR etiketiyle ölçüldüğü ve M3OT'ta RGB-IR etiketleri ≈ 12 px'lik kutular ölçeğinde hizasız olduğu için (`docs/data/m3ot.md`) RGB'ye kalan tespitler IR etiketiyle eşleşmez; bu sütun kapının kalitesini değil etiket hizasını ölçer.
+- **Demo ölçütü** (kare + zaman, ölçümden önce sabit): iki dizide de temiz ≤ %2 ✅, misalign-20 ≥ %90 ❌, gecikme ≤ 10 ❌. Kural (tasarım §4.6): hiçbiri tutmazsa ad sırasıyla ilk dizi + sınırlama notu → **demo `1_08`** (`configs/m3ot_dev.json`). Sınırlama: M3OT demosunda hizasızlık alarmı (IR kaydırma arıza simülasyonu) görünmez; kayıp ve gürültü alarmları görünür. README ve `docs/system.md`'de böyle yazılacak.
+- **Yorum:** eşikler DroneVehicle'da seçildi; M3OT'ta hizasızlık kestirimi (kenar faz korelasyonu) bu iki dizide güvenilir değil. Tasarım bunu öngörmüştü ("demo hikâyesi ölçülmeden yazılmaz"); eşik ya da kural M3OT'a göre değiştirilmez (test'e sızma olmasın, (T) yalnız raporlanır).
