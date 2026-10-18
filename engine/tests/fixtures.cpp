@@ -50,6 +50,18 @@ std::string read_file(const std::filesystem::path& path) {
 
 json read_json(const std::filesystem::path& path) { return json::parse(read_file(path)); }
 
+std::filesystem::path raw_reference_path() { return env_path("BAYKUS_RAW_REF", ""); }
+
+json raw_reference(const std::string& name, const json& expected) {
+  const auto p = raw_reference_path();
+  if (p.empty()) return expected.at("modules").at("raw");
+  return read_json(p).at("frames").at(name);
+}
+
+std::string raw_reference_source() {
+  return raw_reference_path().empty() ? "fixture" : "same_machine";
+}
+
 json load_index() { return read_json(fixtures_root() / "index.json"); }
 
 std::vector<json> fixtures_of(const std::string& kind) {

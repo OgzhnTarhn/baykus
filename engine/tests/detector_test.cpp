@@ -1,4 +1,5 @@
-// Kabul 1 a ve b (modül düzeyi): `modules` bloğu (kapı off, özgün pikseller).
+// Kabul 1 a ve b (modül düzeyi): `modules` bloğu (kapı off, özgün pikseller). Ham referans
+// BAYKUS_RAW_REF ile aynı makinede üretilmiş dosyadan alınabilir (CI; fixtures.hpp).
 #include <gtest/gtest.h>
 
 #include <string>
@@ -75,10 +76,12 @@ class DetectorParity : public ::testing::Test {
 };
 
 TEST_F(DetectorParity, RawOutputParity) {
+  if (!bt::raw_reference_path().empty()) BAYKUS_REQUIRE_FILES({bt::raw_reference_path()});
   baykus::Detector det((bt::models_root() / "e3c.onnx").string());
   for (const auto& f : run_frames(det)) {
     SCOPED_TRACE(f.name);
-    const auto r = bp::compare_raw(raw_rows(f.expected.at("modules").at("raw")), raw_rows(f.out));
+    const auto r =
+        bp::compare_raw(raw_rows(bt::raw_reference(f.name, f.expected)), raw_rows(f.out));
     EXPECT_TRUE(r.ok) << (r.errors.empty() ? "" : r.errors.front());
   }
 }

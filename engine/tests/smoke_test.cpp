@@ -1,5 +1,8 @@
 #include <gtest/gtest.h>
 
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
 #include <string>
 
 #include "baykus/version.hpp"
@@ -29,4 +32,18 @@ TEST(Models, ManifestFilesPresent) {
   BAYKUS_REQUIRE_FILES(
       {m / "e3c.onnx", m / "thresholds.json", m / "calibration.json", m / "gate_model.json"});
   SUCCEED();
+}
+
+TEST(Fixtures, RawReferenceOverride) {
+  namespace bt = baykus::test;
+  const auto p = std::filesystem::temp_directory_path() / "baykus_raw_ref.json";
+  std::ofstream(p) << R"({"frames": {"a": [[1, 2, 3, 4, 5, 6]]}})";
+  const bt::json fixture = {{"modules", {{"raw", {{0}}}}}};
+  ::unsetenv("BAYKUS_RAW_REF");
+  EXPECT_EQ(bt::raw_reference("a", fixture), fixture.at("modules").at("raw"));
+  EXPECT_EQ(bt::raw_reference_source(), "fixture");
+  ::setenv("BAYKUS_RAW_REF", p.c_str(), 1);
+  EXPECT_EQ(bt::raw_reference("a", fixture), bt::json::parse("[[1, 2, 3, 4, 5, 6]]"));
+  EXPECT_EQ(bt::raw_reference_source(), "same_machine");
+  ::unsetenv("BAYKUS_RAW_REF");
 }

@@ -32,6 +32,12 @@ std::string read_file(const std::filesystem::path& path);
 json read_json(const std::filesystem::path& path);
 std::string sha256_hex(const void* data, std::size_t size);
 
+// Kabul 1 a ham referansı: BAYKUS_RAW_REF verilmişse o dosyanın `frames[name]`'i (Python
+// `baykus-engine raw-ref`, aynı makinede üretilmiş; CI), yoksa fikstürün `modules.raw`'ı (laptop).
+std::filesystem::path raw_reference_path();
+json raw_reference(const std::string& name, const json& expected);
+std::string raw_reference_source();
+
 // Python `asdict(Det)` listesi (index, cls_id, score_raw, score, box) → Det.
 std::vector<Det> dets_from_json(const json& j);
 

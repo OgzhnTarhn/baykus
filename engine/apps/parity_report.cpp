@@ -1,6 +1,7 @@
 // Kabul 1-2 kanıt dosyası: her kare fikstüründe ham çıktı (a), üç katman (b), letterbox (Kabul 2)
 // karşılaştırmasının sayıları → results/engine/parity_detect.json (Faz 3 plan Görev 19).
-// Kullanım: baykus_parity_report <çıktı.json>   (BAYKUS_FIXTURES, BAYKUS_MODELS ortamdan)
+// Kullanım: baykus_parity_report <çıktı.json>   (BAYKUS_FIXTURES, BAYKUS_MODELS ortamdan;
+// BAYKUS_RAW_REF verilirse ham referans aynı makinede üretilmiş dosyadan, fixtures.hpp)
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -62,7 +63,7 @@ int main(int argc, char** argv) {
     const auto out = det.infer(x);
 
     std::vector<bp::Row> py_raw, cpp_raw(baykus::kRows);
-    for (const auto& r : mod.at("raw")) {
+    for (const auto& r : bt::raw_reference(e.at("name").get<std::string>(), exp)) {
       bp::Row row{};
       for (int k = 0; k < baykus::kCols; ++k) row[k] = static_cast<float>(r.at(k).get<double>());
       py_raw.push_back(row);
@@ -102,6 +103,7 @@ int main(int argc, char** argv) {
       {"passed", all_ok},
       {"n_frames", frames.size()},
       {"display_boundary_raw", display_boundary},
+      {"raw_reference", bt::raw_reference_source()},
       {"opencv_version", baykus::opencv_version()},
       {"onnxruntime_version", baykus::onnxruntime_version()},
       {"tolerances",
