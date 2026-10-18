@@ -49,9 +49,13 @@ jobs:
       - name: evidence
         run: |
           mkdir -p evidence
-          docker run --rm -e BAYKUS_MODELS=/models -e BAYKUS_FIXTURES=/fixtures \
-            -v "$PWD/models:/models:ro" -v "$PWD/fixtures:/fixtures:ro" -v "$PWD/evidence:/out" \
-            baykus-engine-build /build/bin/baykus_parity_report /out/parity_detect.json
+          for app in "parity_report parity_detect" "parity_health parity_health"; do
+            set -- $app
+            docker run --rm -e BAYKUS_MODELS=/models -e BAYKUS_FIXTURES=/fixtures \
+              -e BAYKUS_CONFIGS=/configs -v "$PWD/models:/models:ro" \
+              -v "$PWD/fixtures:/fixtures:ro" -v "$PWD/configs:/configs:ro" \
+              -v "$PWD/evidence:/out" baykus-engine-build "/build/bin/baykus_$1" "/out/$2.json"
+          done
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: engine-evidence
