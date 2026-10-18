@@ -44,7 +44,7 @@ RUN curl -fsSL -o ort.tgz \
 FROM deps AS build
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
- && apt-get install -y --no-install-recommends libgtest-dev libeigen3-dev nlohmann-json3-dev libssl-dev \
+ && apt-get install -y --no-install-recommends libgtest-dev libeigen3-dev nlohmann-json3-dev libssl-dev zlib1g-dev \
  && rm -rf /var/lib/apt/lists/*
 COPY engine /src/engine
 # Sanitizer'lı derlemede ORT'nin kendi sızıntısı bastırılır; sanitizer'sız derlemede etkisiz
@@ -57,7 +57,7 @@ RUN cmake -S /src/engine -B /build -G Ninja -DCMAKE_BUILD_TYPE=Release \
 FROM ${UBUNTU} AS runtime
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
- && apt-get install -y --no-install-recommends libssl3t64 \
+ && apt-get install -y --no-install-recommends libssl3t64 zlib1g \
  && rm -rf /var/lib/apt/lists/* \
  && useradd --system --no-create-home baykus
 COPY --from=build /opt/opencv/lib/*.so* /usr/local/lib/

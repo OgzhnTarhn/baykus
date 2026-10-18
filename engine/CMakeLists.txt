@@ -14,6 +14,7 @@ find_package(Eigen3 REQUIRED NO_MODULE)
 find_package(nlohmann_json REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(GTest REQUIRED)
+find_package(ZLIB REQUIRED)
 
 find_path(ORT_INCLUDE_DIR onnxruntime_cxx_api.h PATHS /opt/onnxruntime/include REQUIRED)
 find_library(ORT_LIBRARY onnxruntime PATHS /opt/onnxruntime/lib REQUIRED)
@@ -49,12 +50,13 @@ add_library(baykus_core STATIC
   src/pipeline.cpp
   src/preprocess.cpp
   src/temporal.cpp
+  src/tracker.cpp
   src/version.cpp)
 target_include_directories(baykus_core PUBLIC include)
 target_link_libraries(baykus_core
   PUBLIC ${OpenCV_LIBS} onnxruntime::onnxruntime Eigen3::Eigen nlohmann_json::nlohmann_json
          OpenSSL::Crypto
-  PRIVATE baykus_warnings baykus_lsap)
+  PRIVATE baykus_warnings baykus_lsap ZLIB::ZLIB)
 
 add_executable(baykus_buildinfo apps/buildinfo.cpp)
 target_link_libraries(baykus_buildinfo PRIVATE baykus_core baykus_warnings)
@@ -76,7 +78,8 @@ add_executable(baykus_tests
   tests/pipeline_test.cpp
   tests/clip_test.cpp
   tests/lsap_test.cpp
-  tests/kalman_test.cpp)
+  tests/kalman_test.cpp
+  tests/tracker_test.cpp)
 target_link_libraries(baykus_tests PRIVATE baykus_test_support GTest::gtest_main baykus_warnings)
 include(GoogleTest)
 gtest_discover_tests(baykus_tests DISCOVERY_MODE PRE_TEST)

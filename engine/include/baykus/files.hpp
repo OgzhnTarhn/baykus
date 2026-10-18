@@ -12,4 +12,8 @@ std::string read_bytes(const std::string& path);
 std::string sha256_hex(const void* data, std::size_t size);
 std::string sha256_hex(const std::string& data);
 
+// gzip dosyası (Python `gzip`) → açılmış baytlar; bozuk ya da açılamayan dosya std::runtime_error.
+std::string read_gzip(const std::string& path);
+void write_gzip(const std::string& path, const std::string& data);
+
 }  // namespace baykus

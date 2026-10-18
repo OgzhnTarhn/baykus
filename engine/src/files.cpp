@@ -1,6 +1,7 @@
 #include "baykus/files.hpp"
 
 #include <openssl/evp.h>
+#include <zlib.h>
 
 #include <fstream>
 #include <iomanip>
@@ -30,5 +31,27 @@ std::string sha256_hex(const void* data, std::size_t size) {
 }
 
 std::string sha256_hex(const std::string& data) { return sha256_hex(data.data(), data.size()); }
+
+std::string read_gzip(const std::string& path) {
+  gzFile f = gzopen(path.c_str(), "rb");
+  if (f == nullptr) throw std::runtime_error("açılamadı: " + path);
+  std::string out;
+  char buf[1 << 16];
+  int n = 0;
+  while ((n = gzread(f, buf, sizeof(buf))) > 0) out.append(buf, static_cast<std::size_t>(n));
+  int err = Z_OK;
+  const std::string msg = n < 0 ? gzerror(f, &err) : "";
+  gzclose(f);
+  if (n < 0) throw std::runtime_error("gzip okunamadı: " + path + " (" + msg + ")");
+  return out;
+}
+
+void write_gzip(const std::string& path, const std::string& data) {
+  gzFile f = gzopen(path.c_str(), "wb");
+  if (f == nullptr) throw std::runtime_error("yazılamadı: " + path);
+  const bool ok = data.empty() || gzwrite(f, data.data(), static_cast<unsigned>(data.size())) ==
+                                      static_cast<int>(data.size());
+  if (gzclose(f) != Z_OK || !ok) throw std::runtime_error("gzip yazılamadı: " + path);
+}
 
 }  // namespace baykus
