@@ -47,3 +47,11 @@ TEST(Fixtures, RawReferenceOverride) {
   EXPECT_EQ(bt::raw_reference_source(), "same_machine");
   ::unsetenv("BAYKUS_RAW_REF");
 }
+
+// NFR-1 (kapalı ağ): ONNX Runtime 1.30 telemetrisi HTTPS ile gönderim dener; imajda kapalı olmalı
+// (ORT ortamı kurulmadan önce okunur, bu yüzden Dockerfile ENV).
+TEST(Offline, OrtTelemetryDisabledInImage) {
+  const char* v = std::getenv("ORT_DISABLE_TELEMETRY");
+  ASSERT_NE(v, nullptr);
+  EXPECT_STREQ(v, "1");
+}

@@ -17,11 +17,17 @@ Ort::SessionOptions options(int threads) {
   return opts;
 }
 
+// NFR-1: telemetri olayları kapalı (imajda ayrıca ORT_DISABLE_TELEMETRY=1; ortam kurulurken okunur)
+Ort::Env make_env() {
+  Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "baykus");
+  env.DisableTelemetryEvents();
+  return env;
+}
+
 }  // namespace
 
 Detector::Detector(const std::string& onnx_path, int threads)
-    : env_(ORT_LOGGING_LEVEL_WARNING, "baykus"),
-      session_(env_, onnx_path.c_str(), options(threads)) {
+    : env_(make_env()), session_(env_, onnx_path.c_str(), options(threads)) {
   Ort::AllocatorWithDefaultOptions alloc;
   input_name_ = session_.GetInputNameAllocated(0, alloc).get();
   output_name_ = session_.GetOutputNameAllocated(0, alloc).get();

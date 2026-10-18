@@ -43,6 +43,8 @@ RUN curl -fsSL -o ort.tgz \
 
 FROM deps AS build
 ARG DEBIAN_FRONTEND=noninteractive
+# NFR-1: ONNX Runtime telemetrisi (HTTPS gönderim denemesi) kapalı; ORT ortamı kurulmadan okunur
+ENV ORT_DISABLE_TELEMETRY=1
 RUN apt-get update \
  && apt-get install -y --no-install-recommends libgtest-dev libeigen3-dev nlohmann-json3-dev libssl-dev zlib1g-dev \
  && rm -rf /var/lib/apt/lists/*
@@ -56,6 +58,7 @@ RUN cmake -S /src/engine -B /build -G Ninja -DCMAKE_BUILD_TYPE=Release \
 
 FROM ${UBUNTU} AS runtime
 ARG DEBIAN_FRONTEND=noninteractive
+ENV ORT_DISABLE_TELEMETRY=1
 RUN apt-get update \
  && apt-get install -y --no-install-recommends libssl3t64 zlib1g \
  && rm -rf /var/lib/apt/lists/* \
