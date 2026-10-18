@@ -1,0 +1,851 @@
+{
+  "display_boundary_raw": 0.2533212900161743,
+  "frames": [
+    {
+      "layers": {
+        "display": {
+          "compared": 0,
+          "cpp_rows": 0,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 0,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "eval": {
+          "compared": 12,
+          "cpp_rows": 12,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 12,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "track": {
+          "compared": 1,
+          "cpp_rows": 1,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 1,
+          "ratio": 1.0,
+          "swaps": 0
+        }
+      },
+      "letterbox_sha_equal": true,
+      "name": "1_08_000061",
+      "ok": true,
+      "raw": {
+        "errors": [],
+        "max_diff": 0.0,
+        "ok": true,
+        "swaps": 0
+      }
+    },
+    {
+      "layers": {
+        "display": {
+          "compared": 3,
+          "cpp_rows": 3,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 3,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "eval": {
+          "compared": 35,
+          "cpp_rows": 35,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 35,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "track": {
+          "compared": 3,
+          "cpp_rows": 3,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 3,
+          "ratio": 1.0,
+          "swaps": 0
+        }
+      },
+      "letterbox_sha_equal": true,
+      "name": "1_08_000181",
+      "ok": true,
+      "raw": {
+        "errors": [],
+        "max_diff": 0.0,
+        "ok": true,
+        "swaps": 0
+      }
+    },
+    {
+      "layers": {
+        "display": {
+          "compared": 10,
+          "cpp_rows": 10,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 10,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "eval": {
+          "compared": 55,
+          "cpp_rows": 55,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 55,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "track": {
+          "compared": 15,
+          "cpp_rows": 15,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 15,
+          "ratio": 1.0,
+          "swaps": 0
+        }
+      },
+      "letterbox_sha_equal": true,
+      "name": "1_08_000301",
+      "ok": true,
+      "raw": {
+        "errors": [],
+        "max_diff": 0.0,
+        "ok": true,
+        "swaps": 0
+      }
+    },
+    {
+      "layers": {
+        "display": {
+          "compared": 1,
+          "cpp_rows": 1,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 1,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "eval": {
+          "compared": 27,
+          "cpp_rows": 27,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 27,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "track": {
+          "compared": 5,
+          "cpp_rows": 5,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 5,
+          "ratio": 1.0,
+          "swaps": 0
+        }
+      },
+      "letterbox_sha_equal": true,
+      "name": "1_08_000421",
+      "ok": true,
+      "raw": {
+        "errors": [],
+        "max_diff": 0.0,
+        "ok": true,
+        "swaps": 0
+      }
+    },
+    {
+      "layers": {
+        "display": {
+          "compared": 3,
+          "cpp_rows": 3,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 3,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "eval": {
+          "compared": 10,
+          "cpp_rows": 10,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 10,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "track": {
+          "compared": 3,
+          "cpp_rows": 3,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 3,
+          "ratio": 1.0,
+          "swaps": 0
+        }
+      },
+      "letterbox_sha_equal": true,
+      "name": "1_08_000542",
+      "ok": true,
+      "raw": {
+        "errors": [],
+        "max_diff": 0.0,
+        "ok": true,
+        "swaps": 0
+      }
+    },
+    {
+      "layers": {
+        "display": {
+          "compared": 1,
+          "cpp_rows": 1,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 1,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "eval": {
+          "compared": 33,
+          "cpp_rows": 33,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 33,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "track": {
+          "compared": 1,
+          "cpp_rows": 1,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 1,
+          "ratio": 1.0,
+          "swaps": 0
+        }
+      },
+      "letterbox_sha_equal": true,
+      "name": "2_08_000061",
+      "ok": true,
+      "raw": {
+        "errors": [],
+        "max_diff": 0.0,
+        "ok": true,
+        "swaps": 0
+      }
+    },
+    {
+      "layers": {
+        "display": {
+          "compared": 10,
+          "cpp_rows": 10,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 10,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "eval": {
+          "compared": 92,
+          "cpp_rows": 92,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 92,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "track": {
+          "compared": 12,
+          "cpp_rows": 12,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 12,
+          "ratio": 1.0,
+          "swaps": 0
+        }
+      },
+      "letterbox_sha_equal": true,
+      "name": "2_08_000187",
+      "ok": true,
+      "raw": {
+        "errors": [],
+        "max_diff": 0.0,
+        "ok": true,
+        "swaps": 0
+      }
+    },
+    {
+      "layers": {
+        "display": {
+          "compared": 11,
+          "cpp_rows": 11,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 11,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "eval": {
+          "compared": 55,
+          "cpp_rows": 55,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 55,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "track": {
+          "compared": 13,
+          "cpp_rows": 13,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 13,
+          "ratio": 1.0,
+          "swaps": 0
+        }
+      },
+      "letterbox_sha_equal": true,
+      "name": "2_08_000301",
+      "ok": true,
+      "raw": {
+        "errors": [],
+        "max_diff": 0.0,
+        "ok": true,
+        "swaps": 0
+      }
+    },
+    {
+      "layers": {
+        "display": {
+          "compared": 2,
+          "cpp_rows": 2,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 2,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "eval": {
+          "compared": 11,
+          "cpp_rows": 11,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 11,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "track": {
+          "compared": 3,
+          "cpp_rows": 3,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 3,
+          "ratio": 1.0,
+          "swaps": 0
+        }
+      },
+      "letterbox_sha_equal": true,
+      "name": "2_08_000422",
+      "ok": true,
+      "raw": {
+        "errors": [],
+        "max_diff": 0.0,
+        "ok": true,
+        "swaps": 0
+      }
+    },
+    {
+      "layers": {
+        "display": {
+          "compared": 2,
+          "cpp_rows": 2,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 2,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "eval": {
+          "compared": 15,
+          "cpp_rows": 15,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 15,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "track": {
+          "compared": 3,
+          "cpp_rows": 3,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 3,
+          "ratio": 1.0,
+          "swaps": 0
+        }
+      },
+      "letterbox_sha_equal": true,
+      "name": "2_08_000541",
+      "ok": true,
+      "raw": {
+        "errors": [],
+        "max_diff": 0.0,
+        "ok": true,
+        "swaps": 0
+      }
+    },
+    {
+      "layers": {
+        "display": {
+          "compared": 2,
+          "cpp_rows": 2,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 2,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "eval": {
+          "compared": 120,
+          "cpp_rows": 120,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 120,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "track": {
+          "compared": 6,
+          "cpp_rows": 6,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 6,
+          "ratio": 1.0,
+          "swaps": 0
+        }
+      },
+      "letterbox_sha_equal": true,
+      "name": "black_ir",
+      "ok": true,
+      "raw": {
+        "errors": [],
+        "max_diff": 0.0,
+        "ok": true,
+        "swaps": 0
+      }
+    },
+    {
+      "layers": {
+        "display": {
+          "compared": 0,
+          "cpp_rows": 0,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 0,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "eval": {
+          "compared": 37,
+          "cpp_rows": 37,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 37,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "track": {
+          "compared": 0,
+          "cpp_rows": 0,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 0,
+          "ratio": 1.0,
+          "swaps": 0
+        }
+      },
+      "letterbox_sha_equal": true,
+      "name": "noise_ir",
+      "ok": true,
+      "raw": {
+        "errors": [],
+        "max_diff": 0.0,
+        "ok": true,
+        "swaps": 0
+      }
+    },
+    {
+      "layers": {
+        "display": {
+          "compared": 2,
+          "cpp_rows": 2,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 2,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "eval": {
+          "compared": 24,
+          "cpp_rows": 24,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 24,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "track": {
+          "compared": 2,
+          "cpp_rows": 2,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 2,
+          "ratio": 1.0,
+          "swaps": 0
+        }
+      },
+      "letterbox_sha_equal": true,
+      "name": "shift_ir",
+      "ok": true,
+      "raw": {
+        "errors": [],
+        "max_diff": 0.0,
+        "ok": true,
+        "swaps": 0
+      }
+    },
+    {
+      "layers": {
+        "display": {
+          "compared": 1,
+          "cpp_rows": 1,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 1,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "eval": {
+          "compared": 30,
+          "cpp_rows": 30,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 30,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "track": {
+          "compared": 1,
+          "cpp_rows": 1,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 1,
+          "ratio": 1.0,
+          "swaps": 0
+        }
+      },
+      "letterbox_sha_equal": true,
+      "name": "black_rgb",
+      "ok": true,
+      "raw": {
+        "errors": [],
+        "max_diff": 0.0,
+        "ok": true,
+        "swaps": 0
+      }
+    },
+    {
+      "layers": {
+        "display": {
+          "compared": 1,
+          "cpp_rows": 1,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 1,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "eval": {
+          "compared": 27,
+          "cpp_rows": 27,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 27,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "track": {
+          "compared": 1,
+          "cpp_rows": 1,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 1,
+          "ratio": 1.0,
+          "swaps": 0
+        }
+      },
+      "letterbox_sha_equal": true,
+      "name": "darken_rgb",
+      "ok": true,
+      "raw": {
+        "errors": [],
+        "max_diff": 0.0,
+        "ok": true,
+        "swaps": 0
+      }
+    },
+    {
+      "layers": {
+        "display": {
+          "compared": 0,
+          "cpp_rows": 0,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 0,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "eval": {
+          "compared": 8,
+          "cpp_rows": 8,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 8,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "track": {
+          "compared": 0,
+          "cpp_rows": 0,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 0,
+          "ratio": 1.0,
+          "swaps": 0
+        }
+      },
+      "letterbox_sha_equal": true,
+      "name": "resize_800x600",
+      "ok": true,
+      "raw": {
+        "errors": [],
+        "max_diff": 0.0,
+        "ok": true,
+        "swaps": 0
+      }
+    },
+    {
+      "layers": {
+        "display": {
+          "compared": 0,
+          "cpp_rows": 0,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 0,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "eval": {
+          "compared": 0,
+          "cpp_rows": 0,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 0,
+          "ratio": 1.0,
+          "swaps": 0
+        },
+        "track": {
+          "compared": 0,
+          "cpp_rows": 0,
+          "errors": [],
+          "free_rows": 0,
+          "max_raw_diff": 0.0,
+          "min_iou": 1.0,
+          "ok": true,
+          "py_rows": 0,
+          "ratio": 1.0,
+          "swaps": 0
+        }
+      },
+      "letterbox_sha_equal": true,
+      "name": "tiny_33x17",
+      "ok": true,
+      "raw": {
+        "errors": [],
+        "max_diff": 0.0,
+        "ok": true,
+        "swaps": 0
+      }
+    }
+  ],
+  "kabul": "1 (a, b modül düzeyi) + 2",
+  "n_frames": 17,
+  "onnxruntime_version": "1.30.0",
+  "opencv_version": "5.0.0",
+  "passed": true,
+  "tolerances": {
+    "boundary": 0.0001,
+    "layer_iou": 0.99,
+    "layer_raw": 0.001,
+    "min_ratio": 0.99,
+    "raw": 0.0001,
+    "raw_tie": 1e-05
+  }
+}
