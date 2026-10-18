@@ -411,3 +411,9 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
   - Bellek içi: 14,8 FPS (1000 / ortalama total), tepe RSS 287 MB.
 - **Kabul 5 (motor p95 ≤ 100 ms, Docker): ✅ 82,2 ms.**
 - **Yorum:** H5'te aynı model Python ORT ile laptop CPU'da (Docker'sız) pre + infer + post p95 59,9 ms'ti; burada infer p95 62,1 ms (Docker / WSL katmanı ve kuyruk), üstüne Faz 3'te eklenen decode (≈ 7,7) ve sağlık (≈ 10,8) geliyor. HTTP katmanı p95'e ≈ 4 ms ekliyor (eşik yok). Ek ölçüm yapılmadı (yalnız sevk edilen yol).
+
+## 2026-10-18 · F3 · Kapalı ağ kanıtları 1-4, laptop (Görev 33)
+- **Kurulum:** `scripts/offline_proof.sh` (CI `compose` işiyle aynı adımlar), imajlar `baykus-engine` (runtime) ve `baykus-ui` (Next 16.4.2 standalone, node:22-bookworm-slim), `/data` = `fixtures/m3ot/clip` (15 kare), Docker Desktop 4.62.0, Docker Compose v5.0.2. Kanıt 3 yerelde sistem Chrome'uyla (`PW_CHANNEL=chrome`), CI'da Playwright Chromium'u. Kaynak `results/system/offline.json`.
+- **Sonuç (kapalı katman, `compose.offline.yml`):** kanıt 1 `offline_check` geçti (klip kare 1, `/api/detect` 200, 10 tespit, dört model sha256'sı `models.json` ile aynı); kanıt 2 ui ve motor konteynerinde 1.1.1.1:443 → `ENETUNREACH`, example.com → `EAI_AGAIN` (engelli). **Kanıt 3** (normal compose): 34 tespit isteği (3'ü IR 20 px kaydırma arızasıyla multipart), 2 tur başı oturum sıfırlaması, 127.0.0.1:3000 dışına istek 0. **Kanıt 4:** imajdaki `.next` (148 dosya) taramasında izin listesi dışı adres 0.
+- **Ölçümün gerçekten ağı ölçtüğünün denetimi (bir kez, elle):** normal compose'da ui konteynerinden `egress_check` **düştü** (1.1.1.1:443 bağlantı kuruldu, example.com çözüldü: "dış adrese ulaşıldı", çıkış 1); motor normal compose'da da engelli kaldı (yalnız `internal` `back` ağında). Kanıt 3'ün sahte kopyası tarayıcıdan tek bir `https://example.com/x` isteği eklenince düştü.
+- **Kabul 6 (otomatik kısım):** yerelde ✅; CI yeşili push sonrası. Elle Wi-Fi kapalı demo Görev 35'te.

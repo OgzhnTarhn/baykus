@@ -1,0 +1,58 @@
+{
+  "offline_check": {
+    "ok": true,
+    "sequence": "clip",
+    "frame": 1,
+    "detect_status": 200,
+    "detections": 10,
+    "model_sha_ok": true,
+    "mismatched": []
+  },
+  "egress": {
+    "ui": {
+      "tcp": {
+        "target": "1.1.1.1:443",
+        "result": "ENETUNREACH",
+        "connected": false,
+        "expected": true
+      },
+      "dns": {
+        "target": "example.com",
+        "result": "EAI_AGAIN",
+        "connected": false,
+        "expected": true
+      },
+      "blocked": true,
+      "message": "dış ağ kapalı"
+    },
+    "engine": {
+      "blocked": true,
+      "dns": {
+        "connected": false,
+        "expected": true,
+        "result": "EAI_AGAIN",
+        "target": "example.com"
+      },
+      "message": "dış ağ kapalı",
+      "tcp": {
+        "connected": false,
+        "expected": true,
+        "result": "ENETUNREACH",
+        "target": "1.1.1.1:443"
+      }
+    }
+  },
+  "browser_requests_external": 0,
+  "browser": {
+    "requests": 81,
+    "detects": 34,
+    "fault_detects": 2,
+    "resets": 2,
+    "external": []
+  },
+  "scan": {
+    "violations": [],
+    "files": 148
+  },
+  "passed": true
+}
