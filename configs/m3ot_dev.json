@@ -1,5 +1,8 @@
 {
   "split": "val",
-  "sequences": ["1_08", "2_08"],
-  "demo": null
+  "sequences": [
+    "1_08",
+    "2_08"
+  ],
+  "demo": "1_08"
 }

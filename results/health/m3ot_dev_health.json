@@ -1,0 +1,839 @@
+{
+  "protocol": "V",
+  "split": "val",
+  "label_set": "ir",
+  "class_agnostic": true,
+  "rules": [
+    "phase2",
+    "frame",
+    "frame+temporal"
+  ],
+  "conditions": [
+    "clean",
+    "misalign-20",
+    "misalign-20@K",
+    "noise-20",
+    "drop_ir"
+  ],
+  "r_min": 0.24504129436349326,
+  "gate_model_sha256": "eb2807e2f32f20444322a680eaab821da025d67085ac6e887918a42646d5fd78",
+  "thresholds_sha256": "bf3d4c93660cc226e583360b16934c7d2a3877fe9abdc069e30aff62566a4c33",
+  "combined": {
+    "phase2": {
+      "clean": {
+        "alarm_rates": {
+          "rgb_lost": 0.0,
+          "ir_lost": 0.0,
+          "ir_noisy": 0.0,
+          "misaligned": 0.3966666666666666
+        },
+        "gate_rate": 0.3966666666666666,
+        "ap50_auto": 0.1481753825374361,
+        "ap50_off": 0.3955883274556015,
+        "ap50_diff": -0.24741294491816543
+      },
+      "misalign-20": {
+        "alarm_rates": {
+          "rgb_lost": 0.0,
+          "ir_lost": 0.0,
+          "ir_noisy": 0.0,
+          "misaligned": 0.7475
+        },
+        "gate_rate": 0.7475,
+        "ap50_auto": 0.00030487709683583514,
+        "ap50_off": 0.0007140810223392277,
+        "ap50_diff": -0.00040920392550339253
+      },
+      "misalign-20@K": {
+        "alarm_rates": {
+          "rgb_lost": 0.0,
+          "ir_lost": 0.0,
+          "ir_noisy": 0.0,
+          "misaligned": 0.5666666666666667
+        },
+        "gate_rate": 0.5666666666666667,
+        "ap50_auto": 0.038532384724497666,
+        "ap50_off": 0.09747375475097086,
+        "ap50_diff": -0.0589413700264732
+      },
+      "noise-20": {
+        "alarm_rates": {
+          "rgb_lost": 0.0,
+          "ir_lost": 0.0,
+          "ir_noisy": 0.9966666666666667,
+          "misaligned": 0.3966666666666667
+        },
+        "gate_rate": 1.0,
+        "ap50_auto": 0.0005727665712602357,
+        "ap50_off": 0.16204367156398153,
+        "ap50_diff": -0.1614709049927213
+      },
+      "drop_ir": {
+        "alarm_rates": {
+          "rgb_lost": 0.0,
+          "ir_lost": 0.9966666666666667,
+          "ir_noisy": 0.0,
+          "misaligned": 0.0
+        },
+        "gate_rate": 1.0,
+        "ap50_auto": 0.0005727665712602357,
+        "ap50_off": 0.0005727665712602357,
+        "ap50_diff": 0.0
+      }
+    },
+    "frame": {
+      "clean": {
+        "alarm_rates": {
+          "rgb_lost": 0.0,
+          "ir_lost": 0.0,
+          "ir_noisy": 0.0,
+          "misaligned": 0.0
+        },
+        "gate_rate": 0.0,
+        "ap50_auto": 0.3955883274556015,
+        "ap50_off": 0.3955883274556015,
+        "ap50_diff": 0.0
+      },
+      "misalign-20": {
+        "alarm_rates": {
+          "rgb_lost": 0.0,
+          "ir_lost": 0.0,
+          "ir_noisy": 0.0,
+          "misaligned": 0.0
+        },
+        "gate_rate": 0.0,
+        "ap50_auto": 0.0007140810223392277,
+        "ap50_off": 0.0007140810223392277,
+        "ap50_diff": 0.0
+      },
+      "misalign-20@K": {
+        "alarm_rates": {
+          "rgb_lost": 0.0,
+          "ir_lost": 0.0,
+          "ir_noisy": 0.0,
+          "misaligned": 0.0
+        },
+        "gate_rate": 0.0,
+        "ap50_auto": 0.09747375475097086,
+        "ap50_off": 0.09747375475097086,
+        "ap50_diff": 0.0
+      },
+      "noise-20": {
+        "alarm_rates": {
+          "rgb_lost": 0.0,
+          "ir_lost": 0.0,
+          "ir_noisy": 0.9966666666666667,
+          "misaligned": 0.0
+        },
+        "gate_rate": 1.0,
+        "ap50_auto": 0.0005727665712602357,
+        "ap50_off": 0.16204367156398153,
+        "ap50_diff": -0.1614709049927213
+      },
+      "drop_ir": {
+        "alarm_rates": {
+          "rgb_lost": 0.0,
+          "ir_lost": 0.9966666666666667,
+          "ir_noisy": 0.0,
+          "misaligned": 0.0
+        },
+        "gate_rate": 1.0,
+        "ap50_auto": 0.0005727665712602357,
+        "ap50_off": 0.0005727665712602357,
+        "ap50_diff": 0.0
+      }
+    },
+    "frame+temporal": {
+      "clean": {
+        "alarm_rates": {
+          "rgb_lost": 0.0,
+          "ir_lost": 0.0,
+          "ir_noisy": 0.0,
+          "misaligned": 0.0
+        },
+        "gate_rate": 0.0,
+        "ap50_auto": 0.3955883274556015,
+        "ap50_off": 0.3955883274556015,
+        "ap50_diff": 0.0
+      },
+      "misalign-20": {
+        "alarm_rates": {
+          "rgb_lost": 0.0,
+          "ir_lost": 0.0,
+          "ir_noisy": 0.0,
+          "misaligned": 0.0
+        },
+        "gate_rate": 0.0,
+        "ap50_auto": 0.0007140810223392277,
+        "ap50_off": 0.0007140810223392277,
+        "ap50_diff": 0.0
+      },
+      "misalign-20@K": {
+        "alarm_rates": {
+          "rgb_lost": 0.0,
+          "ir_lost": 0.0,
+          "ir_noisy": 0.0,
+          "misaligned": 0.0
+        },
+        "gate_rate": 0.0,
+        "ap50_auto": 0.09747375475097086,
+        "ap50_off": 0.09747375475097086,
+        "ap50_diff": 0.0
+      },
+      "noise-20": {
+        "alarm_rates": {
+          "rgb_lost": 0.0,
+          "ir_lost": 0.0,
+          "ir_noisy": 0.9966666666666667,
+          "misaligned": 0.0
+        },
+        "gate_rate": 1.0,
+        "ap50_auto": 0.0005727665712602357,
+        "ap50_off": 0.16204367156398153,
+        "ap50_diff": -0.1614709049927213
+      },
+      "drop_ir": {
+        "alarm_rates": {
+          "rgb_lost": 0.0,
+          "ir_lost": 0.9966666666666667,
+          "ir_noisy": 0.0,
+          "misaligned": 0.0
+        },
+        "gate_rate": 1.0,
+        "ap50_auto": 0.0005727665712602357,
+        "ap50_off": 0.0005727665712602357,
+        "ap50_diff": 0.0
+      }
+    }
+  },
+  "sequences": [
+    {
+      "seq": "1_08",
+      "split": "val",
+      "n_frames": 600,
+      "k": 300,
+      "rules": {
+        "phase2": {
+          "clean": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.26166666666666666,
+              "misaligned": 0.26166666666666666
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned": 0.26166666666666666
+            },
+            "gate_rate": 0.26166666666666666,
+            "ap50_auto": 0.21787552574443148,
+            "ap50_off": 0.41336920680479305,
+            "ap50_diff": -0.19549368106036158
+          },
+          "misalign-20": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.535,
+              "misaligned": 0.535
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned": 0.535
+            },
+            "gate_rate": 0.535,
+            "ap50_auto": 0.0006898252468931564,
+            "ap50_off": 0.0009527836343754811,
+            "ap50_diff": -0.00026295838748232464
+          },
+          "misalign-20@K": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.415,
+              "misaligned": 0.415
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned": 0.415
+            },
+            "gate_rate": 0.415,
+            "ap50_auto": 0.0832106846535837,
+            "ap50_off": 0.10389332157318766,
+            "ap50_diff": -0.020682636919603967,
+            "delay": 1,
+            "alarm_before_onset": false
+          },
+          "noise-20": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 1.0,
+              "misaligned_frame": 0.27666666666666667,
+              "misaligned": 0.27666666666666667
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.9966666666666667,
+              "misaligned": 0.27666666666666667
+            },
+            "gate_rate": 1.0,
+            "ap50_auto": 0.001766170571787712,
+            "ap50_off": 0.1557386748911755,
+            "ap50_diff": -0.15397250431938778
+          },
+          "drop_ir": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 1.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.9966666666666667,
+              "ir_noisy": 0.0,
+              "misaligned": 0.0
+            },
+            "gate_rate": 1.0,
+            "ap50_auto": 0.001766170571787712,
+            "ap50_off": 0.001766170571787712,
+            "ap50_diff": 0.0
+          }
+        },
+        "frame": {
+          "clean": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned": 0.0
+            },
+            "gate_rate": 0.0,
+            "ap50_auto": 0.41336920680479305,
+            "ap50_off": 0.41336920680479305,
+            "ap50_diff": 0.0
+          },
+          "misalign-20": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned": 0.0
+            },
+            "gate_rate": 0.0,
+            "ap50_auto": 0.0009527836343754811,
+            "ap50_off": 0.0009527836343754811,
+            "ap50_diff": 0.0
+          },
+          "misalign-20@K": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned": 0.0
+            },
+            "gate_rate": 0.0,
+            "ap50_auto": 0.10389332157318766,
+            "ap50_off": 0.10389332157318766,
+            "ap50_diff": 0.0,
+            "delay": null,
+            "alarm_before_onset": false
+          },
+          "noise-20": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 1.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.9966666666666667,
+              "misaligned": 0.0
+            },
+            "gate_rate": 1.0,
+            "ap50_auto": 0.001766170571787712,
+            "ap50_off": 0.1557386748911755,
+            "ap50_diff": -0.15397250431938778
+          },
+          "drop_ir": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 1.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.9966666666666667,
+              "ir_noisy": 0.0,
+              "misaligned": 0.0
+            },
+            "gate_rate": 1.0,
+            "ap50_auto": 0.001766170571787712,
+            "ap50_off": 0.001766170571787712,
+            "ap50_diff": 0.0
+          }
+        },
+        "frame+temporal": {
+          "clean": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned": 0.0
+            },
+            "gate_rate": 0.0,
+            "ap50_auto": 0.41336920680479305,
+            "ap50_off": 0.41336920680479305,
+            "ap50_diff": 0.0
+          },
+          "misalign-20": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned": 0.0
+            },
+            "gate_rate": 0.0,
+            "ap50_auto": 0.0009527836343754811,
+            "ap50_off": 0.0009527836343754811,
+            "ap50_diff": 0.0
+          },
+          "misalign-20@K": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned": 0.0
+            },
+            "gate_rate": 0.0,
+            "ap50_auto": 0.10389332157318766,
+            "ap50_off": 0.10389332157318766,
+            "ap50_diff": 0.0,
+            "delay": null,
+            "alarm_before_onset": false
+          },
+          "noise-20": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 1.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.9966666666666667,
+              "misaligned": 0.0
+            },
+            "gate_rate": 1.0,
+            "ap50_auto": 0.001766170571787712,
+            "ap50_off": 0.1557386748911755,
+            "ap50_diff": -0.15397250431938778
+          },
+          "drop_ir": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 1.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.9966666666666667,
+              "ir_noisy": 0.0,
+              "misaligned": 0.0
+            },
+            "gate_rate": 1.0,
+            "ap50_auto": 0.001766170571787712,
+            "ap50_off": 0.001766170571787712,
+            "ap50_diff": 0.0
+          }
+        }
+      },
+      "demo": {
+        "clean_le_2pct": true,
+        "misalign_ge_90pct": false,
+        "delay_le_10": false,
+        "passed": false
+      }
+    },
+    {
+      "seq": "2_08",
+      "split": "val",
+      "n_frames": 600,
+      "k": 300,
+      "rules": {
+        "phase2": {
+          "clean": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.5316666666666666,
+              "misaligned": 0.5316666666666666
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned": 0.5316666666666666
+            },
+            "gate_rate": 0.5316666666666666,
+            "ap50_auto": 0.10433992445183961,
+            "ap50_off": 0.38199878618576394,
+            "ap50_diff": -0.27765886173392434
+          },
+          "misalign-20": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.96,
+              "misaligned": 0.96
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned": 0.96
+            },
+            "gate_rate": 0.96,
+            "ap50_auto": 0.00011911682024795356,
+            "ap50_off": 0.0006231484706987413,
+            "ap50_diff": -0.0005040316504507877
+          },
+          "misalign-20@K": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.7183333333333334,
+              "misaligned": 0.7183333333333334
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned": 0.7183333333333334
+            },
+            "gate_rate": 0.7183333333333334,
+            "ap50_auto": 0.020768772195779196,
+            "ap50_off": 0.09474340814776513,
+            "ap50_diff": -0.07397463595198595,
+            "delay": 0,
+            "alarm_before_onset": true
+          },
+          "noise-20": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 1.0,
+              "misaligned_frame": 0.5166666666666667,
+              "misaligned": 0.5166666666666667
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.9966666666666667,
+              "misaligned": 0.5166666666666667
+            },
+            "gate_rate": 1.0,
+            "ap50_auto": 9.683119901232177e-05,
+            "ap50_off": 0.17049468841095977,
+            "ap50_diff": -0.17039785721194745
+          },
+          "drop_ir": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 1.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.9966666666666667,
+              "ir_noisy": 0.0,
+              "misaligned": 0.0
+            },
+            "gate_rate": 1.0,
+            "ap50_auto": 9.683119901232177e-05,
+            "ap50_off": 9.683119901232177e-05,
+            "ap50_diff": 0.0
+          }
+        },
+        "frame": {
+          "clean": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned": 0.0
+            },
+            "gate_rate": 0.0,
+            "ap50_auto": 0.38199878618576394,
+            "ap50_off": 0.38199878618576394,
+            "ap50_diff": 0.0
+          },
+          "misalign-20": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned": 0.0
+            },
+            "gate_rate": 0.0,
+            "ap50_auto": 0.0006231484706987413,
+            "ap50_off": 0.0006231484706987413,
+            "ap50_diff": 0.0
+          },
+          "misalign-20@K": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned": 0.0
+            },
+            "gate_rate": 0.0,
+            "ap50_auto": 0.09474340814776513,
+            "ap50_off": 0.09474340814776513,
+            "ap50_diff": 0.0,
+            "delay": null,
+            "alarm_before_onset": false
+          },
+          "noise-20": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 1.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.9966666666666667,
+              "misaligned": 0.0
+            },
+            "gate_rate": 1.0,
+            "ap50_auto": 9.683119901232177e-05,
+            "ap50_off": 0.17049468841095977,
+            "ap50_diff": -0.17039785721194745
+          },
+          "drop_ir": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 1.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.9966666666666667,
+              "ir_noisy": 0.0,
+              "misaligned": 0.0
+            },
+            "gate_rate": 1.0,
+            "ap50_auto": 9.683119901232177e-05,
+            "ap50_off": 9.683119901232177e-05,
+            "ap50_diff": 0.0
+          }
+        },
+        "frame+temporal": {
+          "clean": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned": 0.0
+            },
+            "gate_rate": 0.0,
+            "ap50_auto": 0.38199878618576394,
+            "ap50_off": 0.38199878618576394,
+            "ap50_diff": 0.0
+          },
+          "misalign-20": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned": 0.0
+            },
+            "gate_rate": 0.0,
+            "ap50_auto": 0.0006231484706987413,
+            "ap50_off": 0.0006231484706987413,
+            "ap50_diff": 0.0
+          },
+          "misalign-20@K": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.0,
+              "misaligned": 0.0
+            },
+            "gate_rate": 0.0,
+            "ap50_auto": 0.09474340814776513,
+            "ap50_off": 0.09474340814776513,
+            "ap50_diff": 0.0,
+            "delay": null,
+            "alarm_before_onset": false
+          },
+          "noise-20": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 1.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.0,
+              "ir_noisy": 0.9966666666666667,
+              "misaligned": 0.0
+            },
+            "gate_rate": 1.0,
+            "ap50_auto": 9.683119901232177e-05,
+            "ap50_off": 0.17049468841095977,
+            "ap50_diff": -0.17039785721194745
+          },
+          "drop_ir": {
+            "state_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 1.0,
+              "ir_noisy": 0.0,
+              "misaligned_frame": 0.0,
+              "misaligned": 0.0
+            },
+            "alarm_rates": {
+              "rgb_lost": 0.0,
+              "ir_lost": 0.9966666666666667,
+              "ir_noisy": 0.0,
+              "misaligned": 0.0
+            },
+            "gate_rate": 1.0,
+            "ap50_auto": 9.683119901232177e-05,
+            "ap50_off": 9.683119901232177e-05,
+            "ap50_diff": 0.0
+          }
+        }
+      },
+      "demo": {
+        "clean_le_2pct": true,
+        "misalign_ge_90pct": false,
+        "delay_le_10": false,
+        "passed": false
+      }
+    }
+  ],
+  "demo_choice": {
+    "demo": "1_08",
+    "criterion_passed": false
+  },
+  "git_commit": "8bb1e404405b464ac12e2f6e34d4ce4e8cfcdb89",
+  "created_at": "2026-10-18T14:35:49Z"
+}
