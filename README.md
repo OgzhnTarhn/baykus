@@ -4,9 +4,10 @@
 kamerayı birleştirerek gece-gündüz araç tespiti; bir kamera bozulsa da çalışan, laptop işlemcisinde
 gerçek zamana yakın, her sayısı ölçümle kanıtlı bir sistem.
 
-> **Durum: `v0.1.0` — Faz 1 (MVP).** Eğitim, değerlendirme, sağlamlık, veri setleri arası test ve edge
-> ölçümü tamam. C++ motoru, takip ve operatör ekranı Faz 3'te. Tasarım: [docs/spec.md](docs/spec.md) ·
-> deney günlüğü: [docs/experiments.md](docs/experiments.md) · kararlar: [docs/adr/](docs/adr/)
+> **Durum: `v0.2.0` — Faz 3 (sistem).** C++ çıkarım motoru, takip, operatör ekranı ve internetsiz Docker
+> kurulumu tamam; Faz 1 (model, ölçüm) ve Faz 2 (sensör sağlığı) üzerine. Tasarım: [docs/spec.md](docs/spec.md) ·
+> sistem raporu: [docs/system.md](docs/system.md) · deney günlüğü: [docs/experiments.md](docs/experiments.md) ·
+> kararlar: [docs/adr/](docs/adr/)
 
 ## Sevk edilen sistem
 
@@ -136,6 +137,44 @@ Güven kalibrasyonu (sevk edilen ONNX FP32, test): ECE 0,080 → 0,007. Kalibras
 indirdiği için eşit skorlar sıralamayı bozup mAP50'yi 0,11 puan düşürüyor (önceden yazılan sınır 0,1);
 eşitlikte ham skorla sıralanınca kayıp sıfır. Ayrıntı: [docs/health.md](docs/health.md).
 
+## Faz 3: sistem — C++ motor, operatör ekranı, internetsiz kurulum
+
+![Operatör ekranı: IR kamera kapatıldı, alarm ve kapı rozeti](docs/figures/system/14-ir-kapat-kapi.jpg)
+
+Sevk edilen E3c modeli C++ motorunda (ONNX Runtime + OpenCV) çalışıyor: kare başına kamera sağlığı,
+kalibre skor ve ByteTrack takibi; Next.js ekranında oynatıcı, sağlık paneli, alarmlar ve arıza
+simülasyonu. Her C++ adımı Python referansıyla aynı sonucu veriyor ve bu CI'da her commit'te sınanıyor.
+Kabul ölçütleri ölçümden önce yazıldı; sekizi de geçti ([docs/system.md](docs/system.md), sayılar
+kanıt dosyalarından üretiliyor).
+
+| | Değer | Kaynak |
+|---|---|---|
+| C++ ↔ Python eşliği (tespit, letterbox, sağlık, takip) | 17 fikstür birebir; takip 2 × 600 karede fark 0 | `results/engine/parity_*.json` |
+| Motor gecikmesi (Docker, çözme + sağlık + çıkarım + takip) | p50 **64,8 ms** · p95 **82,2 ms** (eşik 100) | `results/bench/*_laptop-docker.json` |
+| M3OT test AP50 (motor, sınıfsız araç) | **86,0** (Faz 1 PyTorch 88,9) | `results/engine/m3ot_test_detect.json` |
+| M3OT test takip: motor / oracle (M3OT kutuları) | HOTA **0,489** / 0,949 · IDF1 0,677 / 0,941 | `results/track/m3ot_test_*.json` |
+| Kamera kaybı / IR gürültüsü alarmı (M3OT test) | karelerin %99,6'sında; temizde yanlış alarm %0 | `results/health/m3ot_test_health.json` |
+| İnternetsiz çalışma | dış istek 0; Wi-Fi kapalı demo kayıtlı | `results/system/offline.json` |
+
+- Takipçi doğru kutularla neredeyse kusursuz (oracle); motordaki kayıp tespitten geliyor.
+- **IR hizasızlık alarmı M3OT'ta çalışmıyor:** iki kamera arasında doğal kayma var ve eşleşme yanıtı
+  düşük; ürün kuralı temizde yanlış alarm vermiyor ama gerçek 20 px kaymayı da yakalamıyor.
+- Model DroneVehicle'ın 5 sınıfını biliyor (motosiklet yok); yoğun trafikte (M3OT val, kare başına
+  ≈ 11 araç) AP50 39,6'ya düşüyor.
+- H5'teki 60 ms Windows'ta yerel Python ölçümüydü; motor Docker'da ve çözme + sağlık dahil:
+  **karşılaştırılamaz**.
+
+**İnternetsiz kurulum.** İnternetli bilgisayarda bir kez `bash scripts/prepare.sh --bundle out/`
+(imajlar, modeller, demo verisi); `out/` klasörünü taşıyıp internetsiz bilgisayarda:
+
+```bash
+docker load -i baykus-images.tar.gz
+docker compose up
+# tarayıcıda http://127.0.0.1:3000
+```
+
+İnternet varken tek komut: `bash scripts/prepare.sh && docker compose up`.
+
 ## Dürüst ölçüm notları
 
 - **Tek seed:** her model bir kez eğitildi; güven aralıkları görüntü örneklemesinden, seed varyansı dahil
@@ -176,13 +215,14 @@ git commit'i ve seed'iyle bağlı.
 
 ## Yol haritası
 
-Faz 2 (bitti, olumsuz sonuç): kare başına sensör sağlığı, kanal kapısı, güven kalibrasyonu · Faz 3: C++
-motoru, takip, operatör ekranı (sensör sağlık paneli), internetsiz Docker kurulumu · Faz 4: hareketli hedef ·
-Faz 5: sunum. Ayrıntı: [docs/spec.md](docs/spec.md) §22.
+Faz 2 (bitti, olumsuz sonuç): kare başına sensör sağlığı, kanal kapısı, güven kalibrasyonu · Faz 3
+(bitti, `v0.2.0`): C++ motoru, takip, operatör ekranı, internetsiz Docker kurulumu · Faz 4: hareketli
+hedef · Faz 5: sunum. Ayrıntı: [docs/spec.md](docs/spec.md) §22.
 
 ## Lisans ve atıflar
 
 - AGPL-3.0, çünkü Ultralytics YOLO AGPL-3.0. Üretim kullanımı Ultralytics Enterprise lisansı gerektirir.
 - **DroneVehicle** (Sun ve ark., IEEE TCSVT 2022): lisansı belirtilmemiş, yeniden dağıtılmaz.
-- **M3OT** (CC-BY-4.0).
-- ONNX Runtime (MIT), ensemble-boxes (MIT), pycocotools, OpenCV (Apache-2.0).
+- **M3OT** (Scientific Data, 2025; CC BY 4.0): demo dizileri ve ölçümler; ekran görüntüleri bu veriden.
+- ONNX Runtime (MIT), ensemble-boxes (MIT), pycocotools, OpenCV (Apache-2.0), trackers (Apache-2.0),
+  Next.js (MIT).
