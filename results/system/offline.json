@@ -44,9 +44,9 @@
   },
   "browser_requests_external": 0,
   "browser": {
-    "requests": 81,
-    "detects": 34,
-    "fault_detects": 2,
+    "requests": 80,
+    "detects": 33,
+    "fault_detects": 3,
     "resets": 2,
     "external": []
   },
