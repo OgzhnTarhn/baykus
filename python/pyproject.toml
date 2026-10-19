@@ -41,6 +41,7 @@ baykus-bench = "baykus.bench.cli:main"
 baykus-health = "baykus.health.cli:main"
 baykus-engine = "baykus.engine_ref.cli:main"
 baykus-track = "baykus.track.cli:main"
+baykus-system = "baykus.system.cli:main"
 
 [dependency-groups]
 dev = ["pytest>=8.0", "ruff>=0.6", "pre-commit>=3.7"]
