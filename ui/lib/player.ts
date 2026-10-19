@@ -76,7 +76,8 @@ export function createPlayer<R>(deps: PlayerDeps<R>): Player<R> {
     deps.onReset?.();
   }
 
-  // Yalnız oturum sıfırlama (istek yokken düğmeye basıldı ya da yoldaki istek bitti).
+  // Yalnız oturum sıfırlama (istek yokken düğmeye basıldı ya da yoldaki istek bitti). Bu sırada
+  // gelen atlama ya da oynat, sıfırlama bitince uygulanır.
   async function resetOnly(): Promise<void> {
     busy = true;
     emit();
@@ -85,10 +86,18 @@ export function createPlayer<R>(deps: PlayerDeps<R>): Player<R> {
     } catch (e) {
       state = "paused";
       error = e instanceof Error ? e.message : String(e);
+      pendingSeek = null;
+      return;
     } finally {
       busy = false;
       emit();
     }
+    if (pendingSeek !== null) {
+      const t = pendingSeek;
+      pendingSeek = null;
+      return run(t);
+    }
+    if (state === "playing" && frames.length > 0) return run(nextIndex());
   }
 
   async function run(target: number): Promise<void> {

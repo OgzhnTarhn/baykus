@@ -337,3 +337,61 @@ describe("player review fixes", () => {
     expect(h.log).toEqual(["detect a 1", "reset"]);
   });
 });
+
+// İkinci inceleme (docs/reviews/2026-10-19-faz3-kod-incelemesi.md Ö1): tek başına sıfırlama sürerken
+// gelen oynat / atlama sıfırlama bitince uygulanır.
+function manualReset(h: ReturnType<typeof harness>) {
+  const done: (() => void)[] = [];
+  h.deps.reset = () =>
+    new Promise<void>((r) => {
+      h.log.push("reset");
+      done.push(r);
+    });
+  return done;
+}
+
+describe("player second review fixes", () => {
+  it("play pressed during a standalone reset starts playback", async () => {
+    const h = harness();
+    const done = manualReset(h);
+    const p = createPlayer(h.deps);
+    p.load("a", [1, 2, 3]);
+    p.requestReset();
+    p.play();
+    done[0]();
+    await flush();
+    expect(h.log).toEqual(["reset", "detect a 1"]);
+    expect(p.snapshot().state).toBe("playing");
+    p.pause();
+  });
+
+  it("seek during a standalone reset is applied once", async () => {
+    const h = harness({ autoResolve: true });
+    const done = manualReset(h);
+    const p = createPlayer(h.deps);
+    p.load("a", [1, 2, 3, 4]);
+    p.requestReset();
+    p.seek(2);
+    done[0]();
+    await flush();
+    expect(h.log).toEqual(["reset", "detect a 3"]);
+    p.step();
+    await flush();
+    expect(h.log.slice(2)).toEqual(["detect a 4"]); // bekleyen atlama ikinci kez çalışmaz
+  });
+
+  it("a failed standalone reset drops the pending seek", async () => {
+    const h = harness({ autoResolve: true });
+    const fails: ((e: Error) => void)[] = [];
+    h.deps.reset = () => new Promise<void>((_, reject) => fails.push(reject));
+    const p = createPlayer(h.deps);
+    p.load("a", [1, 2, 3]);
+    p.requestReset();
+    p.seek(1);
+    fails[0](new Error("motor yanıt vermiyor"));
+    await flush();
+    expect(h.log).toEqual([]);
+    expect(p.snapshot().error).toBe("motor yanıt vermiyor");
+    expect(p.snapshot().state).toBe("paused");
+  });
+});
