@@ -440,3 +440,9 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
   - `misalign-20` E3c'yi testte de çökertiyor (AP50 0,860 → 0,006); ürün kuralı (kare + zaman) bu kaymayı yakalamıyor — val'deki bulgu testte tekrarlandı. Demo ölçütü iki test dizisinde de tutmadı (temiz ≤ %2 ✅, misalign-20 ≥ %90 ❌, gecikme ≤ 10 ❌).
   - Python sağlık pipeline'ının temiz `off` AP50'si (0,8605) C++ `baykus_detect` ölçümüyle aynı.
 - **Yorum:** Faz 3 motoru M3OT test'te Faz 1 ölçümüne yakın tespit veriyor; takipçi sağlam, sınır dedektörde. Sağlık kayıp ve gürültüde güvenilir; hizasızlık kestirimi M3OT'ta güvenilir değil (Faz 2 kuralı temizde %35 yanlış alarm, ürün kuralı gerçek kaymayı kaçırıyor). Kullanıcı gözlemi (motosiklet sınıfı yok, val sahnelerinde kaçan araçlar) sınırlama olarak `docs/system.md`'ye. Hiçbir eşik ya da kural bu sonuçlara göre değiştirilmedi.
+
+## 2026-10-19 · F3 · Faz çıkışı (Görev 37)
+- **Rapor:** `baykus-system report` → `docs/system.md` (mimari, API, Kabul 1-8 kanıt dosyalarından, gecikme, M3OT tespit ve takip, val keşfi, M3OT sağlık, sınırlamalar); kanıt dosyası yoksa satır düşer.
+- **Kabul 1-8:** hepsi ✅ (1-2 `parity_detect`, 3 `parity_health`, 4 `parity_track` 600/600 × 2, 5 p95 82,2 ms, 6 kanıt 1-4 + Wi-Fi kapalı demo, 7 20/20 ekran maddesi, 8 15/15 hata durumu + 1000 rastgele istek). Tasarım §6.7'ye göre faz çıkışına izin veriyor → spec S7, S8 işaretlendi.
+- **README:** Faz 3 bölümü (ekran görüntüsü, sayılar, sınırlamalar, internetsiz kurulum üç komut, "H5 60 ms Windows yerel; motor Docker'da; karşılaştırılamaz", M3OT atfı).
+- **Sürüm:** `main` ← `f3`, etiket `v0.2.0`.
