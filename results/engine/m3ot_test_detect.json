@@ -1,0 +1,42 @@
+{
+  "split": "test",
+  "label_set": "ir",
+  "class_agnostic": true,
+  "sequences": [
+    "1_03",
+    "2_03"
+  ],
+  "ap50": 0.8604939967652753,
+  "ece_raw": 0.3608937575043127,
+  "ece_calibrated": 0.3468899521877115,
+  "duplicate_rate": 0.012064965197215777,
+  "n_images": 960,
+  "n_dets": 13382,
+  "per_seq": {
+    "1_03": {
+      "ap50": 0.8959218512403921,
+      "ece_raw": 0.3681078773139664,
+      "ece_calibrated": 0.35016302700685487,
+      "duplicate_rate": 0.0009082652134423251,
+      "n_images": 480,
+      "n_dets": 5685
+    },
+    "2_03": {
+      "ap50": 0.8201544315275927,
+      "ece_raw": 0.3522978286763922,
+      "ece_calibrated": 0.34298994512709036,
+      "duplicate_rate": 0.023719165085388995,
+      "n_images": 480,
+      "n_dets": 7697
+    }
+  },
+  "dets_files": [
+    "1_03.json.gz",
+    "2_03.json.gz"
+  ],
+  "floor": [
+    0.001
+  ],
+  "git_commit": "b25b1752f3281da7ba6593728372d913f2d95ea6",
+  "created_at": "2026-10-19T12:52:59Z"
+}
