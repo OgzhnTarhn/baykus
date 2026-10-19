@@ -1,8 +1,10 @@
 {
   "date": "2026-10-19",
   "sequence": "1_08",
-  "how": "Kabul 7 ekran maddeleri Claude tarafından Chrome eklentisiyle (normal compose, 127.0.0.1:3000) sınandı ve görüntülendi; Wi-Fi kapalı demo (Kabul 6 elle) kullanıcı adımı",
-  "wifi_off": null,
+  "how": "Kabul 7 ekran maddeleri Claude tarafından Chrome eklentisiyle (normal compose, 127.0.0.1:3000) sınandı ve görüntülendi; Wi-Fi kapalı demo (Kabul 6 elle) kullanıcı tarafından yapıldı",
+  "wifi_off": true,
+  "wifi_off_file": "docs/figures/system/01-wifi-kapali.jpg",
+  "wifi_off_note": "kullanıcı beyanı: Wi-Fi kapalıyken uygulama çalıştı; görüntü 1_08 kare 306 oynarken, conf 0,10, kapı uyar, arıza kapalı, alarm yok",
   "items": [
     {"id": "FR-U1 oynat / durdur", "file": "docs/figures/system/02-oynatici.jpg", "ok": true},
     {"id": "FR-U1 kare kare", "file": "docs/figures/system/03-kare-kare.jpg", "ok": true},
