@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-19",
+  "sequence": "1_08",
+  "how": "Kabul 7 ekran maddeleri Claude tarafından Chrome eklentisiyle (normal compose, 127.0.0.1:3000) sınandı ve görüntülendi; Wi-Fi kapalı demo (Kabul 6 elle) kullanıcı adımı",
+  "wifi_off": null,
+  "items": [
+    {"id": "FR-U1 oynat / durdur", "file": "docs/figures/system/02-oynatici.jpg", "ok": true},
+    {"id": "FR-U1 kare kare", "file": "docs/figures/system/03-kare-kare.jpg", "ok": true},
+    {"id": "FR-U1 hız üst sınırı", "file": "docs/figures/system/02-oynatici.jpg", "ok": true},
+    {"id": "FR-U2 RGB görünümü", "file": "docs/figures/system/04-rgb.jpg", "ok": true},
+    {"id": "FR-U2 IR görünümü", "file": "docs/figures/system/05-ir.jpg", "ok": true},
+    {"id": "FR-U2 yan yana; kutu, sınıf, kalibre skor, iz numarası", "file": "docs/figures/system/06-yan-yana.jpg", "ok": true},
+    {"id": "FR-U3 conf kaydırıcısı (0,50)", "file": "docs/figures/system/07-esik.jpg", "ok": true},
+    {"id": "FR-U3 takip kapalı", "file": "docs/figures/system/08-takip-kapali.jpg", "ok": true},
+    {"id": "FR-U3 kapı modu (uyar / otomatik)", "file": "docs/figures/system/14-ir-kapat-kapi.jpg", "ok": true},
+    {"id": "FR-U3 canlı gecikme grafiği", "file": "docs/figures/system/09-gecikme.jpg", "ok": true},
+    {"id": "FR-U4 karartma × 0,25", "file": "docs/figures/system/10-karartma.jpg", "ok": true},
+    {"id": "FR-U4 IR gürültü σ 20", "file": "docs/figures/system/11-ir-gurultu.jpg", "ok": true},
+    {"id": "FR-U4 IR kaydırma 20 px (ölçülen 21,4 px; 'IR hizasız' alarmı M3OT'ta çıkmaz, bilinen sınırlama)", "file": "docs/figures/system/12-ir-kaydirma-alarm-temizlendi.jpg", "ok": true},
+    {"id": "FR-U4 bulanıklık 11 × 11", "file": "docs/figures/system/13-bulaniklik.jpg", "ok": true},
+    {"id": "FR-U4 kamerayı kapat (IR)", "file": "docs/figures/system/14-ir-kapat-kapi.jpg", "ok": true},
+    {"id": "sağlık paneli (rozetler, 50 karelik şerit, değerler)", "file": "docs/figures/system/11-ir-gurultu.jpg", "ok": true},
+    {"id": "alarm başlama (IR gürültülü kare 417, IR kamera kayıp kare 122)", "file": "docs/figures/system/14-ir-kapat-kapi.jpg", "ok": true},
+    {"id": "alarm temizlenme (kare 427, kare 152)", "file": "docs/figures/system/15-alarm-temizlendi.jpg", "ok": true},
+    {"id": "alarm sıfırlama (Oturumu sıfırla: alarm, geçmiş, şerit boş)", "file": "docs/figures/system/16-sifirlama.jpg", "ok": true},
+    {"id": "kapı rozeti (uyar: 'yalnız uyarı'; otomatik: 'IR modele verilmiyor')", "file": "docs/figures/system/14-ir-kapat-kapi.jpg", "ok": true}
+  ]
+}
