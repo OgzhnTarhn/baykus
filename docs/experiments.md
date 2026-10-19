@@ -423,3 +423,20 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
 - **Kabul 7 (ekran):** 20 madde (FR-U1 oynatıcı, FR-U2 görünümler, FR-U3 conf / takip / kapı / gecikme grafiği, FR-U4 beş arıza, sağlık paneli, alarm başlama / temizlenme / sıfırlama, kapı rozeti) Claude tarafından Chrome eklentisiyle sınandı; hepsi `ok`. IR 20 px kaydırmada "IR hizasız" alarmı M3OT'ta çıkmıyor (eşleşme yanıtı `r_min` altında; Görev 12'deki bilinen sınırlama).
 - **Kabul 6 (elle):** kullanıcı Wi-Fi'yi kapatıp sayfayı yeniledi; oynatma ve tespit çalıştı (`01-wifi-kapali.jpg`: kare 306, conf 0,10, 10 tespit, motor p95 96,4 ms son 100 karede, arıza kapalı). `wifi_off: true`.
 - **Kullanıcı gözlemi (ölçüm değil):** bazı araçlar kutusuz kalıyor; motosikletler tespit edilmiyor. Model DroneVehicle'ın 5 sınıfıyla (car, truck, bus, van, freight_car) eğitildi, motosiklet sınıfı yok; M3OT'ta tespit gücü val'de AP50 0,396 (`results/engine/m3ot_dev_detect.json`). Sınırlama olarak raporlanır (Görev 37); Faz 3'te model değişmez.
+
+## 2026-10-19 · F3 · Son ölçüm: M3OT test (Görev 36, bir kez)
+- **Kurulum:** sistem donduruldu (kullanıcı onayı; etiket `f3-freeze` = `b25b175`; donmadan sonra yalnız ölçüm aracı eklendi: `baykus-track oracle` ve `scripts/m3ot_measure.sh`, ikisi de önce val'de sınandı). Test dizileri `1_03`, `2_03` (2 × 480 kare, 2465 IR kutusu); sınıfsız `vehicle`, IR etiketleri. Tespit C++ `baykus_detect` (motor imajı, ham ≥ 0,001), AP50 pycocotools, ECE 15 aralık ham ≥ 0,25; takip C++ `baykus_track` (takip katmanı ≥ 0,1, `trackers` 2.6.1 varsayılanları), `trackers eval`; sağlık `baykus-health m3ot --test` (Python referansı, laptop CPU). Kaynaklar `results/engine/m3ot_test_detect.json`, `results/track/m3ot_test_{engine,oracle}.json`, `results/health/m3ot_test_health.json`; val provası `m3ot_dev_*`.
+- **Tespit (birleşik, 960 kare):** AP50 **0,860** (`1_03` 0,896 · `2_03` 0,820); ECE ham 0,361 → kalibre 0,347; çift kutu oranı 0,012 (takip girdisi, IoU ≥ 0,7 farklı sınıf). Faz 1 E3c M3OT AP50 0,889 [0,877; 0,902] (PyTorch + `agnostic_nms`, E7) yanında: fark −2,9 puan; tasarım §4.3'e göre tek bir nedene bağlanmaz (ONNX, 300 kutu sınırı, sınıflar arası çift kutu, NMS yok). Val provasında aynı komutlar AP50 0,396 (kare başına ≈ 11,2 kutu; test ≈ 2,6).
+- **Takip (birleşik):** motor HOTA **0,489** · MOTA 0,547 · IDF1 0,677; oracle HOTA **0,949** · MOTA 0,981 · IDF1 0,941. Takipçi doğru kutularla neredeyse kusursuz; motor satırındaki düşüş tespitten (ADR 0008).
+- **Sağlık (T, birleşik, 960 kare; yalnız raporlanır):**
+
+| Kural | temiz hizasız alarm | misalign-20 alarm | gecikme (@K = 240) | temiz AP50 auto / off | noise-20 AP50 auto / off |
+|---|---|---|---|---|---|
+| Faz 2 | %35,1 | %83,0 | 0 / 0 kare | 0,569 / 0,860 | 0,033 / 0,818 |
+| kare (`r_min`) | %0 | %0,4 | — | 0,860 / 0,860 | 0,033 / 0,818 |
+| kare + zaman | %0 | %0 | yok | 0,860 / 0,860 | 0,033 / 0,818 |
+
+  - `drop_ir` IR kayıp alarmı %99,6, `noise-20` IR gürültülü alarmı %99,6 (pencerenin ilk iki karesi hariç); yanlış kayıp / gürültü alarmı temizde %0.
+  - `misalign-20` E3c'yi testte de çökertiyor (AP50 0,860 → 0,006); ürün kuralı (kare + zaman) bu kaymayı yakalamıyor — val'deki bulgu testte tekrarlandı. Demo ölçütü iki test dizisinde de tutmadı (temiz ≤ %2 ✅, misalign-20 ≥ %90 ❌, gecikme ≤ 10 ❌).
+  - Python sağlık pipeline'ının temiz `off` AP50'si (0,8605) C++ `baykus_detect` ölçümüyle aynı.
+- **Yorum:** Faz 3 motoru M3OT test'te Faz 1 ölçümüne yakın tespit veriyor; takipçi sağlam, sınır dedektörde. Sağlık kayıp ve gürültüde güvenilir; hizasızlık kestirimi M3OT'ta güvenilir değil (Faz 2 kuralı temizde %35 yanlış alarm, ürün kuralı gerçek kaymayı kaçırıyor). Kullanıcı gözlemi (motosiklet sınıfı yok, val sahnelerinde kaçan araçlar) sınırlama olarak `docs/system.md`'ye. Hiçbir eşik ya da kural bu sonuçlara göre değiştirilmedi.
