@@ -4,6 +4,7 @@ pack-dets — detect çıktılarını takip katmanına (ham ≥ 0,1) süzüp tek
 run       — tespit dosyası → iz dosyası (dizi başına yeni takipçi; --dump ile iç durum dökümü).
 compare   — Python ↔ C++ iz dosyaları → Kabul 4 (parity_track.json).
 eval      — iz + tespit + pack_labels iz CSV'si → HOTA, MOTA, IDF1 (test bayrakla).
+oracle    — pack_labels iz CSV'si → M3OT kutuları skor 1 ile tespit dosyası (oracle satırı).
 fixtures  — atama çözücüsü ve Kalman birim fikstürleri.
 """
 
@@ -24,6 +25,7 @@ from baykus.track.runner import (
     kalman_steps,
     load_cfg,
     lsap_cases,
+    oracle_frames,
     run_tracks,
 )
 
@@ -143,6 +145,20 @@ def _cmd_eval(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_oracle(a: argparse.Namespace) -> int:
+    seqs = []
+    for d in a.seq_dir:
+        idx = json.loads((Path(d) / "index.json").read_text(encoding="utf-8"))
+        if idx["split"] == "test" and not a.i_know_this_is_test:
+            raise ValueError(f"{idx['name']}: test dizisi; yalnız son ölçümde {TEST_FLAG} ile")
+        frames = oracle_frames(Path(a.gt_csv), idx["name"], idx["frames"])
+        seqs.append({"seq": idx["name"], "split": idx["split"], "frames": frames})
+    out = _write_gz(Path(a.out), {"source": "oracle", "sequences": seqs})
+    n = sum(len(fr["dets"]) for s in seqs for fr in s["frames"])
+    print(f"{out} ({len(seqs)} dizi, {n} kutu)")
+    return 0
+
+
 def _cmd_fixtures(a: argparse.Namespace) -> int:
     out = Path(a.out_dir)
     recs = {
@@ -189,6 +205,13 @@ def build_parser() -> argparse.ArgumentParser:
     e.add_argument("--out", required=True)
     e.add_argument(TEST_FLAG, action="store_true")
     e.set_defaults(func=_cmd_eval)
+    o = sub.add_parser("oracle", help="M3OT kutuları skor 1 ile tespit dosyası")
+    o.add_argument("--gt-csv", required=True, help="pack_labels tracks_ir.csv")
+    o.add_argument("--seq-dir", nargs="+", required=True, help="index.json'lu dizi klasörleri")
+    o.add_argument("--out", required=True)
+    o.add_argument(TEST_FLAG, action="store_true")
+    o.set_defaults(func=_cmd_oracle)
+
     fx = sub.add_parser("fixtures", help="atama ve Kalman birim fikstürleri")
     fx.add_argument("--out-dir", default="../fixtures/expected")
     fx.set_defaults(func=_cmd_fixtures)

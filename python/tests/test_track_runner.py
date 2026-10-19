@@ -14,6 +14,7 @@ from baykus.track.runner import (
     kalman_steps,
     load_cfg,
     lsap_cases,
+    oracle_frames,
     run_tracks,
     to_mot,
 )
@@ -108,6 +109,36 @@ def test_gt_mot_from_tracks_csv(tmp_path: Path):
     )
     got = gt_mot(csv, "1_08")
     assert got.strip().splitlines() == ["1,5,10.0,20.0,30.0,40.0,1,1,1.0"]
+
+
+def test_oracle_frames_gt_boxes_score_one(tmp_path: Path):
+    csv = tmp_path / "tracks_ir.csv"
+    csv.write_text(
+        "split,modality,seq,frame,stem,track_id,x,y,w,h,flag,cls,vis\n"
+        "val,ir,1_08,1,1_08_000001,5,10,20,30,40,1,1,1.0\n"
+        "val,ir,1_08,1,1_08_000001,6,50,60,10,10,1,1,0.1\n"  # görünürlük ≤ 0,25: GT'de de yok
+        "val,ir,1_08,3,1_08_000003,5,12,20,30,40,1,1,1.0\n"
+        "val,ir,2_08,1,2_08_000001,7,1,2,3,4,1,1,1.0\n",
+        encoding="utf-8",
+    )
+    frames = oracle_frames(csv, "1_08", [1, 2, 3])
+    assert [fr["frame"] for fr in frames] == [1, 2, 3]  # kutusuz kare de takipçiye gider
+    assert frames[0]["dets"] == [
+        {"index": 0, "cls_id": 0, "score_raw": 1.0, "score": 1.0, "box": [10.0, 20.0, 40.0, 60.0]}
+    ]
+    assert frames[1]["dets"] == [] and frames[2]["dets"][0]["box"] == [12.0, 20.0, 42.0, 60.0]
+
+
+def test_oracle_tracks_evaluate_well(tmp_path: Path):
+    csv = tmp_path / "tracks_ir.csv"
+    rows = ["split,modality,seq,frame,stem,track_id,x,y,w,h,flag,cls,vis"]
+    rows += [f"val,ir,1_08,{f},1_08_{f:06d},3,{10 + 2 * f},20,30,40,1,1,1.0" for f in range(1, 9)]
+    csv.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    dets = oracle_frames(csv, "1_08", list(range(1, 9)))
+    tracks, _ = run_tracks(dets, load_cfg(CFG))
+    s = evaluate_mot({"1_08": (tracks, dets)}, csv)["per_seq"]["1_08"]
+    # ByteTrack ilk karelerde izi onaylamadan yazmaz (minimum_consecutive_frames); gerisi kusursuz
+    assert s["IDF1"] > 0.8 and s["MOTA"] > 0.7
 
 
 def test_evaluate_mot_perfect(tmp_path: Path):

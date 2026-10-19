@@ -123,6 +123,24 @@ def gt_mot(tracks_csv: Path, seq: str) -> str:
     return "\n".join(lines) + ("\n" if lines else "")
 
 
+def oracle_frames(tracks_csv: Path, seq: str, frames: list[int]) -> list[dict]:
+    """Oracle satırı (tasarım §4.3): M3OT kutuları skor 1 ile tespit dosyası karelerine (`gt_mot`'la
+    aynı süzgeç); kutusuz kareler de boş listeyle girer ki takipçi yaşlansın."""
+    by_frame: dict[int, list[dict]] = {f: [] for f in frames}
+    with Path(tracks_csv).open(encoding="utf-8", newline="") as f:
+        for r in csv.DictReader(f):
+            if r["seq"] != seq or int(r["flag"]) != 1 or int(r["cls"]) != 1:
+                continue
+            if float(r["vis"]) <= GT_VIS or int(r["frame"]) not in by_frame:
+                continue
+            x, y, w, h = (float(r[k]) for k in ("x", "y", "w", "h"))
+            dets = by_frame[int(r["frame"])]
+            box = [x, y, x + w, y + h]
+            d = {"index": len(dets), "cls_id": 0, "score_raw": 1.0, "score": 1.0, "box": box}
+            dets.append(d)
+    return [{"frame": f, "dets": by_frame[f]} for f in frames]
+
+
 def _metrics(res) -> dict:
     return {"HOTA": res.HOTA.HOTA, "MOTA": res.CLEAR.MOTA, "IDF1": res.Identity.IDF1}
 

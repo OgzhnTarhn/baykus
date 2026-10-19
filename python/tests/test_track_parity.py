@@ -146,3 +146,31 @@ def test_cli_refuses_test_split(tmp_path):
     cfg = str(Path(__file__).resolve().parents[2] / "configs/engine/tracker.json")
     t = str(_dets_file(tmp_path, "test"))
     assert main(["run", "--dets", t, "--out", str(tmp_path / "o.gz"), "--config", cfg]) == 2
+
+
+def test_cli_oracle_writes_sequences_and_refuses_test(tmp_path):
+    import gzip
+    import json
+
+    from baykus.track.cli import main
+
+    csv = tmp_path / "tracks_ir.csv"
+    csv.write_text(
+        "split,modality,seq,frame,stem,track_id,x,y,w,h,flag,cls,vis\n"
+        "val,ir,1_08,2,1_08_000002,5,10,20,30,40,1,1,1.0\n",
+        encoding="utf-8",
+    )
+    for split in ("val", "test"):
+        d = tmp_path / split / "1_08"
+        d.mkdir(parents=True)
+        idx = {"name": "1_08", "split": split, "frames": [1, 2]}
+        (d / "index.json").write_text(json.dumps(idx), encoding="utf-8")
+    out = tmp_path / "oracle.json.gz"
+    args = ["oracle", "--gt-csv", str(csv), "--out", str(out), "--seq-dir"]
+    assert main([*args, str(tmp_path / "val" / "1_08")]) == 0
+    rec = json.loads(gzip.decompress(out.read_bytes()))
+    (s,) = rec["sequences"]
+    assert s["seq"] == "1_08" and s["split"] == "val" and rec["source"] == "oracle"
+    assert [len(fr["dets"]) for fr in s["frames"]] == [0, 1]
+    assert main([*args, str(tmp_path / "test" / "1_08")]) == 2
+    assert main([*args, str(tmp_path / "test" / "1_08"), "--i-know-this-is-test"]) == 0
