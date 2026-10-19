@@ -3,7 +3,7 @@
 import { describe, expect, it } from "vitest";
 
 import { createPlayer, type PlayerDeps } from "@/lib/player";
-import { newSessionId, shouldReset } from "@/lib/session";
+import { newSessionId, shouldReset, trackResumed } from "@/lib/session";
 
 type Call = { seq: string; frame: number; resolve: (v: string) => void; reject: (e: Error) => void };
 
@@ -72,6 +72,14 @@ describe("session", () => {
     expect(shouldReset({ seq: "a", index: 3 }, { seq: "a", index: 2 })).toBe(true);
     expect(shouldReset({ seq: "a", index: 3 }, { seq: "a", index: 3 })).toBe(true);
     expect(shouldReset({ seq: "a", index: 14 }, { seq: "a", index: 0 })).toBe(true);
+  });
+
+  it("resets when tracking is switched back on", () => {
+    // takip kapalıyken motor takipçiyi güncellemez; yeniden açılınca aradaki kareler boşluk olur
+    expect(trackResumed(false, true)).toBe(true);
+    expect(trackResumed(true, false)).toBe(false);
+    expect(trackResumed(true, true)).toBe(false);
+    expect(trackResumed(false, false)).toBe(false);
   });
 });
 

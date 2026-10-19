@@ -37,7 +37,7 @@ import {
 } from "@/lib/client";
 import { LatencyWindow } from "@/lib/latency";
 import { createPlayer, type PlayerSnapshot } from "@/lib/player";
-import { newSessionId } from "@/lib/session";
+import { newSessionId, trackResumed } from "@/lib/session";
 import { DEFAULT_SETTINGS } from "@/lib/settings";
 
 
@@ -102,7 +102,6 @@ function makeConsole(
   const blobUrls: string[][] = []; // bozulmuş karelerin nesne URL'leri; iki kare sonra bırakılır
   let session: string | null = null;
   const sid = () => (session ??= newSessionId());
-  const settings = { set: (v: Settings) => (current = v) };
   const alarms = new Alarms();
   const latency = new LatencyWindow();
   let strip: StripEntry[] = [];
@@ -164,6 +163,12 @@ function makeConsole(
     now: () => performance.now(),
     onChange,
   });
+  const settings = {
+    set: (v: Settings) => {
+      if (trackResumed(current.track, v.track)) player.requestReset();
+      current = v;
+    },
+  };
   return { player, settings };
 }
 
