@@ -31,3 +31,6 @@ kaggle.json
 
 # taşınabilir paket (scripts/prepare.sh --bundle out/)
 /out/
+
+# editör ayarları (kişisel)
+.vscode/
