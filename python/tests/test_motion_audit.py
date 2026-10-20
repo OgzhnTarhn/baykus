@@ -2,9 +2,20 @@ import json
 import re
 from pathlib import Path
 
+import cv2
+import numpy as np
 import pytest
 
-from baykus.motion.audit import Sample, population, render, sample, score, wilson
+from baykus.motion.audit import (
+    CENTER,
+    Sample,
+    centered,
+    population,
+    render,
+    sample,
+    score,
+    wilson,
+)
 from baykus.motion.images import load_sequence
 from baykus.motion.labels import LabelRow
 
@@ -172,3 +183,76 @@ def test_audit_score_cli_exit_code(tmp_path: Path):
     )
     assert code == 1  # tek örnek, uyumsuz → fail
     assert json.loads(out.read_text(encoding="utf-8"))["verdict"] == "fail"
+
+
+def _render_one(tmp_path: Path, speed: tuple[float, float]):
+    tracks = {1: {"start": (160, 128), "speed": speed}}
+    frames, gt = make_video(n=40, cam=(2.0, 1.0), tracks=tracks)
+    d = write_sequence(tmp_path / "dev", "syn", frames, gt)
+    seq = load_sequence(d, allow_test=False)
+    out = tmp_path / "audit"
+    ids = render([Sample("syn", 20, 1, "uniform")], {"syn": seq}, {"syn": gt}, out, k=15)
+    sid = next(iter(ids))
+    from baykus.io import imread_any
+
+    def crop(j: int, ch: str):
+        return imread_any(out / "crops" / f"{sid}_{j:02d}_{ch}.jpg", cv2.IMREAD_GRAYSCALE)
+
+    return crop, frames, gt
+
+
+def _background_change(crop) -> float:
+    a, b = crop(0, "ir").astype(float), crop(10, "ir").astype(float)
+    ring = np.ones_like(a, bool)
+    ring[70:122, 70:122] = False  # aracın çevresi hariç arka plan
+    return float(np.abs(a - b)[ring].mean())
+
+
+def test_crop_follows_vehicle(tmp_path: Path):
+    """Pencere araca ortalanır: duran araçta arka plan kıpırdamaz, hareketlide kayar (kamera da
+    kayıyor)."""
+    still = _background_change(_render_one(tmp_path / "a", (0, 0))[0])
+    moving = _background_change(_render_one(tmp_path / "b", (4, 0))[0])
+    assert still < 6.0
+    assert moving > 3 * still
+
+
+def test_rgb_crop_has_no_box_over_vehicle(tmp_path: Path):
+    """RGB kutusu IR etiketinden geldiği için kayar (kullanıcı geri bildirimi): RGB'de kutu
+    çizilmez, yalnız aracın dışında köşe işaretleri."""
+    crop, frames, gt = _render_one(tmp_path, (0, 0))
+    x1, y1, x2, y2 = gt[1][20]  # j = 5 → t − 15 + 15 = 20
+    want = centered(frames[20], (x1 + x2) / 2, (y1 + y2) / 2).astype(float)
+    got = crop(5, "rgb").astype(float)
+    c = slice(CENTER - 15, CENTER + 15)
+    assert np.abs(got[c, c] - want[c, c]).mean() < 4.0  # aracın üstünde çizgi yok
+    corner = (slice(CENTER - 23, CENTER - 20), slice(CENTER - 23, CENTER - 14))
+    assert np.abs(got[corner] - want[corner]).max() > 60  # köşe işareti var
+
+
+def test_sample_excludes_previous_round():
+    gt = _gt(60, 100)
+    frames = {"s": list(range(1, 101))}
+    labels = _labels(gt, lambda t, f: "band" if t % 2 == 0 else "moving")
+    pop = population(gt, frames, k=15)
+    first = sample(pop, labels, seed=42)
+    seen = {(s.seq, s.frame, s.track_id) for s in first}
+    second = sample(pop, labels, seed=43, exclude=seen)
+    assert not seen & {(s.seq, s.frame, s.track_id) for s in second}
+    assert len(second) == 120
+
+
+def test_page_states_majority_rule(tmp_path: Path):
+    """Klibin bir kısmında duran, bir kısmında hareket eden araç için kural yazılı (1. tur notu)."""
+    crop, frames, gt = _render_one(tmp_path, (0, 0))
+    html = (tmp_path / "audit" / "index.html").read_text(encoding="utf-8")
+    assert "çoğunlukla" in html and "yarı yarıya" in html
+
+
+def test_crop_outside_image_is_black():
+    """Görüntü dışına taşan pencere siyah dolgulu (tekrarlı kenar çizgileri dikkat dağıtıyordu)."""
+    img = np.full((100, 120), 200, np.uint8)
+    c = centered(img, 5.0, 5.0)
+    assert c.shape == (192, 192)
+    assert c[0:80, 0:80].max() == 0  # sol üst: görüntü dışı
+    assert c[CENTER + 10, CENTER + 10] == 200  # görüntü içi

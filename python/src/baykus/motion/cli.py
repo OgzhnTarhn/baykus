@@ -105,13 +105,19 @@ def _cmd_audit(a: argparse.Namespace) -> int:
     gts = {n: gt_tracks(tracks, n) for n in seqs}
     labels, shas = _load_labels(Path(a.labels_dir), list(seqs))
     pop = population(gts, {n: s.frames for n, s in seqs.items()}, k=K)
-    picked = sample(pop, labels, seed=a.seed, k=K)
+    seen: set = set()
+    for prev in a.exclude_key:  # önceki turlarda gösterilen örnekler
+        for s in json.loads(Path(prev).read_text(encoding="utf-8"))["samples"].values():
+            seen.add((s["seq"], s["frame"], s["track_id"]))
+    picked = sample(pop, labels, seed=a.seed, k=K, exclude=seen)
     ids = render(picked, seqs, gts, Path(a.out), k=K, seed=a.seed)
     key = {
         "split": cfg["split"],
         "seed": a.seed,
         "k": K,
         "population": len(pop),
+        "excluded": len(seen),
+        "exclude_keys": [_sha256(Path(p)) for p in a.exclude_key],
         "samples": {i: s._asdict() for i, s in ids.items()},
         "labels_sha256": shas,
         "tracks_sha256": _sha256(tracks),
@@ -168,6 +174,7 @@ def build_parser() -> argparse.ArgumentParser:
     au.add_argument("--out", default="../data/motion/audit")
     au.add_argument("--key", default="../data/motion/audit_key_val.json")
     au.add_argument("--seed", type=int, default=42)
+    au.add_argument("--exclude-key", action="append", default=[], help="önceki turun anahtarı")
     au.add_argument(TEST_FLAG, action="store_true", dest="i_know_this_is_test")
     au.set_defaults(func=_cmd_audit)
     sc = sub.add_parser("audit-score", help="kör örneklem cevapları → Kabul 4")

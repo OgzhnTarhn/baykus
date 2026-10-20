@@ -4,7 +4,8 @@ Nüfus etiketleyiciden bağımsız: aracın `t ± K` aralığında görünür ol
 Örneklem 80 düzgün rastgele (asıl ölçüt) + 40 hedefli (etiketleyicinin bant / kayıtsız dediği
 ya da etiket değişiminin ±K çevresindeki örnekler; bilgi için), iz başına en çok 3, seed 42.
 Sayfa yerel ve internetsiz; etiket, hız ve örnek türü gösterilmez; kırpıntılar telafisizdir
-(bir kestiricinin kaydı kullanılsaydı doğrulama döngüsel olurdu). Puanlama yalnız 80 düzgün
+(bir kestiricinin kaydı kullanılsaydı doğrulama döngüsel olurdu); 2. turdan itibaren pencere
+araca ortalanır (`centered`). Puanlama yalnız 80 düzgün
 örnekte:
 (a) insan ve etiketleyicinin karar verdiği örneklerde uyum ≥ %95, (b) "emin değilim" ≤ %15,
 (c) insan-kararlı örneklerin ≥ %80'i etiketleyicinin etiketli nüfusunda.
@@ -27,6 +28,8 @@ from baykus.motion.labels import Frames, LabelRow
 
 N_UNIFORM, N_TARGETED, PER_TRACK, SEED = 80, 40, 3, 42
 STEP, CROP = 3, 192
+CENTER = CROP // 2
+MARK = 22  # RGB köşe işaretlerinin yarı kenarı (araç ≈ 12-16 px + doğal RGB-IR kayması)
 A_MIN, B_MAX, C_MIN = 0.95, 0.15, 0.80
 ANSWERS = ("moving", "stationary", "unsure")
 DECIDED = ("moving", "stationary")
@@ -77,10 +80,13 @@ def sample(
     n_targeted: int = N_TARGETED,
     per_track: int = PER_TRACK,
     k: int = 15,
+    exclude: set[Key] | frozenset[Key] = frozenset(),
 ) -> list[Sample]:
+    """`exclude`: önceki turda gösterilmiş örnekler (yeniden doğrulamada kullanıcı aynı aracı
+    hatırlamasın; tasarım §5.3)."""
     rng = random.Random(seed)
     count: dict[tuple[str, int], int] = {}
-    chosen: set[Key] = set()
+    chosen: set[Key] = set(exclude)
 
     def take(cands: list[Key], n: int, kind: str) -> list[Sample]:
         got: list[Sample] = []
@@ -103,19 +109,25 @@ def sample(
     return out + take(tgt, n_targeted, "targeted")
 
 
-def _window(cx: float, cy: float, w: int, h: int, size: int) -> tuple[int, int]:
-    x0 = int(round(cx - size / 2))
-    y0 = int(round(cy - size / 2))
-    return min(max(x0, 0), max(w - size, 0)), min(max(y0, 0), max(h - size, 0))
+def centered(img: np.ndarray, cx: float, cy: float) -> np.ndarray:
+    """Aracın kutu merkezine ortalanmış CROP × CROP pencere (alt piksel; kenarda tekrarlı dolgu).
+
+    Pencere her karede araca ortalanır: araç duruyorsa arka plan da durur, kayıyorsa araç arka
+    plana göre hareket ediyordur. Yalnız GT kutusu kullanılır, kamera hareketi kestirilmez
+    (doğrulama döngüsel olmaz). Kullanıcı geri bildirimi (2026-10-20): sabit pencerede kamera
+    hareketi duran araçları da hareketli gösteriyordu."""
+    padded = cv2.copyMakeBorder(img, CROP, CROP, CROP, CROP, cv2.BORDER_CONSTANT, value=0)
+    return cv2.getRectSubPix(padded, (CROP, CROP), (cx + CROP, cy + CROP))  # dışı siyah
 
 
-def _crop(img: np.ndarray, x0: int, y0: int, size: int) -> np.ndarray:
-    c = img[y0 : y0 + size, x0 : x0 + size]
-    if c.shape[0] == size and c.shape[1] == size:
-        return c.copy()
-    pad = np.zeros((size, size, *img.shape[2:]), img.dtype)
-    pad[: c.shape[0], : c.shape[1]] = c
-    return pad
+def corner_marks(c: np.ndarray) -> np.ndarray:
+    """RGB'de kutu yerine merkez çevresinde köşe işaretleri: kutu IR etiketinden geldiği için RGB'de
+    araçtan kayıyordu (doğal RGB-IR kayması; RGB etiketleri laptopta yok)."""
+    a, b, n = CENTER - MARK, CENTER + MARK, 7
+    for x, y, dx, dy in ((a, a, 1, 1), (b, a, -1, 1), (a, b, 1, -1), (b, b, -1, -1)):
+        cv2.line(c, (x, y), (x + dx * n, y), (0, 255, 255), 1)
+        cv2.line(c, (x, y), (x, y + dy * n), (0, 255, 255), 1)
+    return c
 
 
 def render(
@@ -136,19 +148,16 @@ def render(
     offsets = list(range(-k, k + 1, STEP))
     for sid, s in ids.items():
         seq, per = seqs[s.seq], gts[s.seq][s.track_id]
-        x1, y1, x2, y2 = per[s.frame]
         for j, off in enumerate(offsets):
             f = s.frame + off
-            ir = seq.ir(f)
-            rgb = seq.rgb(f)
-            x0, y0 = _window((x1 + x2) / 2, (y1 + y2) / 2, ir.shape[1], ir.shape[0], CROP)
-            b = per.get(f)
-            for ch, img, color in (("ir", ir, 255), ("rgb", rgb, (0, 255, 255))):
-                c = _crop(img, x0, y0, CROP)
-                if b is not None:
-                    p1 = (int(round(b[0] - x0)) - 2, int(round(b[1] - y0)) - 2)
-                    p2 = (int(round(b[2] - x0)) + 1, int(round(b[3] - y0)) + 1)
-                    cv2.rectangle(c, p1, p2, color, 1)
+            b = per.get(f) or per[min(per, key=lambda g: abs(g - f))]  # eksik karede en yakın kutu
+            cx, cy = (b[0] + b[2]) / 2, (b[1] + b[3]) / 2
+            ir = centered(seq.ir(f), cx, cy)
+            p1 = (int(round(b[0] - cx)) + CENTER - 2, int(round(b[1] - cy)) + CENTER - 2)
+            p2 = (int(round(b[2] - cx)) + CENTER + 1, int(round(b[3] - cy)) + CENTER + 1)
+            cv2.rectangle(ir, p1, p2, 255, 1)
+            rgb = corner_marks(centered(seq.rgb(f), cx, cy))
+            for ch, c in (("ir", ir), ("rgb", rgb)):
                 imwrite_any(crops / f"{sid}_{j:02d}_{ch}.jpg", c, [cv2.IMWRITE_JPEG_QUALITY, 90])
     page = PAGE.replace("__SAMPLES__", json.dumps([{"id": i} for i in ids]))
     page = page.replace("__FRAMES__", str(len(offsets)))
@@ -233,14 +242,16 @@ button.on { border-color: var(--accent); outline: 2px solid var(--accent); }
 <body>
 <main>
 <h1>Araç hareket ediyor mu?</h1>
-<p>Her örnekte aynı aracın yaklaşık bir saniyelik görüntüsü oynar (kutu araçtır). Kamera da hareket
-ediyor; aracı yol, çizgi ve park etmiş araçlar gibi arka plana göre değerlendir. Emin değilsen
-"Emin değilim" seç. Kısayollar: 1 hareketli, 2 duran, 3 emin değilim, ← → gezin.</p>
+<p>Her örnekte aynı aracın yaklaşık bir saniyelik görüntüsü oynar. Görüntü araca ortalanmıştır
+(IR'de kutu, RGB'de köşe işaretleri): araç duruyorsa arka plan da durur; yol, çizgi ve park etmiş
+araçlar kayıyorsa araç hareket ediyordur. Araç klip boyunca çoğunlukla hareket ediyorsa
+"Hareketli", çoğunlukla duruyorsa "Duran"; yarı yarıya ise ya da göremiyorsan "Emin değilim" seç.
+Kısayollar: 1 hareketli, 2 duran, 3 emin değilim, ← → gezin.</p>
 <div class="bar"><strong id="pos"></strong><span class="grow"></span><span id="done"></span></div>
 <div class="views">
   <figure><img id="ir" alt="IR"><figcaption>IR</figcaption></figure>
   <figure><img id="rgb" alt="RGB">
-    <figcaption>RGB (kutu IR etiketinden; kayabilir)</figcaption></figure>
+    <figcaption>RGB (araç köşe işaretlerinin ortasında)</figcaption></figure>
 </div>
 <div class="bar">
   <button data-a="moving">1 · Hareketli</button>
