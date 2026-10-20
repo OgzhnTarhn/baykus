@@ -1,0 +1,98 @@
+{
+  "split": "val",
+  "sequences": [
+    "1_08",
+    "2_08"
+  ],
+  "method": "tasarım §4 keşif yöntemi: maskesiz ORB 2000 + ardışık benzerlik (RANSAC 2 px); GT maskeli ORB + ardışık homografi zinciri, K=15, v = yer değiştirme / K / kutu boyu (t), ≤0,03 / bant / ≥0,10; kutu boyu 100 karelik bloklarda",
+  "per_seq": {
+    "1_08": {
+      "ir": {
+        "step_px": {
+          "median": 1.4955675024862733,
+          "p90": 2.5032932100135197,
+          "max": 22.61586058908456
+        },
+        "rot_deg_median": 0.020027220560922557,
+        "scale_median": 1.0023329609396832,
+        "chained_scale": 4.30995387619789,
+        "pairs": 599
+      },
+      "rgb": {
+        "step_px": {
+          "median": 1.624923770641597,
+          "p90": 2.572394286532192,
+          "max": 12.376817611697387
+        },
+        "rot_deg_median": 0.02058335945737959,
+        "scale_median": 1.0027263084857938,
+        "chained_scale": 4.991577581800863,
+        "pairs": 599
+      },
+      "v_hist": {
+        "lo": 1277,
+        "band": 434,
+        "hi": 3263,
+        "total": 4974
+      },
+      "box_growth": {
+        "first_block": 12.359935274911438,
+        "last_block": 15.64682875217851,
+        "ratio": 1.265931285573874,
+        "blocks": [
+          0,
+          5
+        ]
+      },
+      "tracks": 39,
+      "track_len_median": 122.0,
+      "frames": 600
+    },
+    "2_08": {
+      "ir": {
+        "step_px": {
+          "median": 1.06370385757716,
+          "p90": 1.7924697537137102,
+          "max": 10.052024799582512
+        },
+        "rot_deg_median": 0.01797889680005136,
+        "scale_median": 1.0017015465744503,
+        "chained_scale": 3.030938952698522,
+        "pairs": 599
+      },
+      "rgb": {
+        "step_px": {
+          "median": 1.0073203447672403,
+          "p90": 1.5987480691185072,
+          "max": 2.5552177497132784
+        },
+        "rot_deg_median": 0.014043545795565967,
+        "scale_median": 1.001770902939927,
+        "chained_scale": 3.071656296075259,
+        "pairs": 599
+      },
+      "v_hist": {
+        "lo": 2375,
+        "band": 846,
+        "hi": 4051,
+        "total": 7272
+      },
+      "box_growth": {
+        "first_block": 10.2171424576542,
+        "last_block": 16.356650023767088,
+        "ratio": 1.6009026096639634,
+        "blocks": [
+          0,
+          5
+        ]
+      },
+      "tracks": 39,
+      "track_len_median": 188.0,
+      "frames": 600
+    }
+  },
+  "tracks_sha256": "cf4e85e929c20149e2c8afa96d2ae1a7c3f1fc0d88d24f44cffb8877154868df",
+  "git_commit": "6c6340d2710c937086de637e02c0cd1b77a1083e",
+  "git_dirty": true,
+  "created_at": "2026-10-20T19:54:32Z"
+}

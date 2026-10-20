@@ -122,6 +122,10 @@ Geçici betikle (scratchpad; plan Görev 1'de `baykus-motion explore` olarak yen
   | `1_08` | 1309 | 412 (%8,3) | 3253 | 4974 |
   | `2_08` | 2381 | 848 (%11,7) | 4043 | 7272 |
 
+  **Yeniden üretim (2026-10-20, `baykus-motion explore` → `results/motion/explore_val.json`; bu kayıt
+  esastır):** adım ve zincir ölçeği aynı (1,50 / 1,06 px; 4,31 / 3,03); histogram `1_08` 1277 / 434 (%8,7) /
+  3263, `2_08` 2375 / 846 (%11,6) / 4051. Küçük fark geçici betiğe göre maske kutularının yuvarlanmasından ve
+  `≤ 0,03` sınırından (betik `< 0,03` saymıştı); eşikler ve yorum değişmez.
   Dağılım iki tepeli: duranlar `v ≈ 0,01-0,02`'de (GT kutu titremesi), hareketliler 0,15-0,5'te; `1_08`'de
   0,04-0,08 arası çukur, `2_08`'de daha düz (yavaşlayan / duran-kalkan araçlar). Dizi başına 39 iz; iz uzunluğu
   ortanca 122 ve 188 kare. **Eşikler (0,03 ve 0,10) bu keşiften, ölçümden önce sabitlenir** (§5.2); val
