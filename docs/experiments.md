@@ -446,3 +446,14 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
 - **Kabul 1-8:** hepsi ✅ (1-2 `parity_detect`, 3 `parity_health`, 4 `parity_track` 600/600 × 2, 5 p95 82,2 ms, 6 kanıt 1-4 + Wi-Fi kapalı demo, 7 20/20 ekran maddesi, 8 15/15 hata durumu + 1000 rastgele istek). Tasarım §6.7'ye göre faz çıkışına izin veriyor → spec S7, S8 işaretlendi.
 - **README:** Faz 3 bölümü (ekran görüntüsü, sayılar, sınırlamalar, internetsiz kurulum üç komut, "H5 60 ms Windows yerel; motor Docker'da; karşılaştırılamaz", M3OT atfı).
 - **Sürüm:** `main` ← `f3`, etiket `v0.2.0`.
+
+## 2026-10-20 · F4 · Val keşfi: kamera hareketi ve hareketli/duran ayrımı
+- **Kurulum:** yalnız M3OT val (`1_08`, `2_08`, IR, GT izleri); geçici betik (repoda değil), laptop CPU. Test kullanılmadı. Sayılar keşif; kayıtlı sonuç Faz 4 Görev 1'de `results/motion/explore_val.json`.
+- **Bulgular:** kamera hareket ediyor (öteleme ortanca 1,50 / 1,06 px/kare, dönme ≈ 0,02°/kare, ölçek ≈ %0,2/kare yaklaşma); ardışık kare zinciri 600 karede ölçeği 4,3 / 3,0 kat şişiriyor, GT kutu boyu yalnız ≈ 1,3-1,6 kat büyüyor → anahtar kareye kayıt şart. Telafi edilmiş 15 karelik hız / kutu boyu iki tepeli: `≤ 0,03` 1309 / 2381, bant 412 (%8,3) / 848 (%11,7), `≥ 0,10` 3253 / 4043 (`1_08` / `2_08`).
+- **Sonuç:** eşikler 0,03 / 0,10 ve `K = 15` bu keşiften, ölçümden önce sabit (tasarım §4, §5.2); val sonuçları "val'de keşif".
+
+## 2026-10-20 · F4 · Tasarım incelemesi (Codex) ve kararlar
+- **Kaynak:** `docs/design/faz4.md` v1'in Codex incelemesi (12 bulgu + §10 kararlarına tutum). Her bulgu kodla ve belgeyle doğrulandı; tablo tasarım §12'de.
+- **Kabul edilenler (v2):** harita nesli sözleşmesi (kanal değişimi / uzun kayıpta yeni nesil, kısa kayıpta yeniden bağlama); süzgeçsiz `tracks[]` (bölge olayları güven kaydırıcısından bağımsız; `runtime.cpp` kimlikleri yalnız süzülmüş listeye yazıyordu); etiketleyiciden bağımsız seçilen kör insan örneklemi (val kapı, test rapor); uçtan uca klip eşliği (6 senaryo, Release `fixtures-f4`); sabit paydalar, geri çağırma ve kesinlik; oracle işlev kapısı (Kabul 9); iddia kuralı; harita kayması referans kayda karşı; 550 ardışık kare bench; referans hız formülünde payda `t + K`; S6 ve K7 Görev 0'a.
+- **Kabul edilmeyenler:** CI takip kapısının "gerçek kapı olmadığı" (kapı `ctest` `Tracker.FixtureParity`, `REQ=1`; `compare` yalnız kanıt dosyası — yine de düzeltilecek); mevcut test bölümünün hareket görevi için kullanılamayacağı (v1'deki tek test atfı val sayısıyla değiştirildi; görev testte hiç ölçülmedi); motor satırına çıkış kapısı (tespit Faz 4'te değişmiyor; olumsuz sonuç raporlanır).
+- **Kullanıcı kararı (2026-10-20):** §10/1 = **A** — test yalnız `1_03`, `2_03`; M3OT train'den ek dokunulmamış bölüm yok, Colab yok.
