@@ -1,5 +1,5 @@
-// C++ motorunun HTTP API'si (Faz 3 tasarımı §4.1). Motor ulaşılamazsa 502 ve anlaşılır ileti;
-// motorun kendi yanıtı (200 / 400 / 413) olduğu gibi iletilir.
+// C++ motorunun HTTP API'si (Faz 3 tasarımı §4.1). Motor ulaşılamazsa 502, zaman aşımında 504 ve
+// anlaşılır ileti; motorun kendi yanıtı (200 / 400 / 413) olduğu gibi iletilir.
 import { HttpError } from "@/lib/data";
 
 export type DetectParams = {
@@ -15,14 +15,23 @@ export function engineUrl(): string {
   return process.env.ENGINE_URL ?? "http://engine:8080";
 }
 
+// Motor bir isteği bu süreden uzun tutarsa iptal edilir (S11); oynatıcı askıda kalmaz.
+export const ENGINE_TIMEOUT_MS = 10_000;
+
 async function call(path: string, init: RequestInit): Promise<Response> {
+  const abort = new AbortController();
+  const timer = setTimeout(() => abort.abort(), ENGINE_TIMEOUT_MS);
   let res: Response;
+  let body: string;
   try {
-    res = await fetch(`${engineUrl()}${path}`, { ...init, cache: "no-store" });
+    res = await fetch(`${engineUrl()}${path}`, { ...init, cache: "no-store", signal: abort.signal });
+    body = await res.text();
   } catch {
+    if (abort.signal.aborted) throw new HttpError(504, "motor zaman aşımı");
     throw new HttpError(502, "motor yanıt vermiyor");
+  } finally {
+    clearTimeout(timer);
   }
-  const body = await res.text();
   return new Response(body, {
     status: res.status,
     headers: { "content-type": res.headers.get("content-type") ?? "application/json" },
