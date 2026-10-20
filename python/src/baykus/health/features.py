@@ -70,7 +70,10 @@ def _window(w: int, h: int) -> np.ndarray:
 def misalign_vector(bgr: np.ndarray, ir: np.ndarray) -> tuple[float, float, float] | None:
     """IR'nin RGB'ye göre kayma vektörü (dx sağa, dy aşağı; tam çözünürlük pikseli = yarı
     çözünürlük × 2) ve faz korelasyonu tepe yanıtı. Kenar büyüklüğü kullanıldığı için termal
-    kutup tersi sonucu değiştirmez. Kameralardan biri sabitse (kayıp) None."""
+    kutup tersi sonucu değiştirmez. Kameralardan biri sabitse (kayıp) ya da yarı çözünürlükte bir
+    kenar 2 px'ten kısaysa None."""
+    if min(ir.shape[0], ir.shape[1]) // 2 < 2:
+        return None
     a, b = _edges(_gray(bgr)), _edges(ir)
     if pixel_std(a) == 0 or pixel_std(b) == 0:
         return None

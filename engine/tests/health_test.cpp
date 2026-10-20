@@ -168,3 +168,17 @@ TEST(Health, LostCameraSkipsMisalignment) {
   EXPECT_EQ(h.at("reason"), "IR kayıp");
   EXPECT_EQ(h.at("ir").at("state"), "lost");
 }
+
+TEST(Health, TinyImageNoThrow) {  // S3: yarı çözünürlükte kenar < 2 px → kayma yok, istisna yok
+  cv::Mat bgr(1, 3, CV_8UC3, cv::Scalar(100, 100, 100));
+  bgr.at<cv::Vec3b>(0, 1) = cv::Vec3b(200, 200, 200);
+  cv::Mat ir(1, 3, CV_8UC1);
+  ir.at<uchar>(0, 0) = 10;
+  ir.at<uchar>(0, 1) = 200;
+  ir.at<uchar>(0, 2) = 30;
+  baykus::Features f;
+  ASSERT_NO_THROW(f = baykus::frame_features(bgr, ir));
+  EXPECT_FALSE(f.misalign_px.has_value());
+  EXPECT_FALSE(f.misalign_response.has_value());
+  EXPECT_FALSE(f.misalign_dx.has_value());
+}

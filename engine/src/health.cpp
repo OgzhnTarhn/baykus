@@ -1,5 +1,6 @@
 #include "baykus/health.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <opencv2/imgproc.hpp>
 #include <stdexcept>
@@ -91,6 +92,7 @@ Features frame_features(const cv::Mat& bgr, const cv::Mat& ir) {
   f.ir_std = pixel_std(ir);
   f.ir_noise = noise_sigma(ir);
   f.ir_blur = blur_score(ir);
+  if (std::min(ir.rows, ir.cols) / 2 < 2) return f;  // yarı çözünürlükte kenar < 2 px: kayma yok
   const cv::Mat a = edges(g), b = edges(ir);
   if (pixel_std(a) == 0 || pixel_std(b) == 0) return f;  // bir kamera sabit: kayma yok
   cv::Mat window;

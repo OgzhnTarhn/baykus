@@ -85,3 +85,14 @@ def test_misalign_is_deterministic():
     bgr, ir = cv2.cvtColor(g, cv2.COLOR_GRAY2BGR), shift(255 - g, 7)
     first = misalign(bgr, ir)
     assert all(misalign(bgr, ir) == first for _ in range(30))
+
+
+def test_misalign_vector_tiny_image_none():
+    """Yarı çözünürlükte bir kenarı < 2 px olan görüntüde kayma yok (S3: önce cv2.error)."""
+    bgr = np.full((1, 3, 3), 100, np.uint8)
+    bgr[0, 1] = 200
+    ir = np.array([[10, 200, 30]], np.uint8)
+    f = frame_features(bgr, ir, vector=True)
+    assert f["misalign_px"] is None
+    assert f["misalign_response"] is None
+    assert f["misalign_dx"] is None and f["misalign_dy"] is None
