@@ -1,7 +1,9 @@
 """Faz 3 raporu: results/**/*.json → docs/system.md (tasarım §6, plan Görev 37).
 
-Bütün sayılar JSON'lardan; metin sabit, elle düzenlenmez. Kabul 1-8 kanıt dosyalarından okunur:
-dosya yoksa satır "kanıt yok" ve ❌ (eski bir "geçti" varsayılmaz). Eksik isteğe bağlı sayı `—`.
+Ölçüm sayıları, bench protokolü ve kütüphane sürümleri JSON'lardan; açıklama metni sabit
+(Sınırlamalar'daki yaklaşık değerler tasarım ve deney günlüğünden), elle düzenlenmez. Kabul 1-8
+kanıt dosyalarından okunur: dosya yoksa satır "kanıt yok" ve ❌ (eski bir "geçti" varsayılmaz).
+Eksik isteğe bağlı sayı `—`.
 """
 
 from __future__ import annotations
@@ -184,6 +186,23 @@ def _acceptance_table(rows: list[dict]) -> list[str]:
     ]
 
 
+def _protocol(mem: dict | None) -> str:
+    """Bench kaydının `protocol` alanı → tek satır (K7: sabit metin değil)."""
+    p = _get(mem, "protocol")
+    if not p:
+        return "Protokol —."
+    inputs = (
+        f"`{p['seq']}` dizisinin ardışık kareleri"
+        if p.get("inputs") == "sequence"
+        else f"{p.get('images', '—')} görüntü"
+    )
+    track = "açık" if p.get("track") else "kapalı"
+    return (
+        f"Protokol: {p.get('warmup', '—')} ısınma + {p.get('runs', '—')} ölçüm, {inputs}, "
+        f"`gate={p.get('gate', '—')}`, takip {track}."
+    )
+
+
 def _latency(res: dict) -> list[str]:
     mem, http = res.get("k5"), res.get("bench_http")
     out = [
@@ -207,8 +226,7 @@ def _latency(res: dict) -> list[str]:
         f"Bellek içi {_num(_get(mem, 'fps'), 1)} FPS, tepe RSS "
         f"{_num(_get(mem, 'peak_rss_mb'), 0)} MB; "
         f"{sysinfo.get('cpu_model', '—')}, Docker Desktop {sysinfo.get('docker_desktop', '—')}, "
-        f"güç {sysinfo.get('power', '—')}. Protokol H5 (50 ısınma + 500 ölçüm, 20 görüntü, "
-        "`gate=advise`, takip açık).",
+        f"güç {sysinfo.get('power', '—')}. {_protocol(mem)}",
         "",
     ]
 
@@ -357,10 +375,17 @@ def _health(res: dict) -> list[str]:
     return out
 
 
+def _arch(res: dict) -> list[str]:
+    sysinfo = _get(res.get("k5"), "system") or {}
+    ort, cv = sysinfo.get("onnxruntime", "—"), sysinfo.get("opencv", "—")
+    versions = f"ONNX Runtime {ort} + OpenCV {cv}"
+    return [line.replace("{versions}", versions) for line in ARCH]
+
+
 ARCH = [
     "## Mimari",
     "",
-    "- **Motor (`engine/`, C++17):** ONNX Runtime 1.30 + OpenCV 5.0; tek model E3c (erken füzyon, "
+    "- **Motor (`engine/`, C++17):** {versions}; tek model E3c (erken füzyon, "
     "RGB + IR 4 kanal, ONNX FP32). Çözme → sağlık (Faz 2 dedektörü, kare + zaman kuralı) → kapı → "
     "letterbox → çıkarım → kalibre skor → ByteTrack (`trackers` 2.6.1 uyarlaması, oturum başına). "
     "HTTP sunucusu yalnız compose'un iç `back` ağında.",
@@ -422,7 +447,7 @@ def system_markdown(res: dict[str, dict | None]) -> str:
         "> Bu dosya `baykus-system report` ile `results/**/*.json`'dan üretildi; elle düzenlenmez. "
         'Kabul kanıtı yoksa satır "kanıt yok" ile düşer; eksik sayı `—`.',
         "",
-        *ARCH,
+        *_arch(res),
         "## Kabul 1-8",
         "",
         *_acceptance_table(rows),

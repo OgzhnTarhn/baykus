@@ -98,3 +98,37 @@ def test_failing_value_is_fail(tmp_path):
 def test_exploration_label_present(tmp_path):
     md = system_markdown(load_results(_passing(tmp_path)))
     assert "val'de keşif, PyTorch E3c" in md
+
+
+def test_report_protocol_from_json(tmp_path):
+    """K7: bench protokolü ve sürümler kanıt dosyasından; sabit metin değil."""
+    root = _passing(tmp_path)
+    k5 = json.loads((root / EVIDENCE["k5"]).read_text(encoding="utf-8"))
+    k5["protocol"] = {"warmup": 7, "runs": 33, "images": 4, "gate": "auto", "track": False}
+    k5["system"] = {"onnxruntime": "9.8.7", "opencv": "6.5.4"}
+    _write(root, EVIDENCE["k5"], k5)
+    md = system_markdown(load_results(root))
+    assert "7 ısınma + 33 ölçüm, 4 görüntü, `gate=auto`, takip kapalı" in md
+    assert "50 ısınma" not in md
+    assert "ONNX Runtime 9.8.7 + OpenCV 6.5.4" in md
+
+
+def test_report_protocol_sequence_inputs(tmp_path):
+    root = _passing(tmp_path)
+    k5 = json.loads((root / EVIDENCE["k5"]).read_text(encoding="utf-8"))
+    k5["protocol"] = {
+        "warmup": 50,
+        "runs": 500,
+        "inputs": "sequence",
+        "seq": "1_08",
+        "gate": "advise",
+        "track": True,
+    }
+    _write(root, EVIDENCE["k5"], k5)
+    md = system_markdown(load_results(root))
+    assert "50 ısınma + 500 ölçüm, `1_08` dizisinin ardışık kareleri" in md
+
+
+def test_report_protocol_missing_is_dash(tmp_path):
+    md = system_markdown(load_results(_passing(tmp_path)))
+    assert "Protokol —" in md

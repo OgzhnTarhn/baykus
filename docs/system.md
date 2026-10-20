@@ -4,7 +4,7 @@
 
 ## Mimari
 
-- **Motor (`engine/`, C++17):** ONNX Runtime 1.30 + OpenCV 5.0; tek model E3c (erken füzyon, RGB + IR 4 kanal, ONNX FP32). Çözme → sağlık (Faz 2 dedektörü, kare + zaman kuralı) → kapı → letterbox → çıkarım → kalibre skor → ByteTrack (`trackers` 2.6.1 uyarlaması, oturum başına). HTTP sunucusu yalnız compose'un iç `back` ağında.
+- **Motor (`engine/`, C++17):** ONNX Runtime 1.30.0 + OpenCV 5.0.0; tek model E3c (erken füzyon, RGB + IR 4 kanal, ONNX FP32). Çözme → sağlık (Faz 2 dedektörü, kare + zaman kuralı) → kapı → letterbox → çıkarım → kalibre skor → ByteTrack (`trackers` 2.6.1 uyarlaması, oturum başına). HTTP sunucusu yalnız compose'un iç `back` ağında.
 - **Ekran (`ui/`, Next.js 16):** tek sayfa; oynatıcı, RGB / IR / yan yana görünüm, sağlık paneli, alarmlar (5 karenin 3'ü), arıza simülasyonu, kapı modu, gecikme grafiği. Tarayıcı yalnız `127.0.0.1:3000`'e konuşur; motor isteklerini Next sunucusu iletir.
 - **Kurulum:** `docker compose up` (iki servis); `compose.offline.yml` bütün ağları `internal` yapar. `scripts/prepare.sh --bundle` internetsiz bilgisayara taşınacak paketi hazırlar.
 - **Referans:** her C++ adımı Python referansıyla (`python/src/baykus/`) eşlik testli; CI her commit'te sınar.
@@ -50,7 +50,7 @@ Kabul 1-8'in hepsi çıkışı engeller (tasarım §6.7); faz çıkışına **iz
 | total | 64.81 / 82.19 | 63.31 / 80.80 |
 | HTTP dahil gidiş-dönüş | — | 65.84 / 84.68 |
 
-Bellek içi 14.8 FPS, tepe RSS 287 MB; AMD Ryzen 7 8845HS w/ Radeon 780M Graphics, Docker Desktop 4.62.0 (219486), güç AC (Win32_Battery BatteryStatus 2). Protokol H5 (50 ısınma + 500 ölçüm, 20 görüntü, `gate=advise`, takip açık).
+Bellek içi 14.8 FPS, tepe RSS 287 MB; AMD Ryzen 7 8845HS w/ Radeon 780M Graphics, Docker Desktop 4.62.0 (219486), güç AC (Win32_Battery BatteryStatus 2). Protokol: 50 ısınma + 500 ölçüm, 20 görüntü, `gate=advise`, takip açık.
 
 ## M3OT tespit doğruluğu (motor, sınıfsız `vehicle`, IR etiketleri)
 
