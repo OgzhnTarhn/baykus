@@ -16,6 +16,16 @@ offline_check.mjs,egress_check.mjs,engine_test.sh}`, `docker/*.Dockerfile`, `doc
 Önceki dış incelemenin (ledger "Final") düzeltilmiş bulguları tekrar edilmedi; ertelenen S-bulguları
 en sonda "hâlâ açık" olarak listelendi.
 
+## Durum (2026-10-20, dal `f3-fix`)
+
+| Bulgu | Durum | Commit | Doğrulama |
+|---|---|---|---|
+| Ö1 | düzeltildi | `676ad78` | önce düşen 2 vitest + hata yolu testi; UI 65/65, lint, tip |
+| K1 | düzeltildi (UI: takip yeniden açılınca oturum sıfırlanır) | `af00651` | önce düşen vitest; UI 65/65 |
+| K2 | düzeltildi (sinyalle durma bayrağı; dinleme hatası → çıkış 1) | `72e0402` | motor 102/102; `docker stop` → çıkış 0. Hata yolu (sinyalsiz `false`) elle tetiklenemedi |
+| K3 | düzeltildi (runtime'da yalnız server, bench, detect, track) | `feba050` | imajda 4 ikili, `ldd` eksiksiz; kapalı ağ kanıtı 1-4 geçti |
+| K4-K11, S1, S3, S6, S11, S12 | açık | — | — |
+
 ## Önemli
 
 ### Ö1 · Oynatıcı: tek başına oturum sıfırlaması sürerken "Oynat" → oynatma başlamıyor
