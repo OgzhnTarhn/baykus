@@ -164,7 +164,16 @@ Takipçi değişmez; ego takipten bağımsız, hareket durumu takip kimliklerini
 
 ### 5.1 Ego-hareket ve harita nesli (`engine/src/ego.cpp`, Python `baykus.motion.ego`)
 
-**Kaynak kanal:**
+**Bulgu (2026-10-20, kör örneklem sırasında; val `1_08`, `2_08` kareleri gözle):** M3OT val'de RGB ve
+IR kareleri **aynı hizada değil**: görüş alanı, ölçek ve konum belirgin farklı (yol IR'de ortada, RGB'de
+sağda; kavşaklar farklı yerde). Faz 1'in test bölümü ölçümü (etiket IoU ortanca 0,35) bunun hafif hâliydi.
+**Sonuç (Claude'un kararı, plan Görev 4 ve 11'e işlenir):** ego **yalnız IR**; aşağıdaki RGB yedeği bu
+veride kullanılamaz (RGB'den kestirilen kamera hareketi IR koordinatındaki izlere uygulanamaz) ve
+`ChannelSelector` kaldırılır. IR `lost` / `noisy` / donmuş alarmı → ego kaybı (`source: none`); IR dönünce
+§5.11 yeniden konumlama. Kabul 1 `ir_drop` senaryosu buna göre: RGB geçici nesli yok, IR dönüşünde birleşme.
+Ekrandaki RGB görünümünde kutular M3OT'ta araçların üstüne oturmaz (sınırlama; hizalı kameralarda doğru).
+
+**Kaynak kanal (v3 metni; yukarıdaki bulguyla RGB yedeği kalktı):**
 - IR; IR'nin kare bayraklarında `lost` ya da `noisy` varsa ya da IR **donmuş alarmı** (§5.6, 5 karenin 3'ü)
   açıksa RGB (gri); ikisi de uygun değilse `source: none`. Karar ham girdinin sağlığına göre (kapı
   sıfırlamasından önce).
