@@ -4,6 +4,7 @@
 // Kullanım: baykus_server [--models /models] [--manifest /etc/baykus/models.json]
 //                         [--tracker /etc/baykus/tracker.json] [--host 0.0.0.0] [--port 8080]
 //           baykus_server --egress-check  (kanıt 2: JSON stdout, çıkış 0 = dış ağ kapalı)
+#include <atomic>
 #include <csignal>
 #include <exception>
 #include <iostream>
@@ -18,6 +19,9 @@
 #include "baykus/tracker.hpp"
 
 namespace {
+
+// Sinyalle durma: dinleme döngüsünün false dönmesi bu durumda hata değildir.
+std::atomic<bool> g_stopping{false};
 
 int usage() {
   std::cerr << "kullanım: baykus_server [--models DIR] [--manifest M] [--tracker T] [--host H] "
@@ -75,12 +79,16 @@ int main(int argc, char** argv) {
       int sig = 0;
       sigwait(&signals, &sig);
       std::cerr << "sinyal " << sig << ": duruyor\n";
+      g_stopping = true;
       server.stop();
     });
     waiter.detach();
     std::cerr << "baykus_server " << host << ":" << port << " (model e3c, "
               << models.manifest.value("release", "") << ")\n";
-    server.listen_after_bind();
+    if (!server.listen_after_bind() && !g_stopping) {
+      std::cerr << "dinleme hatayla durdu: " << host << ":" << port << "\n";
+      return 1;
+    }
   } catch (const std::exception& e) {
     std::cerr << "motor açılmadı: " << e.what() << "\n";
     return 1;
