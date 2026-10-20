@@ -122,7 +122,7 @@ def _cmd_compare(a: argparse.Namespace) -> int:
     for seq, r in cmp.items():
         print(f"[{seq}] {r['compared']}/{r['frames']} kare · ilk fark {r['first_diff']}")
     print(f"Kabul 4: {rec['verdict']}")
-    return 0
+    return 0 if rec["verdict"] != "fail" else 1  # istisnalı geçiş (tasarım §6.1) de geçiştir
 
 
 def _cmd_eval(a: argparse.Namespace) -> int:
