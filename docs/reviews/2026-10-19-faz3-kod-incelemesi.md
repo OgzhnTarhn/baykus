@@ -16,7 +16,7 @@ offline_check.mjs,egress_check.mjs,engine_test.sh}`, `docker/*.Dockerfile`, `doc
 Önceki dış incelemenin (ledger "Final") düzeltilmiş bulguları tekrar edilmedi; ertelenen S-bulguları
 en sonda "hâlâ açık" olarak listelendi.
 
-## Durum (2026-10-20, dal `f3-fix`)
+## Durum (2026-10-20, dal `f3-fix`; Faz 4 Görev 1, dal `f4`)
 
 | Bulgu | Durum | Commit | Doğrulama |
 |---|---|---|---|
@@ -24,7 +24,13 @@ en sonda "hâlâ açık" olarak listelendi.
 | K1 | düzeltildi (UI: takip yeniden açılınca oturum sıfırlanır) | `af00651` | önce düşen vitest; UI 65/65 |
 | K2 | düzeltildi (sinyalle durma bayrağı; dinleme hatası → çıkış 1) | `72e0402` | motor 102/102; `docker stop` → çıkış 0. Hata yolu (sinyalsiz `false`) elle tetiklenemedi |
 | K3 | düzeltildi (runtime'da yalnız server, bench, detect, track) | `feba050` | imajda 4 ikili, `ldd` eksiksiz; kapalı ağ kanıtı 1-4 geçti |
-| K4-K11, S1, S3, S6, S11, S12 | açık | — | — |
+| S1 | düzeltildi (Faz 4 Görev 1: çözme oturumdan önce) | `bd36cad` | önce düşen `ServerTest.BadFirstRequestKeepsSessionNew`; motor 104/104 |
+| S3 | düzeltildi (yarı çözünürlükte kenar < 2 px → kayma yok; C++ ve Python) | `7db79dc` | önce düşen `Health.TinyImageNoThrow`, `test_misalign_vector_tiny_image_none` |
+| S6 | düzeltildi (`compare` karar `fail` → çıkış 1; istisnalı geçiş 0) | `68d6206` | önce düşen `test_compare_exit_code_on_fail` |
+| S11 | düzeltildi (motor isteği 10 sn sonra 504 "motor zaman aşımı") | `acc30cf` | önce düşen `detect aborts after timeout` |
+| S12 | düzeltildi (yanıt damgası: oturum + dönem; eski yanıt izlemeye yazılmaz) | `9786e02` | önce düşen `session.test.ts` |
+| K7 | düzeltildi (bench protokolü ve sürümler JSON'dan; `docs/system.md` yeniden üretildi) | `970179f` | önce düşen 3 rapor testi |
+| K4-K6, K8-K11 | açık | — | — |
 
 ## Önemli
 
