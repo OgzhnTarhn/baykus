@@ -257,10 +257,19 @@ etiketleyicinin kendisi kör insan örneklemiyle sınanır.
   hedefli** örnek: etiketleyicinin bant / kayıtsız dediği ve etiket değişiminin ±`K` çevresindeki (geçiş)
   örnekler — dışlanan nüfusta insan ne görüyor, bilgi için.
 - **Gösterim:** etiket ve hız gösterilmez. Aracın çevresinden 192 × 192 px, `t − K … t + K` arası her 3. kare,
-  **telafisiz** (herhangi bir kestiricinin kaydı kullanılırsa doğrulama döngüsel olur; insan arka plana göre
+  **telafisiz** (2. turdan itibaren araca ortalanmış; aşağıdaki 1. tur notu) (herhangi bir kestiricinin kaydı kullanılırsa doğrulama döngüsel olur; insan arka plana göre
   karar verir), oynatılabilir; aracın kutusu ince çerçeveyle.
 - Kullanıcı "hareketli / duran / emin değilim" işaretler; sayfa cevapları JSON olarak indirir →
   `baykus-motion audit-score` → `results/motion/label_audit_val.json`.
+- **1. tur (2026-10-20) ve düzeltme:** (a) 65/69 = %94,2 (GA %86-98) → ❌; (b) 0/80 ✅; (c) 69/80 ✅
+  (`results/motion/label_audit_val_r1.json`). Uyumsuz 4 örneğin hepsi "insan hareketli / etiketleyici duran",
+  `v_ref` 0,021-0,029. Kullanıcı geri bildirimi: RGB'de kutu araçtan kayıyor (IR etiketi + doğal kayma) ve
+  bir araç klibin sonunda hareket ediyordu. İnceleme: sabit pencerede kamera hareketi park etmiş araçları
+  da kayıyor gösteriyordu. **Tek düzeltme hakkı sunuma kullanıldı** (etiketleyici değişmedi): pencere her
+  karede aracın GT kutusuna ortalanır (kestirici yok, döngüsel değil), dışı siyah; RGB'de kutu yerine
+  köşe işaretleri; sayfaya "çoğunlukla hareketli / çoğunlukla duran / yarı yarıya → emin değilim" kuralı.
+  1. turun cevapları sonuç görüldükten sonra değiştirilmedi. **2. tur:** seed 43, 1. turun 120 örneği
+  hariç; aynı ölçüt. Tutmazsa B planı (kullanıcı kararı, ADR).
 - **Kabul 4 ölçütü (ölçümden önce), 80 düzgün örnekte:**
   (a) insanın ve etiketleyicinin karar verdiği örneklerde uyum **≥ %95**;
   (b) "emin değilim" **≤ %15**;

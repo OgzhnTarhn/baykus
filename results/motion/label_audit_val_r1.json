@@ -1,0 +1,61 @@
+{
+  "a_agreement": {
+    "k": 65,
+    "n": 69,
+    "rate": 0.9420289855072463,
+    "ci95": [
+      0.8602055747557683,
+      0.9772279796966324
+    ],
+    "pass": false
+  },
+  "b_unsure": {
+    "k": 0,
+    "n": 80,
+    "rate": 0.0,
+    "ci95": null,
+    "pass": true
+  },
+  "c_covered": {
+    "k": 69,
+    "n": 80,
+    "rate": 0.8625,
+    "ci95": [
+      0.7703270280036946,
+      0.9214536632044886
+    ],
+    "pass": true
+  },
+  "targeted": {
+    "moving": {
+      "moving": 12,
+      "band": 15,
+      "stationary": 2
+    },
+    "stationary": {
+      "stationary": 9,
+      "band": 1
+    },
+    "unsure": {
+      "stationary": 1
+    }
+  },
+  "n_uniform": 80,
+  "n_targeted": 40,
+  "thresholds": {
+    "a_min": 0.95,
+    "b_max": 0.15,
+    "c_min": 0.8
+  },
+  "verdict": "fail",
+  "split": "val",
+  "key_sha256": "752b9b334d59c4e61ce0df4c2eeaa39f389019f2a3f24d60cbd2f3914d01c816",
+  "answers_sha256": "b2d7398737cf395578da53178944515110e7a975ba2910aed859cd0cd2c3816a",
+  "labels_sha256": {
+    "1_08": "11f3524f78ab61dd883a31783faf795203cf104f0025fa8a85a86b5d328932e3",
+    "2_08": "cf6918703604b049c9ad162f359b7bdad6774e821338f9e9ea368c7fa1c6eccb"
+  },
+  "git_commit": "82b7660e307715706c659f5438ea3242da04e80a",
+  "git_dirty": false,
+  "created_at": "2026-10-20T20:14:35Z"
+}
