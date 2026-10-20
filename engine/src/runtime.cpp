@@ -40,6 +40,11 @@ Response Runtime::process(const Request& req) {
     throw std::invalid_argument("takip için session gerekli");
   }
 
+  // Çözme oturumdan önce (S1): bozuk görüntü 400 olur ve oturum hiç açılmaz.
+  const auto t_decode = Clock::now();
+  Pair pair = decode_pair(req.rgb, req.ir);
+  const double decode_ms = ms_since(t_decode);
+
   Response r;
   std::shared_ptr<Session> s;
   std::unique_lock<std::mutex> session_lock;
@@ -51,7 +56,7 @@ Response Runtime::process(const Request& req) {
   FrameResult fr;
   {
     std::lock_guard<std::mutex> infer_lock(infer_mutex_);
-    fr = pipeline_.run(req.rgb, req.ir, req.gate, req.floor, s ? &s->window : nullptr);
+    fr = pipeline_.run(std::move(pair), decode_ms, req.gate, req.floor, s ? &s->window : nullptr);
   }
 
   // Takip: takip katmanının bütün tespitleri (conf'tan bağımsız), ham skorla.

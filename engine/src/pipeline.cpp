@@ -26,16 +26,21 @@ Pipeline::Pipeline(const Models& models, bool hash_tensor)
 
 FrameResult Pipeline::run(const std::string& rgb, const std::string& ir,
                           const std::string& gate_mode, float floor, MisalignWindow* window) {
+  const auto t = Clock::now();
+  Pair p = decode_pair(rgb, ir);
+  return run(std::move(p), ms_since(t), gate_mode, floor, window);
+}
+
+FrameResult Pipeline::run(Pair p, double decode_ms, const std::string& gate_mode, float floor,
+                          MisalignWindow* window) {
   if (gate_mode != "off" && gate_mode != "advise" && gate_mode != "auto") {
     throw std::invalid_argument("bilinmeyen gate modu: " + gate_mode +
                                 "; seçenekler: off, advise, auto");
   }
   FrameResult r;
-  auto t = Clock::now();
-  Pair p = decode_pair(rgb, ir);
-  r.timing_ms["decode"] = ms_since(t);
+  r.timing_ms["decode"] = decode_ms;
 
-  t = Clock::now();
+  auto t = Clock::now();
   nlohmann::json health =
       assess(frame_features(p.bgr, p.ir), models_.thresholds, models_.gate.r_min);
   if (window != nullptr) health = window->update(health);

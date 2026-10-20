@@ -242,6 +242,16 @@ TEST_F(ServerTest, DetectShape) {
   EXPECT_GT(with_id, 0);
 }
 
+TEST_F(ServerTest, BadFirstRequestKeepsSessionNew) {  // S1: bozuk ilk istek oturum açmaz
+  const auto bad = client_->Post("/v1/detect?track=true&session=s1", parts(rgb_, "bozuk png"));
+  ASSERT_TRUE(bad);
+  ASSERT_EQ(bad->status, 400) << bad->body;
+  const auto ok = client_->Post("/v1/detect?track=true&session=s1", parts(rgb_, ir_));
+  ASSERT_TRUE(ok);
+  ASSERT_EQ(ok->status, 200) << ok->body;
+  EXPECT_EQ(json::parse(ok->body).at("session_new"), true);
+}
+
 TEST_F(ServerTest, Errors400) {
   for (const auto& c : cases()) {
     if (c.at("expected") == 400) {

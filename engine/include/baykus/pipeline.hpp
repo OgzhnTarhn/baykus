@@ -11,6 +11,7 @@
 
 #include "baykus/detections.hpp"
 #include "baykus/detector.hpp"
+#include "baykus/image_io.hpp"
 #include "baykus/models.hpp"
 #include "baykus/temporal.hpp"
 
@@ -32,6 +33,10 @@ class Pipeline {
   // penceresi; nullptr = oturumsuz (`misaligned` = `misaligned_frame`).
   FrameResult run(const std::string& rgb, const std::string& ir, const std::string& gate_mode,
                   float floor, MisalignWindow* window);
+  // Önceden çözülmüş çiftle (çözme süresi `decode_ms` olarak kayda geçer). Runtime çözmeyi oturum
+  // açılmadan önce yapar: bozuk görüntü oturum tablosunu değiştirmez.
+  FrameResult run(Pair p, double decode_ms, const std::string& gate_mode, float floor,
+                  MisalignWindow* window);
 
   int imgsz() const { return detector_.imgsz(); }
   int channels() const { return detector_.channels(); }
