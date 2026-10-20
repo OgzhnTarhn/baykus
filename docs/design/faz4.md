@@ -279,6 +279,11 @@ etiketleyicinin kendisi kör insan örneklemiyle sınanır.
   köşe işaretleri; sayfaya "çoğunlukla hareketli / çoğunlukla duran / yarı yarıya → emin değilim" kuralı.
   1. turun cevapları sonuç görüldükten sonra değiştirilmedi. **2. tur:** seed 43, 1. turun 120 örneği
   hariç; aynı ölçüt. Tutmazsa B planı (kullanıcı kararı, ADR).
+- **2. tur (2026-10-21):** yalnız IR (RGB paneli kaldırıldı: M3OT val'de RGB ve IR hizalı değil, §5.1 bulgusu),
+  araca ortalı pencere, çoğunluk kuralı, seed 43, 1. tur hariç → (a) 72/73 = %98,6 (GA %92,6-99,8) ✅,
+  (b) 0/80 ✅, (c) 73/80 = %91,3 ✅ → **Kabul 4 ✅** (`results/motion/label_audit_val.json`). Etiketleyici
+  dondu: `motion-labels-v1` (`2811f1c`); val etiketleri bu commit'ten yeniden üretildi, sha256'ları örneklemde
+  kullanılanlarla aynı.
 - **Kabul 4 ölçütü (ölçümden önce), 80 düzgün örnekte:**
   (a) insanın ve etiketleyicinin karar verdiği örneklerde uyum **≥ %95**;
   (b) "emin değilim" **≤ %15**;
