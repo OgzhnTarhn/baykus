@@ -95,7 +95,7 @@ def test_page_hides_labels(tmp_path: Path):
         assert word not in names, word
     assert re.search(r"a\d{3}", html)  # örnek kimlikleri yalnız sıra numarası
     assert len(ids) == 2 and set(ids.values()) == {s for s in samples}
-    assert len(list((out / "crops").iterdir())) == 2 * 11 * 2  # örnek × kare × kanal
+    assert len(list((out / "crops").iterdir())) == 2 * 11  # örnek × kare (yalnız IR)
     assert "http://" not in html and "https://" not in html  # internetsiz
 
 
@@ -217,19 +217,6 @@ def test_crop_follows_vehicle(tmp_path: Path):
     assert moving > 3 * still
 
 
-def test_rgb_crop_has_no_box_over_vehicle(tmp_path: Path):
-    """RGB kutusu IR etiketinden geldiği için kayar (kullanıcı geri bildirimi): RGB'de kutu
-    çizilmez, yalnız aracın dışında köşe işaretleri."""
-    crop, frames, gt = _render_one(tmp_path, (0, 0))
-    x1, y1, x2, y2 = gt[1][20]  # j = 5 → t − 15 + 15 = 20
-    want = centered(frames[20], (x1 + x2) / 2, (y1 + y2) / 2).astype(float)
-    got = crop(5, "rgb").astype(float)
-    c = slice(CENTER - 15, CENTER + 15)
-    assert np.abs(got[c, c] - want[c, c]).mean() < 4.0  # aracın üstünde çizgi yok
-    corner = (slice(CENTER - 23, CENTER - 20), slice(CENTER - 23, CENTER - 14))
-    assert np.abs(got[corner] - want[corner]).max() > 60  # köşe işareti var
-
-
 def test_sample_excludes_previous_round():
     gt = _gt(60, 100)
     frames = {"s": list(range(1, 101))}
@@ -256,3 +243,31 @@ def test_crop_outside_image_is_black():
     assert c.shape == (192, 192)
     assert c[0:80, 0:80].max() == 0  # sol üst: görüntü dışı
     assert c[CENTER + 10, CENTER + 10] == 200  # görüntü içi
+
+
+def _store_token(html: str) -> str:
+    m = re.search(r'var STORE = "([^"]+)"', html)
+    assert m, "STORE anahtarı sabit metin olmalı"
+    return m.group(1)
+
+
+def test_store_key_differs_between_rounds(tmp_path: Path):
+    """2. tur sayfası 1. turun tarayıcı kaydını açmamalı (aynı örnek sayısı ve kimliklerle)."""
+    tracks = {1: {"start": (60, 60), "speed": (0, 0)}, 2: {"start": (150, 140), "speed": (3, 0)}}
+    frames, gt = make_video(n=40, tracks=tracks)
+    d = write_sequence(tmp_path / "dev", "syn", frames, gt)
+    seq = load_sequence(d, allow_test=False)
+    render([Sample("syn", 20, 1, "uniform")], {"syn": seq}, {"syn": gt}, tmp_path / "r1", k=15)
+    render([Sample("syn", 21, 2, "uniform")], {"syn": seq}, {"syn": gt}, tmp_path / "r2", k=15)
+    t1 = _store_token((tmp_path / "r1" / "index.html").read_text(encoding="utf-8"))
+    t2 = _store_token((tmp_path / "r2" / "index.html").read_text(encoding="utf-8"))
+    assert t1 != t2
+
+
+def test_page_is_ir_only(tmp_path: Path):
+    """M3OT val'de RGB ve IR kareleri aynı hizada değil (görüş alanı, ölçek, konum): RGB paneli
+    başka bir yeri gösteriyordu. Örneklem yalnız IR ile."""
+    _render_one(tmp_path, (0, 0))
+    out = tmp_path / "audit"
+    assert not list((out / "crops").glob("*_rgb.jpg"))
+    assert 'id="rgb"' not in (out / "index.html").read_text(encoding="utf-8")
