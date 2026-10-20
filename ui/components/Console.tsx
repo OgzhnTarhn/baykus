@@ -37,7 +37,7 @@ import {
 } from "@/lib/client";
 import { LatencyWindow } from "@/lib/latency";
 import { createPlayer, type PlayerSnapshot } from "@/lib/player";
-import { newSessionId, trackResumed } from "@/lib/session";
+import { isCurrent, newSessionId, nextEpoch, trackResumed, type Stamp } from "@/lib/session";
 import { DEFAULT_SETTINGS } from "@/lib/settings";
 
 
@@ -102,6 +102,8 @@ function makeConsole(
   const blobUrls: string[][] = []; // bozulmuş karelerin nesne URL'leri; iki kare sonra bırakılır
   let session: string | null = null;
   const sid = () => (session ??= newSessionId());
+  let epoch = 0; // dizi değişimi ve oturum sıfırlamasında artar (S12)
+  const stamp = (): Stamp => ({ session: sid(), epoch });
   const alarms = new Alarms();
   const latency = new LatencyWindow();
   let strip: StripEntry[] = [];
@@ -113,6 +115,7 @@ function makeConsole(
       latency: { totals: latency.totals(), stats: latency.stats(), breakdown: latency.breakdown() },
     });
   const clearMonitor = () => {
+    epoch = nextEpoch(epoch);
     alarms.reset();
     strip = [];
     emit();
@@ -121,6 +124,7 @@ function makeConsole(
     detect: async (seq, frame) => {
       const { faults, ...rest } = current;
       const params = { ...rest, session: sid() };
+      const sent = stamp();
       let rgbSrc = frameUrl(seq, frame, "rgb");
       let irSrc = frameUrl(seq, frame, "ir");
       const ch = faultedChannels(faults);
@@ -146,6 +150,8 @@ function makeConsole(
         const meta = { seq, frame, ...params, fault: faultSummary(faults) };
         response = await postDetectForm(buildFaultForm(meta, parts));
       }
+      // dizi değişti ya da oturum sıfırlandı: eski yanıt izlemeye yazılmaz (oynatıcı da göstermez)
+      if (!isCurrent(sent, stamp())) return { seq, frame, rgbSrc, irSrc, response };
       if (response.session_new) clearMonitor();
       const h = response.health;
       alarms.update(h, frame);
@@ -169,7 +175,12 @@ function makeConsole(
       current = v;
     },
   };
-  return { player, settings };
+  // Dizi değişimi yeni dönem açar: yoldaki eski dizi yanıtı izlemeye yazılmaz.
+  const load = (name: string, frames: number[]) => {
+    epoch = nextEpoch(epoch);
+    player.load(name, frames);
+  };
+  return { player, settings, load };
 }
 
 export function Console() {
@@ -183,7 +194,7 @@ export function Console() {
   const [faults, setFaults] = useState<FaultConfig>(NO_FAULTS);
   const [snapState, setSnap] = useState<PlayerSnapshot<FrameView> | null>(null);
   const [monitor, setMonitor] = useState<Monitor>(EMPTY_MONITOR);
-  const [{ player, settings }] = useState(() => makeConsole(setSnap, setMonitor));
+  const [{ player, settings, load }] = useState(() => makeConsole(setSnap, setMonitor));
   const snap = snapState ?? player.snapshot();
 
   useEffect(() => {
@@ -198,7 +209,7 @@ export function Console() {
         setSequences(list);
         if (list.length > 0) {
           setSeq(list[0].name);
-          player.load(list[0].name, list[0].frames);
+          load(list[0].name, list[0].frames);
         }
       })
       .catch((e: Error) => alive && setListError(e.message));
@@ -206,16 +217,16 @@ export function Console() {
       alive = false;
       player.pause();
     };
-  }, [player]);
+  }, [player, load]);
 
   const chooseSeq = useCallback(
     (name: string) => {
       const s = sequences.find((x) => x.name === name);
       if (!s) return;
       setSeq(name);
-      player.load(s.name, s.frames);
+      load(s.name, s.frames);
     },
-    [player, sequences],
+    [load, sequences],
   );
 
   // Klavye: boşluk oynat/durdur, sağ ok sonraki kare (form alanı odaktayken değil).

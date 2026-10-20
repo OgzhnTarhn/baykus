@@ -12,6 +12,19 @@ export function shouldReset(prev: Position | null, next: Position): boolean {
   return prev.seq !== next.seq || next.index - prev.index !== 1;
 }
 
+// Yanıt damgası (S12): istek gönderilirken oturum ve dönem kaydedilir; dizi değişince ya da oturum
+// sıfırlanınca dönem artar. Yanıt geldiğinde damga geçerli değilse yanıt alarm, şerit ve gecikme
+// penceresine yazılmaz (eski dizinin geç gelen yanıtı yeni dizinin izlemesini kirletmez).
+export type Stamp = { session: string; epoch: number };
+
+export function nextEpoch(epoch: number): number {
+  return epoch + 1;
+}
+
+export function isCurrent(sent: Stamp, now: Stamp): boolean {
+  return sent.session === now.session && sent.epoch === now.epoch;
+}
+
 // Takip kapalıyken motor takipçiyi güncellemez (tasarım §4.1 adım 4); yeniden açılınca takipçi
 // aradaki kareleri görmemiş olur, oturum sıfırlanır.
 export function trackResumed(prev: boolean, next: boolean): boolean {
