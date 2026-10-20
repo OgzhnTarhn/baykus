@@ -65,7 +65,9 @@ RUN apt-get update \
  && useradd --system --no-create-home baykus
 COPY --from=build /opt/opencv/lib/*.so* /usr/local/lib/
 COPY --from=build /opt/onnxruntime/lib/*.so* /usr/local/lib/
-COPY --from=build /build/bin/ /usr/local/bin/
+# Yalnız ürün ve ölçüm uygulamaları; testler ve eşlik araçları derleme imajında koşar
+COPY --from=build /build/bin/baykus_server /build/bin/baykus_bench /build/bin/baykus_detect \
+     /build/bin/baykus_track /usr/local/bin/
 COPY configs/engine/tracker.json configs/engine/models.json /etc/baykus/
 RUN ldconfig
 USER baykus
