@@ -1,7 +1,9 @@
 """Motorun işlem sırasının referansı (Faz 3 tasarımı §4.1):
 
-çöz → sağlık (her modda) → kapı (`auto` ve karar ≠ none ise kanal sıfırlanır) → 4 kanal →
-letterbox → ORT → çözümleme + taban süzgeci (ham skor ≥ floor) → kalibre skor → sıralama.
+çöz → sağlık (her modda) → donmuş kare (oturumlu, ham girdi) → kapı (`auto` ve karar ≠ none ise
+kanal sıfırlanır) → 4 kanal → letterbox → ORT → çözümleme + taban süzgeci (ham skor ≥ floor) →
+kalibre skor → sıralama. Donmuş kare (Faz 4 §5.6) `health.<kanal>.frozen` / `diff_mad` olarak
+eklenir; yarı çözünürlük gri kareler (kapıdan önce) sonuçta `rgb_half`, `ir_half`.
 Ham skor float32 (model çıktısı), kalibre skor double. Sıralama: kalibre azalan, ham azalan,
 ORT satır indeksi artan.
 """
@@ -19,8 +21,10 @@ from baykus.engine_ref.compose import decode_pair
 from baykus.engine_ref.models import Models
 from baykus.health.calibrate import apply_isotonic
 from baykus.health.features import frame_features
+from baykus.health.frozen import FrozenDetector
 from baykus.health.gate import apply_gate, assess
 from baykus.health.temporal import MisalignWindow
+from baykus.motion.images import half_gray
 
 GATE_MODES = ("off", "advise", "auto")
 
@@ -85,6 +89,7 @@ class Pipeline:
         gate: str = "advise",
         floor: float = 0.1,
         window: MisalignWindow | None = None,
+        frozen: FrozenDetector | None = None,
     ) -> dict:
         if gate not in GATE_MODES:
             raise ValueError(f"bilinmeyen gate modu: {gate!r}; seçenekler: {GATE_MODES}")
@@ -93,12 +98,22 @@ class Pipeline:
         health = assess(frame_features(bgr, ir, vector=True), m.thresholds, m.gate.r_min)
         if window is not None:
             health = window.update(health)
+        halves: dict = {"rgb_half": None, "ir_half": None, "frozen": None}
+        if frozen is not None:
+            rgb_half, ir_half = half_gray(bgr), half_gray(ir)
+            fz = frozen.update(
+                rgb_half, ir_half, "lost" in health["rgb"]["flags"], "lost" in health["ir"]["flags"]
+            )
+            for ch in ("rgb", "ir"):
+                health[ch]["frozen"] = fz[ch]["frozen"]
+                health[ch]["diff_mad"] = fz[ch]["diff_mad"]
+            halves = {"rgb_half": rgb_half, "ir_half": ir_half, "frozen": fz}
         if gate == "off":  # sağlık yine ölçülür; yalnız kapı kararı "none" sayılır
             health["gate"] = "none"
         health["applied"] = gate == "auto" and health["gate"] != "none"
         if health["applied"]:
             bgr, ir = apply_gate(bgr, ir, health["gate"])
-        return {"health": health, **self.detect(bgr, ir, floor)}
+        return {"health": health, **halves, **self.detect(bgr, ir, floor)}
 
     def detect(self, bgr: np.ndarray, ir: np.ndarray, floor: float = 0.1) -> dict:
         """Çözülmüş (ve gerekirse kapılanmış) çiftten tespit: 4 kanal → letterbox → ORT."""

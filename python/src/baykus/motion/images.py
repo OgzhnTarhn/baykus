@@ -13,7 +13,6 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from baykus.engine_ref.cli import read_index
 from baykus.io import imread_any
 
 Box = tuple[float, float, float, float]  # x1, y1, x2, y2 (tam çözünürlük pikseli)
@@ -50,5 +49,7 @@ class SequenceFrames:
 
 def load_sequence(seq_dir: Path, allow_test: bool) -> SequenceFrames:
     """Test dizisi yalnız `allow_test` ile (Faz 3 `read_index` kalıbı; aksi hâlde ValueError)."""
+    from baykus.engine_ref.cli import read_index  # döngüsel: engine_ref.pipeline → half_gray
+
     index = read_index(Path(seq_dir), allow_test)
     return SequenceFrames(Path(seq_dir), index["name"], index["split"], list(index["frames"]))
