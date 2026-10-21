@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from baykus.motion.drift import Trial, map_drift, reloc_summary, stationary_stability
-from baykus.motion.geometry import compose, invert, similarity
+from baykus.motion.geometry import apply, compose, invert, similarity
 from baykus.motion.labels import LabelRow
 from baykus.motion.measure import FrameOut
 
@@ -46,6 +46,7 @@ def test_map_drift_zero_for_exact_transforms():
     for k in ("15", "60", "150"):
         assert d[k]["median_px"] == pytest.approx(0.0, abs=1e-9)
         assert d[k]["p95_px"] == pytest.approx(0.0, abs=1e-9)
+        assert d[k]["center_median_px"] == pytest.approx(0.0, abs=1e-9)
 
 
 def test_map_drift_measures_offset_and_skips_other_gen():
@@ -60,6 +61,23 @@ def test_map_drift_measures_offset_and_skips_other_gen():
     d = map_drift(frames, run, {}, deltas=(15,), step=10, register=off)
     assert d["15"]["pairs"] == 1 and d["15"]["skipped_gen"] == 2  # (1,16); (11,26), (21,36) değil
     assert d["15"]["median_px"] == pytest.approx(5.0)
+    assert d["15"]["center_median_px"] == pytest.approx(5.0)
+    assert d["15"]["center_p95_px"] == pytest.approx(5.0)
+
+
+def test_map_drift_center_separate_from_corners():
+    frames = TinyFrames(20)
+    run = [FrameOut(f, _ego(_m(f)), []) for f in frames.frames]
+
+    def off(a, b, mask_a, mask_b, ta, tb):
+        p = compose(invert(_m(tb)), _m(ta))
+        c = apply(p, np.array([[W / 2, H / 2]]))[0]
+        zoom = similarity(0, 0, 0, 1.1, center=(c[0], c[1]))  # merkez sabit, köşeler kayar
+        return np.vstack([compose(zoom, p), [0, 0, 1]])
+
+    d = map_drift(frames, run, {}, deltas=(15,), step=10, register=off)["15"]
+    assert d["center_median_px"] == pytest.approx(0.0, abs=1e-9)
+    assert d["median_px"] == pytest.approx(0.1 * np.hypot(W / 2, H / 2))
 
 
 def test_stability_segments_split_on_moves():

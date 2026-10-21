@@ -2,7 +2,8 @@
 
 - **Harita kayması:** aynı nesilde `t` ve `t + Δ` için ürünün `P = M_{t+Δ}⁻¹ · M_t`'si ile
   referansın doğrudan SIFT + homografi kaydının (GT kutuları maskeli) dört köşe + merkezdeki en
-  büyük farkı (px); Δ başına ortanca ve p95.
+  büyük farkı (px); Δ başına ortanca ve p95. Merkezdeki fark ayrıca: köşeler benzerlik modelinin
+  perspektif hatasını da taşır (görüntü dışına doğru büyür), merkez çoğunlukla kaymayı.
 - **Kararlılık:** GT'de kesintisiz ≥ 30 kare duran bölümler (iz başına); bölümde `map_xy`'nin
   standart sapması (merkeze RMS uzaklık) / harita kutu boyu ortancası; bölüm farklı nesillere
   yayılıyorsa en çok noktalı nesil.
@@ -63,6 +64,7 @@ def map_drift(
     out = {}
     for d in deltas:
         diffs: list[float] = []
+        centers: list[float] = []
         ref_failed = skipped_gen = skipped_ok = 0
         for t in frames.frames[::step]:
             a, b = by_frame.get(t), by_frame.get(t + d)
@@ -83,7 +85,9 @@ def map_drift(
             pts = np.array([[0, 0], [ww, 0], [ww, hh], [0, hh], [ww / 2, hh / 2]], np.float64)
             ref = cv2.perspectiveTransform(pts.reshape(-1, 1, 2), np.asarray(h, np.float64))
             prod = apply(compose(invert(_m(b.ego)), _m(a.ego)), pts)
-            diffs.append(float(np.max(np.linalg.norm(prod - ref.reshape(-1, 2), axis=1))))
+            err = np.linalg.norm(prod - ref.reshape(-1, 2), axis=1)
+            diffs.append(float(np.max(err)))
+            centers.append(float(err[4]))
         out[str(d)] = {
             "pairs": len(diffs),
             "ref_failed": ref_failed,
@@ -91,6 +95,8 @@ def map_drift(
             "skipped_not_ok": skipped_ok,
             "median_px": pct(diffs, 50),
             "p95_px": pct(diffs, 95),
+            "center_median_px": pct(centers, 50),
+            "center_p95_px": pct(centers, 95),
         }
     return out
 
