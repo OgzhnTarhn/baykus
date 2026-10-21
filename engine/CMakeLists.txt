@@ -48,6 +48,7 @@ add_library(baykus_core STATIC
   src/calibration.cpp
   src/detections.cpp
   src/detector.cpp
+  src/ego.cpp
   src/egress.cpp
   src/files.cpp
   src/health.cpp
@@ -55,9 +56,11 @@ add_library(baykus_core STATIC
   src/kalman.cpp
   src/lsap.cpp
   src/models.cpp
+  src/motion_config.cpp
   src/parity.cpp
   src/pipeline.cpp
   src/preprocess.cpp
+  src/reloc.cpp
   src/runtime.cpp
   src/server.cpp
   src/sessions.cpp
@@ -96,7 +99,9 @@ add_executable(baykus_tests
   tests/runtime_test.cpp
   tests/server_test.cpp
   tests/bench_test.cpp
-  tests/egress_test.cpp)
+  tests/egress_test.cpp
+  tests/ego_test.cpp
+  tests/reloc_test.cpp)
 target_link_libraries(baykus_tests PRIVATE baykus_test_support GTest::gtest_main baykus_warnings
                                            baykus_httplib)
 include(GoogleTest)
