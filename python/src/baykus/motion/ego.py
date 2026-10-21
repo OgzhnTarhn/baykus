@@ -20,9 +20,10 @@ Nesil kuralları:
 
 from __future__ import annotations
 
+import dataclasses
 import math
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Any, Protocol
 
 import cv2
 import numpy as np
@@ -81,9 +82,15 @@ class EgoResult:
 
 
 class Relocalizer(Protocol):
-    """Görev 5 (`baykus.motion.reloc`)."""
+    """`baykus.motion.reloc.Relocalizer` (kütüphane + birleşme denemesi)."""
 
-    def try_merge(self, gray_half, boxes, source, frame, m_prov) -> Merge | None: ...
+    library: Any
+
+    def reset(self) -> None: ...
+
+    def add_keyframe(self, gray_half, boxes, gen, m_key, frame, n, source) -> None: ...
+
+    def try_merge(self, gray_half, boxes, source, frame, m_prov, prov_gen) -> Merge | None: ...
 
 
 def ego_mask(shape: tuple[int, int], boxes: list[Box], dilate_px: float, border_px: int):
@@ -127,6 +134,8 @@ class Ego:
         self.n = 0
         self.gen = 1
         self.gens: dict[int, dict] = {}
+        self._last_gen = 1  # nesil numaraları yeniden kullanılmaz (birleşen nesil dahil)
+        self._prov_ok = 0  # geçici nesildeki ok kare sayısı (deneme sıklığı)
         self._key: np.ndarray | None = None  # anahtar kare (yarı çöz. gri)
         self._key_pts = np.empty((0, 2), np.float32)
         self._m_key = _IDENTITY.copy()
@@ -134,6 +143,8 @@ class Ego:
         self._age = 0
         self._source: str | None = None
         self._pending_break = False
+        if self.reloc is not None:
+            self.reloc.reset()
 
     def break_continuity(self) -> None:
         """`session/reset?scope=tracks` (atlama): sonraki geçerli kare geçici nesil açar."""
@@ -165,6 +176,8 @@ class Ego:
             res = self._break(gray_half, source, boxes)
         else:
             res = self._track(gray_half, source, boxes)
+        if res.ok and self.reloc is not None:
+            res = self._relocalize(res, gray_half, boxes, frame)
         return self._close_window(res)
 
     def _result(self, ok: bool, source: str, m: np.ndarray | None, **kw) -> EgoResult:
@@ -207,10 +220,11 @@ class Ego:
         if provisional:
             for g in self.gens.values():
                 g["provisional"] = False  # açık geçici nesil birleşmeden kapanır (§5.11)
-            self.gen = max(self.gens) + 1
+            self._last_gen += 1
+            self.gen = self._last_gen
         self.gens[self.gen] = {"provisional": provisional, "opened_n": self.n}
         self._set_key(gray, pts, _IDENTITY)
-        self._source, self._gap, self._pending_break = source, 0, False
+        self._source, self._gap, self._pending_break, self._prov_ok = source, 0, False, 0
         return self._result(True, source, _IDENTITY, keyframe=True)
 
     def _first(self, gray: np.ndarray, source: str, boxes: list[Box]) -> EgoResult:
@@ -290,12 +304,46 @@ class Ego:
             True, source, m, inliers=inl, inlier_ratio=ratio, keyframe=key, relinked=relink
         )
 
+    def _relocalize(
+        self, res: EgoResult, gray: np.ndarray, boxes: list[Box], frame: int | None
+    ) -> EgoResult:
+        """Anahtar kare → kütüphane; geçici nesilde ilk ve her `every`. ok karede, `window_frames`
+        boyunca birleşme denemesi (§5.11). Başarıda geçici nesil hedefe katılır."""
+        rc = self.cfg.reloc
+        if res.keyframe:
+            self.reloc.add_keyframe(
+                gray, boxes, self.gen, res.frame_to_map, frame, self.n, res.source
+            )
+        g = self.gens[self.gen]
+        if not g["provisional"] or self.n - g["opened_n"] >= rc.window_frames:
+            return res
+        due = self._prov_ok % rc.every == 0
+        self._prov_ok += 1
+        if not due:
+            return res
+        mg = self.reloc.try_merge(gray, boxes, res.source, frame, res.frame_to_map, self.gen)
+        if mg is None:
+            return res
+        t = mg.transform
+        self.reloc.library.remap_gen(mg.from_gen, mg.to_gen, t)
+        self._m_key = compose(t, self._m_key)
+        g["provisional"], g["merged_into"] = False, mg.to_gen
+        self.gen = mg.to_gen
+        return dataclasses.replace(
+            res,
+            map_gen=mg.to_gen,
+            provisional=bool(self.gens[mg.to_gen]["provisional"]),
+            frame_to_map=compose(t, res.frame_to_map),
+            relocalized=True,
+            merge=mg,
+        )
+
     def _close_window(self, res: EgoResult) -> EgoResult:
-        """Geçici nesil `window_frames` kare sonra kalıcı olur (yeniden konumlama Görev 5)."""
+        """Geçici nesil `window_frames` kare sonra (birleşmediyse) kalıcı olur."""
         g = self.gens.get(self.gen)
         if g is None or not g["provisional"]:
             return res
         if self.n - g["opened_n"] < self.cfg.reloc.window_frames:
             return res
         g["provisional"] = False
-        return EgoResult(**{**res.__dict__, "provisional": False})
+        return dataclasses.replace(res, provisional=False)
