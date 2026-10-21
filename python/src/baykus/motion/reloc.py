@@ -79,7 +79,21 @@ def orb_features(
     kps, desc = orb.detectAndCompute(gray_half, mask)
     if desc is None or not kps:
         return np.empty((0, 2), np.float32), np.empty((0, 32), np.uint8)
-    return np.float32([k.pt for k in kps]).reshape(-1, 2), desc
+    # OpenCV ORB çıktı sırası derlemeye göre değişiyor (Windows tekerleği ile Linux kaynak
+    # derlemesinde aynı nokta kümesi farklı sırada); eşleştirme ve RANSAC sıraya duyarlı.
+    # Noktaları ve tanımlayıcı satırlarını birlikte kanonik sıraya diz (kararlı).
+    order = sorted(
+        range(len(kps)),
+        key=lambda i: (
+            kps[i].pt[1],
+            kps[i].pt[0],
+            kps[i].octave,
+            kps[i].response,
+            kps[i].angle,
+        ),
+    )
+    pts = np.float32([kps[i].pt for i in order]).reshape(-1, 2)
+    return pts, desc[order]
 
 
 def match(

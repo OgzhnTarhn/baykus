@@ -7,7 +7,7 @@ import pytest
 
 from baykus.io import imread_any
 from baykus.motion.config import MotionCfg
-from baykus.motion.ego import Ego
+from baykus.motion.ego import Ego, ego_mask
 from baykus.motion.geometry import compose, corner_error, invert, similarity, to_full
 from baykus.motion.images import half_gray
 from baykus.motion.reloc import Library, Record, Relocalizer, match, orb_features
@@ -101,6 +101,35 @@ def test_match_recovers_large_shift(cfg, dx):
         a, inl, ratio = match(kps, desc, rec, cfg)
         assert a is not None, (n, inl, ratio)
         assert corner_error(to_full(a), similarity(dx, 0, 0, 1), W, H) <= 1.0
+
+
+def test_orb_features_canonical_order(cfg):
+    g = half_gray(_ir(1))
+    kps, desc = orb_features(g, [], cfg)
+    assert len(kps) > 0 and desc.shape == (len(kps), 32)
+    # Noktalar (y, x) sırasında azalmayan.
+    keys = [(float(y), float(x)) for x, y in kps]
+    assert keys == sorted(keys)
+    # Aynı görüntüde iki çağrı aynı diziyi verir.
+    kps2, desc2 = orb_features(g, [], cfg)
+    assert np.array_equal(kps, kps2) and np.array_equal(desc, desc2)
+    # Tanımlayıcı satırları noktalarla eş: sıralanmış ham cv2 çıktısıyla küme olarak aynı.
+    e = cfg.ego
+    mask = ego_mask(g.shape[:2], [], e.mask_dilate_px, e.border_px)
+    raw_kps, raw_desc = cv2.ORB_create(nfeatures=cfg.reloc.orb_features).detectAndCompute(g, mask)
+    order = sorted(
+        range(len(raw_kps)),
+        key=lambda i: (
+            raw_kps[i].pt[1],
+            raw_kps[i].pt[0],
+            raw_kps[i].octave,
+            raw_kps[i].response,
+            raw_kps[i].angle,
+        ),
+    )
+    raw_pts = np.float32([raw_kps[i].pt for i in order]).reshape(-1, 2)
+    assert np.array_equal(kps, raw_pts)
+    assert np.array_equal(desc, raw_desc[order])
 
 
 def test_reloc_blank_frame_no_merge(cfg):
