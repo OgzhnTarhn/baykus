@@ -55,11 +55,32 @@ def _track_rows(tracker: ByteTrackTracker) -> list[list[float]]:
     return [[*map(float, t.get_state_bbox()), int(t.tracker_id)] for t in tracker.tracks]
 
 
+class TrackStepper:
+    """Kare kare takip: takip katmanı (ham skor ≥ `TRACK_FLOOR`) içeride süzülür; çıktı girdi
+    indeksiyle `{"index", "track_id"}` (olgunlaşmamış iz `-1`). `reset()` kimlikleri 0'dan
+    başlatır."""
+
+    def __init__(self, cfg: dict) -> None:
+        self.tracker = ByteTrackTracker(**cfg)
+        self.tracker.reset()
+
+    def reset(self) -> None:
+        self.tracker.reset()
+
+    def update(self, dets: list[dict]) -> list[dict]:
+        dets = [d for d in dets if d["score_raw"] >= TRACK_FLOOR]
+        res = self.tracker.update(_detections(dets))
+        idx = res.data.get("index", np.array([], np.int64)) if len(res) else []
+        return [
+            {"index": int(i), "track_id": int(t)} for i, t in zip(idx, res.tracker_id, strict=True)
+        ]
+
+
 def run_tracks(
     frames: list[dict], cfg: dict, dump_frames: set[int] = frozenset()
 ) -> tuple[list[dict], dict[int, dict]]:
-    tracker = ByteTrackTracker(**cfg)
-    tracker.reset()
+    stepper = TrackStepper(cfg)
+    tracker = stepper.tracker
     calls: list[tuple[np.ndarray, list]] = []
     associate = tracker._get_associated_indices
 
@@ -74,11 +95,7 @@ def run_tracks(
         dets = [d for d in fr["dets"] if d["score_raw"] >= TRACK_FLOOR]
         before = _track_rows(tracker)
         calls.clear()
-        res = tracker.update(_detections(dets))
-        idx = res.data.get("index", np.array([], np.int64)) if len(res) else []
-        tracks = [
-            {"index": int(i), "track_id": int(t)} for i, t in zip(idx, res.tracker_id, strict=True)
-        ]
+        tracks = stepper.update(dets)
         out.append({"frame": fr["frame"], "tracks": tracks})
         if fr["frame"] in dump_frames:
             (iou1, a1), (iou2, a2) = calls if len(calls) == 2 else ((np.zeros((0, 0)), []),) * 2
