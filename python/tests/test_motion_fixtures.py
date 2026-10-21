@@ -12,7 +12,10 @@ from baykus.engine_ref.pipeline import Pipeline
 from baykus.io import imread_any, imwrite_any
 from baykus.motion import fixtures as fx
 from baykus.motion.config import MotionCfg
+from baykus.motion.ego import Ego
 from baykus.motion.geometry import SIMILARITIES, similarity
+from baykus.motion.images import half_gray
+from baykus.motion.reloc import Relocalizer
 from baykus.track.runner import load_cfg
 from tests.test_engine_ref import _models
 from tests.test_motion_session import ScriptBackend
@@ -252,3 +255,32 @@ def test_motion_val_matches_reference(mcfg):
     assert got["sequences"] == want["sequences"]
     rows = [t for s in got["sequences"] for f in s["frames"] for t in f["tracks"]]
     assert {r[1] for r in rows} == {"moving", "stationary", "unknown"}
+
+
+def test_ego_trace_replays_exactly(stage, mcfg):
+    pipe = Pipeline(_models(), backend=ScriptBackend([np.zeros((1, 300, 6), np.float32)]))
+    tcfg = load_cfg(ROOT / "configs" / "engine" / "tracker.json")
+    scen = fx.scenarios()
+    trace = fx.ego_trace(pipe, tcfg, mcfg, stage, scen)
+    assert trace["motion_sha256"] == mcfg.sha256
+    assert list(trace["scenarios"]) == list(scen)
+    for name, steps in scen.items():
+        rows = trace["scenarios"][name]
+        assert len(rows) == len(steps)
+        for rec in rows:
+            if rec["source"] == "none":
+                assert rec["ir"] is None
+    for name, rows in trace["scenarios"].items():
+        ego = Ego(mcfg, Relocalizer(mcfg))
+        for rec in rows:
+            if rec["reset_before"] == "all":
+                ego.reset()
+            elif rec["reset_before"] == "tracks":
+                ego.break_continuity()
+            gray = (
+                None
+                if rec["ir"] is None
+                else half_gray(imread_any(stage / rec["ir"], cv2.IMREAD_GRAYSCALE))
+            )
+            r = ego.update(gray, rec["source"], [tuple(b) for b in rec["boxes"]], rec["frame"])
+            assert r.to_json() == rec["ego"], (name, rec["frame"])

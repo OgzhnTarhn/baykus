@@ -440,6 +440,69 @@ def run_scenarios(
     return out
 
 
+class _TraceEgo(Ego):
+    """`Ego.update` çağrılarını kaydeder (yeniden oynatma için); sonucu değiştirmez."""
+
+    def __init__(self, cfg: MotionCfg, calls: list[dict]):
+        self.calls = calls
+        super().__init__(cfg, Relocalizer(cfg))
+
+    def update(self, gray_half, source, boxes, frame):
+        res = super().update(gray_half, source, boxes, frame)
+        self.calls.append(
+            {
+                "frame": frame,
+                "gray": gray_half is not None,
+                "source": source,
+                "boxes": [[float(v) for v in b] for b in boxes],
+                "ego": res.to_json(),
+            }
+        )
+        return res
+
+
+def ego_trace(
+    pipe: Pipeline,
+    tracker_cfg: dict,
+    cfg: MotionCfg,
+    root: Path,
+    scen: dict[str, list[dict]],
+) -> dict:
+    """Her senaryo yeni bir `SessionRef` oturumunda; `Ego.update` girdileri (gri var mı, kaynak,
+    kutular, kare) ve çıktısı (`EgoResult.to_json`) kaydedilir. Yeniden oynatma: aynı girdilerle
+    `Ego` + `Relocalizer` aynı çıktıyı verir (`reset_before`: all → reset, tracks →
+    break_continuity)."""
+    root = Path(root)
+    out = {}
+    for name, steps in scen.items():
+        sess = SessionRef(pipe, tracker_cfg, cfg)
+        calls: list[dict] = []
+        sess.ego = _TraceEgo(cfg, calls)
+        rows = []
+        for s in steps:
+            if s["reset_before"]:
+                sess.reset(s["reset_before"])
+            sess.step(
+                (root / s["rgb"]).read_bytes(),
+                (root / s["ir"]).read_bytes(),
+                gate="advise",
+                frame=s["frame"],
+            )
+            c = calls[-1]
+            rows.append(
+                {
+                    "frame": c["frame"],
+                    "reset_before": s["reset_before"],
+                    "ir": s["ir"] if c["gray"] else None,
+                    "source": c["source"],
+                    "boxes": c["boxes"],
+                    "ego": c["ego"],
+                }
+            )
+        out[name] = rows
+    return {"motion_sha256": cfg.sha256, "scenarios": out}
+
+
 def coverage(runs: dict[str, dict]) -> list[str]:
     """Senaryoların sınaması gereken nesil olayları (plan Görev 9 Step 1)."""
     ego = {k: [f["ego"] for f in v["frames"]] for k, v in runs.items()}

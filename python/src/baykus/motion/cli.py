@@ -365,6 +365,29 @@ def _cmd_clip_ref(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_ego_trace(a: argparse.Namespace) -> int:
+    from baykus.edge.backends import OrtBackend
+    from baykus.engine_ref.models import load_models
+    from baykus.engine_ref.pipeline import Pipeline
+    from baykus.motion import fixtures as fx
+    from baykus.track.runner import load_cfg
+
+    models = load_models(Path(a.models), Path(a.models_manifest))
+    cfg = MotionCfg.load(Path(a.motion))
+    root = Path(a.tar)
+    scen = json.loads((root / "scenarios.json").read_text(encoding="utf-8"))
+    pipe = Pipeline(models, backend=OrtBackend(models.onnx))
+    rec = {
+        **fx.ego_trace(pipe, load_cfg(Path(a.tracker)), cfg, root, scen),
+        "scenarios_sha256": _sha256(root / "scenarios.json"),
+        **git_info(),
+        "created_at": iso(utc_now()),
+    }
+    write_json(Path(a.out), rec)
+    print(f"{len(rec['scenarios'])} senaryo → {a.out}")
+    return 0
+
+
 def _common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--split", choices=("dev", "test"), default="dev")
     p.add_argument("--dev", default="../configs/m3ot_dev.json")
@@ -443,6 +466,14 @@ def build_parser() -> argparse.ArgumentParser:
     cr.add_argument("--tar", default="../fixtures/f4", help="açılmış fixtures-f4 paketi")
     cr.add_argument("--out", default="../evidence/clip_ref.json")
     cr.set_defaults(func=_cmd_clip_ref)
+    et = sub.add_parser("ego-trace", help="ego girdi/çıktı izi (yeniden oynatma; bu makinede)")
+    et.add_argument("--models", default="../models")
+    et.add_argument("--models-manifest", default="../configs/engine/models.json")
+    et.add_argument("--motion", default="../configs/engine/motion.json")
+    et.add_argument("--tracker", default="../configs/engine/tracker.json")
+    et.add_argument("--tar", default="../fixtures/f4", help="açılmış fixtures-f4 paketi")
+    et.add_argument("--out", default="../evidence/ego_trace.json")
+    et.set_defaults(func=_cmd_ego_trace)
     return p
 
 
