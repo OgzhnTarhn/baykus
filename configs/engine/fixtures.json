@@ -1,0 +1,10 @@
+{
+  "release": "fixtures-f4",
+  "base_url": "https://github.com/OgzhnTarhn/baykus/releases/download/fixtures-f4/",
+  "files": {
+    "fixtures-f4.tar": {
+      "sha256": "6434da5b5a6b50b4d3cc011b81b50e226425a01c4777031d0ec3c2ea8c771ed8",
+      "bytes": 41000960
+    }
+  }
+}

@@ -10,3 +10,7 @@ Bu klasördeki görüntüler (`frames/`, `clip/`) ve `../synthetic/`, `../tracks
 - Değişiklikler: RGB PNG → JPEG; IR tek kanal PNG; sentetik bozulmalar (siyah IR, IR gürültü σ 20,
   IR 20 px kaydırma, siyah RGB, RGB karartma × 0,25, 800×600 ve 33×17 yeniden boyutlandırma);
   takip fikstüründe yalnız modelin tespitleri (ham skor ≥ 0,1).
+- Faz 4: `../motion/` (val ego haritaları) ve `../expected/motion_val.json` aynı kaynaktan; GitHub
+  Release `fixtures-f4` paketi (`fixtures-f4.tar`, açılınca `fixtures/f4/`): `1_08`'den 60 ardışık
+  kare (özgün baytlar), yatay aynalanmış kareler, sıfır görüntüler, IR benzerlik dönüşümleri ve
+  ötelemeleri. Paket de CC BY 4.0 altındadır.
