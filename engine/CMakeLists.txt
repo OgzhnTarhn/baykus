@@ -9,7 +9,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 option(BAYKUS_SANITIZE "AddressSanitizer + UndefinedBehaviorSanitizer" OFF)
 
-find_package(OpenCV 5.0.0 EXACT REQUIRED COMPONENTS core imgproc imgcodecs)
+find_package(OpenCV 5.0.0 EXACT REQUIRED COMPONENTS
+  core imgproc imgcodecs flann geometry features video)
 find_package(Eigen3 REQUIRED NO_MODULE)
 find_package(nlohmann_json REQUIRED)
 find_package(OpenSSL REQUIRED)

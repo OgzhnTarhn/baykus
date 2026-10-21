@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
 # Baykuş C++ motoru (Faz 3 tasarımı §4.1). Tek doğru kaynak: yerel geliştirme ve CI aynı dosya.
-#   deps    — OpenCV 5.0.0 kaynaktan (core, imgproc, imgcodecs) + ONNX Runtime 1.30.0 hazır paketi
+#   deps    — OpenCV 5.0.0 kaynaktan (core, imgproc, imgcodecs, flann, geometry, features, video)
+#             + ONNX Runtime 1.30.0 hazır paketi
 #   build   — motor + GoogleTest; testler derlenir, koşulmaz (scripts/engine_test.sh)
 #   runtime — yalnız kütüphaneler ve uygulamalar
 # Sürümler Python referansıyla aynı (opencv-python==5.0.0.93, onnxruntime==1.30.0). Gömülü
@@ -22,7 +23,7 @@ RUN curl -fsSL -o opencv.tar.gz "https://github.com/opencv/opencv/archive/refs/t
  && tar xzf opencv.tar.gz \
  && cmake -S "opencv-${OPENCV_VERSION}" -B build-cv -G Ninja \
       -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/opencv \
-      -DBUILD_LIST=core,imgproc,imgcodecs \
+      -DBUILD_LIST=core,imgproc,imgcodecs,flann,geometry,features,video \
       -DWITH_IPP=ON -DBUILD_JPEG=ON -DBUILD_PNG=ON -DBUILD_ZLIB=ON \
       -DWITH_TIFF=OFF -DWITH_WEBP=OFF -DWITH_OPENJPEG=OFF -DWITH_JASPER=OFF -DWITH_OPENEXR=OFF \
       -DWITH_AVIF=OFF -DWITH_OPENCL=OFF -DWITH_FFMPEG=OFF -DWITH_GTK=OFF -DWITH_V4L=OFF \
