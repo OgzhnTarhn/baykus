@@ -10,6 +10,8 @@ mlruns/
 *.onnx
 *.engine
 !fixtures/models/*.onnx
+# Release fikstür paketi (scripts/prepare.sh --fixtures açar)
+/fixtures/f4/
 # ortam
 .venv/
 __pycache__/

@@ -4,6 +4,8 @@
 #   2. modeller: models/ manifestle (sha256) doğrulanır, eksik ya da farklıysa Release'ten indirilir;
 #   3. demo verisi: demo-data/sequences/<dizi>/{index.json, rgb/, ir/} denetlenir (test bölümü yok).
 # Kullanım: bash scripts/prepare.sh                 → sonra: docker compose up
+#           bash scripts/prepare.sh --fixtures      → yalnız Faz 4 eşlik paketi: build/fixtures-f4.tar
+#             (configs/engine/fixtures.json sha256; eksik ya da farklıysa Release'ten) → fixtures/f4/
 #           bash scripts/prepare.sh --bundle out/   → internetsiz bilgisayara taşınacak klasör:
 #             baykus-images.tar.gz (docker save), docker-compose.yml, compose.offline.yml,
 #             configs/engine/, models/, demo-data/, README-offline.md
@@ -11,10 +13,25 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 bundle=""
-if [ "${1:-}" = "--bundle" ]; then
-  bundle="${2:?kullanım: prepare.sh [--bundle <klasör>]}"
+if [ "${1:-}" = "--fixtures" ]; then
+  manifest=configs/engine/fixtures.json
+  tar_name=fixtures-f4.tar
+  sum="$(tr -d ' \n\r\t' < "$manifest" | grep -o '"sha256":"[0-9a-f]\{64\}"' | cut -d'"' -f4)"
+  if [ -f "build/$tar_name" ] &&
+    printf '%s  %s\n' "$sum" "build/$tar_name" | sha256sum -c --quiet 2>/dev/null; then
+    echo "fikstür paketi zaten doğru (sha256): build/$tar_name"
+  else
+    bash scripts/fetch_models.sh build "$manifest"
+  fi
+  rm -rf fixtures/f4
+  mkdir -p fixtures/f4
+  tar -xf "build/$tar_name" -C fixtures/f4
+  echo "fikstürler açıldı: fixtures/f4 ($(find fixtures/f4 -type f | wc -l) dosya)"
+  exit 0
+elif [ "${1:-}" = "--bundle" ]; then
+  bundle="${2:?kullanım: prepare.sh [--fixtures | --bundle <klasör>]}"
 elif [ -n "${1:-}" ]; then
-  echo "kullanım: prepare.sh [--bundle <klasör>]" >&2
+  echo "kullanım: prepare.sh [--fixtures | --bundle <klasör>]" >&2
   exit 2
 fi
 
