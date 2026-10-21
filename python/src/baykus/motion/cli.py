@@ -7,6 +7,7 @@ Test dizisi okuyan komutlar `--i-know-this-is-test` ister (yalnız son ölçüm,
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import json
 import sys
@@ -281,6 +282,89 @@ def _cmd_ego_report(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_fixtures(a: argparse.Namespace) -> int:
+    from baykus.engine_ref.models import load_models
+    from baykus.motion import fixtures as fx
+    from baykus.track.runner import load_cfg
+
+    dev_cfg = json.loads(Path(a.dev).read_text(encoding="utf-8"))
+    models = load_models(Path(a.models), Path(a.models_manifest))
+    cfg = MotionCfg.load(Path(a.motion))
+    meta = fx.build(
+        models,
+        Path(a.data),
+        dev_cfg,
+        cfg,
+        load_cfg(Path(a.tracker)),
+        Path(a.stage),
+        log=lambda s: print(s, flush=True),
+        start_from=a.start_from,
+        candidates=[int(x) for x in a.candidates.split(",")] if a.candidates else None,
+    )
+    sha, size = fx.write_tar(Path(a.stage), Path(a.out_tar))
+    name = Path(a.out_tar).name
+    manifest = {
+        "release": a.release,
+        "base_url": f"https://github.com/OgzhnTarhn/baykus/releases/download/{a.release}/",
+        "files": {name: {"sha256": sha, "bytes": size}},
+    }
+    write_json(Path(a.manifest), manifest)
+
+    out = Path(a.out)
+    dets = json.loads(gzip.decompress(Path(a.dets).read_bytes()))
+    tracks = json.loads(gzip.decompress(Path(a.tracks).read_bytes()))
+    maps = fx.maps_val(Path(a.data), dets, cfg)
+    maps["dets_sha256"] = _sha256(Path(a.dets))
+    maps_path = out / "motion" / "maps_val.json.gz"
+    maps_path.parent.mkdir(parents=True, exist_ok=True)
+    maps_path.write_bytes(fx.gz_json(maps))
+    exp = fx.motion_expected(maps, dets, tracks, cfg)
+    exp["maps_sha256"] = _sha256(maps_path)
+    exp["tracks_sha256"] = _sha256(Path(a.tracks))
+    exp_path = out / "expected" / "motion_val.json"
+    text = json.dumps(exp, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
+    exp_path.write_text(text + "\n", encoding="utf-8", newline="\n")
+    readme = (Path(a.stage) / "README.md").read_text(encoding="utf-8")
+    readme += f"\nPaket: `{name}` sha256 `{sha}`, {size} bayt (Release `{a.release}`).\n"
+    (out / "motion" / "README.md").write_text(readme, encoding="utf-8", newline="\n")
+    print(f"klip {meta['source']} · denenen {len(meta['notes'])} · eşiğe yakın {meta['near']}")
+    print(f"{a.out_tar}: {size / 1e6:.1f} MB, sha256 {sha}")
+    for p in (maps_path, exp_path):
+        print(f"{p}: {p.stat().st_size / 1e3:.0f} KB")
+    if size > 40e6:
+        print("UYARI: paket > 40 MB (plan: klibi 45 kareye indir)")
+    return 0
+
+
+def _cmd_clip_ref(a: argparse.Namespace) -> int:
+    import onnxruntime
+
+    from baykus.edge.backends import OrtBackend
+    from baykus.engine_ref.models import load_models
+    from baykus.engine_ref.pipeline import Pipeline
+    from baykus.motion import fixtures as fx
+    from baykus.track.runner import load_cfg
+
+    models = load_models(Path(a.models), Path(a.models_manifest))
+    cfg = MotionCfg.load(Path(a.motion))
+    root = Path(a.tar)
+    scen = json.loads((root / "scenarios.json").read_text(encoding="utf-8"))
+    pipe = Pipeline(models, backend=OrtBackend(models.onnx))
+    runs = fx.run_scenarios(pipe, load_cfg(Path(a.tracker)), cfg, root, scen)
+    rec = {
+        "scenarios": {k: v["frames"] for k, v in runs.items()},
+        "gate": "advise",
+        "onnxruntime": onnxruntime.__version__,
+        "motion_sha256": cfg.sha256,
+        "scenarios_sha256": _sha256(root / "scenarios.json"),
+        **git_info(),
+        "created_at": iso(utc_now()),
+    }
+    write_json(Path(a.out), rec)
+    print(f"{len(runs)} senaryo, {sum(len(v['frames']) for v in runs.values())} kare → {a.out}")
+    return 0
+
+
 def _common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--split", choices=("dev", "test"), default="dev")
     p.add_argument("--dev", default="../configs/m3ot_dev.json")
@@ -332,6 +416,33 @@ def build_parser() -> argparse.ArgumentParser:
     _common(eg)
     eg.add_argument("--out", required=True)
     eg.set_defaults(func=_cmd_ego_report)
+    fx = sub.add_parser("fixtures", help="hareket eşlik fikstürleri ve Release paketi (§5.9)")
+    fx.add_argument("--dev", default="../configs/m3ot_dev.json")
+    fx.add_argument("--data", default="../data/m3ot_dev")
+    fx.add_argument("--models", default="../models")
+    fx.add_argument("--models-manifest", default="../configs/engine/models.json")
+    fx.add_argument("--motion", default="../configs/engine/motion.json")
+    fx.add_argument("--tracker", default="../configs/engine/tracker.json")
+    fx.add_argument("--dets", default="../fixtures/tracks/dev_dets.json.gz")
+    fx.add_argument("--tracks", default="../fixtures/tracks/dev_tracks_py.json.gz")
+    fx.add_argument("--stage", default="../build/fixtures-f4")
+    fx.add_argument("--out-tar", default="../build/fixtures-f4.tar")
+    fx.add_argument("--out", default="../fixtures")
+    fx.add_argument("--manifest", default="../configs/engine/fixtures.json")
+    fx.add_argument("--release", default="fixtures-f4")
+    fx.add_argument("--start-from", type=int, default=1, help="taramaya bu başlangıçtan devam")
+    fx.add_argument(
+        "--candidates", default=None, help="virgüllü başlangıçlar: en az sorunlu, kapsamı tam olan"
+    )
+    fx.set_defaults(func=_cmd_fixtures)
+    cr = sub.add_parser("clip-ref", help="klip senaryolarının Python çıktısı (bu makinede)")
+    cr.add_argument("--models", default="../models")
+    cr.add_argument("--models-manifest", default="../configs/engine/models.json")
+    cr.add_argument("--motion", default="../configs/engine/motion.json")
+    cr.add_argument("--tracker", default="../configs/engine/tracker.json")
+    cr.add_argument("--tar", default="../fixtures/f4", help="açılmış fixtures-f4 paketi")
+    cr.add_argument("--out", default="../evidence/clip_ref.json")
+    cr.set_defaults(func=_cmd_clip_ref)
     return p
 
 
