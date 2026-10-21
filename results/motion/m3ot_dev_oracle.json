@@ -1,0 +1,200 @@
+{
+  "row": "oracle",
+  "split": "val",
+  "sequences": [
+    "1_08",
+    "2_08"
+  ],
+  "labels_sha256": {
+    "1_08": "11f3524f78ab61dd883a31783faf795203cf104f0025fa8a85a86b5d328932e3",
+    "2_08": "cf6918703604b049c9ad162f359b7bdad6774e821338f9e9ea368c7fa1c6eccb"
+  },
+  "tracks_sha256": "cf4e85e929c20149e2c8afa96d2ae1a7c3f1fc0d88d24f44cffb8877154868df",
+  "motion_sha256": "4cc6096b5b5e02bde88bd7d32102ba8019b68cba9cc974701f4c22679a48c2f4",
+  "runs_sha256": null,
+  "labeled": {
+    "n": 9813,
+    "n_moving": 6450,
+    "n_stationary": 3363,
+    "R_mov": 0.9851162790697674,
+    "R_sta": 0.9131727624145108,
+    "BA": 0.9491445207421392,
+    "coverage": 0.9812493630897788,
+    "BA_decided": 0.9750455708024952,
+    "confusion": {
+      "moving": {
+        "moving": 6354,
+        "stationary": 89,
+        "unknown": 7
+      },
+      "stationary": {
+        "moving": 115,
+        "stationary": 3071,
+        "unknown": 177
+      }
+    }
+  },
+  "stable": {
+    "n": 9298,
+    "n_moving": 6131,
+    "n_stationary": 3167,
+    "R_mov": 0.998532050236503,
+    "R_sta": 0.9352699715819387,
+    "BA": 0.9669010109092209,
+    "coverage": 0.9802107980210798,
+    "BA_decided": 0.9951544337864731,
+    "confusion": {
+      "moving": {
+        "moving": 6122,
+        "stationary": 2,
+        "unknown": 7
+      },
+      "stationary": {
+        "moving": 28,
+        "stationary": 2962,
+        "unknown": 177
+      }
+    }
+  },
+  "per_seq": {
+    "1_08": {
+      "n": 3997,
+      "n_moving": 2839,
+      "n_stationary": 1158,
+      "R_mov": 0.9883761887988728,
+      "R_sta": 0.927461139896373,
+      "BA": 0.957918664347623,
+      "coverage": 0.9857393044783588,
+      "BA_decided": 0.9819265140179649,
+      "confusion": {
+        "moving": {
+          "moving": 2806,
+          "stationary": 33
+        },
+        "stationary": {
+          "moving": 27,
+          "stationary": 1074,
+          "unknown": 57
+        }
+      }
+    },
+    "2_08": {
+      "n": 5816,
+      "n_moving": 3611,
+      "n_stationary": 2205,
+      "R_mov": 0.9825533093325949,
+      "R_sta": 0.9056689342403628,
+      "BA": 0.9441111217864788,
+      "coverage": 0.9781636863823934,
+      "BA_decided": 0.9711277370999982,
+      "confusion": {
+        "moving": {
+          "moving": 3548,
+          "stationary": 56,
+          "unknown": 7
+        },
+        "stationary": {
+          "moving": 88,
+          "stationary": 1997,
+          "unknown": 120
+        }
+      }
+    }
+  },
+  "precision": {
+    "moving": {
+      "total": 8032,
+      "correct": 6354,
+      "wrong_label": 115,
+      "excluded": 1563,
+      "unmatched": 0,
+      "P": 0.791085657370518
+    },
+    "stationary": {
+      "total": 3827,
+      "correct": 3071,
+      "wrong_label": 89,
+      "excluded": 667,
+      "unmatched": 0,
+      "P": 0.802456232035537
+    },
+    "false_moving_per_frame": 0.09583333333333334
+  },
+  "excluded": {
+    "band": {
+      "n": 1239,
+      "pred": {
+        "moving": 572,
+        "stationary": 437,
+        "unknown": 230
+      }
+    },
+    "edge": {
+      "n": 2422,
+      "pred": {
+        "moving": 991,
+        "stationary": 230,
+        "unknown": 1201
+      }
+    }
+  },
+  "delay": {
+    "transitions": 33,
+    "reached": 33,
+    "not_reached": 0,
+    "median": 5.0,
+    "p90": 13.400000000000002
+  },
+  "bootstrap": {
+    "BA": [
+      0.9246039816823941,
+      0.967198813288878
+    ],
+    "R_mov": [
+      0.9797546012269939,
+      0.9903463622619715
+    ],
+    "R_sta": [
+      0.8641329943779373,
+      0.948330541393716
+    ],
+    "n_tracks": 78,
+    "resamples": 1000,
+    "seed": 42,
+    "note": "iz düzeyinde, yalnız dizi içi örnekleme belirsizliği; genelleme güvencesi değil"
+  },
+  "matched": false,
+  "iou_min": null,
+  "k": 15,
+  "gate_k9": {
+    "BA": 0.9491445207421392,
+    "R_mov": 0.9851162790697674,
+    "R_sta": 0.9131727624145108,
+    "pass": true
+  },
+  "vs_human": {
+    "n": 120,
+    "agree": 106,
+    "rate": 0.8833333333333333,
+    "ci95": [
+      0.8136649880680831,
+      0.9292194707890375
+    ],
+    "product_unknown": 5,
+    "product_missed": 0,
+    "decided": {
+      "n": 115,
+      "agree": 106,
+      "rate": 0.9217391304347826,
+      "ci95": [
+        0.8579297392118479,
+        0.9582827655003068
+      ]
+    },
+    "key_sha256": "05263155b19a092a8b272450d77b675dfb7ee5774bc3b43621c1fd81b351ac47",
+    "answers_sha256": "e10cca3390180efdbbdbe1e9bc8ab4836acea419683a409f7b83bd9cb38b3a57"
+  },
+  "git_commit": "a6770482f5971c31ca117a1b92708086f6506c6e",
+  "git_dirty": false,
+  "created_at": "2026-10-21T10:58:04Z"
+}
