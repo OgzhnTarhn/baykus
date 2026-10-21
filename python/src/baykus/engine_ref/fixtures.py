@@ -55,7 +55,16 @@ SYNTHETIC = (
 )
 
 
-def check_margins(h: dict, gm: GateModel, th: Thresholds) -> list[str]:
+def check_margins(
+    h: dict,
+    gm: GateModel,
+    th: Thresholds,
+    *,
+    rel_margin: float = REL_MARGIN,
+    px_margin: float = PX_MARGIN,
+    response_margin: float = RESPONSE_MARGIN,
+) -> list[str]:
+    """Varsayılan paylar Faz 3 §4.6 (10 × tolerans); Faz 4 fikstürleri ölçülmüş farkla daraltır."""
     rgb, ir, pair = h["rgb"], h["ir"], h["pair"]
     rel = (
         ("rgb_std", rgb["std"], th.rgb_lost),
@@ -66,27 +75,30 @@ def check_margins(h: dict, gm: GateModel, th: Thresholds) -> list[str]:
         ("rgb_brightness", rgb["brightness"], th.dark),
     )
     out = [
-        f"{name} {v:.6g} eşiğe ({t:.6g}) göreli {REL_MARGIN:g}'ten yakın"
+        f"{name} {v:.6g} eşiğe ({t:.6g}) göreli {rel_margin:g}'ten yakın"
         for name, v, t in rel
-        if v is not None and abs(v - t) < REL_MARGIN * abs(t)
+        if v is not None and abs(v - t) < rel_margin * abs(t)
     ]
     px, resp = pair["misalign_px"], pair["response"]
-    if resp is not None and resp + RESPONSE_MARGIN < gm.r_min:
+    if resp is not None and resp + response_margin < gm.r_min:
         return out  # kare kuralı kaymayı her durumda reddeder: px kararı değiştiremez
-    if px is not None and abs(px - th.misaligned) < PX_MARGIN:
-        out.append(f"misalign_px {px:.3f} eşiğe ({th.misaligned:.3f}) {PX_MARGIN:g} px'ten yakın")
+    if px is not None and abs(px - th.misaligned) < px_margin:
+        out.append(f"misalign_px {px:.3f} eşiğe ({th.misaligned:.3f}) {px_margin:g} px'ten yakın")
     if (
         px is not None
-        and px >= th.misaligned - PX_MARGIN
+        and px >= th.misaligned - px_margin
         and resp is not None
-        and abs(resp - gm.r_min) < RESPONSE_MARGIN
+        and abs(resp - gm.r_min) < response_margin
     ):
-        out.append(f"response {resp:.4f} r_min'e ({gm.r_min:.4f}) {RESPONSE_MARGIN:g}'den yakın")
+        out.append(f"response {resp:.4f} r_min'e ({gm.r_min:.4f}) {response_margin:g}'den yakın")
     return out
 
 
-def clip_violations(healths: list[dict], gm: GateModel) -> list[str]:
-    """Zaman kuralı penceresi boyunca S karelerinin ortancaya uzaklığı 3 px'e 2 px'ten yakın mı."""
+def clip_violations(
+    healths: list[dict], gm: GateModel, *, dist_margin: float = CLIP_DIST_MARGIN
+) -> list[str]:
+    """Zaman kuralı penceresi boyunca S karelerinin ortancaya uzaklığı 3 px'e `dist_margin`'den
+    (varsayılan 2 px) yakın mı."""
     buf: deque[tuple[bool, float | None, float | None]] = deque(maxlen=gm.window)
     out = []
     for i, h in enumerate(healths):
@@ -96,7 +108,7 @@ def clip_violations(healths: list[dict], gm: GateModel) -> list[str]:
         if not len(s):
             continue
         dist = np.linalg.norm(s - np.median(s, axis=0), axis=1)
-        if np.any(np.abs(dist - gm.tol_px) < CLIP_DIST_MARGIN):
+        if np.any(np.abs(dist - gm.tol_px) < dist_margin):
             out.append(f"kare {i}: S uzaklıkları {np.round(dist, 3).tolist()}")
     return out
 
