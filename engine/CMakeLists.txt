@@ -50,6 +50,7 @@ add_library(baykus_core STATIC
   src/detector.cpp
   src/ego.cpp
   src/egress.cpp
+  src/event_log.cpp
   src/files.cpp
   src/frozen.cpp
   src/health.cpp
@@ -109,7 +110,8 @@ add_executable(baykus_tests
   tests/motion_test.cpp
   tests/motion_parity_test.cpp
   tests/polygon_test.cpp
-  tests/zones_test.cpp)
+  tests/zones_test.cpp
+  tests/event_log_test.cpp)
 target_link_libraries(baykus_tests PRIVATE baykus_test_support GTest::gtest_main baykus_warnings
                                            baykus_httplib)
 include(GoogleTest)
