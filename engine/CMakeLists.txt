@@ -51,11 +51,13 @@ add_library(baykus_core STATIC
   src/ego.cpp
   src/egress.cpp
   src/files.cpp
+  src/frozen.cpp
   src/health.cpp
   src/image_io.cpp
   src/kalman.cpp
   src/lsap.cpp
   src/models.cpp
+  src/motion.cpp
   src/motion_config.cpp
   src/parity.cpp
   src/pipeline.cpp
@@ -101,7 +103,10 @@ add_executable(baykus_tests
   tests/bench_test.cpp
   tests/egress_test.cpp
   tests/ego_test.cpp
-  tests/reloc_test.cpp)
+  tests/reloc_test.cpp
+  tests/frozen_test.cpp
+  tests/motion_test.cpp
+  tests/motion_parity_test.cpp)
 target_link_libraries(baykus_tests PRIVATE baykus_test_support GTest::gtest_main baykus_warnings
                                            baykus_httplib)
 include(GoogleTest)
