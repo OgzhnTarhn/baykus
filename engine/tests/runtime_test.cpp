@@ -332,3 +332,56 @@ TEST_F(MotionRuntimeTest, ScopeAllClears) {
   }
   EXPECT_EQ(min_id, 0);  // kimlikler baştan
 }
+
+TEST_F(MotionRuntimeTest, ZonesConfDoesNotChangeEvents) {  // Review Focus 3
+  std::vector<baykus::ZoneDef> defs;
+  baykus::ZoneDef r;
+  r.id = "r1";
+  r.name = "r1";
+  r.kind = "restricted";
+  r.gen = 1;
+  r.points = {cv::Point2d(-10000.0, -10000.0), cv::Point2d(10000.0, -10000.0),
+              cv::Point2d(10000.0, 10000.0), cv::Point2d(-10000.0, 10000.0)};
+  defs.push_back(r);
+  baykus::ZoneDef h;
+  h.id = "h1";
+  h.name = "h1";
+  h.kind = "line";
+  h.gen = 1;
+  h.points = {cv::Point2d(0.0, 256.0), cv::Point2d(640.0, 256.0)};
+  h.count = "both";
+  defs.push_back(h);
+  for (const std::string id : {"low", "high"}) {
+    bool created = false;
+    const auto s = sessions_->get(id, &created);
+    ASSERT_TRUE(s->motion);
+    s->motion->zones.set(defs, 1);
+  }
+  bool saw_enter = false;
+  baykus::Response last;
+  for (int f = 1; f <= 40; ++f) {
+    SCOPED_TRACE("kare " + std::to_string(f));
+    const auto a = step(f, "low", 0.25);
+    const auto b = step(f, "high", 1.0);
+    json ea = json::array();
+    json eb = json::array();
+    for (const auto& e : a.events) ea.push_back(e.to_json());
+    for (const auto& e : b.events) eb.push_back(e.to_json());
+    EXPECT_EQ(ea, eb);
+    json aa = json::array();
+    json ab = json::array();
+    for (const auto& x : a.alarms) aa.push_back(x.to_json());
+    for (const auto& x : b.alarms) ab.push_back(x.to_json());
+    EXPECT_EQ(aa, ab);
+    EXPECT_EQ(a.zone_counts, b.zone_counts);
+    for (const auto& e : a.events) {
+      if (e.kind == "enter") saw_enter = true;
+    }
+    last = b;
+  }
+  EXPECT_TRUE(saw_enter);
+  const auto j = baykus::response_json(last);
+  EXPECT_TRUE(j.contains("events"));
+  EXPECT_TRUE(j.contains("alarms"));
+  EXPECT_TRUE(j.contains("zone_counts"));
+}

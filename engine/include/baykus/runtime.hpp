@@ -19,6 +19,7 @@
 #include "baykus/pipeline.hpp"
 #include "baykus/sessions.hpp"
 #include "baykus/tracker.hpp"
+#include "baykus/zones.hpp"
 
 namespace baykus {
 
@@ -40,8 +41,11 @@ struct Response {
   std::vector<TrackOut> tracks;  // takip katmanı, kimliği olanlar (API kimliği)
   std::optional<EgoResult> ego;
   std::map<int, TrackMotion> motion;  // anahtar API kimliği
+  std::vector<ZoneEvent> events;      // bu karenin bölge olayları
+  std::vector<Alarm> alarms;          // açık bölge alarmları
+  nlohmann::json zone_counts = nlohmann::json::object();
   nlohmann::json health;
-  // decode, health, pre, infer, post, track, ego, motion, total
+  // decode, health, pre, infer, post, track, ego, motion, zones, total
   std::map<std::string, double> timing_ms;
   bool session_new = false;
 };

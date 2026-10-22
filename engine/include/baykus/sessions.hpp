@@ -19,6 +19,7 @@
 #include "baykus/reloc.hpp"
 #include "baykus/temporal.hpp"
 #include "baykus/tracker.hpp"
+#include "baykus/zones.hpp"
 
 namespace baykus {
 
@@ -28,7 +29,7 @@ enum class Scope { All, Tracks };
 // taşınamaz: `ego` içindeki `Relocalizer*` bu nesnedeki `reloc`'a işaret eder.
 struct MotionParts {
   explicit MotionParts(const MotionCfg& cfg)
-      : reloc(cfg), ego(cfg, &reloc), motion(cfg.motion), frozen(cfg.frozen) {}
+      : reloc(cfg), ego(cfg, &reloc), motion(cfg.motion), frozen(cfg.frozen), zones(cfg.zones) {}
 
   MotionParts(const MotionParts&) = delete;
   MotionParts& operator=(const MotionParts&) = delete;
@@ -39,6 +40,7 @@ struct MotionParts {
   Ego ego;
   MotionState motion;
   FrozenDetector frozen;
+  Zones zones;
 };
 
 struct Session {

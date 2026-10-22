@@ -69,8 +69,10 @@ void Sessions::reset(const std::string& id, Scope scope) {
     if (scope == Scope::Tracks) {
       s->id_base = s->max_api_id + 1;
       s->motion->ego.break_continuity();  // kütüphane korunur
+      s->motion->zones.reset_tracks();
     } else {
       s->motion->ego.reset();
+      s->motion->zones.reset();
       s->id_base = 0;
       s->max_api_id = -1;
       s->n = 0;

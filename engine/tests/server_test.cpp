@@ -254,10 +254,10 @@ TEST_F(ServerTest, DetectShape) {
     }
   }
   for (const char* k :
-       {"decode", "health", "pre", "infer", "post", "track", "ego", "motion", "total"}) {
+       {"decode", "health", "pre", "infer", "post", "track", "ego", "motion", "zones", "total"}) {
     EXPECT_TRUE(j.at("timing_ms").contains(k)) << k;
   }
-  EXPECT_EQ(j.at("timing_ms").size(), 9u);  // Faz 4 §5.7: + ego, motion
+  EXPECT_EQ(j.at("timing_ms").size(), 10u);  // Faz 4 §5.7: + ego, motion, zones
   for (const char* k : {"rgb", "ir", "pair", "gate", "reason", "reason_code", "applied"}) {
     EXPECT_TRUE(j.at("health").contains(k)) << k;
   }

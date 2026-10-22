@@ -133,14 +133,26 @@ Response Runtime::process(const Request& req) {
         TrackOut{it->second, d.cls_id, Box{d.x1, d.y1, d.x2, d.y2}, d.score_raw, d.score});
   }
 
+  // Bölgeler: kimlikli takip katmanı ve hareket durumuyla (Faz 4).
+  double zones_ms = 0.0;
+  if (s && s->motion && ego) {
+    const auto t = Clock::now();
+    r.events = s->motion->zones.update(s->n, req.frame.value_or(s->n), *ego, r.tracks, r.motion);
+    r.alarms = s->motion->zones.alarms();
+    r.zone_counts = s->motion->zones.counts();
+    zones_ms = ms_since(t);
+  }
+
   r.health = std::move(fr.health);
   r.ego = ego;
   r.timing_ms = std::move(fr.timing_ms);
   r.timing_ms["track"] = track_ms;
   r.timing_ms["ego"] = ego_ms;
   r.timing_ms["motion"] = motion_ms;
+  r.timing_ms["zones"] = zones_ms;
   double total = 0.0;
-  for (const char* k : {"decode", "health", "pre", "infer", "post", "track", "ego", "motion"}) {
+  for (const char* k :
+       {"decode", "health", "pre", "infer", "post", "track", "ego", "motion", "zones"}) {
     total += r.timing_ms.at(k);
   }
   r.timing_ms["total"] = total;
@@ -208,8 +220,16 @@ json response_json(const Response& r) {
     }
   }
 
+  json events = json::array();
+  for (const auto& e : r.events) events.push_back(e.to_json());
+  json alarms = json::array();
+  for (const auto& a : r.alarms) alarms.push_back(a.to_json());
+
   return {{"detections", dets},
           {"tracks", tracks},
+          {"events", events},
+          {"alarms", alarms},
+          {"zone_counts", r.zone_counts},
           {"ego", r.ego ? r.ego->to_json() : json(nullptr)},
           {"health", health},
           {"timing_ms", r.timing_ms},
