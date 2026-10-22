@@ -20,6 +20,15 @@ struct TrackObs {
   Box box;
 };
 
+// Takip katmanında kimliği olan tespit (conf'tan bağımsız).
+struct TrackOut {
+  int track_id;
+  int cls_id;
+  Box box;
+  float score_raw;
+  double score;
+};
+
 // Python `baykus.motion.state.TrackMotion`; `motion` = moving | stationary | unknown.
 struct TrackMotion {
   std::string motion;

@@ -68,7 +68,8 @@ add_library(baykus_core STATIC
   src/sessions.cpp
   src/temporal.cpp
   src/tracker.cpp
-  src/version.cpp)
+  src/version.cpp
+  src/zones.cpp)
 target_include_directories(baykus_core PUBLIC include)
 target_link_libraries(baykus_core
   PUBLIC ${OpenCV_LIBS} onnxruntime::onnxruntime Eigen3::Eigen nlohmann_json::nlohmann_json
@@ -106,7 +107,9 @@ add_executable(baykus_tests
   tests/reloc_test.cpp
   tests/frozen_test.cpp
   tests/motion_test.cpp
-  tests/motion_parity_test.cpp)
+  tests/motion_parity_test.cpp
+  tests/polygon_test.cpp
+  tests/zones_test.cpp)
 target_link_libraries(baykus_tests PRIVATE baykus_test_support GTest::gtest_main baykus_warnings
                                            baykus_httplib)
 include(GoogleTest)

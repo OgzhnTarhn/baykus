@@ -34,15 +34,6 @@ struct Request {
   std::optional<int> focus;  // şimdilik kullanılmaz
 };
 
-// Takip katmanında kimliği olan tespit (conf'tan bağımsız).
-struct TrackOut {
-  int track_id;
-  int cls_id;
-  Box box;
-  float score_raw;
-  double score;
-};
-
 struct Response {
   std::vector<Det> dets;         // gösterim katmanı, sıralı
   std::vector<int> track_ids;    // dets ile aynı sırada; -1 = kimlik yok (API'de null)
