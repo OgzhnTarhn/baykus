@@ -8,11 +8,14 @@
 #include <map>
 #include <mutex>
 #include <nlohmann/json.hpp>
+#include <optional>
 #include <string>
 #include <vector>
 
 #include "baykus/detections.hpp"
+#include "baykus/ego.hpp"
 #include "baykus/models.hpp"
+#include "baykus/motion.hpp"
 #include "baykus/pipeline.hpp"
 #include "baykus/sessions.hpp"
 #include "baykus/tracker.hpp"
@@ -27,15 +30,33 @@ struct Request {
   double conf = 0.25;
   bool track = true;
   float floor = 0.1f;
+  std::optional<int> frame;  // ego'ya geçen kare numarası
+  std::optional<int> focus;  // şimdilik kullanılmaz
+};
+
+// Takip katmanında kimliği olan tespit (conf'tan bağımsız).
+struct TrackOut {
+  int track_id;
+  int cls_id;
+  Box box;
+  float score_raw;
+  double score;
 };
 
 struct Response {
-  std::vector<Det> dets;       // gösterim katmanı, sıralı
-  std::vector<int> track_ids;  // dets ile aynı sırada; -1 = kimlik yok (API'de null)
+  std::vector<Det> dets;         // gösterim katmanı, sıralı
+  std::vector<int> track_ids;    // dets ile aynı sırada; -1 = kimlik yok (API'de null)
+  std::vector<TrackOut> tracks;  // takip katmanı, kimliği olanlar (API kimliği)
+  std::optional<EgoResult> ego;
+  std::map<int, TrackMotion> motion;  // anahtar API kimliği
   nlohmann::json health;
-  std::map<std::string, double> timing_ms;  // decode, health, pre, infer, post, track, total
+  // decode, health, pre, infer, post, track, ego, motion, total
+  std::map<std::string, double> timing_ms;
   bool session_new = false;
 };
+
+// `/v1/detect` gövdesi (Python `SessionRef.step` çıktısının ölçülen kısmı).
+nlohmann::json response_json(const Response& r);
 
 class Runtime {
  public:

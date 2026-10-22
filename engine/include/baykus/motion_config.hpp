@@ -1,5 +1,7 @@
 #pragma once
 
+#include <nlohmann/json.hpp>
+
 #include <string>
 
 namespace baykus {
@@ -92,6 +94,9 @@ struct MotionCfg {
   LogCfg log;
   SummaryCfg summary;
   std::string sha256;
+  nlohmann::json raw;
+
+  nlohmann::json to_json() const { return raw; }
 
   // Dosyayı okur ve katı şemayla ayrıştırır; hata std::invalid_argument (yol iletide).
   static MotionCfg load(const std::string& path);

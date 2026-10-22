@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "baykus/files.hpp"
+#include "baykus/geometry.hpp"
 #include "baykus/health.hpp"
 #include "baykus/image_io.hpp"
 #include "baykus/preprocess.hpp"
@@ -19,20 +20,28 @@ double ms_since(Clock::time_point t0) {
   return std::chrono::duration<double, std::milli>(Clock::now() - t0).count();
 }
 
+bool has_lost(const nlohmann::json& flags) {
+  for (const auto& f : flags) {
+    if (f.get<std::string>() == "lost") return true;
+  }
+  return false;
+}
+
 }  // namespace
 
 Pipeline::Pipeline(const Models& models, bool hash_tensor)
     : models_(models), detector_(models.onnx_path), hash_tensor_(hash_tensor) {}
 
 FrameResult Pipeline::run(const std::string& rgb, const std::string& ir,
-                          const std::string& gate_mode, float floor, MisalignWindow* window) {
+                          const std::string& gate_mode, float floor, MisalignWindow* window,
+                          FrozenDetector* frozen) {
   const auto t = Clock::now();
   Pair p = decode_pair(rgb, ir);
-  return run(std::move(p), ms_since(t), gate_mode, floor, window);
+  return run(std::move(p), ms_since(t), gate_mode, floor, window, frozen);
 }
 
 FrameResult Pipeline::run(Pair p, double decode_ms, const std::string& gate_mode, float floor,
-                          MisalignWindow* window) {
+                          MisalignWindow* window, FrozenDetector* frozen) {
   if (gate_mode != "off" && gate_mode != "advise" && gate_mode != "auto") {
     throw std::invalid_argument("bilinmeyen gate modu: " + gate_mode +
                                 "; seçenekler: off, advise, auto");
@@ -44,6 +53,18 @@ FrameResult Pipeline::run(Pair p, double decode_ms, const std::string& gate_mode
   nlohmann::json health =
       assess(frame_features(p.bgr, p.ir), models_.thresholds, models_.gate.r_min);
   if (window != nullptr) health = window->update(health);
+  if (frozen != nullptr) {
+    r.rgb_half = half_gray(p.bgr);
+    r.ir_half = half_gray(p.ir);
+    const nlohmann::json fz =
+        frozen->update(r.rgb_half, r.ir_half, has_lost(health.at("rgb").at("flags")),
+                       has_lost(health.at("ir").at("flags")));
+    for (const char* ch : {"rgb", "ir"}) {
+      health[ch]["frozen"] = fz[ch]["frozen"];
+      health[ch]["diff_mad"] = fz[ch]["diff_mad"];
+    }
+    r.frozen = fz;
+  }
   if (gate_mode == "off") health["gate"] = "none";  // ölçülür; yalnız kapı kararı none sayılır
   const std::string gate = health.at("gate").get<std::string>();
   const bool applied = gate_mode == "auto" && gate != "none";

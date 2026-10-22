@@ -2,6 +2,7 @@
 // hatalı istekler ve `baykus_detect` biçimi. Girdi: video klibi (15 ardışık M3OT karesi).
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -11,6 +12,7 @@
 #include <vector>
 
 #include "baykus/models.hpp"
+#include "baykus/motion_config.hpp"
 #include "baykus/pipeline.hpp"
 #include "baykus/runtime.hpp"
 #include "baykus/sessions.hpp"
@@ -208,4 +210,125 @@ TEST_F(RuntimeTest, DetectRefusesTestSplit) {
   std::ofstream(d / "index.json") << R"({"name": "2-01", "split": "test", "frames": [1]})";
   EXPECT_THROW(baykus::detect_sequence(*runtime_, d.string(), 0.001, "advise", false),
                std::invalid_argument);
+}
+
+// Faz 4: oturum başına ego, hareket ve kapsamlı sıfırlama (Python `SessionRef` sırası).
+namespace {
+
+fs::path f4_clip() { return bt::fixtures_root() / "f4" / "clip"; }
+
+Frame f4_frame(int f) {
+  char name[16];
+  std::snprintf(name, sizeof(name), "%06d", f);
+  return {bt::read_file(f4_clip() / "rgb" / (std::string(name) + ".jpg")),
+          bt::read_file(f4_clip() / "ir" / (std::string(name) + ".png"))};
+}
+
+std::vector<std::pair<int, std::vector<double>>> track_rows(const baykus::Response& r) {
+  std::vector<std::pair<int, std::vector<double>>> out;
+  for (const auto& t : r.tracks)
+    out.push_back({t.track_id, {t.box.x1, t.box.y1, t.box.x2, t.box.y2}});
+  return out;
+}
+
+}  // namespace
+
+class MotionRuntimeTest : public ::testing::Test {
+ protected:
+  void SetUp() override {
+    const auto m = bt::models_root();
+    BAYKUS_REQUIRE_FILES({f4_clip() / "index.json", m / "e3c.onnx", configs() / "models.json",
+                          configs() / "tracker.json", configs() / "motion.json"});
+    models_ = std::make_unique<baykus::Models>(
+        baykus::load_models(m.string(), (configs() / "models.json").string()));
+    cfg_ = baykus::TrackerConfig::load((configs() / "tracker.json").string());
+    const auto motion = baykus::MotionCfg::load((configs() / "motion.json").string());
+    sessions_ = std::make_unique<baykus::Sessions>(cfg_, motion, models_->gate.window,
+                                                   models_->gate.min_frames, models_->gate.tol_px);
+    runtime_ = std::make_unique<baykus::Runtime>(*models_, cfg_, *sessions_);
+  }
+
+  baykus::Response step(int f, const std::string& session, double conf = 0.25) {
+    auto r = request(f4_frame(f), session, conf);
+    r.frame = f;
+    return runtime_->process(r);
+  }
+
+  std::unique_ptr<baykus::Models> models_;
+  baykus::TrackerConfig cfg_;
+  std::unique_ptr<baykus::Sessions> sessions_;
+  std::unique_ptr<baykus::Runtime> runtime_;
+};
+
+TEST_F(MotionRuntimeTest, TracksIndependentOfConf) {  // Review Focus 3
+  for (int f = 1; f <= 8; ++f) {
+    SCOPED_TRACE("kare " + std::to_string(f));
+    const auto a = step(f, "low", 0.25);
+    const auto b = step(f, "high", 1.0);
+    EXPECT_EQ(track_rows(a), track_rows(b));
+    ASSERT_TRUE(a.ego && b.ego);
+    EXPECT_EQ(a.ego->to_json(), b.ego->to_json());
+    EXPECT_TRUE(b.dets.empty());
+  }
+}
+
+TEST_F(MotionRuntimeTest, BadRequestLeavesEgoState) {  // Review Focus 2
+  step(1, "a");
+  step(2, "a");
+  auto bad = request(f4_frame(3), "a");
+  bad.rgb = "bozuk";
+  EXPECT_THROW(runtime_->process(bad), std::invalid_argument);
+  const auto a3 = step(3, "a");
+  step(1, "b");
+  step(2, "b");
+  const auto b3 = step(3, "b");
+  ASSERT_TRUE(a3.ego && b3.ego);
+  EXPECT_EQ(a3.ego->to_json(), b3.ego->to_json());
+  const auto before = sessions_->size();
+  auto first_bad = request(f4_frame(1), "c");
+  first_bad.ir = "bozuk";
+  EXPECT_THROW(runtime_->process(first_bad), std::invalid_argument);
+  EXPECT_EQ(sessions_->size(), before);  // bozuk ilk istek oturum açmaz (S1)
+}
+
+TEST_F(MotionRuntimeTest, NoSessionNoEgo) {
+  auto r = request(f4_frame(1), "");
+  r.track = false;
+  const auto out = runtime_->process(r);
+  EXPECT_FALSE(out.ego.has_value());
+  EXPECT_TRUE(out.tracks.empty());
+  const auto j = baykus::response_json(out);
+  EXPECT_TRUE(j.at("ego").is_null());
+  EXPECT_TRUE(j.at("health").at("ir").at("frozen").is_null());
+  EXPECT_TRUE(j.at("health").at("rgb").at("diff_mad").is_null());
+}
+
+TEST_F(MotionRuntimeTest, ScopeTracksKeepsMapRaisesIdBase) {
+  int max_before = -1;
+  for (int f = 1; f <= 12; ++f) {
+    for (const auto& t : step(f, "s").tracks) max_before = std::max(max_before, t.track_id);
+  }
+  ASSERT_GE(max_before, 0);
+  sessions_->reset("s", baykus::Scope::Tracks);
+  bool back_to_gen1 = false;
+  for (int f = 13; f <= 24; ++f) {
+    const auto r = step(f, "s");
+    for (const auto& t : r.tracks) EXPECT_GT(t.track_id, max_before);
+    if (r.ego && r.ego->ok && r.ego->map_gen == 1 && !r.ego->provisional) back_to_gen1 = true;
+  }
+  EXPECT_TRUE(back_to_gen1);  // kütüphane korundu: yeniden konumlama nesil 1'e birleştirir
+}
+
+TEST_F(MotionRuntimeTest, ScopeAllClears) {
+  for (int f = 1; f <= 12; ++f) step(f, "s");
+  sessions_->reset("s", baykus::Scope::All);
+  const auto first = step(13, "s");
+  ASSERT_TRUE(first.ego);
+  EXPECT_TRUE(first.ego->keyframe);
+  EXPECT_EQ(first.ego->map_gen, 1);
+  int min_id = 1 << 30;
+  for (int f = 14; f <= 20; ++f) {
+    for (const auto& t : step(f, "s").tracks) min_id = std::min(min_id, t.track_id);
+  }
+  EXPECT_EQ(min_id, 0);  // kimlikler baştan
 }

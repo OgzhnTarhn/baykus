@@ -196,6 +196,7 @@ MotionCfg MotionCfg::load(const std::string& path) {
   cfg.zones = parse_zones(path, raw.at("zones"));
   cfg.log = parse_log(path, raw.at("log"));
   cfg.summary = parse_summary(path, raw.at("summary"));
+  cfg.raw = raw;
   cfg.sha256 = sha256_hex(data);
   return cfg;
 }

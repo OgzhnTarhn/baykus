@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <utility>
 
+#include "baykus/classes.hpp"
 #include "baykus/files.hpp"
 
 namespace baykus {
@@ -56,27 +57,90 @@ Response Runtime::process(const Request& req) {
   FrameResult fr;
   {
     std::lock_guard<std::mutex> infer_lock(infer_mutex_);
-    fr = pipeline_.run(std::move(pair), decode_ms, req.gate, req.floor, s ? &s->window : nullptr);
+    FrozenDetector* frozen = (s && s->motion) ? &s->motion->frozen : nullptr;
+    fr = pipeline_.run(std::move(pair), decode_ms, req.gate, req.floor, s ? &s->window : nullptr,
+                       frozen);
+  }
+
+  // Takip katmanı: ham ≥ 0,1 (conf'tan bağımsız).
+  std::vector<Det> layer;
+  for (const auto& d : fr.dets_all) {
+    if (d.score_raw >= kTrackFloor) layer.push_back(d);
+  }
+
+  // Ego (Python `SessionRef.step` sırası); oturum kilidi tutuluyor, çıkarım kilidi dışında.
+  std::optional<EgoResult> ego;
+  double ego_ms = 0.0;
+  if (s && s->motion) {
+    ++s->n;
+    bool ir_bad = false;
+    if (fr.health.contains("ir") && fr.health["ir"].contains("flags")) {
+      for (const auto& f : fr.health["ir"]["flags"]) {
+        if (f == "lost" || f == "noisy") {
+          ir_bad = true;
+          break;
+        }
+      }
+    }
+    bool ir_frozen = false;
+    if (fr.frozen.is_object() && fr.frozen.contains("ir")) {
+      const auto& fi = fr.frozen["ir"];
+      ir_bad = ir_bad || fi.value("alarm", false);
+      ir_frozen = fi.value("frozen", false);
+    }
+    const std::string source = ir_bad ? "none" : "ir";
+    const cv::Mat* gray =
+        (source == "none" || ir_frozen || fr.ir_half.empty()) ? nullptr : &fr.ir_half;
+    std::vector<Box> boxes;
+    boxes.reserve(layer.size());
+    for (const auto& d : layer) boxes.push_back(Box{d.x1, d.y1, d.x2, d.y2});
+    const auto t_ego = Clock::now();
+    ego = s->motion->ego.update(gray, source, boxes, req.frame);
+    ego_ms = ms_since(t_ego);
   }
 
   // Takip: takip katmanının bütün tespitleri (conf'tan bağımsız), ham skorla.
-  std::map<int, int> ids;
+  std::map<int, int> ids;  // tespit indeksi → API kimliği
   double track_ms = 0.0;
   if (req.track) {
     const auto t = Clock::now();
-    std::vector<Det> in;
-    for (const auto& d : fr.dets_all) {
-      if (d.score_raw >= kTrackFloor) in.push_back(d);
+    for (const auto& [index, id] : s->tracker.update(layer)) {
+      if (id < 0) continue;
+      const int api = id + s->id_base;
+      ids[index] = api;
+      if (api > s->max_api_id) s->max_api_id = api;
     }
-    for (const auto& [index, id] : s->tracker.update(in)) ids[index] = id;
     track_ms = ms_since(t);
   }
 
+  // Hareket: kimliği olan takip katmanı tespitleri.
+  double motion_ms = 0.0;
+  if (s && s->motion && ego) {
+    const auto t = Clock::now();
+    std::vector<TrackObs> obs;
+    for (const auto& d : layer) {
+      const auto it = ids.find(d.index);
+      if (it != ids.end()) obs.push_back(TrackObs{it->second, Box{d.x1, d.y1, d.x2, d.y2}});
+    }
+    r.motion = s->motion->motion.update(*ego, obs);
+    motion_ms = ms_since(t);
+  }
+
+  for (const auto& d : layer) {
+    const auto it = ids.find(d.index);
+    if (it == ids.end()) continue;
+    r.tracks.push_back(
+        TrackOut{it->second, d.cls_id, Box{d.x1, d.y1, d.x2, d.y2}, d.score_raw, d.score});
+  }
+
   r.health = std::move(fr.health);
+  r.ego = ego;
   r.timing_ms = std::move(fr.timing_ms);
   r.timing_ms["track"] = track_ms;
+  r.timing_ms["ego"] = ego_ms;
+  r.timing_ms["motion"] = motion_ms;
   double total = 0.0;
-  for (const char* k : {"decode", "health", "pre", "infer", "post", "track"}) {
+  for (const char* k : {"decode", "health", "pre", "infer", "post", "track", "ego", "motion"}) {
     total += r.timing_ms.at(k);
   }
   r.timing_ms["total"] = total;
@@ -86,6 +150,70 @@ Response Runtime::process(const Request& req) {
     r.track_ids.push_back(it == ids.end() ? -1 : it->second);
   }
   return r;
+}
+
+json response_json(const Response& r) {
+  auto motion_fields = [&r](int id, json& motion, json& speed_rel, json& map_xy) {
+    motion = "unknown";
+    speed_rel = nullptr;
+    map_xy = nullptr;
+    if (id < 0) return;
+    const auto it = r.motion.find(id);
+    if (it == r.motion.end()) return;
+    motion = it->second.motion;
+    if (it->second.speed_rel) speed_rel = *it->second.speed_rel;
+    if (it->second.map_xy) map_xy = {it->second.map_xy->x, it->second.map_xy->y};
+  };
+
+  json dets = json::array();
+  for (std::size_t i = 0; i < r.dets.size(); ++i) {
+    const auto& d = r.dets[i];
+    const int id = i < r.track_ids.size() ? r.track_ids[i] : -1;
+    const bool known = d.cls_id >= 0 && d.cls_id < static_cast<int>(kClassNames.size());
+    json motion, speed_rel, map_xy;
+    motion_fields(id, motion, speed_rel, map_xy);
+    dets.push_back({{"cls", known ? std::string(kClassNames[d.cls_id]) : std::string("unknown")},
+                    {"cls_id", d.cls_id},
+                    {"score", d.score},
+                    {"score_raw", static_cast<double>(d.score_raw)},
+                    {"box", {{"x1", d.x1}, {"y1", d.y1}, {"x2", d.x2}, {"y2", d.y2}}},
+                    {"track_id", id < 0 ? json(nullptr) : json(id)},
+                    {"motion", motion},
+                    {"speed_rel", speed_rel},
+                    {"map_xy", map_xy}});
+  }
+
+  json tracks = json::array();
+  for (const auto& t : r.tracks) {
+    json motion, speed_rel, map_xy;
+    motion_fields(t.track_id, motion, speed_rel, map_xy);
+    tracks.push_back(
+        {{"track_id", t.track_id},
+         {"cls_id", t.cls_id},
+         {"box", {{"x1", t.box.x1}, {"y1", t.box.y1}, {"x2", t.box.x2}, {"y2", t.box.y2}}},
+         {"score_raw", static_cast<double>(t.score_raw)},
+         {"score", t.score},
+         {"motion", motion},
+         {"speed_rel", speed_rel},
+         {"map_xy", map_xy}});
+  }
+
+  // Oturumsuz ya da hareketsiz: donmuş kare alanları API'de null (tasarım §5.7). Runtime'ın
+  // sağlık sözlüğü Faz 3 referansıyla birebir kalır.
+  json health = r.health;
+  for (const char* ch : {"rgb", "ir"}) {
+    if (health.contains(ch) && !health[ch].contains("frozen")) {
+      health[ch]["frozen"] = nullptr;
+      health[ch]["diff_mad"] = nullptr;
+    }
+  }
+
+  return {{"detections", dets},
+          {"tracks", tracks},
+          {"ego", r.ego ? r.ego->to_json() : json(nullptr)},
+          {"health", health},
+          {"timing_ms", r.timing_ms},
+          {"session_new", r.session_new}};
 }
 
 json detect_sequence(Runtime& runtime, const std::string& seq_dir, double floor,
