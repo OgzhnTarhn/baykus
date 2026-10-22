@@ -68,7 +68,7 @@ COPY --from=build /opt/opencv/lib/*.so* /usr/local/lib/
 COPY --from=build /opt/onnxruntime/lib/*.so* /usr/local/lib/
 # Yalnız ürün ve ölçüm uygulamaları; testler ve eşlik araçları derleme imajında koşar
 COPY --from=build /build/bin/baykus_server /build/bin/baykus_bench /build/bin/baykus_detect \
-     /build/bin/baykus_track /usr/local/bin/
+     /build/bin/baykus_track /build/bin/baykus_sequence /usr/local/bin/
 COPY configs/engine/tracker.json configs/engine/models.json /etc/baykus/
 RUN ldconfig
 USER baykus

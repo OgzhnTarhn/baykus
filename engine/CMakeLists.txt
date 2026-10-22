@@ -135,6 +135,12 @@ target_link_libraries(baykus_track PRIVATE baykus_core baykus_warnings)
 add_executable(baykus_detect apps/detect.cpp)
 target_link_libraries(baykus_detect PRIVATE baykus_core baykus_warnings)
 
+add_executable(baykus_sequence apps/sequence.cpp)
+target_link_libraries(baykus_sequence PRIVATE baykus_core baykus_warnings)
+
+add_executable(baykus_clip apps/clip.cpp)
+target_link_libraries(baykus_clip PRIVATE baykus_core baykus_warnings)
+
 add_executable(baykus_server apps/server.cpp)
 target_link_libraries(baykus_server PRIVATE baykus_core baykus_warnings Threads::Threads)
 
