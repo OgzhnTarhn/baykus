@@ -388,6 +388,32 @@ def _cmd_ego_trace(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_parity(a: argparse.Namespace) -> int:
+    from baykus.motion.parity import compare
+
+    ref = json.loads(Path(a.ref).read_text(encoding="utf-8"))
+    cpp = json.loads(Path(a.cpp).read_text(encoding="utf-8"))
+    rec = {
+        **compare(ref, cpp),
+        "ref_sha256": _sha256(Path(a.ref)),
+        "cpp_sha256": _sha256(Path(a.cpp)),
+        **git_info(),
+        "created_at": iso(utc_now()),
+    }
+    write_json(Path(a.out), rec)
+    for name, r in rec["per_scenario"].items():
+        print(
+            f"{name}: {r['compared']}/{r['rows']} satır (bantta {r['in_band']}, serbest "
+            f"{r['free']}), hata {r['errors']}, köşe {r['max_corner_px']:.2g} px"
+        )
+    k10 = rec["kabul10b"]
+    print(f"Kabul 10 b: {'geçti' if k10['pass'] else 'GEÇMEDİ'}")
+    for e in rec["errors"][:10]:
+        print(f"  {e}")
+    print(f"Kabul 1: {rec['verdict']} → {a.out}")
+    return 0 if rec["verdict"] == "pass" else 1
+
+
 def _common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--split", choices=("dev", "test"), default="dev")
     p.add_argument("--dev", default="../configs/m3ot_dev.json")
@@ -466,6 +492,11 @@ def build_parser() -> argparse.ArgumentParser:
     cr.add_argument("--tar", default="../fixtures/f4", help="açılmış fixtures-f4 paketi")
     cr.add_argument("--out", default="../evidence/clip_ref.json")
     cr.set_defaults(func=_cmd_clip_ref)
+    pa = sub.add_parser("parity", help="klip senaryoları: Python referansı ↔ C++ (Kabul 1, 10 b)")
+    pa.add_argument("--ref", default="../evidence/clip_ref.json")
+    pa.add_argument("--cpp", default="../evidence/clip_cpp.json")
+    pa.add_argument("--out", default="../results/engine/parity_ego.json")
+    pa.set_defaults(func=_cmd_parity)
     et = sub.add_parser("ego-trace", help="ego girdi/çıktı izi (yeniden oynatma; bu makinede)")
     et.add_argument("--models", default="../models")
     et.add_argument("--models-manifest", default="../configs/engine/models.json")
