@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 #include <httplib.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -70,8 +71,28 @@ class ServerTest : public ::testing::Test {
   }
 
   void TearDown() override {
+    if (motion_server_) motion_server_->stop();
+    if (motion_thread_.joinable()) motion_thread_.join();
     if (server_) server_->stop();
     if (thread_.joinable()) thread_.join();
+  }
+
+  // Hareketli sunucu: motion.json (BAYKUS_CONFIGS/engine) ile kurulmuş Sessions. İlk çağrıda
+  // başlatılır; mevcut hareketsiz sunucu (server_) dokunulmadan kalır.
+  void start_motion_server() {
+    if (motion_server_) return;
+    const auto motion_cfg = baykus::MotionCfg::load((configs() / "motion.json").string());
+    motion_sessions_ = std::make_unique<baykus::Sessions>(
+        cfg_, motion_cfg, models_->gate.window, models_->gate.min_frames, models_->gate.tol_px);
+    motion_runtime_ = std::make_unique<baykus::Runtime>(*models_, cfg_, *motion_sessions_);
+    motion_server_ =
+        std::make_unique<baykus::Server>(*models_, cfg_, *motion_runtime_, *motion_sessions_);
+    motion_port_ = motion_server_->bind_any_port("127.0.0.1");
+    ASSERT_GT(motion_port_, 0);
+    motion_thread_ = std::thread([this] { motion_server_->listen_after_bind(); });
+    motion_server_->wait_until_ready();
+    motion_client_ = std::make_unique<httplib::Client>("127.0.0.1", motion_port_);
+    motion_client_->set_read_timeout(60, 0);
   }
 
   int post_detect(const std::string& query, const httplib::UploadFormDataItems& items) {
@@ -180,6 +201,13 @@ class ServerTest : public ::testing::Test {
   std::thread thread_;
   int port_ = -1;
   std::string rgb_, ir_;
+
+  std::unique_ptr<baykus::Sessions> motion_sessions_;
+  std::unique_ptr<baykus::Runtime> motion_runtime_;
+  std::unique_ptr<baykus::Server> motion_server_;
+  std::unique_ptr<httplib::Client> motion_client_;
+  std::thread motion_thread_;
+  int motion_port_ = -1;
 };
 
 TEST_F(ServerTest, HealthOk) {
@@ -225,10 +253,11 @@ TEST_F(ServerTest, DetectShape) {
       EXPECT_TRUE(d.at("box").contains(k)) << k;
     }
   }
-  for (const char* k : {"decode", "health", "pre", "infer", "post", "track", "total"}) {
+  for (const char* k :
+       {"decode", "health", "pre", "infer", "post", "track", "ego", "motion", "total"}) {
     EXPECT_TRUE(j.at("timing_ms").contains(k)) << k;
   }
-  EXPECT_EQ(j.at("timing_ms").size(), 7u);
+  EXPECT_EQ(j.at("timing_ms").size(), 9u);  // Faz 4 §5.7: + ego, motion
   for (const char* k : {"rgb", "ir", "pair", "gate", "reason", "reason_code", "applied"}) {
     EXPECT_TRUE(j.at("health").contains(k)) << k;
   }
@@ -291,4 +320,89 @@ TEST_F(ServerTest, WritesApiEvidence) {
   const char* dir = std::getenv("BAYKUS_EVIDENCE_DIR");
   if (dir != nullptr && *dir != '\0')
     std::ofstream(fs::path(dir) / "api.json") << rec.dump(2) << "\n";
+}
+
+TEST_F(ServerTest, DetectHasMotionFields) {
+  BAYKUS_REQUIRE_FILES({configs() / "motion.json"});
+  start_motion_server();
+  ASSERT_TRUE(motion_client_);
+  const auto r = motion_client_->Post("/v1/detect?track=true&session=mv&frame=1", parts(rgb_, ir_));
+  ASSERT_TRUE(r);
+  ASSERT_EQ(r->status, 200) << r->body;
+  const auto j = json::parse(r->body);
+  ASSERT_TRUE(j.contains("tracks"));
+  EXPECT_TRUE(j.at("tracks").is_array());
+  ASSERT_TRUE(j.contains("ego"));
+  EXPECT_TRUE(j.at("ego").contains("map_gen"));
+  EXPECT_TRUE(j.at("ego").contains("merge"));  // null olabilir
+  EXPECT_TRUE(j.at("health").at("ir").contains("frozen"));
+  EXPECT_TRUE(j.at("timing_ms").contains("ego"));
+  ASSERT_FALSE(j.at("detections").empty());
+  for (const auto& d : j.at("detections")) {
+    EXPECT_TRUE(d.contains("motion")) << d.dump();
+  }
+}
+
+TEST_F(ServerTest, ResetScopeParam) {
+  BAYKUS_REQUIRE_FILES({configs() / "motion.json"});
+  start_motion_server();
+  ASSERT_TRUE(motion_client_);
+  // Aynı kare tekrarı IR'de donmuş sayılır: ego kayıp (keyframe false). Sıfırlama donmuş kare
+  // geçmişini de siler; sonraki kare yeniden kayda girer.
+  auto detect = [this] {
+    const auto r = motion_client_->Post("/v1/detect?track=true&session=rs", parts(rgb_, ir_));
+    EXPECT_TRUE(r);
+    EXPECT_EQ(r->status, 200) << r->body;
+    return json::parse(r->body);
+  };
+  const auto first = detect();
+  EXPECT_TRUE(first.at("ego").at("keyframe").get<bool>());
+  EXPECT_FALSE(detect().at("ego").at("keyframe").get<bool>());
+
+  // scope=xyz: 400, oturum değişmez (sonraki kare hâlâ donmuş).
+  const auto x = motion_client_->Post("/v1/session/reset?session=rs&scope=xyz", "", "text/plain");
+  ASSERT_TRUE(x);
+  EXPECT_EQ(x->status, 400) << x->body;
+  EXPECT_TRUE(json::parse(x->body).contains("error"));
+  const auto after_bad = detect();
+  EXPECT_FALSE(after_bad.at("session_new").get<bool>());
+  EXPECT_FALSE(after_bad.at("ego").at("keyframe").get<bool>());
+
+  // scope=tracks: 200, yanıtta scope; harita kütüphanesi korunur (sonraki kare kayda girer).
+  const auto t =
+      motion_client_->Post("/v1/session/reset?session=rs&scope=tracks", "", "text/plain");
+  ASSERT_TRUE(t);
+  EXPECT_EQ(t->status, 200) << t->body;
+  EXPECT_EQ(json::parse(t->body).at("scope"), "tracks");
+  EXPECT_TRUE(detect().at("ego").at("ok").get<bool>());
+
+  // scope=all: 200; sonraki kare nesil 1'in ilk anahtar karesi.
+  const auto a = motion_client_->Post("/v1/session/reset?session=rs&scope=all", "", "text/plain");
+  ASSERT_TRUE(a);
+  EXPECT_EQ(a->status, 200) << a->body;
+  EXPECT_EQ(json::parse(a->body).at("scope"), "all");
+  const auto fresh = detect();
+  EXPECT_TRUE(fresh.at("ego").at("keyframe").get<bool>());
+  EXPECT_EQ(fresh.at("ego").at("map_gen").get<int>(), 1);
+}
+
+TEST_F(ServerTest, ModelHasMotion) {
+  BAYKUS_REQUIRE_FILES({configs() / "motion.json"});
+  start_motion_server();
+  ASSERT_TRUE(motion_client_);
+  const auto r = motion_client_->Get("/v1/model");
+  ASSERT_TRUE(r);
+  ASSERT_EQ(r->status, 200) << r->body;
+  const auto j = json::parse(r->body);
+  ASSERT_TRUE(j.contains("motion"));
+  const auto& motion = j.at("motion");
+  for (const char* k : {"ego", "reloc", "motion"}) {
+    EXPECT_TRUE(motion.contains(k)) << k;
+  }
+  ASSERT_TRUE(j.contains("motion_sha256"));
+  const std::string sha = j.at("motion_sha256").get<std::string>();
+  EXPECT_EQ(sha.size(), 64u);
+  EXPECT_TRUE(std::all_of(sha.begin(), sha.end(), [](char c) {
+    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f');
+  })) << sha;
 }

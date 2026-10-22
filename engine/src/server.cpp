@@ -57,19 +57,18 @@ bool parse_bool(const std::string& name, const std::string& s) {
   throw std::invalid_argument(name + " true ya da false olmalı: " + s);
 }
 
-json detections_json(const Response& r) {
-  json out = json::array();
-  for (std::size_t i = 0; i < r.dets.size(); ++i) {
-    const auto& d = r.dets[i];
-    const bool known = d.cls_id >= 0 && d.cls_id < static_cast<int>(kClassNames.size());
-    out.push_back({{"cls", known ? std::string(kClassNames[d.cls_id]) : std::string("unknown")},
-                   {"cls_id", d.cls_id},
-                   {"score", d.score},
-                   {"score_raw", static_cast<double>(d.score_raw)},
-                   {"box", {{"x1", d.x1}, {"y1", d.y1}, {"x2", d.x2}, {"y2", d.y2}}},
-                   {"track_id", r.track_ids[i] < 0 ? json(nullptr) : json(r.track_ids[i])}});
+int parse_int(const std::string& name, const std::string& s) {
+  std::size_t used = 0;
+  int v = 0;
+  try {
+    v = std::stoi(s, &used);
+  } catch (const std::exception&) {
+    used = 0;
   }
-  return out;
+  if (used != s.size() || s.empty()) {
+    throw std::invalid_argument(name + " tam sayı olmalı: " + s);
+  }
+  return v;
 }
 
 // İstek → yanıt; beklenen hatalar türüne göre koda çevrilir, sunucu ayakta kalır.
@@ -120,8 +119,16 @@ Server::Server(const Models& models, const TrackerConfig& tracker_cfg, Runtime& 
     send_json(res, 200, {{"status", "ok"}, {"model_loaded", true}});
   });
 
-  http_->Get("/v1/model", [model_info](const httplib::Request&, httplib::Response& res) {
-    send_json(res, 200, model_info);
+  http_->Get("/v1/model", [model_info, &sessions](const httplib::Request&, httplib::Response& res) {
+    json body = model_info;
+    if (sessions.motion_cfg()) {
+      body["motion"] = sessions.motion_cfg()->to_json();
+      body["motion_sha256"] = sessions.motion_cfg()->sha256;
+    } else {
+      body["motion"] = nullptr;
+      body["motion_sha256"] = nullptr;
+    }
+    send_json(res, 200, body);
   });
 
   http_->Post("/v1/detect", [&runtime](const httplib::Request& req, httplib::Response& res) {
@@ -144,12 +151,10 @@ Server::Server(const Models& models, const TrackerConfig& tracker_cfg, Runtime& 
       r.track = req.has_param("track") && parse_bool("track", req.get_param_value("track"));
       if (req.has_param("gate")) r.gate = req.get_param_value("gate");
       if (req.has_param("session")) r.session = req.get_param_value("session");
+      if (req.has_param("frame")) r.frame = parse_int("frame", req.get_param_value("frame"));
+      if (req.has_param("focus")) r.focus = parse_int("focus", req.get_param_value("focus"));
       const auto out = runtime.process(r);
-      send_json(res, 200,
-                {{"detections", detections_json(out)},
-                 {"health", out.health},
-                 {"timing_ms", out.timing_ms},
-                 {"session_new", out.session_new}});
+      send_json(res, 200, response_json(out));
     });
   });
 
@@ -158,8 +163,21 @@ Server::Server(const Models& models, const TrackerConfig& tracker_cfg, Runtime& 
         guarded(res, [&] {
           const std::string id = req.has_param("session") ? req.get_param_value("session") : "";
           if (id.empty()) throw std::invalid_argument("session zorunlu");
-          sessions.reset(id);
-          send_json(res, 200, {{"session", id}, {"reset", true}});
+          Scope scope = Scope::All;
+          std::string scope_name = "all";
+          if (req.has_param("scope")) {
+            scope_name = req.get_param_value("scope");
+            if (scope_name == "all") {
+              scope = Scope::All;
+            } else if (scope_name == "tracks") {
+              scope = Scope::Tracks;
+            } else {
+              throw std::invalid_argument("bilinmeyen scope: " + scope_name +
+                                          "; seçenekler: all, tracks");
+            }
+          }
+          sessions.reset(id, scope);
+          send_json(res, 200, {{"session", id}, {"reset", true}, {"scope", scope_name}});
         });
       });
 

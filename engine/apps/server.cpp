@@ -13,6 +13,7 @@
 
 #include "baykus/egress.hpp"
 #include "baykus/models.hpp"
+#include "baykus/motion_config.hpp"
 #include "baykus/runtime.hpp"
 #include "baykus/server.hpp"
 #include "baykus/sessions.hpp"
@@ -24,8 +25,8 @@ namespace {
 std::atomic<bool> g_stopping{false};
 
 int usage() {
-  std::cerr << "kullanım: baykus_server [--models DIR] [--manifest M] [--tracker T] [--host H] "
-               "[--port P] | --egress-check\n";
+  std::cerr << "kullanım: baykus_server [--models DIR] [--manifest M] [--tracker T] [--motion M] "
+               "[--host H] [--port P] | --egress-check\n";
   return 2;
 }
 
@@ -40,7 +41,8 @@ int main(int argc, char** argv) {
     return v.at("blocked").get<bool>() ? 0 : 1;
   }
   std::string models_dir = "/models", manifest = "/etc/baykus/models.json",
-              tracker = "/etc/baykus/tracker.json", host = "0.0.0.0";
+              tracker = "/etc/baykus/tracker.json", motion = "/configs/engine/motion.json",
+              host = "0.0.0.0";
   int port = 8080;
   for (int i = 1; i < argc; ++i) {
     const std::string a = argv[i];
@@ -51,6 +53,8 @@ int main(int argc, char** argv) {
       manifest = argv[++i];
     } else if (a == "--tracker" && has_value) {
       tracker = argv[++i];
+    } else if (a == "--motion" && has_value) {
+      motion = argv[++i];
     } else if (a == "--host" && has_value) {
       host = argv[++i];
     } else if (a == "--port" && has_value) {
@@ -68,7 +72,9 @@ int main(int argc, char** argv) {
   try {
     const auto models = baykus::load_models(models_dir, manifest);
     const auto cfg = baykus::TrackerConfig::load(tracker);
-    baykus::Sessions sessions(cfg, models.gate.window, models.gate.min_frames, models.gate.tol_px);
+    const auto motion_cfg = baykus::MotionCfg::load(motion);
+    baykus::Sessions sessions(cfg, motion_cfg, models.gate.window, models.gate.min_frames,
+                              models.gate.tol_px);
     baykus::Runtime runtime(models, cfg, sessions);
     baykus::Server server(models, cfg, runtime, sessions);
     if (!server.bind(host, port)) {
