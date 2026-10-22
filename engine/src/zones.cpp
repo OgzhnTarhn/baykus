@@ -322,6 +322,13 @@ nlohmann::json Zones::defs_json() const {
   return arr;
 }
 
+const ZoneDef* Zones::find(const std::string& id) const {
+  for (const ZoneState& z : zones_) {
+    if (z.def.id == id) return &z.def;
+  }
+  return nullptr;
+}
+
 void Zones::reset_tracks() {
   for (ZoneState& z : zones_) {
     z.tracks.clear();
@@ -754,6 +761,77 @@ void Zones::reconcile_alarms_(ZoneState& z, int n, int frame, std::vector<ZoneEv
       out.push_back(ev);
     }
   }
+}
+
+std::vector<ZoneDef> parse_zone_defs(const nlohmann::json& body) {
+  if (!body.is_object()) {
+    throw std::invalid_argument("gövde nesne olmalı");
+  }
+  const auto jzones = body.find("zones");
+  if (jzones == body.end() || !jzones->is_array()) {
+    throw std::invalid_argument("zones dizisi yok");
+  }
+  std::vector<ZoneDef> defs;
+  defs.reserve(jzones->size());
+  for (std::size_t i = 0; i < jzones->size(); ++i) {
+    const nlohmann::json& j = (*jzones)[i];
+    const std::string where = "bölge " + std::to_string(i + 1);
+    if (!j.is_object()) {
+      throw std::invalid_argument(where + ": nesne olmalı");
+    }
+    ZoneDef d;
+    const auto jid = j.find("id");
+    if (jid == j.end() || !jid->is_string()) {
+      throw std::invalid_argument(where + ": id dize olmalı");
+    }
+    d.id = jid->get<std::string>();
+    const std::string where_id = "bölge " + d.id;
+    const auto jname = j.find("name");
+    if (jname == j.end() || !jname->is_string()) {
+      throw std::invalid_argument(where_id + ": name dize olmalı");
+    }
+    d.name = jname->get<std::string>();
+    const auto jkind = j.find("kind");
+    if (jkind == j.end() || !jkind->is_string()) {
+      throw std::invalid_argument(where_id + ": kind dize olmalı");
+    }
+    d.kind = jkind->get<std::string>();
+    const auto jgen = j.find("gen");
+    if (jgen == j.end() || !jgen->is_number_integer()) {
+      throw std::invalid_argument(where_id + ": gen tam sayı olmalı");
+    }
+    d.gen = jgen->get<int>();
+    const auto jpts = j.find("points");
+    if (jpts == j.end() || !jpts->is_array()) {
+      throw std::invalid_argument(where_id + ": points dizi olmalı");
+    }
+    for (std::size_t k = 0; k < jpts->size(); ++k) {
+      const nlohmann::json& pt = (*jpts)[k];
+      if (!pt.is_array() || pt.size() != 2u || !pt[0].is_number() || !pt[1].is_number()) {
+        throw std::invalid_argument(where_id + ": nokta " + std::to_string(k + 1) +
+                                    " 2 sayılık dizi olmalı");
+      }
+      d.points.emplace_back(pt[0].get<double>(), pt[1].get<double>());
+    }
+    const auto jdwell = j.find("dwell_frames");
+    if (jdwell != j.end()) {
+      if (!jdwell->is_number_integer()) {
+        throw std::invalid_argument(where_id + ": dwell_frames tam sayı olmalı");
+      }
+      d.dwell_frames = jdwell->get<int>();
+    }
+    const auto jcount = j.find("count");
+    if (jcount != j.end()) {
+      if (!jcount->is_string()) {
+        throw std::invalid_argument(where_id + ": count dize olmalı");
+      }
+      d.count = jcount->get<std::string>();
+    } else if (d.kind == "line") {
+      d.count = "both";
+    }
+    defs.push_back(std::move(d));
+  }
+  return defs;
 }
 
 }  // namespace baykus

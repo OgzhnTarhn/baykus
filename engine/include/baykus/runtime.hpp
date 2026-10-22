@@ -32,7 +32,7 @@ struct Request {
   bool track = true;
   float floor = 0.1f;
   std::optional<int> frame;  // ego'ya geçen kare numarası
-  std::optional<int> focus;  // şimdilik kullanılmaz
+  std::optional<int> focus;  // iz özeti kimliği; yanıtta "focus_track" (yoksa null)
 };
 
 struct Response {
@@ -40,9 +40,11 @@ struct Response {
   std::vector<int> track_ids;    // dets ile aynı sırada; -1 = kimlik yok (API'de null)
   std::vector<TrackOut> tracks;  // takip katmanı, kimliği olanlar (API kimliği)
   std::optional<EgoResult> ego;
-  std::map<int, TrackMotion> motion;  // anahtar API kimliği
-  std::vector<ZoneEvent> events;      // bu karenin bölge olayları
-  std::vector<Alarm> alarms;          // açık bölge alarmları
+  std::map<int, TrackMotion> motion;                    // anahtar API kimliği
+  std::vector<ZoneEvent> events;                        // bu karenin bölge olayları
+  nlohmann::json log_events = nlohmann::json::array();  // bu karenin günlük kayıtları
+  std::optional<nlohmann::json> focus_track;            // `focus` iz özeti (yoksa boş)
+  std::vector<Alarm> alarms;                            // açık bölge alarmları
   nlohmann::json zone_counts = nlohmann::json::object();
   nlohmann::json health;
   // decode, health, pre, infer, post, track, ego, motion, zones, total

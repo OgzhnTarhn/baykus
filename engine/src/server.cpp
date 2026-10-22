@@ -2,10 +2,13 @@
 
 #include <httplib.h>
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <map>
 #include <optional>
 #include <stdexcept>
+#include <utility>
 
 #include "baykus/classes.hpp"
 #include "baykus/image_io.hpp"
@@ -21,9 +24,15 @@ struct TooLarge : std::runtime_error {
   using std::runtime_error::runtime_error;
 };
 
+// 404 için ayrı tür: bilinmeyen oturum / alarm / iz özeti.
+struct NotFound : std::runtime_error {
+  using std::runtime_error::runtime_error;
+};
+
 void send_json(httplib::Response& res, int status, const json& body) {
   res.status = status;
-  res.set_content(body.dump(), "application/json");
+  // Geçersiz UTF-8 (ör. bozuk gövdeyi aktaran ayrıştırma iletisi) dökümü düşürmesin.
+  res.set_content(body.dump(-1, ' ', false, json::error_handler_t::replace), "application/json");
 }
 
 void send_error(httplib::Response& res, int status, const std::string& message) {
@@ -71,6 +80,20 @@ int parse_int(const std::string& name, const std::string& s) {
   return v;
 }
 
+long parse_long(const std::string& name, const std::string& s) {
+  std::size_t used = 0;
+  long v = 0;
+  try {
+    v = std::stol(s, &used);
+  } catch (const std::exception&) {
+    used = 0;
+  }
+  if (used != s.size() || s.empty()) {
+    throw std::invalid_argument(name + " tam sayı olmalı: " + s);
+  }
+  return v;
+}
+
 // İstek → yanıt; beklenen hatalar türüne göre koda çevrilir, sunucu ayakta kalır.
 template <typename F>
 void guarded(httplib::Response& res, F f) {
@@ -78,6 +101,8 @@ void guarded(httplib::Response& res, F f) {
     f();
   } catch (const TooLarge& e) {
     send_error(res, 413, e.what());
+  } catch (const NotFound& e) {
+    send_error(res, 404, e.what());
   } catch (const ImageTooLarge& e) {
     send_error(res, 413, e.what());
   } catch (const std::invalid_argument& e) {
@@ -86,6 +111,16 @@ void guarded(httplib::Response& res, F f) {
     std::cerr << "iç hata: " << e.what() << "\n";
     send_error(res, 500, "iç hata");
   }
+}
+
+// Oturum bulunamazsa 404; `session` yoksa 400; oturumda hareket kapalıysa 400. Oturum açmaz.
+std::shared_ptr<Session> motion_session(Sessions& sessions, const httplib::Request& req) {
+  const std::string id = req.has_param("session") ? req.get_param_value("session") : "";
+  if (id.empty()) throw std::invalid_argument("session zorunlu");
+  auto s = sessions.find(id);
+  if (!s) throw NotFound("oturum yok: " + id);
+  if (!s->motion) throw std::invalid_argument("bu oturumda hareket kapalı");
+  return s;
 }
 
 }  // namespace
@@ -180,6 +215,119 @@ Server::Server(const Models& models, const TrackerConfig& tracker_cfg, Runtime& 
           send_json(res, 200, {{"session", id}, {"reset", true}, {"scope", scope_name}});
         });
       });
+
+  http_->Put("/v1/session/zones", [&sessions](const httplib::Request& req, httplib::Response& res) {
+    guarded(res, [&] {
+      auto s = motion_session(sessions, req);
+      std::lock_guard<std::mutex> lock(s->m);
+      auto& mp = *s->motion;
+      const std::size_t max_bytes = sessions.motion_cfg()->zones.body_max_bytes;
+      if (req.body.size() > max_bytes) {
+        throw TooLarge("gövde " + std::to_string(max_bytes) + " bayttan büyük");
+      }
+      json body;
+      try {
+        body = json::parse(req.body);
+      } catch (const json::exception& e) {
+        throw std::invalid_argument(std::string("gövde JSON değil: ") + e.what());
+      }
+      auto defs = parse_zone_defs(body);
+      int max_gen = 1;
+      const auto& gens = mp.ego.generations();
+      if (!gens.empty()) {
+        max_gen = std::max_element(gens.begin(), gens.end(), [](const auto& a, const auto& b) {
+                    return a.first < b.first;
+                  })->first;
+      }
+      // Eski tanımların ad / türü: alarm_clear kayıtları eski tanımla yazılır.
+      std::map<std::string, std::pair<std::string, std::string>> old;
+      for (const auto& z : mp.zones.defs_json()) {
+        old[z.at("id").get<std::string>()] = {z.value("name", std::string()),
+                                              z.value("kind", std::string())};
+      }
+      std::vector<ZoneEvent> cleared;
+      mp.zones.set(std::move(defs), max_gen, &cleared);
+      for (const auto& e : cleared) {
+        const auto it = old.find(e.zone_id);
+        if (it == old.end()) {
+          mp.log.append(e, "", "");
+        } else {
+          mp.log.append(e, it->second.first, it->second.second);
+        }
+      }
+      ZoneEvent updated;
+      updated.n = s->n;
+      updated.frame = s->last_frame;
+      updated.kind = "zones_updated";
+      updated.gen = s->has_ego ? s->last_gen : 1;
+      mp.log.append(updated, "", "");
+      send_json(res, 200, {{"zones", mp.zones.defs_json()}});
+    });
+  });
+
+  http_->Get("/v1/session/zones", [&sessions](const httplib::Request& req, httplib::Response& res) {
+    guarded(res, [&] {
+      auto s = motion_session(sessions, req);
+      std::lock_guard<std::mutex> lock(s->m);
+      send_json(res, 200, {{"zones", s->motion->zones.defs_json()}});
+    });
+  });
+
+  http_->Get(
+      "/v1/session/events", [&sessions](const httplib::Request& req, httplib::Response& res) {
+        guarded(res, [&] {
+          auto s = motion_session(sessions, req);
+          long since = 0;
+          if (req.has_param("since")) {
+            since = parse_long("since", req.get_param_value("since"));
+            if (since < 0) throw std::invalid_argument("since 0 ya da daha büyük olmalı");
+          }
+          std::string format = "json";
+          if (req.has_param("format")) format = req.get_param_value("format");
+          if (format != "json" && format != "csv") {
+            throw std::invalid_argument("bilinmeyen format: " + format + "; seçenekler: json, csv");
+          }
+          std::lock_guard<std::mutex> lock(s->m);
+          if (format == "csv") {
+            res.status = 200;
+            res.set_content(s->motion->log.csv_since(since), "text/csv; charset=utf-8");
+          } else {
+            send_json(res, 200, s->motion->log.since(since));
+          }
+        });
+      });
+
+  http_->Post(
+      "/v1/session/alarms/ack", [&sessions](const httplib::Request& req, httplib::Response& res) {
+        guarded(res, [&] {
+          auto s = motion_session(sessions, req);
+          const std::string alarm = req.has_param("alarm") ? req.get_param_value("alarm") : "";
+          if (alarm.empty()) throw std::invalid_argument("alarm zorunlu");
+          std::lock_guard<std::mutex> lock(s->m);
+          auto& mp = *s->motion;
+          std::vector<ZoneEvent> out;
+          if (!mp.zones.ack(alarm, s->n, s->last_frame, &out)) {
+            throw NotFound("alarm yok: " + alarm);
+          }
+          for (const auto& e : out) {
+            const ZoneDef* z = mp.zones.find(e.zone_id);
+            mp.log.append(e, z != nullptr ? z->name : "", z != nullptr ? z->kind : "");
+          }
+          send_json(res, 200, {{"alarm", alarm}, {"acked", true}});
+        });
+      });
+
+  http_->Get("/v1/session/track", [&sessions](const httplib::Request& req, httplib::Response& res) {
+    guarded(res, [&] {
+      auto s = motion_session(sessions, req);
+      if (!req.has_param("id")) throw std::invalid_argument("id zorunlu");
+      const int id = parse_int("id", req.get_param_value("id"));
+      std::lock_guard<std::mutex> lock(s->m);
+      const auto summary = s->motion->summary.get(id);
+      if (!summary) throw NotFound("iz özeti yok: " + std::to_string(id));
+      send_json(res, 200, *summary);
+    });
+  });
 
   // httplib'in kendi hataları (404, 413, ...) da JSON gövdeyle
   http_->set_error_handler([](const httplib::Request&, httplib::Response& res) {

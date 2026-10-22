@@ -13,11 +13,13 @@
 #include <string>
 
 #include "baykus/ego.hpp"
+#include "baykus/event_log.hpp"
 #include "baykus/frozen.hpp"
 #include "baykus/motion.hpp"
 #include "baykus/motion_config.hpp"
 #include "baykus/reloc.hpp"
 #include "baykus/temporal.hpp"
+#include "baykus/track_summary.hpp"
 #include "baykus/tracker.hpp"
 #include "baykus/zones.hpp"
 
@@ -29,7 +31,13 @@ enum class Scope { All, Tracks };
 // taşınamaz: `ego` içindeki `Relocalizer*` bu nesnedeki `reloc`'a işaret eder.
 struct MotionParts {
   explicit MotionParts(const MotionCfg& cfg)
-      : reloc(cfg), ego(cfg, &reloc), motion(cfg.motion), frozen(cfg.frozen), zones(cfg.zones) {}
+      : reloc(cfg),
+        ego(cfg, &reloc),
+        motion(cfg.motion),
+        frozen(cfg.frozen),
+        zones(cfg.zones),
+        log(cfg.log),
+        summary(cfg.summary) {}
 
   MotionParts(const MotionParts&) = delete;
   MotionParts& operator=(const MotionParts&) = delete;
@@ -41,6 +49,8 @@ struct MotionParts {
   MotionState motion;
   FrozenDetector frozen;
   Zones zones;
+  EventLog log;
+  TrackSummaries summary;
 };
 
 struct Session {
@@ -58,6 +68,10 @@ struct Session {
   int id_base = 0;
   int max_api_id = -1;
   int n = 0;
+  int last_frame = 0;
+  bool has_ego = false;
+  int last_gen = 1;
+  bool last_provisional = false;
   std::mutex m;  // aynı oturuma eşzamanlı iki istek sırayla işlenir
 };
 
@@ -80,6 +94,9 @@ class Sessions {
   // Oturum yoksa (hiç açılmadı, çıkarıldı ya da süresi doldu) yenisi açılır, *created = true.
   // shared_ptr: başka bir istek oturumu tablodan çıkarsa da kullanan istek güvende kalır.
   std::shared_ptr<Session> get(const std::string& id, bool* created);
+  // Oturum varsa döner (son kullanım güncellenir, süresi dolanlar önce silinir), yoksa nullptr;
+  // oturum açmaz.
+  std::shared_ptr<Session> find(const std::string& id);
   // Takipçi ve pencere sıfırlanır (kimlikler baştan); oturum yoksa yeni açılır.
   void reset(const std::string& id, Scope scope = Scope::All);
   std::size_t size();

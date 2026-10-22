@@ -1,8 +1,10 @@
 #pragma once
 
-// HTTP API (Faz 3 tasarımı §4.1; spec §15.3): GET /health, GET /v1/model, POST /v1/detect,
-// POST /v1/session/reset. Hatalar JSON `{"error"}`: geçersiz istek 400, parça > 10 MB 413,
-// bilinmeyen yol 404, iç hata 500; tek hatalı istek sunucuyu düşürmez.
+// HTTP API (Faz 3 tasarımı §4.1; spec §15.3; Faz 4 uçları docs/design/events_rules.md 'Uçlar'):
+// GET /health, GET /v1/model, POST /v1/detect, POST /v1/session/reset, PUT/GET /v1/session/zones,
+// GET /v1/session/events, POST /v1/session/alarms/ack, GET /v1/session/track. Hatalar JSON
+// `{"error"}`: geçersiz istek 400, parça / gövde > sınır 413, bilinmeyen yol / oturum / alarm / iz
+// 404, iç hata 500; tek hatalı istek sunucuyu düşürmez.
 #include <cstddef>
 #include <memory>
 #include <string>

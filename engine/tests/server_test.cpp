@@ -406,3 +406,219 @@ TEST_F(ServerTest, ModelHasMotion) {
     return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f');
   })) << sha;
 }
+
+TEST_F(ServerTest, ZonesPutGetValidate) {
+  BAYKUS_REQUIRE_FILES({configs() / "motion.json"});
+  start_motion_server();
+  ASSERT_TRUE(motion_client_);
+  const auto d = motion_client_->Post("/v1/detect?track=true&session=zp&frame=1", parts(rgb_, ir_));
+  ASSERT_TRUE(d);
+  ASSERT_EQ(d->status, 200) << d->body;
+
+  const std::string valid =
+      R"({"zones":[{"id":"z1","name":"Zone 1","kind":"area","gen":1,"points":[[0,0],[10,0],[10,10],[0,10]]}]})";
+  const auto put = motion_client_->Put("/v1/session/zones?session=zp", valid, "application/json");
+  ASSERT_TRUE(put);
+  ASSERT_EQ(put->status, 200) << put->body;
+  const auto pj = json::parse(put->body);
+  ASSERT_TRUE(pj.contains("zones"));
+  ASSERT_EQ(pj.at("zones").size(), 1u);
+
+  const auto get = motion_client_->Get("/v1/session/zones?session=zp");
+  ASSERT_TRUE(get);
+  ASSERT_EQ(get->status, 200) << get->body;
+  EXPECT_EQ(json::parse(get->body).at("zones"), pj.at("zones"));
+
+  // Papyon (kendini kesen) çokgen: 400 ve error iletisi; GET değişmemiş.
+  const std::string bowtie =
+      R"({"zones":[{"id":"z2","name":"Bow","kind":"area","gen":1,"points":[[0,0],[10,10],[10,0],[0,10]]}]})";
+  const auto bad = motion_client_->Put("/v1/session/zones?session=zp", bowtie, "application/json");
+  ASSERT_TRUE(bad);
+  EXPECT_EQ(bad->status, 400) << bad->body;
+  EXPECT_TRUE(json::parse(bad->body).contains("error"));
+  const auto get2 = motion_client_->Get("/v1/session/zones?session=zp");
+  ASSERT_TRUE(get2);
+  EXPECT_EQ(json::parse(get2->body).at("zones"), pj.at("zones"));
+
+  // 70 KB gövde: 413.
+  const auto big = motion_client_->Put("/v1/session/zones?session=zp", std::string(70 * 1024, 'x'),
+                                       "application/json");
+  ASSERT_TRUE(big);
+  EXPECT_EQ(big->status, 413) << big->body;
+
+  // Bozuk JSON: 400.
+  const auto broken =
+      motion_client_->Put("/v1/session/zones?session=zp", "{not json", "application/json");
+  ASSERT_TRUE(broken);
+  EXPECT_EQ(broken->status, 400) << broken->body;
+
+  // Bilinmeyen oturum: 404.
+  const auto unknown =
+      motion_client_->Put("/v1/session/zones?session=zzz_unknown", valid, "application/json");
+  ASSERT_TRUE(unknown);
+  EXPECT_EQ(unknown->status, 404) << unknown->body;
+}
+
+TEST_F(ServerTest, EventsSinceJsonCsv) {
+  BAYKUS_REQUIRE_FILES({configs() / "motion.json"});
+  start_motion_server();
+  ASSERT_TRUE(motion_client_);
+  const auto d = motion_client_->Post("/v1/detect?track=true&session=ev&frame=1", parts(rgb_, ir_));
+  ASSERT_TRUE(d);
+  ASSERT_EQ(d->status, 200) << d->body;
+  const std::string valid =
+      R"({"zones":[{"id":"z1","name":"Zone 1","kind":"area","gen":1,"points":[[0,0],[10,0],[10,10],[0,10]]}]})";
+  const auto put = motion_client_->Put("/v1/session/zones?session=ev", valid, "application/json");
+  ASSERT_TRUE(put);
+  ASSERT_EQ(put->status, 200) << put->body;
+
+  const auto ev = motion_client_->Get("/v1/session/events?session=ev&since=0");
+  ASSERT_TRUE(ev);
+  ASSERT_EQ(ev->status, 200) << ev->body;
+  const auto ej = json::parse(ev->body);
+  ASSERT_TRUE(ej.contains("events"));
+  ASSERT_TRUE(ej.contains("last_seq"));
+  bool has_updated = false;
+  for (const auto& e : ej.at("events")) {
+    if (e.at("kind") == "zones_updated") has_updated = true;
+  }
+  EXPECT_TRUE(has_updated) << ej.dump();
+  const long last = ej.at("last_seq").get<long>();
+  EXPECT_GT(last, 0);
+
+  const auto empty =
+      motion_client_->Get("/v1/session/events?session=ev&since=" + std::to_string(last));
+  ASSERT_TRUE(empty);
+  ASSERT_EQ(empty->status, 200) << empty->body;
+  EXPECT_TRUE(json::parse(empty->body).at("events").empty());
+
+  const auto csv = motion_client_->Get("/v1/session/events?session=ev&since=0&format=csv");
+  ASSERT_TRUE(csv);
+  ASSERT_EQ(csv->status, 200) << csv->body;
+  EXPECT_NE(csv->get_header_value("Content-Type").find("text/csv"), std::string::npos);
+  const auto nl = csv->body.find("\r\n");
+  ASSERT_NE(nl, std::string::npos);
+  EXPECT_EQ(csv->body.substr(0, nl),
+            "seq,n,frame,kind,zone_id,zone_name,zone_kind,track_id,dir,gen,alarm_id");
+
+  const auto xml = motion_client_->Get("/v1/session/events?session=ev&since=0&format=xml");
+  ASSERT_TRUE(xml);
+  EXPECT_EQ(xml->status, 400) << xml->body;
+}
+
+TEST_F(ServerTest, AckUnknownAlarm404) {
+  BAYKUS_REQUIRE_FILES({configs() / "motion.json"});
+  start_motion_server();
+  ASSERT_TRUE(motion_client_);
+  const auto d = motion_client_->Post("/v1/detect?track=true&session=ak&frame=1", parts(rgb_, ir_));
+  ASSERT_TRUE(d);
+  ASSERT_EQ(d->status, 200) << d->body;
+
+  const auto ack =
+      motion_client_->Post("/v1/session/alarms/ack?session=ak&alarm=yok", "", "text/plain");
+  ASSERT_TRUE(ack);
+  EXPECT_EQ(ack->status, 404) << ack->body;
+  EXPECT_TRUE(json::parse(ack->body).contains("error"));
+
+  const auto unknown = motion_client_->Post("/v1/session/alarms/ack?session=zzz_unknown&alarm=yok",
+                                            "", "text/plain");
+  ASSERT_TRUE(unknown);
+  EXPECT_EQ(unknown->status, 404) << unknown->body;
+}
+
+TEST_F(ServerTest, TrackSummaryAndFocus) {
+  BAYKUS_REQUIRE_FILES({configs() / "motion.json"});
+  start_motion_server();
+  ASSERT_TRUE(motion_client_);
+  int track_id = -1;
+  for (int i = 1; i <= 5; ++i) {
+    const auto r = motion_client_->Post(
+        "/v1/detect?track=true&session=ts&frame=" + std::to_string(i), parts(rgb_, ir_));
+    ASSERT_TRUE(r);
+    ASSERT_EQ(r->status, 200) << r->body;
+    const auto j = json::parse(r->body);
+    for (const auto& t : j.at("tracks")) {
+      if (t.contains("track_id") && t.at("track_id").is_number()) {
+        track_id = t.at("track_id").get<int>();
+        break;
+      }
+    }
+  }
+  ASSERT_GE(track_id, 0) << "olgun iz kimliği yok";
+
+  const auto tr =
+      motion_client_->Get("/v1/session/track?session=ts&id=" + std::to_string(track_id));
+  ASSERT_TRUE(tr);
+  ASSERT_EQ(tr->status, 200) << tr->body;
+  EXPECT_EQ(json::parse(tr->body).at("track_id").get<int>(), track_id);
+
+  const auto fd = motion_client_->Post(
+      "/v1/detect?track=true&session=ts&frame=6&focus=" + std::to_string(track_id),
+      parts(rgb_, ir_));
+  ASSERT_TRUE(fd);
+  ASSERT_EQ(fd->status, 200) << fd->body;
+  const auto fj = json::parse(fd->body);
+  ASSERT_TRUE(fj.contains("focus_track"));
+  ASSERT_FALSE(fj.at("focus_track").is_null());
+  EXPECT_EQ(fj.at("focus_track").at("track_id").get<int>(), track_id);
+
+  const auto missing = motion_client_->Get("/v1/session/track?session=ts&id=999999");
+  ASSERT_TRUE(missing);
+  EXPECT_EQ(missing->status, 404) << missing->body;
+}
+
+TEST_F(ServerTest, FuzzNewEndpointsKeepHealthOk) {
+  BAYKUS_REQUIRE_FILES({configs() / "motion.json"});
+  start_motion_server();
+  ASSERT_TRUE(motion_client_);
+  const auto d =
+      motion_client_->Post("/v1/detect?track=true&session=fz2&frame=1", parts(rgb_, ir_));
+  ASSERT_TRUE(d);
+  ASSERT_EQ(d->status, 200) << d->body;
+
+  std::mt19937 rng(7);
+  auto bytes = [&](std::size_t max) {
+    std::string s(std::uniform_int_distribution<std::size_t>(0, max)(rng), '\0');
+    for (auto& c : s) c = static_cast<char>(rng() & 0xff);
+    return s;
+  };
+  const std::vector<std::string> sessions = {"fz2", "zzz_unknown", ""};
+  int server_errors = 0;
+  for (int i = 0; i < 1000; ++i) {
+    const std::string sess = sessions[rng() % sessions.size()];
+    const std::string q = sess.empty() ? "" : "?session=" + sess;
+    const std::string sep = q.empty() ? "?" : "&";
+    httplib::Result r;
+    switch (rng() % 6) {
+      case 0:
+        r = motion_client_->Put("/v1/session/zones" + q, bytes(2048), "application/json");
+        break;
+      case 1:
+        r = motion_client_->Get("/v1/session/zones" + q);
+        break;
+      case 2:
+        r = motion_client_->Get("/v1/session/events" + q + sep +
+                                "since=" + std::to_string(rng() % 100));
+        break;
+      case 3:
+        r = motion_client_->Post(
+            "/v1/session/alarms/ack" + q + sep + "alarm=" + std::to_string(rng() % 50), "",
+            "text/plain");
+        break;
+      case 4:
+        r = motion_client_->Get("/v1/session/track" + q + sep +
+                                "id=" + std::to_string(rng() % 100));
+        break;
+      default:
+        r = motion_client_->Post(
+            "/v1/detect?track=true&session=fz2&focus=" + std::to_string(rng() % 100),
+            parts(rgb_, bytes(512)));
+    }
+    if (!r || r->status >= 500) ++server_errors;
+  }
+  EXPECT_EQ(server_errors, 0);
+  const auto h = motion_client_->Get("/health");
+  ASSERT_TRUE(h);
+  EXPECT_EQ(h->status, 200);
+  EXPECT_EQ(json::parse(h->body).at("status"), "ok");
+}

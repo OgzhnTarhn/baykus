@@ -56,6 +56,16 @@ std::shared_ptr<Session> Sessions::get(const std::string& id, bool* created) {
   return s;
 }
 
+std::shared_ptr<Session> Sessions::find(const std::string& id) {
+  std::lock_guard<std::mutex> lock(m_);
+  const TimePoint now = clock_();
+  expire(now);
+  const auto it = entries_.find(id);
+  if (it == entries_.end()) return nullptr;
+  it->second.last = now;
+  return it->second.session;
+}
+
 void Sessions::reset(const std::string& id, Scope scope) {
   bool created = false;
   auto s = get(id, &created);
@@ -70,9 +80,21 @@ void Sessions::reset(const std::string& id, Scope scope) {
       s->id_base = s->max_api_id + 1;
       s->motion->ego.break_continuity();  // kütüphane korunur
       s->motion->zones.reset_tracks();
+      ZoneEvent e;
+      e.n = s->n;
+      e.frame = s->last_frame;
+      e.kind = "session_reset_tracks";
+      e.gen = s->has_ego ? s->last_gen : 1;
+      s->motion->log.append(e, "", "");
     } else {
       s->motion->ego.reset();
       s->motion->zones.reset();
+      s->motion->log.reset();
+      s->motion->summary.reset();
+      s->has_ego = false;
+      s->last_gen = 1;
+      s->last_provisional = false;
+      s->last_frame = 0;
       s->id_base = 0;
       s->max_api_id = -1;
       s->n = 0;

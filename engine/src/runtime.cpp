@@ -133,13 +133,52 @@ Response Runtime::process(const Request& req) {
         TrackOut{it->second, d.cls_id, Box{d.x1, d.y1, d.x2, d.y2}, d.score_raw, d.score});
   }
 
-  // Bölgeler: kimlikli takip katmanı ve hareket durumuyla (Faz 4).
+  // Bölgeler + günlük + özet: kimlikli takip katmanı ve hareket durumuyla (Faz 4).
   double zones_ms = 0.0;
   if (s && s->motion && ego) {
     const auto t = Clock::now();
-    r.events = s->motion->zones.update(s->n, req.frame.value_or(s->n), *ego, r.tracks, r.motion);
+    const int frame = req.frame.value_or(s->n);
+    EventLog& log = s->motion->log;
+    auto map_event = [&](const char* kind, int gen) {
+      ZoneEvent e;
+      e.n = s->n;
+      e.frame = frame;
+      e.kind = kind;
+      e.gen = gen;
+      r.log_events.push_back(log.append(std::move(e), "", ""));
+    };
+    const EgoResult& e = *ego;
+    if (e.merge) {
+      // Geçici nesil açıldığı karede birleştiyse önce açılışı yazılır.
+      if (!(s->last_provisional && s->last_gen == e.merge->from_gen)) {
+        map_event("map_provisional", e.merge->from_gen);
+      }
+      map_event("map_relocalized", e.merge->to_gen);
+      map_event("map_merged", e.merge->to_gen);
+    } else if (s->last_provisional && e.map_gen == s->last_gen && !e.provisional) {
+      map_event("map_new_generation", e.map_gen);
+    } else if (s->last_provisional && e.map_gen != s->last_gen) {
+      map_event("map_new_generation", s->last_gen);
+      if (e.provisional) map_event("map_provisional", e.map_gen);
+    } else if (e.provisional && (!s->has_ego || e.map_gen != s->last_gen)) {
+      map_event("map_provisional", e.map_gen);
+    }
+
+    r.events = s->motion->zones.update(s->n, frame, *ego, r.tracks, r.motion);
+    for (const auto& ev : r.events) {
+      const ZoneDef* def = s->motion->zones.find(ev.zone_id);
+      r.log_events.push_back(log.append(ev, def ? def->name : "", def ? def->kind : ""));
+    }
+
+    s->has_ego = true;
+    s->last_gen = e.map_gen;
+    s->last_provisional = e.provisional;
+    s->last_frame = frame;
+
     r.alarms = s->motion->zones.alarms();
     r.zone_counts = s->motion->zones.counts();
+    s->motion->summary.update(s->n, frame, r.tracks, r.motion, r.events, *ego);
+    if (req.focus) r.focus_track = s->motion->summary.get(*req.focus);
     zones_ms = ms_since(t);
   }
 
@@ -220,14 +259,14 @@ json response_json(const Response& r) {
     }
   }
 
-  json events = json::array();
-  for (const auto& e : r.events) events.push_back(e.to_json());
+  json events = r.log_events;
   json alarms = json::array();
   for (const auto& a : r.alarms) alarms.push_back(a.to_json());
 
   return {{"detections", dets},
           {"tracks", tracks},
           {"events", events},
+          {"focus_track", r.focus_track ? *r.focus_track : json(nullptr)},
           {"alarms", alarms},
           {"zone_counts", r.zone_counts},
           {"ego", r.ego ? r.ego->to_json() : json(nullptr)},

@@ -73,6 +73,8 @@ class Zones {
   std::vector<Alarm> alarms() const;
   nlohmann::json counts() const;
   nlohmann::json defs_json() const;
+  // Bölge tanımı; yoksa nullptr.
+  const ZoneDef* find(const std::string& id) const;
   void reset_tracks();
   void reset();
 
@@ -134,5 +136,9 @@ class Zones {
   int ego_gen_ = 0;       // son görülen ego'nun map_gen'i
   bool ego_provisional_ = false;
 };
+
+// Bölge gövdesini ayrıştırır (docs/design/events_rules.md 'Bölge gövdesi ayrıştırma'). Tür hatası →
+// std::invalid_argument (Türkçe, bölge sırası / id ile). Değer sınırları `Zones::set`'te.
+std::vector<ZoneDef> parse_zone_defs(const nlohmann::json& body);
 
 }  // namespace baykus
