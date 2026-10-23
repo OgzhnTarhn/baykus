@@ -1,0 +1,26 @@
+# E11 (F4 Görev 15B): E3c'nin ağırlıklarından ince ayar, DroneVehicle train + M3OT train (öğretmen
+# etiketli; docs/design/faz4-kapsama.md §3 B). Tarif E3c'ninki; ağırlıklar zaten 4 kanallı olduğu için
+# first_conv_init yok. `model`: defter E3c'nin best.pt'sini buraya kopyalar
+# (Drive runs/2026-10-15_e3c-modality-dropout_s_d4e1280/weights/best.pt).
+experiment: e3c_m3ot
+mode: early_fusion
+model: /content/e3c_best.pt
+data: data/dv_rgbt/data_rgbt4.yaml
+label_set: ir
+modality_dropout:
+  p_rgb: 0.15
+  p_ir: 0.15
+train:
+  imgsz: 640
+  epochs: 20        # ince ayar (E3c 50); erken durma patience ile
+  patience: 10
+  batch: 16
+  seed: 42
+  close_mosaic: 5
+eval:
+  splits: [val]
+  label_sets: [ir, rgb]
+  slices: [illumination, size, class]
+  n_boot: 1000
+tracking:
+  mlflow_experiment: baykus
