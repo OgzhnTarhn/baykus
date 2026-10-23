@@ -282,6 +282,26 @@ def _cmd_ego_report(a: argparse.Namespace) -> int:
     return 0
 
 
+def _write_motion_val(
+    maps: dict,
+    maps_path: Path,
+    dets_path: Path,
+    tracks_path: Path,
+    cfg: MotionCfg,
+    exp_path: Path,
+) -> Path:
+    from baykus.motion import fixtures as fx
+
+    dets = json.loads(gzip.decompress(Path(dets_path).read_bytes()))
+    tracks = json.loads(gzip.decompress(Path(tracks_path).read_bytes()))
+    exp = fx.motion_expected(maps, dets, tracks, cfg)
+    exp["maps_sha256"] = _sha256(maps_path)
+    exp["tracks_sha256"] = _sha256(Path(tracks_path))
+    text = json.dumps(exp, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
+    exp_path.write_text(text + "\n", encoding="utf-8", newline="\n")
+    return exp_path
+
+
 def _cmd_fixtures(a: argparse.Namespace) -> int:
     from baykus.engine_ref.models import load_models
     from baykus.motion import fixtures as fx
@@ -312,18 +332,14 @@ def _cmd_fixtures(a: argparse.Namespace) -> int:
 
     out = Path(a.out)
     dets = json.loads(gzip.decompress(Path(a.dets).read_bytes()))
-    tracks = json.loads(gzip.decompress(Path(a.tracks).read_bytes()))
     maps = fx.maps_val(Path(a.data), dets, cfg)
     maps["dets_sha256"] = _sha256(Path(a.dets))
     maps_path = out / "motion" / "maps_val.json.gz"
     maps_path.parent.mkdir(parents=True, exist_ok=True)
     maps_path.write_bytes(fx.gz_json(maps))
-    exp = fx.motion_expected(maps, dets, tracks, cfg)
-    exp["maps_sha256"] = _sha256(maps_path)
-    exp["tracks_sha256"] = _sha256(Path(a.tracks))
-    exp_path = out / "expected" / "motion_val.json"
-    text = json.dumps(exp, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
-    exp_path.write_text(text + "\n", encoding="utf-8", newline="\n")
+    exp_path = _write_motion_val(
+        maps, maps_path, Path(a.dets), Path(a.tracks), cfg, out / "expected" / "motion_val.json"
+    )
     readme = (Path(a.stage) / "README.md").read_text(encoding="utf-8")
     readme += f"\nPaket: `{name}` sha256 `{sha}`, {size} bayt (Release `{a.release}`).\n"
     (out / "motion" / "README.md").write_text(readme, encoding="utf-8", newline="\n")
@@ -333,6 +349,14 @@ def _cmd_fixtures(a: argparse.Namespace) -> int:
         print(f"{p}: {p.stat().st_size / 1e3:.0f} KB")
     if size > 40e6:
         print("UYARI: paket > 40 MB (plan: klibi 45 kareye indir)")
+    return 0
+
+
+def _cmd_motion_val(a: argparse.Namespace) -> int:
+    cfg = MotionCfg.load(Path(a.motion))
+    maps = json.loads(gzip.decompress(Path(a.maps).read_bytes()))
+    out = _write_motion_val(maps, Path(a.maps), Path(a.dets), Path(a.tracks), cfg, Path(a.out))
+    print(f"→ {out}")
     return 0
 
 
@@ -484,6 +508,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--candidates", default=None, help="virgüllü başlangıçlar: en az sorunlu, kapsamı tam olan"
     )
     fx.set_defaults(func=_cmd_fixtures)
+    mv = sub.add_parser("motion-val", help="maps_val.json.gz → expected/motion_val.json")
+    mv.add_argument("--dets", default="../fixtures/tracks/dev_dets.json.gz")
+    mv.add_argument("--tracks", default="../fixtures/tracks/dev_tracks_py.json.gz")
+    mv.add_argument("--maps", default="../fixtures/motion/maps_val.json.gz")
+    mv.add_argument("--motion", default="../configs/engine/motion.json")
+    mv.add_argument("--out", default="../fixtures/expected/motion_val.json")
+    mv.set_defaults(func=_cmd_motion_val)
     cr = sub.add_parser("clip-ref", help="klip senaryolarının Python çıktısı (bu makinede)")
     cr.add_argument("--models", default="../models")
     cr.add_argument("--models-manifest", default="../configs/engine/models.json")

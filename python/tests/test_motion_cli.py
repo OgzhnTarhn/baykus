@@ -25,3 +25,26 @@ def test_cli_measure_oracle_and_test_guard(tmp_path):
     assert rec["labeled"]["n"] > 0 and rec["git_commit"] and rec["motion_sha256"]
     assert rec["labeled"]["R_mov"] > 0.5 and rec["labeled"]["R_sta"] > 0.5
     assert main(["measure", "--row", "oracle", "--split", "test", *args]) == 2  # bayraksız test
+
+
+def test_motion_val_matches_committed_fixture(tmp_path):
+    from pathlib import Path
+
+    import pytest
+
+    from baykus.motion.cli import main
+
+    root = Path(__file__).resolve().parents[1]  # python/
+    dets = root / "../fixtures/tracks/dev_dets.json.gz"
+    tracks = root / "../fixtures/tracks/dev_tracks_py.json.gz"
+    maps = root / "../fixtures/motion/maps_val.json.gz"
+    motion = root / "../configs/engine/motion.json"
+    expected = root / "../fixtures/expected/motion_val.json"
+    for p in (dets, tracks, maps, motion, expected):
+        if not p.exists():
+            pytest.skip(f"depo fikstürü yok: {p}")
+    out = tmp_path / "motion_val.json"
+    code = main(["motion-val", "--dets", str(dets), "--tracks", str(tracks),
+                 "--maps", str(maps), "--motion", str(motion), "--out", str(out)])  # fmt: skip
+    assert code == 0
+    assert out.read_bytes() == expected.read_bytes()
