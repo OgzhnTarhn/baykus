@@ -268,5 +268,164 @@
   "kind": "tracks",
   "path": "tracks/dev_tracks_py.json.gz",
   "files": []
+ },
+ {
+  "name": "tiles_cases",
+  "kind": "tiles_cases",
+  "path": "expected/tiles_cases.json",
+  "files": []
+ },
+ {
+  "name": "1_08_000061_tiles4",
+  "kind": "tiles",
+  "path": "expected/1_08_000061_tiles4.json",
+  "files": [
+   "m3ot/frames/1_08_000061_rgb.jpg",
+   "m3ot/frames/1_08_000061_ir.png"
+  ]
+ },
+ {
+  "name": "1_08_000181_tiles4",
+  "kind": "tiles",
+  "path": "expected/1_08_000181_tiles4.json",
+  "files": [
+   "m3ot/frames/1_08_000181_rgb.jpg",
+   "m3ot/frames/1_08_000181_ir.png"
+  ]
+ },
+ {
+  "name": "1_08_000301_tiles4",
+  "kind": "tiles",
+  "path": "expected/1_08_000301_tiles4.json",
+  "files": [
+   "m3ot/frames/1_08_000301_rgb.jpg",
+   "m3ot/frames/1_08_000301_ir.png"
+  ]
+ },
+ {
+  "name": "1_08_000421_tiles4",
+  "kind": "tiles",
+  "path": "expected/1_08_000421_tiles4.json",
+  "files": [
+   "m3ot/frames/1_08_000421_rgb.jpg",
+   "m3ot/frames/1_08_000421_ir.png"
+  ]
+ },
+ {
+  "name": "1_08_000542_tiles4",
+  "kind": "tiles",
+  "path": "expected/1_08_000542_tiles4.json",
+  "files": [
+   "m3ot/frames/1_08_000542_rgb.jpg",
+   "m3ot/frames/1_08_000542_ir.png"
+  ]
+ },
+ {
+  "name": "2_08_000061_tiles4",
+  "kind": "tiles",
+  "path": "expected/2_08_000061_tiles4.json",
+  "files": [
+   "m3ot/frames/2_08_000061_rgb.jpg",
+   "m3ot/frames/2_08_000061_ir.png"
+  ]
+ },
+ {
+  "name": "2_08_000187_tiles4",
+  "kind": "tiles",
+  "path": "expected/2_08_000187_tiles4.json",
+  "files": [
+   "m3ot/frames/2_08_000187_rgb.jpg",
+   "m3ot/frames/2_08_000187_ir.png"
+  ]
+ },
+ {
+  "name": "2_08_000301_tiles4",
+  "kind": "tiles",
+  "path": "expected/2_08_000301_tiles4.json",
+  "files": [
+   "m3ot/frames/2_08_000301_rgb.jpg",
+   "m3ot/frames/2_08_000301_ir.png"
+  ]
+ },
+ {
+  "name": "2_08_000422_tiles4",
+  "kind": "tiles",
+  "path": "expected/2_08_000422_tiles4.json",
+  "files": [
+   "m3ot/frames/2_08_000422_rgb.jpg",
+   "m3ot/frames/2_08_000422_ir.png"
+  ]
+ },
+ {
+  "name": "2_08_000541_tiles4",
+  "kind": "tiles",
+  "path": "expected/2_08_000541_tiles4.json",
+  "files": [
+   "m3ot/frames/2_08_000541_rgb.jpg",
+   "m3ot/frames/2_08_000541_ir.png"
+  ]
+ },
+ {
+  "name": "black_ir_tiles4",
+  "kind": "tiles",
+  "path": "expected/black_ir_tiles4.json",
+  "files": [
+   "synthetic/black_ir_rgb.png",
+   "synthetic/black_ir_ir.png"
+  ]
+ },
+ {
+  "name": "noise_ir_tiles4",
+  "kind": "tiles",
+  "path": "expected/noise_ir_tiles4.json",
+  "files": [
+   "synthetic/noise_ir_rgb.png",
+   "synthetic/noise_ir_ir.png"
+  ]
+ },
+ {
+  "name": "shift_ir_tiles4",
+  "kind": "tiles",
+  "path": "expected/shift_ir_tiles4.json",
+  "files": [
+   "synthetic/shift_ir_rgb.png",
+   "synthetic/shift_ir_ir.png"
+  ]
+ },
+ {
+  "name": "black_rgb_tiles4",
+  "kind": "tiles",
+  "path": "expected/black_rgb_tiles4.json",
+  "files": [
+   "synthetic/black_rgb_rgb.png",
+   "synthetic/black_rgb_ir.png"
+  ]
+ },
+ {
+  "name": "darken_rgb_tiles4",
+  "kind": "tiles",
+  "path": "expected/darken_rgb_tiles4.json",
+  "files": [
+   "synthetic/darken_rgb_rgb.png",
+   "synthetic/darken_rgb_ir.png"
+  ]
+ },
+ {
+  "name": "resize_800x600_tiles4",
+  "kind": "tiles",
+  "path": "expected/resize_800x600_tiles4.json",
+  "files": [
+   "synthetic/resize_800x600_rgb.png",
+   "synthetic/resize_800x600_ir.png"
+  ]
+ },
+ {
+  "name": "tiny_33x17_tiles4",
+  "kind": "tiles",
+  "path": "expected/tiny_33x17_tiles4.json",
+  "files": [
+   "synthetic/tiny_33x17_rgb.png",
+   "synthetic/tiny_33x17_ir.png"
+  ]
  }
 ]

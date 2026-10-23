@@ -33,6 +33,7 @@ struct Request {
   float floor = 0.1f;
   std::optional<int> frame;  // ego'ya geçen kare numarası
   std::optional<int> focus;  // iz özeti kimliği; yanıtta "focus_track" (yoksa null)
+  int tiles = 1;             // parçalı çıkarım: 1 (tam kare) ya da 4
 };
 
 struct Response {

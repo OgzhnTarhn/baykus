@@ -617,4 +617,86 @@ def generate(
     (out / "m3ot" / "README.md").write_text(readme, encoding="utf-8", newline="\n")
     text = json.dumps(w.index, ensure_ascii=False, indent=1) + "\n"
     (out / "index.json").write_text(text, encoding="utf-8", newline="\n")
-    return w.index
+    return w.index + tiles_fixtures(pipe, out)  # F4 Görev 15D: parçalı mod beklentileri
+
+
+def _det_dict(d) -> dict:
+    return {**asdict(d), "box": list(d.box)}
+
+
+def tiles_cases(seed: int = 42, n: int = 20) -> dict:
+    """Parçalı mod birim durumları (C++ `Tiles.*`): pencereler ve sentetik birleştirmeler."""
+    import random
+
+    from baykus.engine_ref.pipeline import Det
+    from baykus.engine_ref.tiles import merge, windows
+
+    rng = random.Random(seed)
+    wins = windows(640, 512)
+    merges = []
+    for _ in range(n):
+        per_tile = []
+        for x0, y0, pw, ph in wins:
+            dets = []
+            for i in range(rng.randint(0, 6)):
+                if rng.random() < 0.4:  # örtüşme şeridine: komşu parçada aynı yere düşebilir
+                    cx, cy = 320.0 - x0 + rng.uniform(-30, 30), 256.0 - y0 + rng.uniform(-30, 30)
+                else:
+                    cx, cy = rng.uniform(10, pw - 10), rng.uniform(10, ph - 10)
+                w, h = rng.uniform(6, 20), rng.uniform(6, 20)
+                x1, y1 = max(cx - w / 2, 0.0), max(cy - h / 2, 0.0)
+                x2, y2 = min(cx + w / 2, float(pw)), min(cy + h / 2, float(ph))
+                raw = float(np.float32(rng.choice([0.9, 0.7, 0.5, round(rng.random(), 3)])))
+                dets.append(Det(i, rng.randint(0, 4), raw, raw, (x1, y1, x2, y2)))
+            per_tile.append(dets)
+        merged = merge(per_tile, wins)
+        merges.append(
+            {
+                "per_tile": [[_det_dict(d) for d in t] for t in per_tile],
+                "merged": [_det_dict(d) for d in merged],
+            }
+        )
+    sizes = ((640, 512), (800, 600), (33, 17))
+    return {
+        "windows": [
+            {"w": w, "h": h, "windows": [list(x) for x in windows(w, h)]} for w, h in sizes
+        ],
+        "merges": merges,
+    }
+
+
+def tiles_fixtures(pipe: Pipeline, fixtures_root: Path) -> list[dict]:
+    """`frame` fikstürlerinin `tiles=4` beklentileri + birim durumları; index.json güncellenir
+    (eski `tiles` / `tiles_cases` kayıtları çıkar). `generate` bunu en sonda çağırır."""
+    root = Path(fixtures_root)
+    w = _Writer(root)
+    index = json.loads((root / "index.json").read_text(encoding="utf-8"))
+    index = [e for e in index if e["kind"] not in ("tiles", "tiles_cases")]
+    added = [
+        {
+            "name": "tiles_cases",
+            "kind": "tiles_cases",
+            "path": w.json("expected/tiles_cases.json", tiles_cases()),
+            "files": [],
+        }
+    ]
+    for e in [e for e in index if e["kind"] == "frame"]:
+        exp = json.loads((root / e["path"]).read_text(encoding="utf-8"))
+        inputs = exp["inputs"]
+        bgr, ir = decode_pair(
+            (root / inputs["rgb"]).read_bytes(), (root / inputs["ir"]).read_bytes()
+        )
+        det = pipe.detect(bgr, ir, EVAL_FLOOR, tiles=4)
+        rec = {
+            "inputs": inputs,
+            "tiles": 4,
+            "windows": [list(x) for x in det["windows"]],
+            "tensor_sha256": det["tensor_sha256"],
+            "dets": _layers(det["dets_all"]),
+        }
+        name = f"{e['name']}_tiles4"
+        path = w.json(f"expected/{name}.json", rec)
+        added.append({"name": name, "kind": "tiles", "path": path, "files": list(e["files"])})
+    text = json.dumps(index + added, ensure_ascii=False, indent=1) + "\n"
+    (root / "index.json").write_text(text, encoding="utf-8", newline="\n")
+    return added

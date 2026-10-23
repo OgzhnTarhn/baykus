@@ -1,0 +1,39 @@
+{
+ "inputs": {
+  "rgb": "synthetic/tiny_33x17_rgb.png",
+  "ir": "synthetic/tiny_33x17_ir.png"
+ },
+ "tiles": 4,
+ "windows": [
+  [
+   0,
+   0,
+   19,
+   10
+  ],
+  [
+   14,
+   0,
+   19,
+   10
+  ],
+  [
+   0,
+   7,
+   19,
+   10
+  ],
+  [
+   14,
+   7,
+   19,
+   10
+  ]
+ ],
+ "tensor_sha256": "7092002c42be977039789d869619895359d55c088facd71fdc8c530d1a331a34",
+ "dets": {
+  "eval": [],
+  "track": [],
+  "display": []
+ }
+}

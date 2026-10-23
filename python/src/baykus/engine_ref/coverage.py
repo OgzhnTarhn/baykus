@@ -4,6 +4,7 @@
 oranı (ham skor eşikleri × IoU ≥ 0,5 / 0,3) ve kare başına tespit sayısı; "combined" iki
 dizinin toplam sayılarıyla. Etiketler IR (`labels/<split>_ir.json`), sınıfsız; değerlendirme
 katmanı (ham ≥ 0,001). Test dizisi reddedilir.
+tiles4 — görüntü değişmez; tespit 4 karoya bölünerek yapılır (pipe.detect(..., tiles=4)).
 """
 
 from __future__ import annotations
@@ -18,16 +19,16 @@ from baykus.engine_ref.compose import decode_pair
 from baykus.engine_ref.measure import ap50_sequence, load_gt
 from baykus.engine_ref.pipeline import Det, Pipeline
 
-CONDITIONS = ("clean", "rgb_off", "ir_as_rgb")
+CONDITIONS = ("clean", "rgb_off", "ir_as_rgb", "tiles4")
 SCORES = (0.05, 0.1, 0.3, 0.5, 0.7)
 IOU_MINS = (0.5, 0.3)
 
 
 def apply(cond: str, bgr: np.ndarray, ir: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Koşulu uygular: temiz aynı, RGB kapalı siyah, RGB yerine IR gri→BGR."""
+    """Koşulu uygular: temiz aynı, RGB kapalı siyah, RGB yerine IR gri→BGR, tiles4 aynı."""
     if cond not in CONDITIONS:
         raise ValueError(f"bilinmeyen koşul: {cond!r}; seçenekler: {CONDITIONS}")
-    if cond == "clean":
+    if cond in ("clean", "tiles4"):
         return bgr, ir
     if cond == "rgb_off":
         return np.zeros_like(bgr), ir
@@ -140,7 +141,10 @@ def run_coverage(
             gt_n = 0
             for (bgr, ir), img_id, g in zip(frames, ids, gts, strict=True):
                 b, i = apply(cond, bgr, ir)
-                dets = pipe.detect(b, i, floor)["dets_all"]
+                if cond == "tiles4":
+                    dets = pipe.detect(b, i, floor, tiles=4)["dets_all"]
+                else:
+                    dets = pipe.detect(b, i, floor)["dets_all"]
                 coco += _coco(dets, img_id)
                 gt_n += len(g)
                 for s in SCORES:

@@ -44,13 +44,14 @@ def _cmd_detect(a: argparse.Namespace) -> int:
     for f in index["frames"]:
         rgb = (seq / "rgb" / f"{f:06d}.jpg").read_bytes()
         ir = (seq / "ir" / f"{f:06d}.png").read_bytes()
-        r = pipe.run(rgb, ir, gate=a.gate, floor=a.floor)
+        r = pipe.run(rgb, ir, gate=a.gate, floor=a.floor, tiles=a.tiles)
         frames.append({"frame": f, "dets": [asdict(d) for d in r["dets_all"]]})
     rec = {
         "seq": index["name"],
         "split": index["split"],
         "floor": a.floor,
         "gate": a.gate,
+        "tiles": a.tiles,
         "frames": frames,
     }
     out = Path(a.out)
@@ -144,6 +145,15 @@ def _cmd_fixtures(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_tiles_fixtures(a: argparse.Namespace) -> int:
+    from baykus.engine_ref.fixtures import tiles_fixtures
+
+    models = load_models(Path(a.models), Path(a.manifest) if a.manifest else None)
+    added = tiles_fixtures(Pipeline(models, backend=OrtBackend(models.onnx)), Path(a.fixtures))
+    print(f"{len(added)} parçalı fikstür kaydı → {Path(a.fixtures) / 'index.json'}")
+    return 0
+
+
 def _cmd_raw_ref(a: argparse.Namespace) -> int:
     from baykus.engine_ref.fixtures import raw_reference
 
@@ -164,6 +174,7 @@ def build_parser() -> argparse.ArgumentParser:
     d.add_argument("--out", required=True)
     d.add_argument("--floor", type=float, default=0.001, help="ham skor taban süzgeci")
     d.add_argument("--gate", default="advise", choices=GATE_MODES)
+    d.add_argument("--tiles", type=int, default=1, choices=(1, 4), help="karo sayısı (1 veya 4)")
     d.add_argument(TEST_FLAG, action="store_true", help="test dizisi (yalnız son ölçüm)")
     d.set_defaults(func=_cmd_detect)
     m = sub.add_parser("measure", help="tespit dosyaları → AP50, ECE, çift sınıf oranı")
@@ -193,6 +204,13 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--fixtures", default="../fixtures")
     r.add_argument("--out", required=True)
     r.set_defaults(func=_cmd_raw_ref)
+    t = sub.add_parser(
+        "tiles-fixtures", help="kare fikstürlerinin tiles=4 beklentileri (Görev 15D)"
+    )
+    t.add_argument("--models", required=True)
+    t.add_argument("--manifest", default=None)
+    t.add_argument("--fixtures", default="../fixtures")
+    t.set_defaults(func=_cmd_tiles_fixtures)
     return p
 
 

@@ -40,6 +40,9 @@ Response Runtime::process(const Request& req) {
   if (req.track && req.session.empty()) {
     throw std::invalid_argument("takip için session gerekli");
   }
+  if (req.tiles != 1 && req.tiles != 4) {
+    throw std::invalid_argument("tiles 1 ya da 4 olmalı");
+  }
 
   // Çözme oturumdan önce (S1): bozuk görüntü 400 olur ve oturum hiç açılmaz.
   const auto t_decode = Clock::now();
@@ -59,7 +62,7 @@ Response Runtime::process(const Request& req) {
     std::lock_guard<std::mutex> infer_lock(infer_mutex_);
     FrozenDetector* frozen = (s && s->motion) ? &s->motion->frozen : nullptr;
     fr = pipeline_.run(std::move(pair), decode_ms, req.gate, req.floor, s ? &s->window : nullptr,
-                       frozen);
+                       frozen, req.tiles);
   }
 
   // Takip katmanı: ham ≥ 0,1 (conf'tan bağımsız).

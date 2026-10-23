@@ -145,6 +145,7 @@ Server::Server(const Models& models, const TrackerConfig& tracker_cfg, Runtime& 
         {"calibration", files.at("calibration.json").at("sha256")},
         {"gate_model", files.at("gate_model.json").at("sha256")}}},
       {"tracker", tracker_cfg.to_json()},
+      {"tiles", {{"modes", {1, 4}}, {"default", 1}, {"window_ratio", {9, 16}}, {"nms_iou", 0.5}}},
   };
 
   // İki parça + çok parçalı başlıklar; tek parça sınırı işleyicide (413 iletisi parça adıyla).
@@ -188,6 +189,7 @@ Server::Server(const Models& models, const TrackerConfig& tracker_cfg, Runtime& 
       if (req.has_param("session")) r.session = req.get_param_value("session");
       if (req.has_param("frame")) r.frame = parse_int("frame", req.get_param_value("frame"));
       if (req.has_param("focus")) r.focus = parse_int("focus", req.get_param_value("focus"));
+      if (req.has_param("tiles")) r.tiles = parse_int("tiles", req.get_param_value("tiles"));
       const auto out = runtime.process(r);
       send_json(res, 200, response_json(out));
     });

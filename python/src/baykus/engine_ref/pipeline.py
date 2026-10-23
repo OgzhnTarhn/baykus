@@ -27,6 +27,7 @@ from baykus.health.temporal import MisalignWindow
 from baykus.motion.images import half_gray
 
 GATE_MODES = ("off", "advise", "auto")
+TILES_MODES = (1, 4)
 
 
 @dataclass(frozen=True)
@@ -90,6 +91,7 @@ class Pipeline:
         floor: float = 0.1,
         window: MisalignWindow | None = None,
         frozen: FrozenDetector | None = None,
+        tiles: int = 1,
     ) -> dict:
         if gate not in GATE_MODES:
             raise ValueError(f"bilinmeyen gate modu: {gate!r}; seçenekler: {GATE_MODES}")
@@ -113,10 +115,39 @@ class Pipeline:
         health["applied"] = gate == "auto" and health["gate"] != "none"
         if health["applied"]:
             bgr, ir = apply_gate(bgr, ir, health["gate"])
-        return {"health": health, **halves, **self.detect(bgr, ir, floor)}
+        return {"health": health, **halves, **self.detect(bgr, ir, floor, tiles)}
 
-    def detect(self, bgr: np.ndarray, ir: np.ndarray, floor: float = 0.1) -> dict:
-        """Çözülmüş (ve gerekirse kapılanmış) çiftten tespit: 4 kanal → letterbox → ORT."""
+    def detect(self, bgr: np.ndarray, ir: np.ndarray, floor: float = 0.1, tiles: int = 1) -> dict:
+        """Tespit: `tiles=1` tam kare (bugünkü davranış), `tiles=4` 2 × 2 pencere
+        (`baykus.engine_ref.tiles`)."""
+        if tiles not in TILES_MODES:
+            raise ValueError(f"bilinmeyen tiles modu: {tiles!r}; seçenekler: {TILES_MODES}")
+        if tiles == 1:
+            return self._detect_one(bgr, ir, floor)[0]
+        from baykus.engine_ref.tiles import merge, windows  # döngüsel içe aktarma
+
+        wins = windows(bgr.shape[1], bgr.shape[0])
+        per_tile: list[list[Det]] = []
+        tensors: list[bytes] = []
+        for x0, y0, pw, ph in wins:
+            tile_bgr = np.ascontiguousarray(bgr[y0 : y0 + ph, x0 : x0 + pw])
+            tile_ir = np.ascontiguousarray(ir[y0 : y0 + ph, x0 : x0 + pw])
+            res, x = self._detect_one(tile_bgr, tile_ir, floor)
+            per_tile.append(res["dets_all"])
+            tensors.append(x.tobytes())
+        return {
+            "dets_all": merge(per_tile, wins),
+            "tensor_sha256": hashlib.sha256(b"".join(tensors)).hexdigest(),
+            "raw": None,
+            "lb": None,
+            "windows": wins,
+        }
+
+    def _detect_one(
+        self, bgr: np.ndarray, ir: np.ndarray, floor: float = 0.1
+    ) -> tuple[dict, np.ndarray]:
+        """Çözülmüş (ve gerekirse kapılanmış) çiftten tespit: 4 kanal → letterbox → ORT.
+        Dönüş: (sonuç sözlüğü, letterbox tensörü)."""
         m = self.models
         x, lb = preprocess(stack_rgbt(bgr, ir), imgsz=getattr(self.backend, "imgsz", 640))
         raw = self.backend.infer(x)
@@ -126,4 +157,4 @@ class Pipeline:
             "tensor_sha256": hashlib.sha256(x.tobytes()).hexdigest(),
             "raw": raw,
             "lb": lb,
-        }
+        }, x
