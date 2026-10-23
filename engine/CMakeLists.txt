@@ -113,7 +113,8 @@ add_executable(baykus_tests
   tests/polygon_test.cpp
   tests/zones_test.cpp
   tests/event_log_test.cpp
-  tests/track_summary_test.cpp)
+  tests/track_summary_test.cpp
+  tests/clip_zones_test.cpp)
 target_link_libraries(baykus_tests PRIVATE baykus_test_support GTest::gtest_main baykus_warnings
                                            baykus_httplib)
 include(GoogleTest)
