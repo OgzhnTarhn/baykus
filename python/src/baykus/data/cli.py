@@ -205,6 +205,90 @@ def _cmd_demo_pack(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_m3ot_relabel(a: argparse.Namespace) -> int:
+    from baykus.data.m3ot_merge import relabel
+
+    if (a.teacher is not None) == a.all_car:
+        raise ValueError("--teacher ya da --all-car'dan tam biri verilmeli")
+    teacher = None
+    if a.teacher is not None:
+        teacher = json.loads(Path(a.teacher).read_text(encoding="utf-8"))["tracks"]
+    counts = relabel(Path(a.root), a.split, teacher)
+    print(json.dumps(counts, ensure_ascii=False))
+    return 0
+
+
+def _cmd_m3ot_merge(a: argparse.Namespace) -> int:
+    from baykus.data.m3ot_merge import merge
+
+    n = merge(Path(a.m3ot), Path(a.into), a.split)
+    print(f"birleştirilen çift: {n}")
+    return 0
+
+
+def _no_test(split: str) -> None:
+    if split == "test":
+        raise ValueError("M3OT test bölümü öğretmen etiketine / denetime girmez")
+
+
+def _cmd_m3ot_teacher(a: argparse.Namespace) -> int:
+    _no_test(a.split)  # modeller yüklenmeden
+    from baykus.classes import CLASS_NAMES
+    from baykus.data import teacher as t
+    from baykus.edge.backends import OrtBackend
+    from baykus.engine_ref.models import load_models
+    from baykus.engine_ref.pipeline import Pipeline
+    from baykus.runinfo import git_info, iso, utc_now, write_json
+
+    models = load_models(Path(a.models), Path(a.manifest) if a.manifest else None)
+    tracks = t.label_tracks(
+        Path(a.root), a.split, Pipeline(models, backend=OrtBackend(models.onnx))
+    )
+    counts = {name: 0 for name in CLASS_NAMES}
+    for v in tracks.values():
+        counts[CLASS_NAMES[v["cls_id"]]] += 1
+    rule = {
+        "window": list(t.WINDOW),
+        "frames_per_track": t.FRAMES_PER_TRACK,
+        "iou_min": t.IOU_MIN,
+        "score_min": t.SCORE_MIN,
+        "floor": t.FLOOR,
+    }
+    rec = {"split": a.split, "tracks": tracks, "counts": counts, "rule": rule}
+    rec.update(git_commit=git_info()["git_commit"], created_at=iso(utc_now()))
+    print(write_json(Path(a.out), rec))
+    print(f"{len(tracks)} iz: {json.dumps(counts, ensure_ascii=False)}")
+    return 0
+
+
+def _cmd_m3ot_audit(a: argparse.Namespace) -> int:
+    _no_test(a.split)
+    from baykus.data import teacher_audit
+    from baykus.data.teacher import audit_crops
+    from baykus.runinfo import write_json
+
+    tracks = json.loads(Path(a.teacher).read_text(encoding="utf-8"))["tracks"]
+    keys = teacher_audit.sample(tracks)
+    ids = teacher_audit.render(keys, audit_crops(Path(a.root), a.split, keys), Path(a.out))
+    print(write_json(Path(a.out) / "key.json", ids))
+    print(f"{len(ids)} örnek → {Path(a.out) / 'index.html'}")
+    return 0
+
+
+def _cmd_m3ot_audit_score(a: argparse.Namespace) -> int:
+    from baykus.data.teacher_audit import score
+    from baykus.runinfo import git_info, iso, utc_now, write_json
+
+    tracks = json.loads(Path(a.teacher).read_text(encoding="utf-8"))["tracks"]
+    ids = json.loads(Path(a.key).read_text(encoding="utf-8"))
+    answers = json.loads(Path(a.answers).read_text(encoding="utf-8"))
+    rec = score(ids, tracks, answers)
+    rec.update(git_commit=git_info()["git_commit"], created_at=iso(utc_now()))
+    print(write_json(Path(a.out), rec))
+    print(f"doğruluk {rec['accuracy']} ({rec['answered']} cevap) → karar {rec['decision']}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="baykus-data")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -271,6 +355,36 @@ def build_parser() -> argparse.ArgumentParser:
     dp.add_argument("--out", required=True)
     dp.add_argument("--allow-test", action="store_true", help="test bölümü (yalnız son ölçüm için)")
     dp.set_defaults(func=_cmd_demo_pack)
+    mr = sub.add_parser("m3ot-relabel", help="M3OT etiketlerini öğretmen sınıflarıyla yeniden yaz")
+    mr.add_argument("--root", required=True, help="baykus-data m3ot --out klasörü")
+    mr.add_argument("--split", default="train", choices=list(SPLITS))
+    mr.add_argument("--teacher", help="öğretmen JSON (içinde 'tracks')")
+    mr.add_argument("--all-car", action="store_true", help="bütün kutuları car say")
+    mr.set_defaults(func=_cmd_m3ot_relabel)
+    mm = sub.add_parser("m3ot-merge", help="M3OT train'i DroneVehicle ağacına önekli kopyala")
+    mm.add_argument("--m3ot", required=True, help="baykus-data m3ot --out klasörü")
+    mm.add_argument("--into", required=True, help="DroneVehicle kökü")
+    mm.add_argument("--split", default="train", choices=list(SPLITS))
+    mm.set_defaults(func=_cmd_m3ot_merge)
+    mt = sub.add_parser("m3ot-teacher", help="M3OT izlerine öğretmen modelle sınıf (tasarım §3 B)")
+    mt.add_argument("--root", required=True, help="baykus-data m3ot --out klasörü")
+    mt.add_argument("--split", default="train", choices=list(SPLITS))
+    mt.add_argument("--models", required=True, help="model dizini (e3c.onnx + JSON'lar)")
+    mt.add_argument("--manifest", default=None, help="configs/engine/models.json (sha256)")
+    mt.add_argument("--out", required=True)
+    mt.set_defaults(func=_cmd_m3ot_teacher)
+    ma = sub.add_parser("m3ot-audit", help="öğretmen etiketlerinin kör denetim sayfası")
+    ma.add_argument("--root", required=True)
+    ma.add_argument("--split", default="train", choices=list(SPLITS))
+    ma.add_argument("--teacher", required=True, help="m3ot-teacher çıktısı")
+    ma.add_argument("--out", required=True, help="sayfa klasörü (index.html, crops/, key.json)")
+    ma.set_defaults(func=_cmd_m3ot_audit)
+    ms = sub.add_parser("m3ot-audit-score", help="kör denetim cevapları → doğruluk ve karar")
+    ms.add_argument("--teacher", required=True)
+    ms.add_argument("--key", required=True, help="m3ot-audit'in key.json'u")
+    ms.add_argument("--answers", required=True, help="sayfadan indirilen cevaplar")
+    ms.add_argument("--out", required=True)
+    ms.set_defaults(func=_cmd_m3ot_audit_score)
     return p
 
 
