@@ -5,6 +5,7 @@ run       — tespit dosyası → iz dosyası (dizi başına yeni takipçi; --du
 compare   — Python ↔ C++ iz dosyaları → Kabul 4 (parity_track.json).
 eval      — iz + tespit + pack_labels iz CSV'si → HOTA, MOTA, IDF1 (test bayrakla).
 oracle    — pack_labels iz CSV'si → M3OT kutuları skor 1 ile tespit dosyası (oracle satırı).
+sweep     — eşik ızgarası → HOTA/MOTA/IDF1 ve sabit kuralla seçim (tasarım §3 A).
 fixtures  — atama çözücüsü ve Kalman birim fikstürleri.
 """
 
@@ -12,11 +13,13 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import hashlib
 import json
 import sys
 from pathlib import Path
 
 from baykus.runinfo import git_info, iso, utc_now, write_json
+from baykus.track import sweep
 from baykus.track.parity import compare, evidence, verdict
 from baykus.track.runner import (
     KALMAN_INIT,
@@ -159,6 +162,42 @@ def _cmd_oracle(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_sweep(a: argparse.Namespace) -> int:
+    seqs: dict[str, list[dict]] = {}
+    for f in a.dets:
+        for s in _sequences(_read_gz(Path(f))):
+            if s["split"] == "test":
+                raise ValueError(f"{s['seq']}: test dizisi; eşik ızgarasına girmez")
+            seqs[s["seq"]] = s["frames"]
+    base = load_cfg(Path(a.config))
+    rows = sweep.run_grid(seqs, Path(a.gt_csv), base)
+    chosen = sweep.pick(rows)
+    rec = {
+        "rows": rows,
+        "pick": chosen,
+        "base": base,
+        "label_set": "ir",
+        "sequences": sorted(seqs),
+        "dets_sha256": {
+            Path(f).name: hashlib.sha256(Path(f).read_bytes()).hexdigest() for f in a.dets
+        },
+        "git_commit": git_info()["git_commit"],
+        "created_at": iso(utc_now()),
+    }
+    print(write_json(Path(a.out), rec))
+    for r in rows:
+        print(
+            f"activation {r['activation']:.2f} · high {r['high_conf']:.2f}: "
+            f"HOTA {r['HOTA']:.4f} · MOTA {r['MOTA']:.4f} · IDF1 {r['IDF1']:.4f} · "
+            f"iz/kare {r['tracks_per_frame']:.3f}"
+        )
+    print(
+        f"seçilen: activation {chosen['activation']:.2f} · high {chosen['high_conf']:.2f} "
+        f"(HOTA {chosen['HOTA']:.4f})"
+    )
+    return 0
+
+
 def _cmd_fixtures(a: argparse.Namespace) -> int:
     out = Path(a.out_dir)
     recs = {
@@ -211,6 +250,13 @@ def build_parser() -> argparse.ArgumentParser:
     o.add_argument("--out", required=True)
     o.add_argument(TEST_FLAG, action="store_true")
     o.set_defaults(func=_cmd_oracle)
+
+    s = sub.add_parser("sweep", help="eşik ızgarası → HOTA/MOTA/IDF1 ve seçim")
+    s.add_argument("--dets", nargs="+", required=True)
+    s.add_argument("--gt-csv", required=True, help="pack_labels tracks_ir.csv")
+    s.add_argument("--config", default="../configs/engine/tracker.json")
+    s.add_argument("--out", required=True)
+    s.set_defaults(func=_cmd_sweep)
 
     fx = sub.add_parser("fixtures", help="atama ve Kalman birim fikstürleri")
     fx.add_argument("--out-dir", default="../fixtures/expected")
