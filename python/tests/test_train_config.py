@@ -108,6 +108,8 @@ def test_repo_configs_load():
 def test_repo_configs_share_training_recipe():
     # Deneyler karşılaştırılabilir olsun: hepsi aynı eğitim ayarıyla (gpu-budget.md: 50 epoch)
     root = Path(__file__).resolve().parents[2] / "configs"
-    trains = {f.stem: load_config(f).train for f in root.glob("*.yaml")}
+    # İnce ayar (E11, F4 Görev 15B: E3c ağırlıklarından 20 epoch) sıfırdan eğitim tarifinin dışında.
+    fine_tune = {"e3c_m3ot"}
+    trains = {f.stem: load_config(f).train for f in root.glob("*.yaml") if f.stem not in fine_tune}
     assert len(set(trains.values())) == 1, trains
     assert next(iter(trains.values())).epochs == 50
