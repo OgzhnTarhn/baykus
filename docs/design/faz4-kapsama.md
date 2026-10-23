@@ -58,8 +58,20 @@ aynen; yalnız parametreler), RGB-IR hizalama (ölçüldü: neden değil).
 - **Model adı:** E3c-M. E3c'nin ağırlıklarından ince ayar; tarif E3c'ninki (erken füzyon, kanal kaybı
   eğitimi, aynı hiperparametreler, aynı görüntü boyu 640).
 - **Veri:** DroneVehicle train (aynen) + M3OT train (14 dizi, 9.590 çift; IR etiketleri, flag 1, sınıf 1,
-  vis > 0,25). M3OT'ta sınıf yok → kutular `car` (sınıf 0) olarak girer (Claude'un kararı; M3OT'taki
-  kamyon / otobüsler `car` öğretilir, bedeli aşağıdaki sınıf ölçüsüyle görülür).
+  vis > 0,25). M3OT'ta araç türü yok (13.474 val kutusunun hepsi tek sınıf) → **öğretmen etiketi**
+  (kullanıcı kararı 2026-10-23; "hepsi otomobil" ve "yeni sınıf" seçenekleri reddedildi):
+  - Her M3OT train izinden (dizi + iz kimliği) eşit aralıklı en çok **10** kare. Kutunun merkezinde
+    **160 × 128** pencere (görüntü sınırına kaydırılarak), RGB ve IR aynı koordinatla kırpılır, bugünkü ön
+    işlemeyle 640'a (≈ 4× büyütme), E3c (ONNX FP32, Python referansı) ham ≥ 0,1.
+  - O karenin oyu: kutuyla (pencere koordinatında) IoU ≥ **0,3** olanların en yüksek IoU'lusu, ham skoru
+    ≥ **0,5** ise sınıfı; değilse oy yok.
+  - İzin sınıfı: oyların çoğunluğu (eşitlikte skor toplamı büyük olan, o da eşitse küçük `cls_id`);
+    hiç oy yoksa `car`.
+  - **İnsan denetimi (kör, ≈ 15 dk):** 100 iz; tahmini `car` olmayanlardan en çok 60 (sınıf başına
+    orantılı), kalanı `car`. Kullanıcı tahmini görmeden IR ve RGB kırpıntısına bakıp türü seçer ya da
+    "bilmiyorum" der. Doğruluk = cevaplananlarda tahminle aynı oranı (Wilson %95 GA, sınıf başına da).
+  - **Kural:** doğruluk ≥ **0,80** → öğretmen etiketleri; altında → bütün M3OT kutuları `car` (ve ADR'de
+    sınırlama). Ölçümden önce sabit.
 - **Doğrulama:** seçimler DroneVehicle val + M3OT val ile; M3OT test kullanılmaz.
 - **Sevk kuralı:** (i) DroneVehicle val mAP50 (ONNX FP32, motor yolu) E3c'nin 0,841'inden en çok **1,0
   puan** düşük (ADR 0007'deki Δ ≤ 1,0 kuralı) **ve** sınıf başına AP50'de hiçbir sınıf 3,0 puandan fazla
@@ -83,22 +95,25 @@ aynen; yalnız parametreler), RGB-IR hizalama (ölçüldü: neden değil).
 
 1. **15A** ölçüm araçları (`sweep`, parçalı / koşullu AP) + tanının resmî kaydı + A (E3c) → takip
    fikstürleri, klip beklentileri (Kabul 1 referansı, `zones_clip.json`) yeniden.
-2. **15B** Colab defteri (`notebooks/colab/10_m3ot_train.ipynb`): M3OT indirme (figshare API, çerezsiz) +
-   train dönüştürme + ince ayar + ONNX + DroneVehicle val + M3OT val ölçümü. **[KULLANICI - COLAB]**
+2. **15B** öğretmen etiketi aracı + kör denetim sayfası; Colab defteri (`notebooks/colab/10_m3ot_train.ipynb`):
+   M3OT indirme (figshare API, çerezsiz) + train dönüştürme + öğretmen etiketleri + denetim örneği
+   **[KULLANICI - COLAB]**, laptopta kör denetim **[KULLANICI - LAPTOP, ≈ 15 dk]**, sonra aynı defterde
+   ince ayar + ONNX + DroneVehicle val + M3OT val ölçümü **[KULLANICI - COLAB]**.
 3. **15C** sevk kuralı; sevk edilirse model dosyaları, manifest, kalibrasyon, sağlık / kapı, **bütün
    eşlik fikstürleri** (Faz 2-3 tespit, sağlık, takip, F4 klip ve Release `fixtures-f4` yeni sürüm) yeniden;
    A yeni modelle tekrar.
 4. **15D** parçalı mod (Python + C++ + API + eşlik).
 5. **15E** spec v4.6 notu, ADR 0010, `docs/experiments.md`; sonra Görev 16 (motor satırı yeni kapsamla).
 
-**Süre:** 15A 1 gün; 15B defter 1 gün + Colab (indirme ≈ 7 dk, dönüştürme ≈ 10 dk, eğitim birkaç saat;
+**Süre:** 15A 1 gün; 15B araç + defter 2 gün + Colab (indirme ≈ 7 dk, dönüştürme ≈ 10 dk, eğitim birkaç saat;
 defterde hücre başına süre); 15C 2 gün; 15D 3-4 gün; 15E 0,5 gün → ≈ 1,5-2 hafta.
 
 ## 5. Riskler
 
 - M3OT train ve val aynı platform / bölgeden: val sonucu iyimser olabilir; test Görev 23'te ayırt eder.
-- M3OT kutularının `car` olarak öğretilmesi DroneVehicle'da sınıf karışıklığı yapabilir (sevk kuralı ii'deki
-  sınıf ölçüsü yakalar).
+- Öğretmen etiketleri bugünkü modelin yanlılığını taşır (M3OT'ta zayıf olduğu için); kör denetim bunu
+  ölçer, sınıf başına AP kuralı DroneVehicle'daki bedeli yakalar. 13 px'lik araçta türü insan da her
+  zaman ayırt edemeyebilir ("bilmiyorum" cevapları raporlanır).
 - Model değişimi bütün fikstürleri değiştirir: Görev 9-15'te sabitlenen beklentiler (klip olayları dahil)
   yeniden üretilir ve gözden geçirilir.
 
