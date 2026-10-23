@@ -295,6 +295,9 @@ ayrıntılar, uygulama başında sabit sürümde yeniden doğrulanır):
 - **Parametreler:** referansın varsayılanları (`lost_track_buffer=30`, `frame_rate=30`,
   `track_activation_threshold=0.7`, `minimum_consecutive_frames=2`, `minimum_iou_threshold=0.1`,
   `high_conf_det_threshold=0.6`); `configs/engine/tracker.yaml`'da sabit. Eşikler **ham** skora uygulanır.
+  **F4 Görev 15A (2026-10-23):** `track_activation_threshold` ve `high_conf_det_threshold` M3OT val'de HOTA
+  kuralıyla 0,3 / 0,3 seçildi (`results/track/m3ot_dev_sweep_e3c.json`, tasarım `faz4-kapsama.md` §3 A); 0,7 / 0,6
+  bulunan araçların yarısında iz açmıyordu. Diğer parametreler aynen.
   M3OT'un kare hızı doğrulanmadı; `frame_rate=30` varsayım olarak yazılır.
 - **Sabit sürümde doğrulama (2026-10-18, `trackers==2.6.1` kaynağı, plan F3 Görev 13):** yukarıdaki maddeler
   `main` dalından okunmuştu; 2.6.1'de dört fark var ve **C++ 2.6.1'i izler** (bu madde yukarıdakilerin önüne geçer):

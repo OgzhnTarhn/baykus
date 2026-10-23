@@ -37,9 +37,11 @@ def _moving(n=6, step=4.0):
 
 
 def test_cfg_matches_trackers_defaults():
+    """İki eşik F4 Görev 15A'da val'de seçildi (0,3 / 0,3); diğerleri referansın varsayılanları."""
     cfg = load_cfg(CFG)
     sig = inspect.signature(ByteTrackTracker.__init__).parameters
-    assert cfg == {k: sig[k].default for k in cfg}
+    selected = {"track_activation_threshold": 0.3, "high_conf_det_threshold": 0.3}
+    assert cfg == {k: selected.get(k, sig[k].default) for k in cfg}
     assert set(cfg) == {
         "lost_track_buffer",
         "frame_rate",

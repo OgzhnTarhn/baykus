@@ -66,10 +66,11 @@ TEST(Tracker, ConfigMatchesJson) {
   EXPECT_EQ(cfg.to_json(), bt::read_json(tracker_json()));
   EXPECT_EQ(cfg.lost_track_buffer, 30);
   EXPECT_EQ(cfg.frame_rate, 30.0);
-  EXPECT_EQ(cfg.track_activation_threshold, 0.7);
+  // F4 Görev 15A, val HOTA kuralı (m3ot_dev_sweep_e3c.json); Faz 3'te 0,7 / 0,6.
+  EXPECT_EQ(cfg.track_activation_threshold, 0.3);
   EXPECT_EQ(cfg.minimum_consecutive_frames, 2);
   EXPECT_EQ(cfg.minimum_iou_threshold, 0.1);
-  EXPECT_EQ(cfg.high_conf_det_threshold, 0.6);
+  EXPECT_EQ(cfg.high_conf_det_threshold, 0.3);
 }
 
 TEST(Tracker, ConfigRejectsMissingOrExtraKeys) {
