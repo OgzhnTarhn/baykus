@@ -1,7 +1,8 @@
 // Kabul 7 klip regresyonu (docs/design/events_rules.md "Klip regresyonu"): Release klibinin `clean`
 // ve `long_gap` senaryoları sabit bölge kümesiyle (fixtures/motion/zones_clip.json) Runtime'dan
-// geçer; günlük ve son sayaçlar fixtures/expected/zones_clip.json ile birebir. Beklenen dosya yoksa
-// aday (kare kare ego / iz / alarm dökümüyle) BAYKUS_EVIDENCE_DIR'e yazılır ve test düşer.
+// geçer; günlük ve son sayaçlar fixtures/expected/zones_clip.json ile birebir. Aday (kare kare ego
+// / iz / alarm dökümüyle) her koşuda BAYKUS_EVIDENCE_DIR'e yazılır; beklenen dosya yoksa test
+// düşer.
 #include <gtest/gtest.h>
 
 #include <cstdlib>
@@ -98,12 +99,14 @@ TEST(ClipZones, Regression) {
     got[name] = run_scenario(runtime, sessions, f4, name, scenarios.at(name), zones_body);
   }
 
+  // Aday her koşuda yazılır (kanıt klasörü verilmişse): beklenen yoksa ya da değişince gözden
+  // geçirilir.
+  const char* dir = std::getenv("BAYKUS_EVIDENCE_DIR");
+  if (dir != nullptr && *dir != '\0') {
+    std::ofstream(fs::path(dir) / "zones_clip_candidate.json") << got.dump(1) << "\n";
+  }
   if (!fs::exists(expected_path)) {
-    const char* dir = std::getenv("BAYKUS_EVIDENCE_DIR");
-    if (dir != nullptr && *dir != '\0') {
-      std::ofstream(fs::path(dir) / "zones_clip_candidate.json") << got.dump(1) << "\n";
-    }
-    ADD_FAILURE() << "beklenen dosya yok: " << expected_path << "; aday yazıldı";
+    ADD_FAILURE() << "beklenen dosya yok: " << expected_path;
     return;
   }
   const auto expected = bt::read_json(expected_path);
