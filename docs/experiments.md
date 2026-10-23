@@ -490,3 +490,16 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
   - **Yeniden konumlama** (100 karede bir ±50 kare benzetilmiş atlama): 13/22 başarı (0,59), deneme ortanca 1, en çok 6; kesintisiz koşuyla karşılaştırılabilen 12'de köşe farkı ortanca 0,79 px, p95 2,89 px; **yanlış bağlama (> 10 px) 0**.
   - **Donmuş kare** (temiz val): IR'de donmuş kare oranı 0,015 / 0,013 ve alarm oranı aynı (M3OT IR akışında art arda tekrarlanan kareler var); RGB 0; `freeze@300` alarm gecikmesi 3 kare. Eşik 0,5 ölçümden önce sabit, ayarlanmaz: ürünün oturumunda bu kareler IR donmuş alarmı → ego kaybı (sınırlama).
 - **Bilinen davranış (Görev 6, tasarım §5.2 harfiyen):** tek bir ego kaybı `K + 1` kare `v` hesaplatmaz; tutma `K` kare olduğundan karar tam 1 kare `unknown`'a düşer.
+
+## 2026-10-23 · F4 · M3OT araç kapsamı tanısı ve takipçi eşikleri (val) — Görev 15A
+- **Neden:** Görev 15 klip gözden geçirmesinde kullanıcı karede 30'dan fazla araç görülürken motorun 0-5 iz verdiğini gördü (tasarım `docs/design/faz4-kapsama.md`).
+- **Kapsam** (`results/engine/m3ot_dev_coverage_e3c.json`, `baykus-engine coverage`, E3c ONNX FP32, Python referansı, val `1_08` + `2_08`, IR etiketi, sınıfsız; karede 11,2 etiketli araç, ortanca kutu 13 px):
+  | Koşul | AP50 | Bulma (IoU ≥ 0,5) ham ≥ 0,05 / 0,1 / 0,3 / 0,5 / 0,7 | Tespit / kare ham ≥ 0,1 |
+  |---|---|---|---|
+  | temiz | 0,396 | 0,402 / 0,348 / 0,230 / 0,146 / 0,064 | 5,8 |
+  | RGB kapalı | 0,388 | 0,382 / 0,325 / 0,215 / 0,152 / 0,081 | 5,5 |
+  | RGB yerine IR | 0,308 | 0,296 / 0,236 / 0,137 / 0,079 / 0,033 | 4,3 |
+- **Yorum:** model en düşük eşikte bile araçların %40'ını buluyor; RGB'yi kapatmak sonucu değiştirmiyor, yani val'deki RGB-IR hizasızlığı bu kaybın nedeni değil (küçük araç / alan farkıyla uyumlu; ayrıca ölçülmedi). Geçici tanı betiğiyle 4 parçalı (2 × 2) çıkarım AP50 0,50 vermişti; resmî ölçüm Görev 15D'de (`tiles`).
+- **Takipçi eşikleri** (`results/track/m3ot_dev_sweep_e3c.json`, `baykus-track sweep`, 30 çift, kural ölçümden önce tasarımda sabit): bugünkü 0,7 / 0,6 HOTA 0,220, MOTA 0,152, iz/kare 2,46; seçilen **etkinleşme 0,3 / yüksek 0,3**: HOTA 0,292, MOTA 0,207, IDF1 0,436, iz/kare 4,99. En yüksek HOTA 0,294 (0,2 / 0,2) tolerans içinde → kural yüksek eşiği seçti. Izgarada sonuç fiilen iki eşiğin büyüğüyle belirleniyor (ör. etkinleşme 0,7'de yüksek eşik 0,6-0,2 hep 0,220; yüksek 0,6'da etkinleşme 0,6-0,2 hep 0,268).
+- **Motor (C++) ile** (`results/track/m3ot_dev_engine.json`, `scripts/m3ot_measure.sh dev`): HOTA 0,220 → **0,292**, MOTA 0,152 → 0,207, IDF1 0,296 → 0,436 (Python ızgarasıyla birebir); oracle değişmedi (0,974). Klip (Release `fixtures-f4`, 8 senaryo) iz × kare 1116 → 5218; Kabul 1 ✅ (hata 0, köşe ≤ 1,8e-5 px), Kabul 4 ✅ (600 / 600 kare), Kabul 10 b ✅.
+- **Bölge klibi:** olaylar clean 12 → 24, long_gap 12 → 26 (karede iz 0-5 → 10-15); Claude'un bağımsız kural yeniden hesabı aynı olayları veriyor; kullanıcının görsel gözden geçirmesi model değişiminden sonra (Görev 15C).
