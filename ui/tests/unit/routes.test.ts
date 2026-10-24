@@ -10,16 +10,25 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { POST as detect } from "@/app/api/detect/route";
 import { GET as frame } from "@/app/api/frame/[seq]/[frame]/[mod]/route";
+import { GET as modelRoute } from "@/app/api/model/route";
 import { GET as sequences } from "@/app/api/sequences/route";
+import { POST as ack } from "@/app/api/session/alarms/ack/route";
+import { GET as events } from "@/app/api/session/events/route";
 import { POST as reset } from "@/app/api/session/reset/route";
+import { GET as trackRoute } from "@/app/api/session/track/route";
+import { GET as getZones, PUT as putZones } from "@/app/api/session/zones/route";
 import { listSequences } from "@/lib/data";
 
-type Received = { url: string; parts: Record<string, Buffer> };
+type Received = { url: string; method: string; body: string; parts: Record<string, Buffer> };
 
 let dataDir: string;
 let engine: Server;
 let received: Received[] = [];
-let engineReply: { status: number; body: unknown } = { status: 200, body: { detections: [] } };
+// `text` verilirse gövde JSON yerine olduğu gibi (contentType ile) gönderilir.
+let engineReply: { status: number; body?: unknown; contentType?: string; text?: string } = {
+  status: 200,
+  body: { detections: [] },
+};
 
 // Yalnız başlığı geçerli bir PNG (IHDR genişlik ve yükseklik): boyut denetimi bunu okur.
 function png(width: number, height: number, pad = 0): Buffer {
@@ -77,7 +86,21 @@ beforeAll(async () => {
         if (typeof v !== "string") parts[k] = Buffer.from(await v.arrayBuffer());
       }
     }
-    received.push({ url: req.url ?? "", parts });
+    received.push({
+      url: req.url ?? "",
+      method: req.method ?? "",
+      body: (req.headers["content-type"] ?? "").startsWith("multipart/form-data")
+        ? ""
+        : body.toString("utf-8"),
+      parts,
+    });
+    if (engineReply.text !== undefined) {
+      res.writeHead(engineReply.status, {
+        "content-type": engineReply.contentType ?? "text/plain; charset=utf-8",
+      });
+      res.end(engineReply.text);
+      return;
+    }
     res.writeHead(engineReply.status, { "content-type": "application/json" });
     res.end(JSON.stringify(engineReply.body));
   });
@@ -149,6 +172,45 @@ describe("detect route", () => {
     expect(q.get("track")).toBe("true");
     expect(q.get("gate")).toBe("auto");
     expect(q.get("session")).toBe("s-1");
+  });
+
+  it("detect forwards frame focus and tiles", async () => {
+    const r = await detect(jsonRequest("/api/detect", { ...meta, focus: 7, tiles: 4 }));
+    expect(r.status).toBe(200);
+    const q = new URL(received[0].url, "http://e").searchParams;
+    expect(q.get("frame")).toBe("2");
+    expect(q.get("focus")).toBe("7");
+    expect(q.get("tiles")).toBe("4");
+
+    received = [];
+    expect((await detect(jsonRequest("/api/detect", meta))).status).toBe(200);
+    const plain = new URL(received[0].url, "http://e").searchParams;
+    expect(plain.get("frame")).toBe("2");
+    expect(plain.has("focus")).toBe(false);
+    expect(plain.has("tiles")).toBe(false);
+
+    received = [];
+    expect((await detect(jsonRequest("/api/detect", { ...meta, tiles: 3 }))).status).toBe(400);
+    expect(received).toHaveLength(0);
+  });
+
+  it("freeze reads the frozen frame bytes from disk", async () => {
+    const dir = join(dataDir, "sequences", "1_08");
+    const r = await detect(jsonRequest("/api/detect", { ...meta, freeze: { ir: 1 } }));
+    expect(r.status).toBe(200);
+    const { parts } = received[0];
+    expect(sha(parts.ir)).toBe(sha(readFileSync(join(dir, "ir", "000001.png"))));
+    expect(parts.rgb.toString()).toBe("jpeg-1_08-2");
+
+    received = [];
+    expect((await detect(jsonRequest("/api/detect", { ...meta, freeze: { rgb: 3 } }))).status).toBe(200);
+    expect(received[0].parts.rgb.toString()).toBe("jpeg-1_08-3");
+  });
+
+  it("freeze rejects frame outside sequence (400)", async () => {
+    expect((await detect(jsonRequest("/api/detect", { ...meta, freeze: { rgb: 99 } }))).status).toBe(400);
+    expect((await detect(jsonRequest("/api/detect", { ...meta, freeze: { ir: "x" } }))).status).toBe(400);
+    expect(received).toHaveLength(0);
   });
 
   it("multipart fills missing channel from disk", async () => {
@@ -229,5 +291,124 @@ describe("session reset route", () => {
   it("400 without session", async () => {
     expect((await reset(jsonRequest("/api/session/reset", {}))).status).toBe(400);
     expect(received).toHaveLength(0);
+  });
+
+  it("reset route rejects unknown scope", async () => {
+    expect((await reset(jsonRequest("/api/session/reset", { session: "s-9", scope: "x" }))).status).toBe(400);
+    expect(received).toHaveLength(0);
+
+    expect((await reset(jsonRequest("/api/session/reset", { session: "s-9", scope: "tracks" }))).status).toBe(200);
+    expect(received[0].url).toBe("/v1/session/reset?session=s-9&scope=tracks");
+
+    received = [];
+    expect((await reset(jsonRequest("/api/session/reset", { session: "s-9", scope: "all" }))).status).toBe(200);
+    expect(received[0].url).toBe("/v1/session/reset?session=s-9&scope=all");
+  });
+});
+
+describe("zones route", () => {
+  const zones = [{ id: "z1", points: [[0, 0], [10, 0], [10, 10]] }];
+
+  it("zones route forwards engine 400 message", async () => {
+    engineReply = { status: 400, body: { error: "çokgen kendini kesiyor" } };
+    const r = await putZones(jsonRequest("/api/session/zones?session=s-1", { zones }));
+    expect(r.status).toBe(400);
+    expect((await r.json()).error).toBe("çokgen kendini kesiyor");
+    expect(received).toHaveLength(1);
+    expect(received[0].method).toBe("PUT");
+    expect(received[0].url).toBe("/v1/session/zones?session=s-1");
+    expect(received[0].body).toBe(JSON.stringify({ zones }));
+  });
+
+  it("zones get forwards", async () => {
+    engineReply = { status: 200, body: { zones } };
+    const r = await getZones(new Request("http://ui/api/session/zones?session=s-1"));
+    expect(r.status).toBe(200);
+    expect((await r.json()).zones).toEqual(zones);
+    expect(received[0].method).toBe("GET");
+    expect(received[0].url).toBe("/v1/session/zones?session=s-1");
+  });
+
+  it("zones route needs session", async () => {
+    expect((await getZones(new Request("http://ui/api/session/zones"))).status).toBe(400);
+    expect((await putZones(jsonRequest("/api/session/zones", { zones }))).status).toBe(400);
+    expect(received).toHaveLength(0);
+  });
+
+  it("zones body over 64 KB is 413", async () => {
+    const big = { zones: [{ id: "z1", points: [[0, 0]], pad: "x".repeat(64 * 1024) }] };
+    const r = await putZones(jsonRequest("/api/session/zones?session=s-1", big));
+    expect(r.status).toBe(413);
+    expect(received).toHaveLength(0);
+  });
+});
+
+describe("events route", () => {
+  it("events route passes csv content type", async () => {
+    engineReply = { status: 200, text: "seq,n\n1,2\n", contentType: "text/csv; charset=utf-8" };
+    const r = await events(new Request("http://ui/api/session/events?session=s-1&since=5&format=csv"));
+    expect(r.status).toBe(200);
+    expect(r.headers.get("content-type")).toBe("text/csv; charset=utf-8");
+    expect(await r.text()).toBe("seq,n\n1,2\n");
+    expect(received[0].url).toBe("/v1/session/events?session=s-1&since=5&format=csv");
+  });
+
+  it("events route validates since and format", async () => {
+    for (const q of ["session=s-1&since=-1", "session=s-1&since=a", "session=s-1&format=xml"]) {
+      const r = await events(new Request(`http://ui/api/session/events?${q}`));
+      expect(r.status, q).toBe(400);
+    }
+    expect(received).toHaveLength(0);
+
+    expect((await events(new Request("http://ui/api/session/events?session=s-1"))).status).toBe(200);
+    expect(received[0].url).toBe("/v1/session/events?session=s-1&since=0&format=json");
+  });
+});
+
+describe("alarm ack route", () => {
+  it("ack forwards alarm id", async () => {
+    const r = await ack(jsonRequest("/api/session/alarms/ack", { session: "s-1", alarm: "a3" }));
+    expect(r.status).toBe(200);
+    expect(received[0].method).toBe("POST");
+    expect(received[0].url).toBe("/v1/session/alarms/ack?session=s-1&alarm=a3");
+  });
+
+  it("ack passes 404 through", async () => {
+    engineReply = { status: 404, body: { error: "alarm yok: a9" } };
+    const r = await ack(jsonRequest("/api/session/alarms/ack", { session: "s-1", alarm: "a9" }));
+    expect(r.status).toBe(404);
+    expect((await r.json()).error).toBe("alarm yok: a9");
+  });
+
+  it("ack needs session and alarm", async () => {
+    expect((await ack(jsonRequest("/api/session/alarms/ack", { session: "s-1" }))).status).toBe(400);
+    expect((await ack(jsonRequest("/api/session/alarms/ack", { alarm: "a3" }))).status).toBe(400);
+    expect(received).toHaveLength(0);
+  });
+});
+
+describe("track route", () => {
+  it("track forwards id", async () => {
+    const r = await trackRoute(new Request("http://ui/api/session/track?session=s-1&id=3"));
+    expect(r.status).toBe(200);
+    expect(received[0].method).toBe("GET");
+    expect(received[0].url).toBe("/v1/session/track?session=s-1&id=3");
+  });
+
+  it("track rejects bad id", async () => {
+    expect((await trackRoute(new Request("http://ui/api/session/track?session=s-1&id=x"))).status).toBe(400);
+    expect((await trackRoute(new Request("http://ui/api/session/track?session=s-1"))).status).toBe(400);
+    expect(received).toHaveLength(0);
+  });
+});
+
+describe("model route", () => {
+  it("model forwards", async () => {
+    engineReply = { status: 200, body: { model: "yolo26n", classes: ["car"] } };
+    const r = await modelRoute();
+    expect(r.status).toBe(200);
+    expect((await r.json()).model).toBe("yolo26n");
+    expect(received[0].method).toBe("GET");
+    expect(received[0].url).toBe("/v1/model");
   });
 });

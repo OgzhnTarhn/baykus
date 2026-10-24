@@ -3,13 +3,34 @@
 //   (tarayıcıda yeniden kodlama pikselleri Python referansından uzaklaştırmasın).
 // - multipart: `meta` (aynı JSON + isteğe bağlı "fault") ve bozulan kanallar `rgb` / `ir`
 //   (image/png, kare boyutunda, ≤ 10 MB); gönderilmeyen kanal diskten tamamlanır.
+// Faz 4 (§5.6): meta `frame`, `focus`, `tiles` ve `freeze` (kareyi dondur) alanlarını da taşır.
 import { errorResponse, framePath, HttpError, loadIndex, readFrame } from "@/lib/data";
 import { detect, type DetectParams, type Part } from "@/lib/engine";
 
 const MAX_PART_BYTES = 10 * 1024 * 1024; // motorla aynı sınır
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 
-type Meta = DetectParams & { seq: string; frame: number };
+type Freeze = { rgb?: number; ir?: number };
+type Meta = DetectParams & { seq: string; frame: number; freeze?: Freeze };
+
+// Dondurulacak kanal kareleri: yalnızca tam sayı; verilmeyen kanal güncel kareden okunur.
+function parseFreeze(raw: unknown): Freeze | undefined {
+  if (raw === undefined) return undefined;
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+    throw new HttpError(400, "freeze nesne olmalı");
+  }
+  const f = raw as Record<string, unknown>;
+  const out: Freeze = {};
+  for (const key of ["rgb", "ir"] as const) {
+    const v = f[key];
+    if (v === undefined) continue;
+    if (typeof v !== "number" || !Number.isInteger(v)) {
+      throw new HttpError(400, `freeze.${key} tam sayı olmalı`);
+    }
+    out[key] = v;
+  }
+  return out;
+}
 
 function parseMeta(raw: unknown): Meta {
   const m = (raw ?? {}) as Record<string, unknown>;
@@ -21,7 +42,38 @@ function parseMeta(raw: unknown): Meta {
     throw new HttpError(400, "conf (sayı), track (true/false) ve gate zorunlu");
   }
   const session = typeof m.session === "string" ? m.session : "";
-  return { seq: m.seq, frame, conf: m.conf, track: m.track, gate: m.gate, session };
+  const focus = m.focus === undefined ? undefined : m.focus;
+  if (focus !== undefined && focus !== null && (typeof focus !== "number" || !Number.isInteger(focus))) {
+    throw new HttpError(400, "focus tam sayı olmalı");
+  }
+  const tiles = m.tiles;
+  if (tiles !== undefined && tiles !== 1 && tiles !== 4) {
+    throw new HttpError(400, "tiles 1 ya da 4 olmalı");
+  }
+  const freeze = parseFreeze(m.freeze);
+  return {
+    seq: m.seq,
+    frame,
+    conf: m.conf,
+    track: m.track,
+    gate: m.gate,
+    session,
+    focus: focus as number | null | undefined,
+    tiles: tiles as number | undefined,
+    freeze,
+  };
+}
+
+// Dondurulan kareler dizinin index.frames içinde olmalı (motor çağrılmadan 400).
+async function checkFreeze(meta: Meta): Promise<void> {
+  if (!meta.freeze) return;
+  const index = await loadIndex(meta.seq);
+  for (const key of ["rgb", "ir"] as const) {
+    const n = meta.freeze[key];
+    if (n !== undefined && !index.frames.includes(n)) {
+      throw new HttpError(400, `dondurulan kare dizide yok: ${n}`);
+    }
+  }
 }
 
 // PNG başlığından (IHDR) genişlik ve yükseklik; PNG değilse null.
@@ -86,11 +138,14 @@ export async function POST(req: Request) {
       throw new HttpError(400, "application/json ya da multipart/form-data bekleniyor");
     }
     await framePath(meta.seq, meta.frame, "rgb"); // dizi ve kare doğrulaması (400 / 404)
+    await checkFreeze(meta);
+    const rgbFrame = meta.freeze?.rgb ?? meta.frame;
+    const irFrame = meta.freeze?.ir ?? meta.frame;
     const rgb = parts.rgb ?? {
-      bytes: await readFrame(meta.seq, meta.frame, "rgb"),
+      bytes: await readFrame(meta.seq, rgbFrame, "rgb"),
       type: "image/jpeg",
     };
-    const ir = parts.ir ?? { bytes: await readFrame(meta.seq, meta.frame, "ir"), type: "image/png" };
+    const ir = parts.ir ?? { bytes: await readFrame(meta.seq, irFrame, "ir"), type: "image/png" };
     return await detect(meta, rgb, ir);
   } catch (e) {
     return errorResponse(e);

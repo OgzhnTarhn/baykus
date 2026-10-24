@@ -208,11 +208,12 @@ export async function postDetect(
   seq: string,
   frame: number,
   s: DetectSettings,
+  extra: { focus?: number | null; freeze?: Freeze } = {},
 ): Promise<DetectResponse> {
   const res = await send("/api/detect", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ seq, frame, ...s }),
+    body: JSON.stringify({ seq, frame, ...s, ...extra }),
   });
   return json<DetectResponse>(res);
 }
@@ -222,11 +223,87 @@ export async function postDetectForm(form: FormData): Promise<DetectResponse> {
   return json<DetectResponse>(await send("/api/detect", { method: "POST", body: form }));
 }
 
-export async function postReset(session: string): Promise<void> {
+export async function postReset(session: string, scope: ResetScope = "all"): Promise<void> {
   const res = await send("/api/session/reset", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ session }),
+    body: JSON.stringify({ session, scope }),
   });
   await json<unknown>(res);
+}
+
+// Bölgeler (§5.7): GET durum alanını da döndürür, PUT yalnız tanımı gönderir.
+export async function fetchZones(session: string): Promise<ZoneDef[]> {
+  const q = new URLSearchParams({ session });
+  const body = await json<{ zones: ZoneDef[] }>(await send(`/api/session/zones?${q}`));
+  return body.zones;
+}
+
+export async function putZones(
+  session: string,
+  zones: ZoneDef[],
+): Promise<{ ok: true; zones: ZoneDef[] } | { ok: false; error: string }> {
+  const q = new URLSearchParams({ session });
+  const defs = zones.map((z) => {
+    const def: ZoneDef = { ...z };
+    delete def.status; // durum yalnız GET yanıtında; PUT tanım gönderir
+    return def;
+  });
+  const res = await send(`/api/session/zones?${q}`, {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ zones: defs }),
+  });
+  if (res.status === 400) {
+    let body: unknown = null;
+    try {
+      body = await res.json();
+    } catch {
+      // gövde JSON değil; aşağıda genel ileti
+    }
+    const msg = (body as { error?: unknown } | null)?.error;
+    return { ok: false, error: typeof msg === "string" ? msg : `istek başarısız (${res.status})` };
+  }
+  return { ok: true, zones: (await json<{ zones: ZoneDef[] }>(res)).zones };
+}
+
+export async function fetchEvents(session: string, since = 0): Promise<EventsPage> {
+  const q = new URLSearchParams({ session, since: String(since), format: "json" });
+  return json<EventsPage>(await send(`/api/session/events?${q}`));
+}
+
+export async function fetchEventsCsv(session: string): Promise<string> {
+  const q = new URLSearchParams({ session, since: "0", format: "csv" });
+  const res = await send(`/api/session/events?${q}`);
+  if (!res.ok) {
+    let body: unknown = null;
+    try {
+      body = await res.json();
+    } catch {
+      // gövde JSON değil; aşağıda durum koduyla ileti kurulur
+    }
+    const msg = (body as { error?: unknown } | null)?.error;
+    throw new Error(typeof msg === "string" ? msg : `istek başarısız (${res.status})`);
+  }
+  return res.text();
+}
+
+export async function postAck(session: string, alarm: string): Promise<void> {
+  const res = await send("/api/session/alarms/ack", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ session, alarm }),
+  });
+  await json<unknown>(res);
+}
+
+export async function fetchTrack(session: string, id: number): Promise<TrackSummary | null> {
+  const q = new URLSearchParams({ session, id: String(id) });
+  const res = await send(`/api/session/track?${q}`);
+  if (res.status === 404) return null;
+  return json<TrackSummary>(res);
+}
+
+export async function fetchModel(): Promise<Record<string, unknown>> {
+  return json<Record<string, unknown>>(await send("/api/model"));
 }
