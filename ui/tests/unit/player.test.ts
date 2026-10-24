@@ -2,14 +2,16 @@
 // Motor yerine elle çözülen sözler: aynı anda kaç istek olduğu ve hangi karelerin istendiği görülür.
 import { describe, expect, it } from "vitest";
 
+import type { ResetScope } from "@/lib/client";
 import { createPlayer, type PlayerDeps } from "@/lib/player";
-import { newSessionId, shouldReset, trackResumed } from "@/lib/session";
+import { newSessionId, resetScope, trackResumed } from "@/lib/session";
 
 type Call = { seq: string; frame: number; resolve: (v: string) => void; reject: (e: Error) => void };
 
 function harness(opts: { autoResolve?: boolean } = {}) {
   const calls: Call[] = [];
   const log: string[] = [];
+  const scopes: ResetScope[] = []; // sıfırlama kapsamları; log girdileri düz "reset" kalır
   let inFlight = 0;
   let maxInFlight = 0;
   let clock = 0;
@@ -35,8 +37,9 @@ function harness(opts: { autoResolve?: boolean } = {}) {
         if (opts.autoResolve) call.resolve(`r${frame}`);
       });
     },
-    reset: async () => {
+    reset: async (scope: ResetScope) => {
       log.push("reset");
+      scopes.push(scope);
     },
     sleep: async (ms) => {
       clock += ms;
@@ -48,6 +51,7 @@ function harness(opts: { autoResolve?: boolean } = {}) {
     deps,
     calls,
     log,
+    scopes,
     stats: () => ({ inFlight, maxInFlight }),
   };
 }
@@ -65,13 +69,13 @@ describe("session", () => {
   });
 
   it("resets on sequence change, jump, back-step, repeat and loop start", () => {
-    expect(shouldReset(null, { seq: "a", index: 0 })).toBe(false);
-    expect(shouldReset({ seq: "a", index: 3 }, { seq: "a", index: 4 })).toBe(false);
-    expect(shouldReset({ seq: "a", index: 3 }, { seq: "b", index: 4 })).toBe(true);
-    expect(shouldReset({ seq: "a", index: 3 }, { seq: "a", index: 5 })).toBe(true);
-    expect(shouldReset({ seq: "a", index: 3 }, { seq: "a", index: 2 })).toBe(true);
-    expect(shouldReset({ seq: "a", index: 3 }, { seq: "a", index: 3 })).toBe(true);
-    expect(shouldReset({ seq: "a", index: 14 }, { seq: "a", index: 0 })).toBe(true);
+    expect(resetScope(null, { seq: "a", index: 0 })).toBeNull();
+    expect(resetScope({ seq: "a", index: 3 }, { seq: "a", index: 4 })).toBeNull();
+    expect(resetScope({ seq: "a", index: 3 }, { seq: "b", index: 4 })).toBe("all");
+    expect(resetScope({ seq: "a", index: 3 }, { seq: "a", index: 5 })).toBe("tracks");
+    expect(resetScope({ seq: "a", index: 3 }, { seq: "a", index: 2 })).toBe("tracks");
+    expect(resetScope({ seq: "a", index: 3 }, { seq: "a", index: 3 })).toBe("tracks");
+    expect(resetScope({ seq: "a", index: 14 }, { seq: "a", index: 0 })).toBe("tracks");
   });
 
   it("resets when tracking is switched back on", () => {
@@ -269,6 +273,91 @@ describe("player", () => {
   });
 });
 
+// Faz 4: sıfırlama kapsamlı (tracks / all); dizi değişimi tüm oturumu, dizi içi atlama yalnız takipçiyi
+// sıfırlar. Elle istenen sıfırlama yoldaki otomatik sıfırlamayla birleşir ("all" kazanır).
+describe("player reset scope", () => {
+  it("seek resets tracks scope", async () => {
+    const h = harness({ autoResolve: true });
+    const p = createPlayer(h.deps);
+    p.load("a", [1, 2, 3]);
+    p.step();
+    await flush();
+    p.seek(2); // ileri atlama > 1
+    await flush();
+    expect(h.scopes).toEqual(["tracks"]);
+  });
+
+  it("sequence change resets all scope", async () => {
+    const h = harness({ autoResolve: true });
+    const p = createPlayer(h.deps);
+    p.load("a", [1, 2]);
+    p.step();
+    await flush();
+    p.load("b", [1, 2]);
+    p.step();
+    await flush();
+    expect(h.scopes).toEqual(["all"]);
+  });
+
+  it("manual reset defaults to all scope", async () => {
+    const h = harness({ autoResolve: true });
+    const p = createPlayer(h.deps);
+    p.load("a", [1, 2, 3]);
+    p.requestReset();
+    await flush();
+    expect(h.scopes).toEqual(["all"]);
+  });
+
+  it("tracks request merged with sequence change sends all", async () => {
+    const h = harness();
+    const p = createPlayer(h.deps);
+    p.load("a", [1, 2]);
+    p.step();
+    await flush();
+    p.requestReset("tracks"); // istek yolda: bekler
+    p.load("b", [1, 2]);
+    p.seek(0); // istek yolda: atlama bekler (step yolda istekte yok sayılır)
+    await flush();
+    expect(h.scopes).toEqual([]);
+    h.calls[0].resolve("r1");
+    await flush();
+    expect(h.scopes).toEqual(["all"]); // tek sıfırlama, "all" kazanır
+    expect(h.log).toEqual(["detect a 1", "reset", "detect b 1"]);
+  });
+
+  it("error recovery resets tracks scope", async () => {
+    const h = harness();
+    const p = createPlayer(h.deps);
+    p.load("a", [1, 2, 3]);
+    p.step();
+    await flush();
+    h.calls[0].resolve("r1");
+    await flush();
+    p.step();
+    await flush();
+    h.calls[1].reject(new Error("kare görüntüsü yüklenemedi"));
+    await flush();
+    p.step();
+    await flush();
+    expect(h.scopes).toEqual(["tracks"]);
+  });
+
+  it("onReset receives the scope", async () => {
+    const h = harness({ autoResolve: true });
+    const seen: ResetScope[] = [];
+    const p = createPlayer({ ...h.deps, onReset: (scope: ResetScope) => seen.push(scope) });
+    p.load("a", [1, 2, 3]);
+    p.step();
+    await flush();
+    p.seek(2); // tracks
+    await flush();
+    p.load("b", [1, 2, 3]);
+    p.step(); // all
+    await flush();
+    expect(seen).toEqual(["tracks", "all"]);
+  });
+});
+
 // İnceleme bulguları (Ö1, Ö2, Ö5, S2): kareler arası bekleme elle çözülen sözle.
 function manualSleep(h: ReturnType<typeof harness>) {
   const wakes: (() => void)[] = [];
@@ -350,9 +439,10 @@ describe("player review fixes", () => {
 // gelen oynat / atlama sıfırlama bitince uygulanır.
 function manualReset(h: ReturnType<typeof harness>) {
   const done: (() => void)[] = [];
-  h.deps.reset = () =>
+  h.deps.reset = (scope: ResetScope) =>
     new Promise<void>((r) => {
       h.log.push("reset");
+      h.scopes.push(scope);
       done.push(r);
     });
   return done;

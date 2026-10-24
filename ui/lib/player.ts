@@ -2,8 +2,11 @@
 // - aynı anda tek istek; sonraki kare yanıt gelince istenir;
 // - hız bir üst sınırdır (kare aralığının kalanı beklenir), kare atlanmaz;
 // - motor hatasında durur ve iletiyi gösterir (yeniden deneme döngüsü yok);
-// - dizi sonunda başa döner; oturum kuralı (session.ts) gerekirse önce motor oturumunu sıfırlar.
-import { shouldReset, type Position } from "@/lib/session";
+// - dizi sonunda başa döner; oturum kuralı (session.ts) gerekirse önce motor oturumunu sıfırlar;
+// - sıfırlama kapsamlıdır (Faz 4 §5.8): dizi içi geçişler "tracks", dizi değişimi ve elle istenen
+//   sıfırlama "all"; bekleyen kapsamlar birleşir, "all" kazanır.
+import type { ResetScope } from "@/lib/client";
+import { resetScope, type Position } from "@/lib/session";
 
 export type PlayerState = "idle" | "playing" | "paused";
 
@@ -21,11 +24,11 @@ export type PlayerSnapshot<R> = {
 
 export type PlayerDeps<R> = {
   detect(seq: string, frame: number): Promise<R>;
-  reset(): Promise<void>;
+  reset(scope: ResetScope): Promise<void>;
   sleep(ms: number): Promise<void>;
   now(): number;
   onChange(s: PlayerSnapshot<R>): void;
-  onReset?(): void;
+  onReset?(scope: ResetScope): void;
 };
 
 export type Player<R> = {
@@ -34,7 +37,7 @@ export type Player<R> = {
   pause(): void;
   step(): void;
   seek(index: number): void;
-  requestReset(): void;
+  requestReset(scope?: ResetScope): void;
   setSpeed(fps: number): void;
   snapshot(): PlayerSnapshot<R>;
 };
@@ -53,7 +56,10 @@ export function createPlayer<R>(deps: PlayerDeps<R>): Player<R> {
   let pendingSeek: number | null = null;
   let fps = DEFAULT_FPS;
   let last: Position | null = null; // motora en son başarıyla verilen kare
-  let resetRequested = false; // operatörün "oturumu sıfırla"sı; yoldaki istek bitince yapılır
+  let pendingReset: ResetScope | null = null; // bekleyen sıfırlama kapsamı (null = yok); "all" kazanır
+
+  const mergeScope = (a: ResetScope | null, b: ResetScope | null): ResetScope | null =>
+    a === "all" || b === "all" ? "all" : (a ?? b);
 
   const snapshot = (): PlayerSnapshot<R> => ({
     state,
@@ -69,11 +75,11 @@ export function createPlayer<R>(deps: PlayerDeps<R>): Player<R> {
   const emit = () => deps.onChange(snapshot());
   const nextIndex = () => (index + 1 >= frames.length ? 0 : index + 1);
 
-  async function doReset(): Promise<void> {
-    resetRequested = false;
-    await deps.reset();
+  async function doReset(scope: ResetScope): Promise<void> {
+    pendingReset = null;
+    await deps.reset(scope);
     last = null; // boş oturum: sonraki kare yeniden sıfırlatmaz
-    deps.onReset?.();
+    deps.onReset?.(scope);
   }
 
   // Yalnız oturum sıfırlama (istek yokken düğmeye basıldı ya da yoldaki istek bitti). Bu sırada
@@ -82,7 +88,7 @@ export function createPlayer<R>(deps: PlayerDeps<R>): Player<R> {
     busy = true;
     emit();
     try {
-      await doReset();
+      await doReset(pendingReset ?? "all");
     } catch (e) {
       state = "paused";
       error = e instanceof Error ? e.message : String(e);
@@ -107,7 +113,8 @@ export function createPlayer<R>(deps: PlayerDeps<R>): Player<R> {
     const requested = frames;
     const started = deps.now();
     try {
-      if (resetRequested || shouldReset(last, pos)) await doReset();
+      const scope = mergeScope(pendingReset, resetScope(last, pos));
+      if (scope !== null) await doReset(scope);
       const r = await deps.detect(pos.seq, requested[target]);
       last = pos; // motorun gördüğü son kare (yanıt gösterilmese de)
       if (pos.seq === seq) {
@@ -122,7 +129,7 @@ export function createPlayer<R>(deps: PlayerDeps<R>): Player<R> {
       pendingSeek = null;
       // motor kareyi işlemiş olabilir (ör. yanıttan sonra görüntü yüklenemedi): takipçi aynı kareyi
       // iki kez görmesin diye sonraki istekten önce oturum sıfırlanır
-      resetRequested = true;
+      pendingReset = mergeScope(pendingReset, "tracks");
       return;
     } finally {
       busy = false;
@@ -143,7 +150,7 @@ export function createPlayer<R>(deps: PlayerDeps<R>): Player<R> {
         return run(t);
       }
       if (state !== "playing" || frames.length === 0) {
-        if (resetRequested) await resetOnly();
+        if (pendingReset !== null) await resetOnly();
         return;
       }
       if (waited) return run(nextIndex());
@@ -193,8 +200,8 @@ export function createPlayer<R>(deps: PlayerDeps<R>): Player<R> {
       if (i < 0 || i >= frames.length) return;
       start(i);
     },
-    requestReset() {
-      resetRequested = true;
+    requestReset(scope: ResetScope = "all") {
+      pendingReset = mergeScope(pendingReset, scope);
       if (!busy && !waiting) void resetOnly();
     },
     setSpeed(v) {
