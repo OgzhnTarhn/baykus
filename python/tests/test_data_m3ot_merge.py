@@ -122,6 +122,30 @@ def test_label_tracks_end_to_end(tmp_path: Path):
     assert pipe.calls == 2
 
 
+class _CropPipe:
+    """Gerçek pipeline gibi: tespit kutusu pencere koordinatında, iz kutusunun tam üstünde."""
+
+    def detect(self, bgr, ir, floor):
+        assert bgr.shape[:2] == (128, 160)
+        return {"dets_all": [Det(0, 2, 0.9, 0.9, [70.0, 57.0, 90.0, 71.0])]}
+
+
+def test_label_tracks_window_offset_not_applied_twice(tmp_path: Path):
+    """640 × 512 karede pencere köşesi (230, 193); tespit kutusu zaten pencere koordinatında."""
+    root = tmp_path / "m3ot"
+    row = _row(1, 300) | {"y": 250, "w": 20, "h": 14}
+    (root / "meta").mkdir(parents=True)
+    with (root / "meta/m3ot_tracks.csv").open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=m3ot.TRACK_FIELDS)
+        w.writeheader()
+        w.writerow(row)
+    imwrite_any(root / "ir/images/train/s_000001.png", np.full((512, 640), 128, np.uint8))
+    imwrite_any(root / "rgb/images/train/s_000001.jpg", np.full((512, 640, 3), 128, np.uint8))
+    out = label_tracks(root, "train", _CropPipe())
+    assert out["s:1"]["cls_id"] == 2
+    assert out["s:1"]["votes"] == [[2, pytest.approx(0.9)]]
+
+
 def test_teacher_cli_rejects_test_split_before_models(tmp_path: Path):
     with pytest.raises(ValueError):
         main(["m3ot-teacher", "--root", str(tmp_path), "--split", "test",

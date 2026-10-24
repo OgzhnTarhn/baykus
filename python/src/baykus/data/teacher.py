@@ -232,16 +232,12 @@ def label_tracks(
                 row["box"][2] - x0,
                 row["box"][3] - y0,
             ]
+            # Tespit kırpılmış pencerede yapılır: kutular zaten pencere koordinatında.
             dets = [
                 {
                     "cls_id": int(d.cls_id),
                     "score_raw": float(d.score_raw),
-                    "box": [
-                        float(d.box[0]) - x0,
-                        float(d.box[1]) - y0,
-                        float(d.box[2]) - x0,
-                        float(d.box[3]) - y0,
-                    ],
+                    "box": [float(v) for v in d.box],
                 }
                 for d in pipe.detect(bgr, ir, FLOOR)["dets_all"]
             ]
