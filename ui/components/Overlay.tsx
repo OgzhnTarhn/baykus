@@ -1,6 +1,7 @@
 // Kutular, sınıf, kalibre skor ve iz numarası (FR-U2). Kutular kare koordinatında (motor yanıtı);
 // SVG viewBox kare boyutu olduğu için görüntüyle birlikte ölçeklenir.
 import type { Detection } from "@/lib/client";
+import { boxStyle } from "@/lib/motion";
 
 export function classColor(cls: string): string {
   return `var(--cls-${cls}, var(--text))`;
@@ -31,7 +32,8 @@ export function Overlay({
       {detections.map((d, i) => {
         const { x1, y1, x2, y2 } = d.box;
         const color = classColor(d.cls);
-        const text = label(d);
+        const style = boxStyle(d.motion);
+        const text = style.tag ? `${style.tag} ${label(d)}` : label(d);
         const ty = y1 - 3 < font ? y2 + font : y1 - 3;
         return (
           <g key={d.track_id ?? `i${i}`}>
@@ -42,7 +44,8 @@ export function Overlay({
               height={y2 - y1}
               fill="none"
               stroke={color}
-              strokeWidth={2}
+              strokeWidth={style.width}
+              strokeDasharray={style.dash ?? undefined}
               vectorEffect="non-scaling-stroke"
             />
             <text

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import type { DetectResponse } from "@/lib/client";
 import type { PlayerSnapshot } from "@/lib/player";
+import { visible } from "@/lib/motion";
 import { Overlay } from "@/components/Overlay";
 
 export type FrameView = {
@@ -30,12 +31,14 @@ function Pane({
   src,
   fv,
   size,
+  onlyMoving,
 }: {
   title: string;
   color: string;
   src: string | null;
   fv: FrameView | null;
   size: [number, number];
+  onlyMoving: boolean;
 }) {
   return (
     <figure className="min-w-0 flex-1">
@@ -47,7 +50,13 @@ function Pane({
           // eslint-disable-next-line @next/next/no-img-element -- kare baytları API'den; optimizasyon yok
           <img src={src} alt={`${title} kare ${fv?.frame}`} className="h-full w-full" />
         )}
-        {fv && <Overlay detections={fv.response.detections} width={size[0]} height={size[1]} />}
+        {fv && (
+          <Overlay
+            detections={visible(fv.response.detections, onlyMoving)}
+            width={size[0]}
+            height={size[1]}
+          />
+        )}
         <figcaption
           className="absolute left-2 top-2 rounded bg-black/60 px-1.5 text-xs font-medium"
           style={{ color }}
@@ -64,6 +73,7 @@ export type PlayerProps = {
   snap: PlayerSnapshot<FrameView>;
   size: [number, number];
   view: View;
+  onlyMoving?: boolean;
   onView(v: View): void;
   onPlay(): void;
   onPause(): void;
@@ -77,15 +87,30 @@ export function Player(p: PlayerProps) {
   const fv = snap.result;
   const playing = snap.state === "playing";
   const total = snap.frames.length;
+  const onlyMoving = p.onlyMoving ?? false;
   return (
     <section className="flex min-w-0 flex-col gap-3" aria-label="Oynatıcı">
       <div className="flex min-h-6 items-center gap-2">{p.badge}</div>
       <div className="flex flex-col gap-3 lg:flex-row">
         {p.view !== "ir" && (
-          <Pane title="RGB" color="var(--rgb)" src={fv?.rgbSrc ?? null} fv={fv} size={p.size} />
+          <Pane
+            title="RGB"
+            color="var(--rgb)"
+            src={fv?.rgbSrc ?? null}
+            fv={fv}
+            size={p.size}
+            onlyMoving={onlyMoving}
+          />
         )}
         {p.view !== "rgb" && (
-          <Pane title="IR" color="var(--ir)" src={fv?.irSrc ?? null} fv={fv} size={p.size} />
+          <Pane
+            title="IR"
+            color="var(--ir)"
+            src={fv?.irSrc ?? null}
+            fv={fv}
+            size={p.size}
+            onlyMoving={onlyMoving}
+          />
         )}
       </div>
 

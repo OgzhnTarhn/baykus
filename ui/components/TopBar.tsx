@@ -1,5 +1,6 @@
-// Üst çubuk (Faz 3 tasarımı §4.4): dizi, conf kaydırıcısı, takip aç/kapa, kapı modu, oturum sıfırla.
-import type { Gate, SequenceIndex } from "@/lib/client";
+// Üst çubuk (Faz 3 tasarımı §4.4): dizi, conf kaydırıcısı, takip aç/kapa, yalnız hareketliler,
+// küçük hedef modu (Faz 4 §5.8), kapı modu, oturum sıfırla.
+import type { Gate, SequenceIndex, Tiles } from "@/lib/client";
 
 const GATES: { value: Gate; label: string }[] = [
   { value: "off", label: "kapalı" },
@@ -15,12 +16,20 @@ export type TopBarProps = {
   onConf(v: number): void;
   track: boolean;
   onTrack(v: boolean): void;
+  onlyMoving?: boolean;
+  onOnlyMoving?(v: boolean): void;
+  tiles?: Tiles;
+  onTiles?(v: Tiles): void;
   gate: Gate;
   onGate(v: Gate): void;
   onReset(): void;
 };
 
 export function TopBar(p: TopBarProps) {
+  const onlyMoving = p.onlyMoving ?? false;
+  const onOnlyMoving = p.onOnlyMoving ?? (() => {});
+  const tiles = p.tiles ?? 1;
+  const onTiles = p.onTiles ?? (() => {});
   return (
     <header className="flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-line bg-panel px-4 py-3">
       <h1 className="text-lg font-semibold tracking-tight">Baykuş</h1>
@@ -64,6 +73,30 @@ export function TopBar(p: TopBarProps) {
         <span>Takip</span>
       </label>
 
+      <label
+        className="flex items-center gap-2 text-sm"
+        title="yalnız gösterim; olaylar ve sayaçlar etkilenmez"
+      >
+        <input
+          type="checkbox"
+          checked={onlyMoving}
+          onChange={(e) => onOnlyMoving(e.target.checked)}
+        />
+        <span>Yalnız hareketliler</span>
+      </label>
+
+      <label
+        className="flex items-center gap-2 text-sm"
+        title="kareyi 2 × 2 parçada işler: küçük araçlar için, daha yavaş"
+      >
+        <input
+          type="checkbox"
+          checked={tiles === 4}
+          onChange={(e) => onTiles(e.target.checked ? 4 : 1)}
+        />
+        <span>Küçük hedef modu</span>
+      </label>
+
       <fieldset className="flex items-center gap-1 text-sm">
         <legend className="sr-only">Kapı modu</legend>
         <span className="mr-1 text-muted">Kapı</span>
@@ -92,7 +125,8 @@ export function TopBar(p: TopBarProps) {
         className="ml-auto rounded border border-line px-3 py-1 text-sm hover:border-text"
         onClick={p.onReset}
       >
-        Oturumu sıfırla
+        <span className="block">Oturumu sıfırla</span>
+        <span className="block text-xs text-muted">bölgeler ve olaylar silinir</span>
       </button>
     </header>
   );

@@ -1,4 +1,5 @@
-// Arıza simülasyonu paneli (FR-U4): karartma, IR gürültü, IR kaydırma, bulanıklık, kamerayı kapat.
+// Arıza simülasyonu paneli (FR-U4): karartma, IR gürültü, IR kaydırma, bulanıklık, kamerayı kapat,
+// kareyi dondur.
 // Değişiklik bir sonraki kareden geçerli olur.
 import { LEVELS, NO_FAULTS, faultedChannels, type FaultConfig } from "@/lib/faults";
 
@@ -44,7 +45,9 @@ export function FaultPanel({
 }) {
   const set = (patch: Partial<FaultConfig>) => onChange({ ...faults, ...patch });
   const ch = faultedChannels(faults);
-  const on = ch.rgb || ch.ir;
+  const pixel = ch.rgb || ch.ir;
+  const on = pixel || faults.freezeRgb || faults.freezeIr;
+  const frozen = [faults.freezeRgb && "RGB", faults.freezeIr && "IR"].filter(Boolean).join(" ve ");
   return (
     <section className="flex flex-col gap-2 rounded border border-line bg-panel p-3">
       <div className="flex items-center justify-between">
@@ -100,9 +103,25 @@ export function FaultPanel({
           />
           IR kamerayı kapat
         </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={faults.freezeRgb}
+            onChange={(e) => set({ freezeRgb: e.target.checked })}
+          />
+          RGB kareyi dondur
+        </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={faults.freezeIr}
+            onChange={(e) => set({ freezeIr: e.target.checked })}
+          />
+          IR kareyi dondur
+        </label>
       </div>
       <p className="text-xs text-muted">
-        {on
+        {pixel
           ? `Bozulan kanal tarayıcıda üretilip PNG olarak gönderiliyor: ${[
               ch.rgb && "RGB",
               ch.ir && "IR",
@@ -110,6 +129,7 @@ export function FaultPanel({
               .filter(Boolean)
               .join(" ve ")}.`
           : "Arıza yok: iki kanalın özgün dosyaları motora gidiyor."}
+        {frozen && ` Dondurulan kanal: ${frozen} (aynı karenin özgün baytları tekrar gönderiliyor).`}
       </p>
     </section>
   );

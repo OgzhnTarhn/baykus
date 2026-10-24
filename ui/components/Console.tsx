@@ -1,7 +1,9 @@
 "use client";
 
 // Operatör ekranı (Faz 3 tasarımı §4.4): oynatıcı durum makinesini (lib/player) tarayıcıya bağlar.
-// Ayarlar (conf, takip, kapı) bir sonraki kareden geçerli olur; oturum sayfa açılışında UUID.
+// Ayarlar (conf, takip, kapı, küçük hedef modu) bir sonraki kareden geçerli olur; oturum sayfa
+// açılışında UUID. Faz 4 (§5.6, §5.8): kareyi dondurma, kapsamlı sıfırlama, ego son yeniden
+// konumlama ve yalnız hareketliler süzgeci burada bağlanır.
 import { useCallback, useEffect, useState } from "react";
 
 import { AlarmList } from "@/components/AlarmList";
@@ -20,6 +22,7 @@ import {
   encodePng,
   faultedChannels,
   faultSummary,
+  holdFrames,
   mulberry32,
   NO_FAULTS,
   type FaultConfig,
@@ -32,8 +35,10 @@ import {
   postDetectForm,
   postReset,
   type DetectSettings,
+  type Freeze,
   type Gate,
   type SequenceIndex,
+  type Tiles,
 } from "@/lib/client";
 import { LatencyWindow } from "@/lib/latency";
 import { createPlayer, type PlayerSnapshot } from "@/lib/player";
@@ -76,19 +81,21 @@ function toPng(p: Pixels): Promise<Blob> {
 // Oynatıcı ve istek ayarları bileşen dışında kurulur: ayarlar render sırasında okunmaz, yalnız
 // istek anında (sonraki kare) okunur.
 // Oturum kimliği ilk istekte üretilir (tarayıcıda; sunucu ön-render'ında rastgele değer yok).
-type Settings = Omit<DetectSettings, "session"> & { faults: FaultConfig };
+type Settings = Omit<DetectSettings, "session" | "tiles"> & { faults: FaultConfig; tiles: Tiles };
 
 export type Monitor = {
   active: AlarmId[];
   history: AlarmEvent[];
   strip: StripEntry[];
   latency: LatencyView;
+  lastReloc: number | null; // ego'nun son yeniden konumlandığı kare (Faz 4 §5.7)
 };
 const EMPTY_MONITOR: Monitor = {
   active: [],
   history: [],
   strip: [],
   latency: { totals: [], stats: null, breakdown: [] },
+  lastReloc: null,
 };
 
 // Alarmlar ve durum şeridi motor oturumunu izler: oturum sıfırlanınca (ya da motor oturumu
@@ -98,7 +105,7 @@ function makeConsole(
   onChange: (s: PlayerSnapshot<FrameView>) => void,
   onMonitor: (m: Monitor) => void,
 ) {
-  let current: Settings = { ...DEFAULT_SETTINGS, faults: NO_FAULTS };
+  let current: Settings = { ...DEFAULT_SETTINGS, faults: NO_FAULTS, tiles: 1 };
   const blobUrls: string[][] = []; // bozulmuş karelerin nesne URL'leri; iki kare sonra bırakılır
   let session: string | null = null;
   const sid = () => (session ??= newSessionId());
@@ -107,12 +114,15 @@ function makeConsole(
   const alarms = new Alarms();
   const latency = new LatencyWindow();
   let strip: StripEntry[] = [];
+  let held: Freeze = {}; // dondurulan kanalların tuttuğu kare (Faz 4 §5.6)
+  let lastReloc: number | null = null; // ego'nun son yeniden konumlandığı kare
   const emit = () =>
     onMonitor({
       active: alarms.active(),
       history: alarms.history(),
       strip,
       latency: { totals: latency.totals(), stats: latency.stats(), breakdown: latency.breakdown() },
+      lastReloc,
     });
   const clearMonitor = () => {
     epoch = nextEpoch(epoch);
@@ -125,13 +135,16 @@ function makeConsole(
       const { faults, ...rest } = current;
       const params = { ...rest, session: sid() };
       const sent = stamp();
-      let rgbSrc = frameUrl(seq, frame, "rgb");
-      let irSrc = frameUrl(seq, frame, "ir");
+      // Dondurulan kanal ilk kareyi tutar; görüntü ve motora giden baytlar o kareden gelir.
+      held = holdFrames(held, faults, frame);
+      const freeze = held.rgb !== undefined || held.ir !== undefined ? held : undefined;
+      let rgbSrc = frameUrl(seq, held.rgb ?? frame, "rgb");
+      let irSrc = frameUrl(seq, held.ir ?? frame, "ir");
       const ch = faultedChannels(faults);
       let response;
       if (!ch.rgb && !ch.ir) {
         [response] = await Promise.all([
-          postDetect(seq, frame, params),
+          postDetect(seq, frame, params, freeze ? { freeze } : {}),
           preload(rgbSrc),
           preload(irSrc),
         ]);
@@ -147,12 +160,13 @@ function makeConsole(
         if (parts.ir) urls.push((irSrc = URL.createObjectURL(parts.ir)));
         blobUrls.push(urls);
         if (blobUrls.length > 2) blobUrls.shift()!.forEach((u) => URL.revokeObjectURL(u));
-        const meta = { seq, frame, ...params, fault: faultSummary(faults) };
+        const meta = { seq, frame, ...params, fault: faultSummary(faults), freeze };
         response = await postDetectForm(buildFaultForm(meta, parts));
       }
       // dizi değişti ya da oturum sıfırlandı: eski yanıt izlemeye yazılmaz (oynatıcı da göstermez)
       if (!isCurrent(sent, stamp())) return { seq, frame, rgbSrc, irSrc, response };
       if (response.session_new) clearMonitor();
+      if (response.ego?.relocalized) lastReloc = frame;
       const h = response.health;
       alarms.update(h, frame);
       strip = [
@@ -163,21 +177,26 @@ function makeConsole(
       emit();
       return { seq, frame, rgbSrc, irSrc, response };
     },
-    reset: () => postReset(sid()),
-    onReset: clearMonitor,
+    reset: (scope) => postReset(sid(), scope),
+    onReset: (scope) => {
+      if (scope === "all") lastReloc = null;
+      clearMonitor();
+    },
     sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
     now: () => performance.now(),
     onChange,
   });
   const settings = {
     set: (v: Settings) => {
-      if (trackResumed(current.track, v.track)) player.requestReset();
+      if (trackResumed(current.track, v.track)) player.requestReset("tracks");
       current = v;
     },
   };
   // Dizi değişimi yeni dönem açar: yoldaki eski dizi yanıtı izlemeye yazılmaz.
   const load = (name: string, frames: number[]) => {
     epoch = nextEpoch(epoch);
+    held = {};
+    lastReloc = null;
     player.load(name, frames);
   };
   return { player, settings, load };
@@ -190,6 +209,8 @@ export function Console() {
   const [conf, setConf] = useState(DEFAULT_SETTINGS.conf);
   const [track, setTrack] = useState(DEFAULT_SETTINGS.track);
   const [gate, setGate] = useState<Gate>(DEFAULT_SETTINGS.gate);
+  const [tiles, setTiles] = useState<Tiles>(1);
+  const [onlyMoving, setOnlyMoving] = useState(false);
   const [view, setView] = useState<View>("both");
   const [faults, setFaults] = useState<FaultConfig>(NO_FAULTS);
   const [snapState, setSnap] = useState<PlayerSnapshot<FrameView> | null>(null);
@@ -198,8 +219,8 @@ export function Console() {
   const snap = snapState ?? player.snapshot();
 
   useEffect(() => {
-    settings.set({ conf, track, gate, faults });
-  }, [settings, conf, track, gate, faults]);
+    settings.set({ conf, track, gate, faults, tiles });
+  }, [settings, conf, track, gate, faults, tiles]);
 
   useEffect(() => {
     let alive = true;
@@ -260,9 +281,13 @@ export function Console() {
         onConf={setConf}
         track={track}
         onTrack={setTrack}
+        onlyMoving={onlyMoving}
+        onOnlyMoving={setOnlyMoving}
+        tiles={tiles}
+        onTiles={setTiles}
         gate={gate}
         onGate={setGate}
-        onReset={() => player.requestReset()}
+        onReset={() => player.requestReset("all")}
       />
       <main className="grid flex-1 gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
         {listError ? (
@@ -280,6 +305,7 @@ export function Console() {
             snap={snap}
             size={size}
             view={view}
+            onlyMoving={onlyMoving}
             onView={setView}
             onPlay={() => player.play()}
             onPause={() => player.pause()}
@@ -290,8 +316,16 @@ export function Console() {
         )}
         <aside className="flex flex-col gap-4" aria-label="Durum">
           <AlarmList active={monitor.active} history={monitor.history} />
-          <HealthPanel health={health} strip={monitor.strip} />
-          <DetectionList detections={snap.result?.response.detections ?? null} />
+          <HealthPanel
+            health={health}
+            strip={monitor.strip}
+            ego={snap.result?.response.ego ?? null}
+            lastReloc={monitor.lastReloc}
+          />
+          <DetectionList
+            detections={snap.result?.response.detections ?? null}
+            onlyMoving={onlyMoving}
+          />
           <LatencyChart view={monitor.latency} />
           <FaultPanel faults={faults} onChange={setFaults} />
         </aside>
