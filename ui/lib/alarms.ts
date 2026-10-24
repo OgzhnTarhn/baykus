@@ -1,10 +1,18 @@
 // Alarm sözleşmesi (Faz 3 tasarımı §4.4; Python eşi baykus.health.m3ot.Alarms):
-// - kayıp ve gürültü: son 5 karenin en az 3'ünde bayrak; hizasız: geçerli karenin pair.misaligned'ı
-//   (zaman kuralı motorda zaten pencereli; ikinci pencere yok);
+// - kayıp, gürültü ve donma: son 5 karenin en az 3'ünde bayrak; hizasız: geçerli karenin
+//   pair.misaligned'ı (zaman kuralı motorda zaten pencereli; ikinci pencere yok);
+// - donma alarmları (rgb_frozen / ir_frozen) Faz 4 tasarımı §5.6: rgb/ir.frozen === true pencereli;
 // - histerezis yok: koşul tutunca başlar, tutmayınca temizlenir; olaylar kare numarasıyla geçmişe;
 // - metin alarm kimliğinden (sabit tablo), motorun kapı reason'ından değil;
 // - reset() pencereleri, açık alarmları ve geçmişi temizler. Pencere sabit, yapılandırılmaz.
-export const ALARM_IDS = ["rgb_lost", "ir_lost", "ir_noisy", "misaligned"] as const;
+export const ALARM_IDS = [
+  "rgb_lost",
+  "ir_lost",
+  "ir_noisy",
+  "misaligned",
+  "rgb_frozen",
+  "ir_frozen",
+] as const;
 export type AlarmId = (typeof ALARM_IDS)[number];
 
 export const ALARM_TEXT: Record<AlarmId, string> = {
@@ -12,21 +20,26 @@ export const ALARM_TEXT: Record<AlarmId, string> = {
   ir_lost: "IR kamera kayıp",
   ir_noisy: "IR gürültülü",
   misaligned: "IR hizasız",
+  rgb_frozen: "RGB görüntü donmuş",
+  ir_frozen: "IR görüntü donmuş",
 };
 
 export const ALARM_WINDOW = 5;
 export const ALARM_MIN = 3;
 
 export type AlarmInput = {
-  rgb: { flags: string[] };
-  ir: { flags: string[] };
+  rgb: { flags: string[]; frozen?: boolean | null };
+  ir: { flags: string[]; frozen?: boolean | null };
   pair: { misaligned: boolean };
 };
 
 export type AlarmEvent = { id: AlarmId; kind: "start" | "clear"; frame: number };
 
+// Pencere sütunları: rgb kayıp, ir kayıp, ir gürültülü, rgb donmuş, ir donmuş.
+const WINDOWED: readonly AlarmId[] = ["rgb_lost", "ir_lost", "ir_noisy", "rgb_frozen", "ir_frozen"];
+
 export class Alarms {
-  private window: [boolean, boolean, boolean][] = [];
+  private window: boolean[][] = [];
   private on: AlarmId[] = [];
   private events: AlarmEvent[] = [];
 
@@ -35,14 +48,20 @@ export class Alarms {
       h.rgb.flags.includes("lost"),
       h.ir.flags.includes("lost"),
       h.ir.flags.includes("noisy"),
+      h.rgb.frozen === true,
+      h.ir.frozen === true,
     ]);
     if (this.window.length > ALARM_WINDOW) this.window.shift();
     const next: AlarmId[] = [];
-    for (let i = 0; i < 3; i++) {
-      const count = this.window.filter((w) => w[i]).length;
-      if (count >= ALARM_MIN) next.push(ALARM_IDS[i]);
+    for (const id of ALARM_IDS) {
+      if (id === "misaligned") {
+        if (h.pair.misaligned) next.push(id);
+        continue;
+      }
+      const col = WINDOWED.indexOf(id);
+      const count = this.window.filter((w) => w[col]).length;
+      if (count >= ALARM_MIN) next.push(id);
     }
-    if (h.pair.misaligned) next.push("misaligned");
 
     const out: AlarmEvent[] = [];
     for (const id of ALARM_IDS) {

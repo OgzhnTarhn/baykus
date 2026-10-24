@@ -6,6 +6,8 @@
 // - blur: Gauss çekirdeği (OpenCV sigma=0 çekirdeği, kenar REFLECT_101; kayan nokta, birebir değil);
 // - blackout: kamerayı kapat = sıfır görüntü.
 // Pikseller ImageData düzeninde (RGBA, alfa 255); IR gri olduğu için R = G = B korunur.
+import type { Freeze } from "@/lib/client";
+
 export type Pixels = { width: number; height: number; data: Uint8ClampedArray };
 
 export type FaultConfig = {
@@ -15,6 +17,8 @@ export type FaultConfig = {
   blur: number; // iki kanal, çekirdek; 0 = kapalı
   offRgb: boolean;
   offIr: boolean;
+  freezeRgb: boolean;
+  freezeIr: boolean;
 };
 
 export const NO_FAULTS: FaultConfig = {
@@ -24,6 +28,8 @@ export const NO_FAULTS: FaultConfig = {
   blur: 0,
   offRgb: false,
   offIr: false,
+  freezeRgb: false,
+  freezeIr: false,
 };
 
 // Spec §12.3 şiddetleri (baykus.robustness.corruptions.SUITE)
@@ -161,10 +167,19 @@ export function blackout(img: Pixels): Pixels {
   return out;
 }
 
+// kareyi dondur (Faz 4 §5.6): o kanalın tuttuğu karenin özgün baytları diskten yeniden gönderilir
+// (Next rotası meta.freeze). Donma açıkken ilk kare numarası tutulur, kapanınca bırakılır.
+export function holdFrames(held: Freeze, f: FaultConfig, frame: number): Freeze {
+  const out: Freeze = {};
+  if (f.freezeRgb) out.rgb = held.rgb ?? frame;
+  if (f.freezeIr) out.ir = held.ir ?? frame;
+  return out;
+}
+
 export function faultedChannels(f: FaultConfig): { rgb: boolean; ir: boolean } {
   return {
-    rgb: f.offRgb || f.darken < 1 || f.blur > 0,
-    ir: f.offIr || f.noise > 0 || f.shift > 0 || f.blur > 0,
+    rgb: !f.freezeRgb && (f.offRgb || f.darken < 1 || f.blur > 0),
+    ir: !f.freezeIr && (f.offIr || f.noise > 0 || f.shift > 0 || f.blur > 0),
   };
 }
 
@@ -198,6 +213,8 @@ export function faultSummary(f: FaultConfig): Record<string, number | boolean> {
   if (f.blur > 0) out.blur = f.blur;
   if (f.offRgb) out.off_rgb = true;
   if (f.offIr) out.off_ir = true;
+  if (f.freezeRgb) out.freeze_rgb = true;
+  if (f.freezeIr) out.freeze_ir = true;
   return out;
 }
 

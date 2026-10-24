@@ -10,13 +10,17 @@ import {
   buildFaultForm,
   darken,
   faultedChannels,
+  faultSummary,
+  holdFrames,
   mulberry32,
   noise,
   rintEven,
   shiftIr,
   NO_FAULTS,
+  type FaultConfig,
   type Pixels,
 } from "@/lib/faults";
+import type { Freeze } from "@/lib/client";
 import { decodePng } from "./png";
 
 const SYN = join(__dirname, "..", "..", "..", "fixtures", "synthetic");
@@ -116,5 +120,48 @@ describe("faults", () => {
     expect((sent as Blob).type).toBe("image/png");
     expect(new Uint8Array(await (sent as Blob).arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]));
     expect(JSON.parse(form.get("meta") as string)).toEqual({ ...meta, fault: { shift: 20 } });
+  });
+
+  it("freeze holds the first frame while on and releases when off", () => {
+    expect(NO_FAULTS.freezeRgb).toBe(false);
+    expect(NO_FAULTS.freezeIr).toBe(false);
+
+    const on: FaultConfig = { ...NO_FAULTS, freezeRgb: true };
+    let held: Freeze = {};
+    held = holdFrames(held, on, 5);
+    expect(held).toEqual({ rgb: 5 });
+    const prev = held;
+    held = holdFrames(held, on, 6);
+    expect(held).toEqual({ rgb: 5 });
+    expect(held).not.toBe(prev);
+    held = holdFrames(held, { ...NO_FAULTS }, 7);
+    expect(held).toEqual({});
+
+    // kanallar bağımsız: IR donarken RGB serbest akar
+    const irOnly: FaultConfig = { ...NO_FAULTS, freezeIr: true };
+    let both: Freeze = {};
+    both = holdFrames(both, irOnly, 5);
+    expect(both).toEqual({ ir: 5 });
+    both = holdFrames(both, irOnly, 6);
+    expect(both).toEqual({ ir: 5 });
+    both = holdFrames(both, { ...NO_FAULTS, freezeRgb: true, freezeIr: true }, 7);
+    expect(both).toEqual({ rgb: 7, ir: 5 });
+    both = holdFrames(both, { ...NO_FAULTS, freezeRgb: true }, 8);
+    expect(both).toEqual({ rgb: 7 });
+  });
+
+  it("frozen channel is not re-encoded", () => {
+    expect(faultedChannels({ ...NO_FAULTS, freezeIr: true, noise: 10 })).toEqual({ rgb: false, ir: false });
+    expect(faultedChannels({ ...NO_FAULTS, freezeRgb: true, darken: 0.25 })).toEqual({ rgb: false, ir: false });
+    expect(faultedChannels({ ...NO_FAULTS, freezeRgb: true, blur: 7 })).toEqual({ rgb: false, ir: true });
+  });
+
+  it("fault summary lists freeze", () => {
+    expect(faultSummary({ ...NO_FAULTS, freezeRgb: true })).toEqual({ freeze_rgb: true });
+    expect(faultSummary({ ...NO_FAULTS, freezeIr: true })).toEqual({ freeze_ir: true });
+    expect(faultSummary({ ...NO_FAULTS, freezeRgb: true, freezeIr: true })).toEqual({
+      freeze_rgb: true,
+      freeze_ir: true,
+    });
   });
 });

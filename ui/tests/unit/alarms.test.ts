@@ -15,11 +15,20 @@ type AlarmSeq = { name: string; steps: Step[] };
 type IndexEntry = { name: string; kind: string; path: string };
 type Clip = { variant: string; frames: { frame: number; health: AlarmInput; alarms: string[] }[] };
 
-const input = (rgb: string[], ir: string[], misaligned = false): AlarmInput => ({
-  rgb: { flags: rgb },
-  ir: { flags: ir },
-  pair: { misaligned },
-});
+// frozen alanları henüz AlarmInput'ta yok (Görev: rgb/ir `frozen?: boolean | null` eklenir);
+// şimdilik AlarmInput görünümüne yaslıyoruz.
+const input = (
+  rgb: string[],
+  ir: string[],
+  misaligned = false,
+  rgbFrozen: boolean | null = null,
+  irFrozen: boolean | null = null,
+): AlarmInput =>
+  ({
+    rgb: { flags: rgb, frozen: rgbFrozen },
+    ir: { flags: ir, frozen: irFrozen },
+    pair: { misaligned },
+  }) as AlarmInput;
 
 describe("alarms", () => {
   it("matches python alarm_states on alarm_sequences", () => {
@@ -65,6 +74,36 @@ describe("alarms", () => {
     ]);
   });
 
+  it("frozen alarm starts at third of five", () => {
+    expect(ALARM_TEXT.rgb_frozen).toBe("RGB görüntü donmuş");
+    expect(ALARM_TEXT.ir_frozen).toBe("IR görüntü donmuş");
+    const a = new Alarms();
+    // ilk iki donmuş kare: pencerede 2/5, alarm yok
+    expect(a.update(input([], [], false, true, null), 10)).toEqual([]);
+    expect(a.active()).toEqual([]);
+    expect(a.update(input([], [], false, true, null), 11)).toEqual([]);
+    expect(a.active()).toEqual([]);
+    // üçüncü donmuş kare: 3/5 -> başlar
+    expect(a.update(input([], [], false, true, null), 12)).toEqual([
+      { id: "rgb_frozen", kind: "start", frame: 12 },
+    ]);
+    expect(a.active()).toContain("rgb_frozen");
+    expect(a.active()).not.toContain("ir_frozen");
+    // ir.frozen null: hiçbir karede ir_frozen başlamaz
+    expect(a.update(input([], [], false, false, null), 13)).toEqual([]);
+    expect(a.update(input([], [], false, false, null), 14)).toEqual([]);
+    expect(a.update(input([], [], false, false, null), 15)).toEqual([
+      { id: "rgb_frozen", kind: "clear", frame: 15 },
+    ]);
+    expect(a.active()).toEqual([]);
+    expect(a.history()).toEqual([
+      { id: "rgb_frozen", kind: "start", frame: 12 },
+      { id: "rgb_frozen", kind: "clear", frame: 15 },
+    ]);
+    expect(a.history().some((e) => e.id === "ir_frozen")).toBe(false);
+    expect(a.active()).not.toContain("ir_frozen");
+  });
+
   it("reset clears history", () => {
     const a = new Alarms();
     for (let f = 1; f <= 3; f++) a.update(input([], ["noisy"], true), f);
@@ -90,6 +129,8 @@ describe("alarms", () => {
       ir_lost: "IR kamera kayıp",
       ir_noisy: "IR gürültülü",
       misaligned: "IR hizasız",
+      rgb_frozen: "RGB görüntü donmuş",
+      ir_frozen: "IR görüntü donmuş",
     });
     const a = new Alarms();
     const h = { ...input([], [], true), reason: "başka metin", reason_code: "misaligned" };
