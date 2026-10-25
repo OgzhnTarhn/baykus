@@ -22,6 +22,8 @@ export type TopBarProps = {
   onTiles?(v: Tiles): void;
   gate: Gate;
   onGate(v: Gate): void;
+  unacked?: number;
+  onAlarms?(): void;
   onReset(): void;
 };
 
@@ -30,6 +32,8 @@ export function TopBar(p: TopBarProps) {
   const onOnlyMoving = p.onOnlyMoving ?? (() => {});
   const tiles = p.tiles ?? 1;
   const onTiles = p.onTiles ?? (() => {});
+  const unacked = p.unacked ?? 0;
+  const onAlarms = p.onAlarms ?? (() => {});
   return (
     <header className="flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-line bg-panel px-4 py-3">
       <h1 className="text-lg font-semibold tracking-tight">Baykuş</h1>
@@ -119,6 +123,17 @@ export function TopBar(p: TopBarProps) {
           </label>
         ))}
       </fieldset>
+
+      {unacked > 0 && (
+        <button
+          type="button"
+          className="ml-auto rounded-full bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-500"
+          aria-label={`${unacked} onaylanmamış bölge alarmı, alarm sekmesini aç`}
+          onClick={onAlarms}
+        >
+          {unacked} onaylanmamış alarm
+        </button>
+      )}
 
       <button
         type="button"

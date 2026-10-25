@@ -5,6 +5,8 @@
 // - histerezis yok: koşul tutunca başlar, tutmayınca temizlenir; olaylar kare numarasıyla geçmişe;
 // - metin alarm kimliğinden (sabit tablo), motorun kapı reason'ından değil;
 // - reset() pencereleri, açık alarmları ve geçmişi temizler. Pencere sabit, yapılandırılmaz.
+import type { Alarm, ZoneEvent } from "@/lib/client";
+
 export const ALARM_IDS = [
   "rgb_lost",
   "ir_lost",
@@ -91,6 +93,57 @@ export class Alarms {
     this.window = [];
     this.on = [];
     this.events = [];
+  }
+}
+
+// Bölge alarmları motorda (Faz 4 §5.5); ekran açık listeyi ve geçmişi (onaylandı / onaylanmadan
+// kapandı) tutar. Girdi motorun açık alarm listesi ve kare günlüğü olaylarıdır; onay durumu
+// alarm_ack olaylarından işlenir ve alarm listeden düştüğünde geçmişe yazılır.
+export type ZoneAlarmHistory = { alarm: Alarm; cleared_frame: number; acked: boolean };
+
+export class ZoneAlarmBook {
+  private current: Alarm[] = [];
+  private acked = new Set<string>();
+  private past: ZoneAlarmHistory[] = [];
+
+  update(alarms: Alarm[], events: ZoneEvent[]): void {
+    const known = new Set([...this.current.map((a) => a.id), ...alarms.map((a) => a.id)]);
+    for (const e of events) {
+      if (e.kind === "alarm_ack" && e.alarm_id !== null && known.has(e.alarm_id)) {
+        this.acked.add(e.alarm_id);
+      }
+    }
+    for (const a of alarms) if (a.acked) this.acked.add(a.id);
+
+    const next = alarms.map((a) => ({ ...a, acked: this.acked.has(a.id) }));
+    const nextIds = new Set(next.map((a) => a.id));
+    const maxFrame = events.length ? Math.max(...events.map((e) => e.frame)) : null;
+    for (const prev of this.current) {
+      if (nextIds.has(prev.id)) continue;
+      const clear = events.find((e) => e.kind === "alarm_clear" && e.alarm_id === prev.id);
+      const cleared_frame = clear ? clear.frame : (maxFrame ?? prev.since_frame);
+      this.past.unshift({ alarm: prev, cleared_frame, acked: this.acked.has(prev.id) });
+      this.acked.delete(prev.id);
+    }
+    this.current = next;
+  }
+
+  open(): Alarm[] {
+    return this.current.map((a) => ({ ...a }));
+  }
+
+  history(): ZoneAlarmHistory[] {
+    return this.past.map((h) => ({ ...h }));
+  }
+
+  unacked(): number {
+    return this.current.filter((a) => !a.acked).length;
+  }
+
+  reset(): void {
+    this.current = [];
+    this.acked = new Set();
+    this.past = [];
   }
 }
 
