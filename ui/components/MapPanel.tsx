@@ -15,7 +15,15 @@ import {
 } from "react";
 
 import type { Affine, Motion, Track, ZoneCount, ZoneCounts, ZoneDef } from "@/lib/client";
-import { MAP_CAPTION, apply, compose, hitTest, type Mosaic } from "@/lib/mosaic";
+import {
+  MAP_CAPTION,
+  apply,
+  compose,
+  fromCanvas,
+  hitTest,
+  toCanvas,
+  type Mosaic,
+} from "@/lib/mosaic";
 import { Viewport } from "@/lib/viewport";
 
 const BG = "#0b0d10";
@@ -318,15 +326,15 @@ export function drawMap(
   opts: MapDrawOpts,
 ): void {
   const base = ctx.getTransform();
-  const baseAffine: Affine = [base.a, base.b, base.c, base.d, base.e, base.f];
+  const baseAffine = fromCanvas(base); // tuval sırası → [a, b, tx, c, d, ty]
   fillBackground(ctx);
 
   const layer = mosaic.layer(gen);
   for (const tile of layer.tiles) {
-    ctx.setTransform(...compose(baseAffine, compose(view, tile.m)));
+    ctx.setTransform(...toCanvas(compose(baseAffine, compose(view, tile.m))));
     ctx.drawImage(tile.thumb, 0, 0);
   }
-  ctx.setTransform(...baseAffine);
+  ctx.setTransform(...toCanvas(baseAffine));
 
   // Görüş alanı (kare dörtgeni): beyaz, ince.
   if (layer.footprint !== null && layer.footprint.length > 0) {

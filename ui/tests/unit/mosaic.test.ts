@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Affine, Ego, Track } from "@/lib/client";
-import { Mosaic, hitTest } from "@/lib/mosaic";
+import { Mosaic, apply, fromCanvas, hitTest, toCanvas } from "@/lib/mosaic";
 
 // Küçük yardımcılar: Ego (ok, map_gen, provisional, frame_to_map, merge) ve Track (track_id, map_xy).
 function ego(over: Partial<Ego> = {}): Ego {
@@ -279,5 +279,18 @@ describe("mozaik katmanları", () => {
     expect(m.currentGen()).toBe(1);
     expect(m.layer(1).tiles).toHaveLength(1);
     expect(m.layer(1).trails.get(1)).toEqual([[1, 1]]);
+  });
+});
+
+describe("canvas matrix order", () => {
+  it("canvas conversion keeps the mapping", () => {
+    const m: Affine = [2, 0.5, 10, -0.25, 3, 20];
+    const [a, b, c, d, e, f] = toCanvas(m);
+    const p: [number, number] = [7, -4];
+    // tuval: x' = a·x + c·y + e, y' = b·x + d·y + f
+    expect([a * p[0] + c * p[1] + e, b * p[0] + d * p[1] + f]).toEqual(apply(m, p));
+    expect(fromCanvas({ a, b, c, d, e, f })).toEqual(m);
+    // devicePixelRatio tabanı: köşegen ölçek
+    expect(fromCanvas({ a: 2, b: 0, c: 0, d: 2, e: 0, f: 0 })).toEqual([2, 0, 0, 0, 2, 0]);
   });
 });

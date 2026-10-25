@@ -35,6 +35,24 @@ export function apply(m: Affine, p: [number, number]): [number, number] {
   return [m[0] * p[0] + m[1] * p[1] + m[2], m[3] * p[0] + m[4] * p[1] + m[5]];
 }
 
+// Tuval sırası farklıdır: setTransform(a, b, c, d, e, f) x' = a·x + c·y + e, y' = b·x + d·y + f.
+export type CanvasMatrix = [number, number, number, number, number, number];
+
+export function toCanvas(m: Affine): CanvasMatrix {
+  return [m[0], m[3], m[1], m[4], m[2], m[5]];
+}
+
+export function fromCanvas(m: {
+  a: number;
+  b: number;
+  c: number;
+  d: number;
+  e: number;
+  f: number;
+}): Affine {
+  return [m.a, m.c, m.e, m.b, m.d, m.f];
+}
+
 function emptyLayer(gen: number): Layer {
   return { gen, provisional: false, tiles: [], trails: new Map(), footprint: null };
 }
