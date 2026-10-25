@@ -69,8 +69,8 @@ COPY --from=build /opt/onnxruntime/lib/*.so* /usr/local/lib/
 # Yalnız ürün ve ölçüm uygulamaları; testler ve eşlik araçları derleme imajında koşar
 COPY --from=build /build/bin/baykus_server /build/bin/baykus_bench /build/bin/baykus_detect \
      /build/bin/baykus_track /build/bin/baykus_sequence /usr/local/bin/
-COPY configs/engine/tracker.json configs/engine/models.json /etc/baykus/
+COPY configs/engine/tracker.json configs/engine/models.json configs/engine/motion.json /etc/baykus/
 RUN ldconfig
 USER baykus
 EXPOSE 8080
-CMD ["baykus_server", "--models", "/models", "--manifest", "/etc/baykus/models.json", "--port", "8080"]
+CMD ["baykus_server", "--models", "/models", "--manifest", "/etc/baykus/models.json", "--motion", "/etc/baykus/motion.json", "--port", "8080"]
