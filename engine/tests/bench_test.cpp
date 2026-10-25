@@ -7,9 +7,11 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "baykus/bench.hpp"
 #include "baykus/models.hpp"
+#include "baykus/motion_config.hpp"
 #include "baykus/runtime.hpp"
 #include "baykus/sessions.hpp"
 #include "fixtures.hpp"
@@ -72,4 +74,84 @@ TEST(Bench, SmokeTwoIters) {
   // her yinelemede total ≥ infer → sıralı değerler ve yüzdelikler de
   EXPECT_GE(r.at("stages").at("total").at("p95").get<double>(),
             r.at("stages").at("infer").at("p95").get<double>());
+}
+
+TEST(Bench, SequenceInputsInOrder) {
+  const auto d = fs::temp_directory_path() / "baykus_bench_sequence";
+  fs::remove_all(d);
+  fs::create_directories(d / "rgb");
+  fs::create_directories(d / "ir");
+  std::ofstream(d / "index.json") << R"({"frames": [5, 3, 9]})";
+  for (const int f : {5, 3, 9}) {
+    const auto stem = std::string(6 - std::to_string(f).size(), '0') + std::to_string(f);
+    std::ofstream(d / "rgb" / (stem + ".jpg")) << "rgb-" << f;
+    std::ofstream(d / "ir" / (stem + ".png")) << "ir-" << f;
+  }
+  const auto frames = baykus::load_sequence(d.string(), 2);
+  ASSERT_EQ(frames.size(), 2u);
+  EXPECT_EQ(frames[0].frame, 5);  // index.json sırası
+  EXPECT_EQ(frames[0].rgb, "rgb-5");
+  EXPECT_EQ(frames[0].ir, "ir-5");
+  EXPECT_EQ(frames[1].frame, 3);
+  EXPECT_EQ(frames[1].rgb, "rgb-3");
+  EXPECT_EQ(frames[1].ir, "ir-3");
+  EXPECT_THROW(baykus::load_sequence(d.string(), 4), std::runtime_error);
+  fs::remove(d / "ir" / "000003.png");
+  EXPECT_THROW(baykus::load_sequence(d.string(), 3), std::runtime_error);
+  fs::remove_all(d);
+}
+
+TEST(Bench, NoEgoDisablesStage) {
+  const auto m = bt::models_root();
+  const char* c = std::getenv("BAYKUS_CONFIGS");
+  const auto configs = fs::path(c && *c ? c : "/configs") / "engine";
+  const auto clip = bt::fixtures_root() / "m3ot" / "clip" / "sequences" / "clip";
+  BAYKUS_REQUIRE_FILES({clip / "rgb" / "000001.jpg", clip / "ir" / "000001.png", m / "e3c.onnx",
+                        configs / "models.json", configs / "motion.json"});
+  const auto models = baykus::load_models(m.string(), (configs / "models.json").string());
+  const auto frames = baykus::load_sequence(clip.string(), 15);
+  const baykus::TrackerConfig cfg;
+  baykus::SequenceOptions opt;
+  opt.warmup = 2;
+  opt.iters = 4;
+  {
+    baykus::Sessions sessions(cfg, models.gate.window, models.gate.min_frames, models.gate.tol_px);
+    baykus::Runtime runtime(models, cfg, sessions);
+    const auto r = baykus::bench_sequence(runtime, sessions, frames, opt);
+    EXPECT_DOUBLE_EQ(r.at("stages").at("ego").at("p95").get<double>(), 0.0);
+    EXPECT_TRUE(r.at("keyframe_p95").is_null());
+    EXPECT_TRUE(r.at("reloc_attempt_p95").is_null());
+    EXPECT_EQ(r.at("frames_sent").get<std::vector<int>>(), (std::vector<int>{1, 2, 3, 4, 5, 6}));
+  }
+  {
+    baykus::Sessions sessions(cfg, baykus::MotionCfg::load((configs / "motion.json").string()),
+                              models.gate.window, models.gate.min_frames, models.gate.tol_px);
+    baykus::Runtime runtime(models, cfg, sessions);
+    const auto r = baykus::bench_sequence(runtime, sessions, frames, opt);
+    EXPECT_GT(r.at("stages").at("ego").at("mean").get<double>(), 0.0);
+  }
+}
+
+TEST(Bench, SeekEvery) {
+  const auto m = bt::models_root();
+  const char* c = std::getenv("BAYKUS_CONFIGS");
+  const auto configs = fs::path(c && *c ? c : "/configs") / "engine";
+  const auto clip = bt::fixtures_root() / "m3ot" / "clip" / "sequences" / "clip";
+  BAYKUS_REQUIRE_FILES({clip / "rgb" / "000001.jpg", clip / "ir" / "000001.png", m / "e3c.onnx",
+                        configs / "models.json", configs / "motion.json"});
+  const auto models = baykus::load_models(m.string(), (configs / "models.json").string());
+  const auto frames = baykus::load_sequence(clip.string(), 15);
+  const baykus::TrackerConfig cfg;
+  baykus::Sessions sessions(cfg, baykus::MotionCfg::load((configs / "motion.json").string()),
+                            models.gate.window, models.gate.min_frames, models.gate.tol_px);
+  baykus::Runtime runtime(models, cfg, sessions);
+  baykus::SequenceOptions opt;
+  opt.warmup = 0;
+  opt.iters = 12;
+  opt.seek_every = 5;
+  const auto r = baykus::bench_sequence(runtime, sessions, frames, opt);
+  EXPECT_EQ(r.at("seeks").get<int>(), 2);
+  EXPECT_EQ(r.at("frames_sent").get<std::vector<int>>(),
+            (std::vector<int>{1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2}));
+  EXPECT_TRUE(r.at("seek_p95").is_number());
 }

@@ -1,0 +1,10 @@
+{"zones": [
+  {"id": "z1", "name": "Ana yol", "kind": "area", "gen": 1,
+   "points": [[340, 100], [545, 100], [545, 400], [340, 400]]},
+  {"id": "z2", "name": "Sağ yol", "kind": "restricted", "gen": 1,
+   "points": [[450, 250], [540, 250], [540, 480], [450, 480]]},
+  {"id": "z3", "name": "Kavşak bekleme", "kind": "dwell", "gen": 1,
+   "points": [[380, 0], [540, 0], [540, 90], [380, 90]], "dwell_frames": 30},
+  {"id": "h1", "name": "Sayım hattı", "kind": "line", "gen": 1,
+   "points": [[340, 300], [545, 300]], "count": "both"}
+]}
