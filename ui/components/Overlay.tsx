@@ -16,10 +16,14 @@ export function Overlay({
   detections,
   width,
   height,
+  selected = null,
+  onSelect,
 }: {
   detections: Detection[];
   width: number;
   height: number;
+  selected?: number | null;
+  onSelect?(trackId: number): void;
 }) {
   const font = Math.max(10, Math.round(height / 36));
   return (
@@ -35,6 +39,10 @@ export function Overlay({
         const style = boxStyle(d.motion);
         const text = style.tag ? `${style.tag} ${label(d)}` : label(d);
         const ty = y1 - 3 < font ? y2 + font : y1 - 3;
+        // Tıklanabilir kutu: yalnız iz numarası olan tespitler ve onSelect verilmişse (§5.8).
+        const trackId = d.track_id;
+        const clickable = trackId !== null && onSelect !== undefined;
+        const isSelected = trackId !== null && trackId === selected;
         return (
           <g key={d.track_id ?? `i${i}`}>
             <rect
@@ -42,12 +50,30 @@ export function Overlay({
               y={y1}
               width={x2 - x1}
               height={y2 - y1}
-              fill="none"
+              fill={clickable ? "transparent" : "none"}
               stroke={color}
-              strokeWidth={style.width}
+              strokeWidth={isSelected ? style.width + 2 : style.width}
               strokeDasharray={style.dash ?? undefined}
               vectorEffect="non-scaling-stroke"
-            />
+              pointerEvents={clickable ? "all" : undefined}
+              cursor={clickable ? "pointer" : undefined}
+              onClick={clickable ? () => onSelect(trackId) : undefined}
+            >
+              {clickable && <title>{`#${trackId}`}</title>}
+            </rect>
+            {isSelected && (
+              <rect
+                x={x1 - 2}
+                y={y1 - 2}
+                width={x2 - x1 + 4}
+                height={y2 - y1 + 4}
+                fill="none"
+                stroke="#fff"
+                strokeWidth={1}
+                strokeDasharray="2 2"
+                vectorEffect="non-scaling-stroke"
+              />
+            )}
             <text
               x={x1}
               y={ty}

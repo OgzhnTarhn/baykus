@@ -32,6 +32,8 @@ function Pane({
   fv,
   size,
   onlyMoving,
+  selected,
+  onSelect,
 }: {
   title: string;
   color: string;
@@ -39,6 +41,8 @@ function Pane({
   fv: FrameView | null;
   size: [number, number];
   onlyMoving: boolean;
+  selected?: number | null;
+  onSelect?(id: number): void;
 }) {
   return (
     <figure className="min-w-0 flex-1">
@@ -55,6 +59,8 @@ function Pane({
             detections={visible(fv.response.detections, onlyMoving)}
             width={size[0]}
             height={size[1]}
+            selected={selected}
+            onSelect={onSelect}
           />
         )}
         <figcaption
@@ -74,6 +80,8 @@ export type PlayerProps = {
   size: [number, number];
   view: View;
   onlyMoving?: boolean;
+  selected?: number | null;
+  onSelect?(id: number): void;
   onView(v: View): void;
   onPlay(): void;
   onPause(): void;
@@ -100,6 +108,8 @@ export function Player(p: PlayerProps) {
             fv={fv}
             size={p.size}
             onlyMoving={onlyMoving}
+            selected={p.selected}
+            onSelect={p.onSelect}
           />
         )}
         {p.view !== "rgb" && (
@@ -110,6 +120,8 @@ export function Player(p: PlayerProps) {
             fv={fv}
             size={p.size}
             onlyMoving={onlyMoving}
+            selected={p.selected}
+            onSelect={p.onSelect}
           />
         )}
       </div>
