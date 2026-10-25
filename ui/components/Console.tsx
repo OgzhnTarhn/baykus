@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { AlarmList } from "@/components/AlarmList";
+import { AlarmPanel } from "@/components/AlarmPanel";
 import { DetectionList } from "@/components/DetectionList";
 import { FaultPanel } from "@/components/FaultPanel";
 import { Footer } from "@/components/Footer";
@@ -17,7 +18,15 @@ import { MapPanel } from "@/components/MapPanel";
 import { Player, type FrameView, type View } from "@/components/Player";
 import { TopBar } from "@/components/TopBar";
 import { TrackCard } from "@/components/TrackCard";
-import { Alarms, type AlarmEvent, type AlarmId } from "@/lib/alarms";
+import { ZoneEditorLayer, ZoneToolbar } from "@/components/ZoneEditor";
+import { ZoneList } from "@/components/ZoneList";
+import {
+  Alarms,
+  ZoneAlarmBook,
+  type AlarmEvent,
+  type AlarmId,
+  type ZoneAlarmHistory,
+} from "@/lib/alarms";
 import {
   applyFaults,
   buildFaultForm,
@@ -32,26 +41,37 @@ import {
 } from "@/lib/faults";
 import {
   fetchSequences,
+  fetchZones,
   frameUrl,
+  postAck,
   postDetect,
   postDetectForm,
   postReset,
+  putZones,
+  type Alarm,
   type DetectSettings,
   type Freeze,
   type Gate,
+  type LineCount,
   type SequenceIndex,
   type Tiles,
+  type ZoneCounts,
 } from "@/lib/client";
 import { cardView } from "@/lib/card";
+import { ZoneDraft, type Tool } from "@/lib/editor";
 import { LatencyWindow } from "@/lib/latency";
 import { Mosaic } from "@/lib/mosaic";
 import { createPlayer, type PlayerSnapshot } from "@/lib/player";
 import { isCurrent, newSessionId, nextEpoch, trackResumed, type Stamp } from "@/lib/session";
 import { DEFAULT_SETTINGS } from "@/lib/settings";
+import { ZoneSync } from "@/lib/zone-sync";
 
 
 // Harita karo küçük resmi kare ölçüsünün dörtte biri (Mosaic thumbScale).
 const THUMB_SCALE = 4;
+
+// Bölge listesini değiştiren olay türleri: ekran bu olaylarda listeyi yeniden yükler.
+const ZONE_EVENT_KINDS = new Set(["zones_updated", "map_new_generation", "map_merged"]);
 
 async function preload(src: string): Promise<HTMLImageElement> {
   const img = new Image();
@@ -112,6 +132,12 @@ export type Monitor = {
   latency: LatencyView;
   lastReloc: number | null; // ego'nun son yeniden konumlandığı kare (Faz 4 §5.7)
   mapVersion: number; // harita her geçerli yanıtta yeniden çizilir (Faz 4 §5.8)
+  zoneAlarms: Alarm[]; // açık bölge alarmları (Faz 4 §5.5)
+  zoneHistory: ZoneAlarmHistory[]; // kapanan bölge alarmları (onaylı / onaysız)
+  unacked: number; // onaylanmamış açık bölge alarmı sayısı
+  zoneCounts: ZoneCounts; // bölge sayaçları (motorun son yanıtı)
+  mapGen: number | null; // ego'nun son harita nesli; ego yoksa korunur
+  zonesChanged: number; // bölge listesi değişim sayacı (ekran listeyi yeniler)
 };
 const EMPTY_MONITOR: Monitor = {
   active: [],
@@ -120,6 +146,12 @@ const EMPTY_MONITOR: Monitor = {
   latency: { totals: [], stats: null, breakdown: [] },
   lastReloc: null,
   mapVersion: 0,
+  zoneAlarms: [],
+  zoneHistory: [],
+  unacked: 0,
+  zoneCounts: {},
+  mapGen: null,
+  zonesChanged: 0,
 };
 
 // Alarmlar ve durum şeridi motor oturumunu izler: oturum sıfırlanınca (ya da motor oturumu
@@ -141,6 +173,7 @@ function makeConsole(
   let epoch = 0; // dizi değişimi ve oturum sıfırlamasında artar (S12)
   const stamp = (): Stamp => ({ session: sid(), epoch });
   const alarms = new Alarms();
+  const zoneBook = new ZoneAlarmBook();
   const latency = new LatencyWindow();
   let strip: StripEntry[] = [];
   let held: Freeze = {}; // dondurulan kanalların tuttuğu kare (Faz 4 §5.6)
@@ -148,6 +181,9 @@ function makeConsole(
   let size: [number, number] = [640, 512]; // dizinin kare ölçüsü (load ile gelir)
   let mosaic = new Mosaic(size, THUMB_SCALE); // göreli harita (Faz 4 §5.8)
   let mapVersion = 0; // her geçerli yanıtta artar; harita yeniden çizim tetiğidir
+  let zoneCounts: ZoneCounts = {}; // motorun son bölge sayaçları
+  let mapGen: number | null = null; // ego'nun son harita nesli; ego yoksa korunur
+  let zonesChanged = 0; // bölge listesi değişim sayacı (ekran listeyi yeniler)
   const emit = () =>
     onMonitor({
       active: alarms.active(),
@@ -156,10 +192,18 @@ function makeConsole(
       latency: { totals: latency.totals(), stats: latency.stats(), breakdown: latency.breakdown() },
       lastReloc,
       mapVersion,
+      zoneAlarms: zoneBook.open(),
+      zoneHistory: zoneBook.history(),
+      unacked: zoneBook.unacked(),
+      zoneCounts,
+      mapGen,
+      zonesChanged,
     });
   const clearMonitor = () => {
     epoch = nextEpoch(epoch);
     alarms.reset();
+    zoneBook.reset();
+    zoneCounts = {};
     strip = [];
     emit();
   };
@@ -207,6 +251,11 @@ function makeConsole(
         clearMonitor();
         mosaic.reset(epoch); // motor oturumu yeniden açıldı: nesiller 1'den başlar, eski harita atılır
       }
+      // Bölge alarmları ve sayaçları motorun son yanıtından; liste değişimi ekranı yeniler.
+      zoneBook.update(response.alarms ?? [], response.events ?? []);
+      zoneCounts = response.zone_counts ?? {};
+      if (response.ego) mapGen = response.ego.map_gen;
+      if ((response.events ?? []).some((e) => ZONE_EVENT_KINDS.has(e.kind))) zonesChanged += 1;
       if (response.ego?.relocalized) lastReloc = frame;
       // Harita: gerekiyorsa ego'nun kaynak kanal karesi karo küçük resmi olur.
       const ego = response.ego ?? null;
@@ -228,7 +277,11 @@ function makeConsole(
     },
     reset: (scope) => postReset(sid(), scope),
     onReset: (scope) => {
-      if (scope === "all") lastReloc = null;
+      if (scope === "all") {
+        lastReloc = null;
+        mapGen = null;
+        zonesChanged += 1; // ekran bölge listesini yeniden yükler
+      }
       clearMonitor();
       // "tracks" sıfırlaması haritayı korur; yalnız kapsamlı sıfırlama haritayı boşaltır.
       if (scope === "all") mosaic.reset(epoch);
@@ -248,12 +301,14 @@ function makeConsole(
     epoch = nextEpoch(epoch);
     held = {};
     lastReloc = null;
+    mapGen = null;
+    zonesChanged += 1; // yeni dizi: ekran bölge listesini yeniden yükler
     size = frameSize;
     mosaic = new Mosaic(size, THUMB_SCALE); // yeni dizi yeni harita
     mosaic.reset(epoch);
     player.load(name, frames);
   };
-  return { player, settings, load, getMosaic: () => mosaic };
+  return { player, settings, load, getMosaic: () => mosaic, session: () => sid() };
 }
 
 // Ana alan düzeni (Faz 4 §5.8): "İkisi" oynatıcı ve haritayı yan yana (xl altı alt alta) gösterir.
@@ -262,6 +317,16 @@ const LAYOUTS: { value: Layout; label: string }[] = [
   { value: "video", label: "Görüntü" },
   { value: "map", label: "Harita" },
   { value: "both", label: "İkisi" },
+];
+
+// Sağ sütun sekmeleri (Faz 4 §5.8): her sekme tek bir durum paneli gösterir.
+type Tab = "detections" | "zones" | "alarms" | "health" | "latency";
+const TABS: { value: Tab; label: string }[] = [
+  { value: "detections", label: "Tespitler" },
+  { value: "zones", label: "Bölgeler" },
+  { value: "alarms", label: "Alarmlar" },
+  { value: "health", label: "Sağlık" },
+  { value: "latency", label: "Gecikme" },
 ];
 
 export function Console() {
@@ -280,14 +345,46 @@ export function Console() {
   const [faults, setFaults] = useState<FaultConfig>(NO_FAULTS);
   const [snapState, setSnap] = useState<PlayerSnapshot<FrameView> | null>(null);
   const [monitor, setMonitor] = useState<Monitor>(EMPTY_MONITOR);
-  const [{ player, settings, load, getMosaic }] = useState(() =>
+  const [{ player, settings, load, getMosaic, session }] = useState(() =>
     makeConsole(setSnap, setMonitor),
   );
   const snap = snapState ?? player.snapshot();
+  const [tab, setTab] = useState<Tab>("detections");
+  const [pending, setPending] = useState<Set<string>>(new Set());
+  const [ackError, setAckError] = useState<string | null>(null);
+
+  // Bölge editörü (Faz 4 §5.8): taslak ve eşitleyici bileşen ömrü boyunca tek; fps dizinin
+  // index.json değerinden gelir (dizi yüklenmeden önce 30).
+  const fps = sequences.find((s) => s.name === seq)?.fps ?? 30;
+  const [zoneVersion, setZoneVersion] = useState(0);
+  const bump = useCallback(() => setZoneVersion((n) => n + 1), []);
+  const [tool, setTool] = useState<Tool | null>(null);
+  const [selectedZone, setSelectedZone] = useState<string | null>(null);
+  const [draft] = useState(() => new ZoneDraft(fps));
+  const [sync] = useState(() => new ZoneSync(draft, (defs) => putZones(session(), defs), bump));
 
   useEffect(() => {
     settings.set({ conf, track, gate, faults, tiles, focus: selected });
   }, [settings, conf, track, gate, faults, tiles, selected]);
+
+  // Bölge listesi değişti (ya da harita nesli sıfırlandı): taslak motordan tazelenir. Harita yoksa
+  // bölge de yoktur; okunamayan liste taslağı olduğu gibi bırakır.
+  useEffect(() => {
+    let alive = true;
+    const zones = monitor.mapGen === null ? Promise.resolve([]) : fetchZones(session());
+    zones
+      .then((list) => {
+        if (!alive) return;
+        draft.load(list);
+        bump();
+      })
+      .catch(() => {
+        // liste okunamadı: taslak son hâlinde kalır
+      });
+    return () => {
+      alive = false;
+    };
+  }, [monitor.zonesChanged, monitor.mapGen, draft, session, bump]);
 
   useEffect(() => {
     let alive = true;
@@ -345,6 +442,49 @@ export function Console() {
       ? cardView(focusTrack, current?.fps ?? 0, snap.frame)
       : null;
 
+  // Bölge listesi ve harita aynı taslaktan okunur; askıdaki bölge listede gri görünür.
+  const zones = draft
+    .defs()
+    .map((z) => (draft.isSuspended(z.id) ? { ...z, status: "suspended" as const } : z));
+  const alarmZones = new Set(monitor.zoneAlarms.map((a) => a.zone_id));
+
+  // Harita tıklaması: araç yoksa seçim yapılır; araç varsa nokta eklenir, çift tıklama bitirir.
+  const onMapClick = (p: [number, number], ev: { double: boolean }): boolean => {
+    if (tool === null || monitor.mapGen === null) return false;
+    if (draft.drawing().tool === null) draft.start(tool, monitor.mapGen);
+    const z = ev.double && tool !== "line" ? draft.finish() : draft.addPoint(p);
+    if (z !== null) {
+      sync.edit(() => {});
+      setTool(null);
+      setSelectedZone(z.id);
+    }
+    bump();
+    return true;
+  };
+
+  // Liste düzenlemeleri taslağa uygulanır ve eşitleyiciye (PUT) devredilir.
+  const onRename = (id: string, name: string) => sync.edit((d) => d.rename(id, name));
+  const onDwellSeconds = (id: string, s: number) =>
+    sync.edit((d) => d.setDwellSeconds(id, s, fps));
+  const onCount = (id: string, c: LineCount) => sync.edit((d) => d.setCount(id, c));
+  const onFlip = (id: string) => sync.edit((d) => d.flipLine(id));
+  const onRemove = (id: string) => sync.edit((d) => d.remove(id));
+
+  // Alarm onayı (Faz 4 §5.8): istek sürerken düğme kilitli; hata satırı panelin üstünde görünür.
+  const onAck = (id: string) => {
+    setPending((p) => new Set(p).add(id));
+    setAckError(null);
+    postAck(session(), id)
+      .catch((e: Error) => setAckError(e.message))
+      .finally(() =>
+        setPending((p) => {
+          const next = new Set(p);
+          next.delete(id);
+          return next;
+        }),
+      );
+  };
+
   return (
     <div className="flex min-h-screen flex-col">
       <TopBar
@@ -361,6 +501,8 @@ export function Console() {
         onTiles={setTiles}
         gate={gate}
         onGate={setGate}
+        unacked={monitor.unacked}
+        onAlarms={() => setTab("alarms")}
         onReset={() => player.requestReset("all")}
       />
       <main className="flex flex-1 flex-col gap-3 p-4">
@@ -419,6 +561,19 @@ export function Console() {
                     selected={selected}
                     onSelect={setSelected}
                     follow={follow}
+                    zones={zones}
+                    alarmZones={alarmZones}
+                    counts={monitor.zoneCounts}
+                    onMapClick={onMapClick}
+                    overlay={(api) => (
+                      <ZoneEditorLayer
+                        draft={draft}
+                        version={zoneVersion}
+                        selectedZone={selectedZone}
+                        api={api}
+                        onChange={() => sync.edit(() => {})}
+                      />
+                    )}
                   />
                 </div>
               )}
@@ -435,19 +590,80 @@ export function Console() {
             </div>
           )}
           <aside className="flex flex-col gap-4" aria-label="Durum">
-            <AlarmList active={monitor.active} history={monitor.history} />
-            <HealthPanel
-              health={health}
-              strip={monitor.strip}
-              ego={snap.result?.response.ego ?? null}
-              lastReloc={monitor.lastReloc}
-            />
-            <DetectionList
-              detections={snap.result?.response.detections ?? null}
-              onlyMoving={onlyMoving}
-            />
-            <LatencyChart view={monitor.latency} />
-            <FaultPanel faults={faults} onChange={setFaults} />
+            <div role="tablist" aria-label="Durum sekmeleri" className="flex flex-wrap gap-1">
+              {TABS.map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === t.value}
+                  className={`rounded border px-2 py-1 text-sm ${
+                    tab === t.value ? "border-rgb text-rgb" : "border-line text-muted"
+                  }`}
+                  onClick={() => setTab(t.value)}
+                >
+                  {t.label}
+                  {t.value === "alarms" && monitor.unacked > 0 ? ` (${monitor.unacked})` : ""}
+                </button>
+              ))}
+            </div>
+            <div role="tabpanel" className="flex flex-col gap-4">
+              {tab === "detections" && (
+                <DetectionList
+                  detections={snap.result?.response.detections ?? null}
+                  onlyMoving={onlyMoving}
+                />
+              )}
+              {tab === "zones" && (
+                <ZoneList
+                  zones={zones}
+                  counts={monitor.zoneCounts}
+                  fps={fps}
+                  error={draft.error()}
+                  selected={selectedZone}
+                  onSelect={setSelectedZone}
+                  onRename={onRename}
+                  onDwellSeconds={onDwellSeconds}
+                  onCount={onCount}
+                  onFlip={onFlip}
+                  onRemove={onRemove}
+                  toolbar={
+                    <ZoneToolbar tool={tool} onTool={setTool} disabled={monitor.mapGen === null} />
+                  }
+                />
+              )}
+              {tab === "alarms" && (
+                <>
+                  <AlarmList active={monitor.active} history={monitor.history} />
+                  {ackError !== null && (
+                    <p role="alert" className="text-sm">
+                      Alarm onaylanamadı: {ackError}
+                    </p>
+                  )}
+                  <AlarmPanel
+                    open={monitor.zoneAlarms}
+                    history={monitor.zoneHistory}
+                    zones={zones}
+                    frame={snap.frame ?? 0}
+                    fps={fps}
+                    pending={pending}
+                    onAck={onAck}
+                  />
+                </>
+              )}
+              {tab === "health" && (
+                <>
+                  <HealthPanel
+                    health={health}
+                    strip={monitor.strip}
+                    ego={snap.result?.response.ego ?? null}
+                    lastReloc={monitor.lastReloc}
+                  />
+                  <FaultPanel faults={faults} onChange={setFaults} />
+                </>
+              )}
+              {tab === "latency" && <LatencyChart view={monitor.latency} />}
+            </div>
           </aside>
         </div>
       </main>

@@ -8,10 +8,12 @@ import {
   useEffect,
   useRef,
   useState,
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
+  type ReactNode,
 } from "react";
 
-import type { Affine, Motion, Track } from "@/lib/client";
+import type { Affine, Motion, Track, ZoneCount, ZoneCounts, ZoneDef } from "@/lib/client";
 import { MAP_CAPTION, apply, compose, hitTest, type Mosaic } from "@/lib/mosaic";
 import { Viewport } from "@/lib/viewport";
 
@@ -24,6 +26,21 @@ const ZOOM_STEP = 1.1;
 const HIT_PX = 12;
 const FIT_PAD = 24;
 const DRAG_SLOP = 2;
+
+// Bölgeler (§5.8): renk tek başına anlam taşımaz — dolgu + çizgi deseni birlikte kullanılır.
+const ZONE_AREA_COLOR = "#ffffff";
+const ZONE_AREA_FILL = "rgba(255,255,255,0.08)";
+const ZONE_RESTRICTED_COLOR = "#ef4444";
+const ZONE_RESTRICTED_FILL = "rgba(239,68,68,0.15)";
+const ZONE_RESTRICTED_HATCH = "rgba(239,68,68,0.5)";
+const ZONE_DWELL_COLOR = "#f59e0b";
+const ZONE_DWELL_FILL = "rgba(245,158,11,0.12)";
+const ZONE_ALARM_WIDTH = 4;
+const HATCH_STEP = 8;
+const LINE_LABEL_OFFSET = 14;
+const LINE_COUNT_OFFSET = 28;
+const ZONE_FONT = "11px sans-serif";
+const ZONE_SHADOW = "rgba(0,0,0,0.9)";
 
 function trailColor(motion: Motion): string {
   if (motion === "moving") return MOVING_COLOR;
@@ -61,6 +78,215 @@ function strokeTrail(
   ctx.stroke();
 }
 
+// Bölge köşelerini ekran uzayına çevirir (geçersiz noktalar atlanır).
+function screenPolygon(view: Affine, pts: [number, number][]): [number, number][] {
+  const out: [number, number][] = [];
+  for (const p of pts) {
+    const [x, y] = apply(view, p);
+    if (Number.isFinite(x) && Number.isFinite(y)) out.push([x, y]);
+  }
+  return out;
+}
+
+function tracePolygon(ctx: CanvasRenderingContext2D, pts: [number, number][]): void {
+  ctx.beginPath();
+  pts.forEach(([x, y], i) => {
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.closePath();
+}
+
+// Çapraz tarama: poligona kırpılır, 8 px aralıkla 45° çizgiler (renk körlüğü için desen).
+function hatchPolygon(ctx: CanvasRenderingContext2D, pts: [number, number][]): void {
+  if (pts.length < 3) return;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const [x, y] of pts) {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+  }
+  ctx.save();
+  tracePolygon(ctx, pts);
+  ctx.clip();
+  ctx.beginPath();
+  for (let c = minX + minY; c <= maxX + maxY; c += HATCH_STEP) {
+    ctx.moveTo(c - minY, minY);
+    ctx.lineTo(c - maxY, maxY);
+  }
+  ctx.strokeStyle = ZONE_RESTRICTED_HATCH;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([]);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// Bölge adı (ve varsa içerideki sayı): koyu gölge ile okunur.
+function drawZoneLabel(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+): void {
+  ctx.font = ZONE_FONT;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = ZONE_SHADOW;
+  ctx.setLineDash([]);
+  ctx.strokeText(text, x, y);
+  ctx.fillStyle = TEXT;
+  ctx.fillText(text, x, y);
+}
+
+function drawPolygonZone(
+  ctx: CanvasRenderingContext2D,
+  pts: [number, number][],
+  zone: ZoneDef,
+  count: ZoneCount | undefined,
+  alarm: boolean,
+): void {
+  if (pts.length < 3) return;
+  if (zone.kind === "restricted") {
+    tracePolygon(ctx, pts);
+    ctx.fillStyle = ZONE_RESTRICTED_FILL;
+    ctx.fill();
+    hatchPolygon(ctx, pts);
+    tracePolygon(ctx, pts);
+    ctx.strokeStyle = ZONE_RESTRICTED_COLOR;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+  } else if (zone.kind === "dwell") {
+    tracePolygon(ctx, pts);
+    ctx.fillStyle = ZONE_DWELL_FILL;
+    ctx.fill();
+    ctx.strokeStyle = ZONE_DWELL_COLOR;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 3]);
+  } else {
+    tracePolygon(ctx, pts);
+    ctx.fillStyle = ZONE_AREA_FILL;
+    ctx.fill();
+    ctx.strokeStyle = ZONE_AREA_COLOR;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([]);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+  if (alarm) {
+    tracePolygon(ctx, pts);
+    ctx.strokeStyle = ZONE_RESTRICTED_COLOR;
+    ctx.lineWidth = ZONE_ALARM_WIDTH;
+    ctx.setLineDash([]);
+    ctx.stroke();
+  }
+  const inside = count?.inside;
+  const label = typeof inside === "number" ? `${zone.name} (${inside})` : zone.name;
+  drawZoneLabel(ctx, label, pts[0][0], pts[0][1]);
+}
+
+// Çizgi bölgesi: A/B tarafları, yön oku ve sayaç metni.
+function drawLineZone(
+  ctx: CanvasRenderingContext2D,
+  pts: [number, number][],
+  zone: ZoneDef,
+  count: ZoneCount | undefined,
+  alarm: boolean,
+): void {
+  if (pts.length < 2) return;
+  const [p0, p1] = pts;
+  const dx = p1[0] - p0[0];
+  const dy = p1[1] - p0[1];
+  const len = Math.hypot(dx, dy);
+  if (!(len > 0)) return;
+  // n = (-dy, dx)/len → cross(P1-P0, n) > 0, yani A tarafı.
+  const nx = -dy / len;
+  const ny = dx / len;
+  const mx = (p0[0] + p1[0]) / 2;
+  const my = (p0[1] + p1[1]) / 2;
+
+  ctx.beginPath();
+  ctx.moveTo(p0[0], p0[1]);
+  ctx.lineTo(p1[0], p1[1]);
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([]);
+  ctx.stroke();
+  if (alarm) {
+    ctx.strokeStyle = ZONE_RESTRICTED_COLOR;
+    ctx.lineWidth = ZONE_ALARM_WIDTH;
+    ctx.stroke();
+  }
+
+  for (const [x, y] of [p0, p1]) {
+    ctx.beginPath();
+    ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.fillStyle = "#ffffff";
+    ctx.fill();
+  }
+
+  const ax = mx + nx * LINE_LABEL_OFFSET;
+  const ay = my + ny * LINE_LABEL_OFFSET;
+  const bx = mx - nx * LINE_LABEL_OFFSET;
+  const by = my - ny * LINE_LABEL_OFFSET;
+  drawZoneLabel(ctx, "A", ax, ay);
+  drawZoneLabel(ctx, "B", bx, by);
+
+  // A etiketinden B etiketine yön oku.
+  const ux = bx - ax;
+  const uy = by - ay;
+  const ulen = Math.hypot(ux, uy);
+  if (ulen > 0) {
+    const ex = ax + (ux / ulen) * (ulen - 6);
+    const ey = ay + (uy / ulen) * (ulen - 6);
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(ex, ey);
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([]);
+    ctx.stroke();
+    const hx = ux / ulen;
+    const hy = uy / ulen;
+    ctx.beginPath();
+    ctx.moveTo(ex, ey);
+    ctx.lineTo(ex - hx * 6 - hy * 3, ey - hy * 6 + hx * 3);
+    ctx.lineTo(ex - hx * 6 + hy * 3, ey - hy * 6 - hx * 3);
+    ctx.closePath();
+    ctx.fillStyle = "#ffffff";
+    ctx.fill();
+  }
+
+  if (count !== undefined && (count.a_to_b !== null || count.b_to_a !== null)) {
+    const text = `A→B ${count.a_to_b ?? "–"} · B→A ${count.b_to_a ?? "–"}`;
+    drawZoneLabel(ctx, text, mx + nx * LINE_COUNT_OFFSET, my + ny * LINE_COUNT_OFFSET);
+  }
+}
+
+// Bölgeler: yalnız çizilen nesille aynı nesildekiler, karo katmanının üstünde, izlerin altında.
+function drawZones(
+  ctx: CanvasRenderingContext2D,
+  view: Affine,
+  gen: number,
+  zones: ZoneDef[],
+  alarmZones: Set<string> | undefined,
+  counts: ZoneCounts | undefined,
+): void {
+  for (const zone of zones) {
+    if (zone.gen !== gen) continue;
+    const pts = screenPolygon(view, zone.points);
+    const count = counts === undefined ? undefined : counts[zone.id];
+    const alarm = alarmZones !== undefined && alarmZones.has(zone.id);
+    if (zone.kind === "line") drawLineZone(ctx, pts, zone, count, alarm);
+    else drawPolygonZone(ctx, pts, zone, count, alarm);
+  }
+  ctx.setLineDash([]);
+}
+
 // Saf çizim: karo katmanı + görüş alanı + iz kuyrukları + işaretçiler. `view` harita → ekran (CSS px)
 // dönüşümüdür; çağıranın o anki dönüşümü (ör. devicePixelRatio) taban olarak korunur. Task 21 tam kapsamı
 // çevrimdışı tuvale aynı fonksiyonla çizer.
@@ -69,7 +295,14 @@ export function drawMap(
   mosaic: Mosaic,
   gen: number,
   view: Affine,
-  opts: { tracks: Track[]; selected: number | null; motionOf: (id: number) => Motion },
+  opts: {
+    tracks: Track[];
+    selected: number | null;
+    motionOf: (id: number) => Motion;
+    zones?: ZoneDef[];
+    alarmZones?: Set<string>;
+    counts?: ZoneCounts;
+  },
 ): void {
   const base = ctx.getTransform();
   const baseAffine: Affine = [base.a, base.b, base.c, base.d, base.e, base.f];
@@ -95,6 +328,11 @@ export function drawMap(
     ctx.lineWidth = 1.5;
     ctx.setLineDash([]);
     ctx.stroke();
+  }
+
+  // Bölgeler: karo ve görüş alanının üstünde, izlerin altında (ekran uzayında).
+  if (opts.zones !== undefined && opts.zones.length > 0) {
+    drawZones(ctx, view, gen, opts.zones, opts.alarmZones, opts.counts);
   }
 
   // İz kuyrukları: hareketli düz kalın, duran kesikli ince, bilinmeyen düz ince gri.
@@ -153,6 +391,11 @@ export function MapPanel({
   selected,
   onSelect,
   follow,
+  zones,
+  alarmZones,
+  counts,
+  onMapClick,
+  overlay,
 }: {
   mosaic: Mosaic;
   version: number;
@@ -160,6 +403,15 @@ export function MapPanel({
   selected: number | null;
   onSelect(id: number | null): void;
   follow?: number;
+  zones?: ZoneDef[];
+  alarmZones?: Set<string>;
+  counts?: ZoneCounts;
+  onMapClick?(p: [number, number], ev: { double: boolean }): boolean;
+  overlay?(api: {
+    toScreen(p: [number, number]): [number, number];
+    toMap(p: [number, number]): [number, number];
+    scale: number;
+  }): ReactNode;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -170,6 +422,11 @@ export function MapPanel({
   const [percent, setPercent] = useState(100);
   const [following, setFollowing] = useState(true);
   const [hover, setHover] = useState<{ id: number; x: number; y: number } | null>(null);
+  // Görünüm her değiştiğinde artar; kaplama katmanı güncel dönüşümle yeniden çizilir.
+  // Dönüşüm ref'te tutulduğu için render sırasında okunamaz; kopyası burada saklanır.
+  const [viewState, setViewState] = useState<{ m: Affine; scale: number; tick: number } | null>(
+    null,
+  );
 
   const gen = mosaic.currentGen();
   const layer = gen === null ? null : mosaic.layer(gen);
@@ -205,10 +462,18 @@ export function MapPanel({
     if (g === null) {
       fillBackground(ctx);
     } else {
-      drawMap(ctx, mosaic, g, vp.matrix(), { tracks, selected, motionOf });
+      drawMap(ctx, mosaic, g, vp.matrix(), {
+        tracks,
+        selected,
+        motionOf,
+        zones,
+        alarmZones,
+        counts,
+      });
     }
     setPercent(vp.percent());
-  }, [ensureViewport, mosaic, tracks, selected, motionOf]);
+    setViewState((prev) => ({ m: vp.matrix(), scale: vp.scale, tick: (prev?.tick ?? 0) + 1 }));
+  }, [ensureViewport, mosaic, tracks, selected, motionOf, zones, alarmZones, counts]);
 
   // Tuval boyutu: kapsayıcıya göre, devicePixelRatio ile.
   useEffect(() => {
@@ -338,13 +603,44 @@ export function MapPanel({
     }
     if (drag === null || drag.moved) return;
     const r = e.currentTarget.getBoundingClientRect();
-    onSelect(pick(e.clientX - r.left, e.clientY - r.top));
+    const x = e.clientX - r.left;
+    const y = e.clientY - r.top;
+    // Önce kaplama (bölge editörü) söz sahibi: tüketirse seçim yapılmaz.
+    const vp = ensureViewport();
+    if (onMapClick !== undefined && vp !== null) {
+      const p = vp.toMap({ x, y });
+      if (onMapClick([p.x, p.y], { double: false })) return;
+    }
+    onSelect(pick(x, y));
+  };
+
+  const onDoubleClick = (e: ReactMouseEvent<HTMLCanvasElement>): void => {
+    if (onMapClick === undefined) return;
+    const vp = ensureViewport();
+    if (vp === null) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const p = vp.toMap({ x: e.clientX - r.left, y: e.clientY - r.top });
+    if (onMapClick([p.x, p.y], { double: true })) e.preventDefault();
   };
 
   const onPointerLeave = (): void => {
     dragRef.current = null;
     setHover(null);
   };
+
+  // Kaplama katmanı: güncel dönüşümü veren api. viewState her görünüm değişiminde (kaydır, yakınlaştır,
+  // sığdır, izle, boyut, version) tazelenir; kaplama böylece güncel dönüşümle yeniden çizilir.
+  const overlayApi =
+    viewState === null
+      ? null
+      : {
+          toScreen: (p: [number, number]): [number, number] => apply(viewState.m, p),
+          toMap: (p: [number, number]): [number, number] => {
+            const s = viewState.scale;
+            return [(p[0] - viewState.m[2]) / s, (p[1] - viewState.m[5]) / s];
+          },
+          scale: viewState.scale,
+        };
 
   return (
     <section className="flex flex-col gap-2 rounded border border-line bg-panel p-3">
@@ -415,7 +711,16 @@ export function MapPanel({
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerLeave={onPointerLeave}
+          onDoubleClick={onDoubleClick}
         />
+        {overlay !== undefined && overlayApi !== null && (
+          <svg
+            className="pointer-events-none absolute inset-0 h-full w-full"
+            data-view-tick={viewState?.tick ?? 0}
+          >
+            {overlay(overlayApi)}
+          </svg>
+        )}
         {gen === null && (
           <p className="pointer-events-none absolute inset-0 flex items-center justify-center p-4 text-center text-sm text-muted">
             Harita, ego izlenen ilk karelerle oluşur.
