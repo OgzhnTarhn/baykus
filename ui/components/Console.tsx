@@ -4,18 +4,21 @@
 // Ayarlar (conf, takip, kapı, küçük hedef modu, seçili iz) bir sonraki kareden geçerli olur; oturum
 // sayfa açılışında UUID. Faz 4 (§5.6, §5.8): kareyi dondurma, kapsamlı sıfırlama, ego son yeniden
 // konumlama, yalnız hareketliler süzgeci, göreli harita ve araç kartı burada bağlanır.
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AlarmList } from "@/components/AlarmList";
 import { AlarmPanel } from "@/components/AlarmPanel";
 import { DetectionList } from "@/components/DetectionList";
+import { EventDetail, EventList } from "@/components/EventList";
+import { ExportMenu } from "@/components/ExportMenu";
 import { FaultPanel } from "@/components/FaultPanel";
 import { Footer } from "@/components/Footer";
 import { LatencyChart, type LatencyView } from "@/components/LatencyChart";
 import { GateBadge } from "@/components/GateBadge";
 import { HealthPanel, STRIP_LEN, type StripEntry } from "@/components/HealthPanel";
-import { MapPanel } from "@/components/MapPanel";
+import { MapPanel, renderMapCanvas, type MapDrawOpts } from "@/components/MapPanel";
 import { Player, type FrameView, type View } from "@/components/Player";
+import { TimelineFilters, TimelineView } from "@/components/Timeline";
 import { TopBar } from "@/components/TopBar";
 import { TrackCard } from "@/components/TrackCard";
 import { ZoneEditorLayer, ZoneToolbar } from "@/components/ZoneEditor";
@@ -40,6 +43,9 @@ import {
   type Pixels,
 } from "@/lib/faults";
 import {
+  fetchEvents,
+  fetchEventsCsv,
+  fetchModel,
   fetchSequences,
   fetchZones,
   frameUrl,
@@ -48,6 +54,7 @@ import {
   postDetectForm,
   postReset,
   putZones,
+  type Affine,
   type Alarm,
   type DetectSettings,
   type Freeze,
@@ -56,14 +63,19 @@ import {
   type SequenceIndex,
   type Tiles,
   type ZoneCounts,
+  type ZoneEvent,
 } from "@/lib/client";
 import { cardView } from "@/lib/card";
 import { ZoneDraft, type Tool } from "@/lib/editor";
+import { csvBlob, download, eventsJson, fileName, mapPng } from "@/lib/exporting";
 import { LatencyWindow } from "@/lib/latency";
 import { Mosaic } from "@/lib/mosaic";
 import { createPlayer, type PlayerSnapshot } from "@/lib/player";
 import { isCurrent, newSessionId, nextEpoch, trackResumed, type Stamp } from "@/lib/session";
 import { DEFAULT_SETTINGS } from "@/lib/settings";
+import { Snapshots, SNAPSHOT_SIZE } from "@/lib/snapshots";
+import { EVENT_TEXT } from "@/lib/texts";
+import { Timeline, type TimelineFilter } from "@/lib/timeline";
 import { ZoneSync } from "@/lib/zone-sync";
 
 
@@ -72,6 +84,9 @@ const THUMB_SCALE = 4;
 
 // Bölge listesini değiştiren olay türleri: ekran bu olaylarda listeyi yeniden yükler.
 const ZONE_EVENT_KINDS = new Set(["zones_updated", "map_new_generation", "map_merged"]);
+
+// Anlık görüntü üreten olay türleri (Faz 4 §5.13): iz kutusu çevresindeki kırpma saklanır.
+const SNAPSHOT_EVENT_KINDS = new Set(["enter", "exit", "stopped", "line_cross", "alarm_start"]);
 
 async function preload(src: string): Promise<HTMLImageElement> {
   const img = new Image();
@@ -138,6 +153,7 @@ export type Monitor = {
   zoneCounts: ZoneCounts; // bölge sayaçları (motorun son yanıtı)
   mapGen: number | null; // ego'nun son harita nesli; ego yoksa korunur
   zonesChanged: number; // bölge listesi değişim sayacı (ekran listeyi yeniler)
+  timelineVersion: number; // zaman çizelgesine yeni olay yazıldığında artar (Faz 4 §5.8)
 };
 const EMPTY_MONITOR: Monitor = {
   active: [],
@@ -152,6 +168,7 @@ const EMPTY_MONITOR: Monitor = {
   zoneCounts: {},
   mapGen: null,
   zonesChanged: 0,
+  timelineVersion: 0,
 };
 
 // Alarmlar ve durum şeridi motor oturumunu izler: oturum sıfırlanınca (ya da motor oturumu
@@ -175,6 +192,28 @@ function makeConsole(
   const alarms = new Alarms();
   const zoneBook = new ZoneAlarmBook();
   const latency = new LatencyWindow();
+  // Zaman çizelgesi ve olay anı kırpmaları (Faz 4 §5.8, §5.13): damga oturum + dönemdir.
+  const timeline = new Timeline();
+  let timelineStamp: Stamp | null = null; // çizelgenin son damgası; tutmazsa add öncesi kurulur
+  let timelineVersion = 0; // add() boş olmayan liste aldığında artar
+  let snapCanvas: HTMLCanvasElement | null = null; // kırpma kodlayıcısının yeniden kullanılan tuvali
+  const encodeSnap = (p: Pixels): string => {
+    const c = (snapCanvas ??= document.createElement("canvas"));
+    c.width = SNAPSHOT_SIZE;
+    c.height = SNAPSHOT_SIZE;
+    const ctx = c.getContext("2d");
+    if (!ctx) throw new Error("canvas açılamadı");
+    ctx.putImageData(new ImageData(new Uint8ClampedArray(p.data), p.width, p.height), 0, 0);
+    return c.toDataURL("image/jpeg", 0.8);
+  };
+  const snaps = new Snapshots(encodeSnap);
+  // Çizelge damgası dizi/sıfırlama sonrası tazelenir; anlık görüntüler de o an bırakılır.
+  const resetTimeline = () => {
+    const s = stamp();
+    timeline.reset(s.session, s.epoch);
+    timelineStamp = s;
+    snaps.clear();
+  };
   let strip: StripEntry[] = [];
   let held: Freeze = {}; // dondurulan kanalların tuttuğu kare (Faz 4 §5.6)
   let lastReloc: number | null = null; // ego'nun son yeniden konumlandığı kare
@@ -198,14 +237,19 @@ function makeConsole(
       zoneCounts,
       mapGen,
       zonesChanged,
+      timelineVersion,
     });
   const clearMonitor = () => {
     epoch = nextEpoch(epoch);
     alarms.reset();
-    zoneBook.reset();
-    zoneCounts = {};
     strip = [];
     emit();
+  };
+  // Bölge alarm kitabı ve sayaçlar motor oturumuna bağlı: yalnız kapsamlı sıfırlamada ve motor
+  // oturumu yeniden açılınca boşalır (aynı dizide atlama, scope=tracks, korur).
+  const clearZones = () => {
+    zoneBook.reset();
+    zoneCounts = {};
   };
   const player = createPlayer<FrameView>({
     detect: async (seq, frame) => {
@@ -249,7 +293,38 @@ function makeConsole(
       if (!isCurrent(sent, stamp())) return { seq, frame, rgbSrc, irSrc, response };
       if (response.session_new) {
         clearMonitor();
+        clearZones();
         mosaic.reset(epoch); // motor oturumu yeniden açıldı: nesiller 1'den başlar, eski harita atılır
+        resetTimeline(); // motor günlüğü de yeni: çizelge ve anlık görüntüler bırakılır
+      }
+      // Zaman çizelgesi: hiç kurulmadıysa kurulur; dönem yalnız scope=tracks ile değiştiyse (silme
+      // yolları resetTimeline çağırır) olaylar korunarak damga ilerletilir.
+      const events = response.events ?? [];
+      const now = stamp();
+      if (timelineStamp === null || timelineStamp.session !== now.session) {
+        timeline.reset(now.session, now.epoch);
+        timelineStamp = now;
+      } else if (timelineStamp.epoch !== now.epoch) {
+        timeline.restamp(now.session, now.epoch);
+        timelineStamp = now;
+      }
+      timeline.add(events, now.session, now.epoch);
+      if (events.length > 0) timelineVersion += 1;
+      // Anlık görüntüler (Faz 4 §5.13): iz kutusu çevresi; kanal pikselleri kare başına bir kez.
+      const trackById = new Map((response.tracks ?? []).map((t) => [t.track_id, t]));
+      let rgbPx: Pixels | null = null;
+      let irPx: Pixels | null = null;
+      for (const e of events) {
+        if (!SNAPSHOT_EVENT_KINDS.has(e.kind) || e.track_id === null) continue;
+        const track = trackById.get(e.track_id);
+        if (track === undefined) continue;
+        try {
+          rgbPx ??= toPixels(rgbImg);
+          irPx ??= toPixels(irImg);
+          snaps.capture(e.seq, rgbPx, irPx, track.box);
+        } catch {
+          // kırpma üretilemedi: bu olayın anlık görüntüsü atlanır
+        }
       }
       // Bölge alarmları ve sayaçları motorun son yanıtından; liste değişimi ekranı yeniler.
       zoneBook.update(response.alarms ?? [], response.events ?? []);
@@ -284,7 +359,11 @@ function makeConsole(
       }
       clearMonitor();
       // "tracks" sıfırlaması haritayı korur; yalnız kapsamlı sıfırlama haritayı boşaltır.
-      if (scope === "all") mosaic.reset(epoch);
+      if (scope === "all") {
+        clearZones();
+        mosaic.reset(epoch);
+        resetTimeline(); // dönem değişti: çizelge ve anlık görüntüler bırakılır
+      }
     },
     sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
     now: () => performance.now(),
@@ -306,9 +385,18 @@ function makeConsole(
     size = frameSize;
     mosaic = new Mosaic(size, THUMB_SCALE); // yeni dizi yeni harita
     mosaic.reset(epoch);
+    resetTimeline(); // yeni dönem: çizelge ve anlık görüntüler bırakılır
     player.load(name, frames);
   };
-  return { player, settings, load, getMosaic: () => mosaic, session: () => sid() };
+  return {
+    player,
+    settings,
+    load,
+    getMosaic: () => mosaic,
+    session: () => sid(),
+    timeline,
+    snaps,
+  };
 }
 
 // Ana alan düzeni (Faz 4 §5.8): "İkisi" oynatıcı ve haritayı yan yana (xl altı alt alta) gösterir.
@@ -320,11 +408,12 @@ const LAYOUTS: { value: Layout; label: string }[] = [
 ];
 
 // Sağ sütun sekmeleri (Faz 4 §5.8): her sekme tek bir durum paneli gösterir.
-type Tab = "detections" | "zones" | "alarms" | "health" | "latency";
+type Tab = "detections" | "zones" | "alarms" | "events" | "health" | "latency";
 const TABS: { value: Tab; label: string }[] = [
   { value: "detections", label: "Tespitler" },
   { value: "zones", label: "Bölgeler" },
   { value: "alarms", label: "Alarmlar" },
+  { value: "events", label: "Olaylar" },
   { value: "health", label: "Sağlık" },
   { value: "latency", label: "Gecikme" },
 ];
@@ -345,13 +434,24 @@ export function Console() {
   const [faults, setFaults] = useState<FaultConfig>(NO_FAULTS);
   const [snapState, setSnap] = useState<PlayerSnapshot<FrameView> | null>(null);
   const [monitor, setMonitor] = useState<Monitor>(EMPTY_MONITOR);
-  const [{ player, settings, load, getMosaic, session }] = useState(() =>
+  const [{ player, settings, load, getMosaic, session, timeline, snaps }] = useState(() =>
     makeConsole(setSnap, setMonitor),
   );
   const snap = snapState ?? player.snapshot();
   const [tab, setTab] = useState<Tab>("detections");
   const [pending, setPending] = useState<Set<string>>(new Set());
   const [ackError, setAckError] = useState<string | null>(null);
+  // Zaman çizelgesi (Faz 4 §5.8): süzgeç, seçili olay ve çizelgenin ölçülen genişliği.
+  const [filter, setFilter] = useState<TimelineFilter>({});
+  const [selectedSeq, setSelectedSeq] = useState<number | null>(null);
+  const [tlWidth, setTlWidth] = useState(800);
+  const [tlEl, setTlEl] = useState<HTMLDivElement | null>(null);
+  // Dışa aktarma (Faz 4 §5.13): iş sürerken menü kilitlenir, hata menünün altında görünür.
+  const [exportBusy, setExportBusy] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const mapExport = useRef<{
+    view(): { view: Affine; width: number; height: number } | null;
+  } | null>(null);
 
   // Bölge editörü (Faz 4 §5.8): taslak ve eşitleyici bileşen ömrü boyunca tek; fps dizinin
   // index.json değerinden gelir (dizi yüklenmeden önce 30).
@@ -366,6 +466,17 @@ export function Console() {
   useEffect(() => {
     settings.set({ conf, track, gate, faults, tiles, focus: selected });
   }, [settings, conf, track, gate, faults, tiles, selected]);
+
+  // Çizelge genişliği sarmalayıcı div'den ölçülür; işaretler bu piksel uzayında ölçeklenir.
+  useEffect(() => {
+    if (tlEl === null) return;
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width ?? 0;
+      if (w > 0) setTlWidth(Math.round(w));
+    });
+    ro.observe(tlEl);
+    return () => ro.disconnect();
+  }, [tlEl]);
 
   // Bölge listesi değişti (ya da harita nesli sıfırlandı): taslak motordan tazelenir. Harita yoksa
   // bölge de yoktur; okunamayan liste taslağı olduğu gibi bırakır.
@@ -442,6 +553,16 @@ export function Console() {
       ? cardView(focusTrack, current?.fps ?? 0, snap.frame)
       : null;
 
+  // Zaman çizelgesi (Faz 4 §5.8): kare ekseni dizinin kare listesinden; olaylar süzgeçten geçer.
+  // Çizelge bileşen dışında biriktirilir; monitor.timelineVersion her yeni olayda artar ve
+  // monitor durumu değiştiği için ekran (dolayısıyla çizelge) yeniden çizilir.
+  const frames = current?.frames ?? [];
+  const frameCount = frames.length > 0 ? frames.length : 1;
+  const firstFrame = frames.length > 0 ? frames[0] : 1;
+  const tlEvents = timeline.filtered(filter);
+  const selectedEvent =
+    selectedSeq === null ? null : (timeline.all().find((e) => e.seq === selectedSeq) ?? null);
+
   // Bölge listesi ve harita aynı taslaktan okunur; askıdaki bölge listede gri görünür.
   const zones = draft
     .defs()
@@ -485,6 +606,106 @@ export function Console() {
       );
   };
 
+  // Dışa aktarma (Faz 4 §5.13): her iş önce hatayı siler, sürerken menüyü kilitler; hata metni
+  // menünün altında kalır. Dosyalar tarayıcıda üretilir, sunucuya yazılmaz.
+  const runExport = async (fn: () => Promise<void>): Promise<void> => {
+    setExportBusy(true);
+    setExportError(null);
+    try {
+      await fn();
+    } catch (e) {
+      setExportError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setExportBusy(false);
+    }
+  };
+
+  // Olay günlüğü: tüm sayfalar `last_seq` ile ilerlenir; boş sayfa ya da ilerlemeyen imleç durdurur.
+  const onEventsJson = () =>
+    runExport(async () => {
+      const events: ZoneEvent[] = [];
+      let since = 0;
+      for (;;) {
+        const page = await fetchEvents(session(), since);
+        events.push(...page.events);
+        if (page.events.length === 0 || page.last_seq <= since) break;
+        since = page.last_seq;
+      }
+      const model = await fetchModel();
+      const sha = model.sha256 as { model?: string } | undefined;
+      const meta = {
+        sequence: seq,
+        session: session(),
+        created_at: new Date().toISOString(),
+        model_sha256: sha?.model ?? null,
+        motion_sha256: typeof model.motion_sha256 === "string" ? model.motion_sha256 : null,
+        fps_assumed: fps,
+        zones: draft.defs(),
+      };
+      download(eventsJson(meta, events), fileName("olaylar", seq, new Date(), "json"));
+    });
+
+  const onEventsCsv = () =>
+    runExport(async () => {
+      download(csvBlob(await fetchEventsCsv(session())), fileName("olaylar", seq, new Date(), "csv"));
+    });
+
+  // Harita PNG: panelin çizim seçenekleriyle aynı nesne; "görünen" kip panelin o anki dönüşümü.
+  const mapOpts: MapDrawOpts = {
+    tracks,
+    selected,
+    motionOf: (id: number) => tracks.find((t) => t.track_id === id)?.motion ?? "unknown",
+    zones,
+    alarmZones,
+    counts: monitor.zoneCounts,
+  };
+  const exportMap = (mode: "full" | "view") =>
+    runExport(async () => {
+      // "Görünen" kip harita paneli ekranda değilken (düzen "video") kullanılamaz.
+      if (mode === "view" && layout === "video") throw new Error("Harita görünmüyor.");
+      const mosaic = getMosaic();
+      const gen = mosaic.currentGen();
+      if (gen === null) throw new Error("Harita henüz yok.");
+      const target = mode === "full" ? "full" : (mapExport.current?.view() ?? null);
+      if (target === null) throw new Error("Harita henüz yok.");
+      const canvas = renderMapCanvas(mosaic, gen, mapOpts, target);
+      if (canvas === null) throw new Error("Harita henüz yok.");
+      download(await mapPng(canvas), fileName("harita", seq, new Date(), "png"));
+    });
+
+  // Zaman çizelgesi ve olay ayrıntısı (Faz 4 §5.8): oynatıcının (ya da haritanın) altında.
+  const timelineBlock = (
+    <div ref={setTlEl} className="flex flex-col gap-2">
+      <TimelineFilters
+        kinds={Object.keys(EVENT_TEXT)}
+        zones={zones}
+        value={filter}
+        onChange={setFilter}
+      />
+      <TimelineView
+        markers={timeline.markers(frameCount, tlWidth, firstFrame, tlEvents)}
+        bands={timeline.alarmBands()}
+        frame={snap.frame ?? firstFrame}
+        frameCount={frameCount}
+        firstFrame={firstFrame}
+        selectedSeq={selectedSeq}
+        onPick={setSelectedSeq}
+        width={tlWidth}
+      />
+      {selectedEvent !== null && (
+        <EventDetail
+          event={selectedEvent}
+          snapshot={snaps.get(selectedEvent.seq)}
+          onGoTo={(f) => {
+            const i = frames.indexOf(f);
+            if (i >= 0) player.seek(i);
+          }}
+          onClose={() => setSelectedSeq(null)}
+        />
+      )}
+    </div>
+  );
+
   return (
     <div className="flex min-h-screen flex-col">
       <TopBar
@@ -506,7 +727,7 @@ export function Console() {
         onReset={() => player.requestReset("all")}
       />
       <main className="flex flex-1 flex-col gap-3 p-4">
-        <div role="group" aria-label="Düzen" className="flex gap-1">
+        <div role="group" aria-label="Düzen" className="flex items-center gap-1">
           {LAYOUTS.map((l) => (
             <button
               key={l.value}
@@ -520,6 +741,16 @@ export function Console() {
               {l.label}
             </button>
           ))}
+          <div className="ml-auto">
+            <ExportMenu
+              onEventsJson={onEventsJson}
+              onEventsCsv={onEventsCsv}
+              onMapFull={() => exportMap("full")}
+              onMapView={() => exportMap("view")}
+              busy={exportBusy}
+              error={exportError}
+            />
+          </div>
         </div>
         <div className="grid flex-1 gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
           {listError ? (
@@ -550,6 +781,7 @@ export function Console() {
                     onSeek={(i) => player.seek(i)}
                     onSpeed={(v) => player.setSpeed(v)}
                   />
+                  {timelineBlock}
                 </div>
               )}
               {layout !== "video" && (
@@ -565,6 +797,7 @@ export function Console() {
                     alarmZones={alarmZones}
                     counts={monitor.zoneCounts}
                     onMapClick={onMapClick}
+                    exportRef={mapExport}
                     overlay={(api) => (
                       <ZoneEditorLayer
                         draft={draft}
@@ -575,6 +808,7 @@ export function Console() {
                       />
                     )}
                   />
+                  {layout === "map" && timelineBlock}
                 </div>
               )}
               {selected !== null && (
@@ -650,6 +884,14 @@ export function Console() {
                     onAck={onAck}
                   />
                 </>
+              )}
+              {tab === "events" && (
+                <EventList
+                  events={tlEvents}
+                  selectedSeq={selectedSeq}
+                  onSelect={setSelectedSeq}
+                  onTrack={setSelected}
+                />
               )}
               {tab === "health" && (
                 <>
