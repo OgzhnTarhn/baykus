@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
   type MouseEvent as ReactMouseEvent,
+  type MutableRefObject,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
@@ -41,6 +42,15 @@ const LINE_LABEL_OFFSET = 14;
 const LINE_COUNT_OFFSET = 28;
 const ZONE_FONT = "11px sans-serif";
 const ZONE_SHADOW = "rgba(0,0,0,0.9)";
+
+// Çevrimdışı PNG: uzun kenar sınırı, dolgu, alt şerit ve yazı tipi.
+const EXPORT_MAX_SIDE = 4096;
+const EXPORT_PAD = 16;
+const EXPORT_STRIP_H = 44;
+const EXPORT_LINE_H = 16;
+const EXPORT_STRIP_BG = "rgba(0,0,0,0.72)";
+const EXPORT_FONT = "12px sans-serif";
+const EXPORT_LEGEND = "H hareketli (düz) · D duran (kesikli) · bölgeler türüne göre";
 
 function trailColor(motion: Motion): string {
   if (motion === "moving") return MOVING_COLOR;
@@ -287,6 +297,16 @@ function drawZones(
   ctx.setLineDash([]);
 }
 
+// drawMap'in çizim seçenekleri: panel ve çevrimdışı PNG aynı nesneyi kullanır.
+export type MapDrawOpts = {
+  tracks: Track[];
+  selected: number | null;
+  motionOf: (id: number) => Motion;
+  zones?: ZoneDef[];
+  alarmZones?: Set<string>;
+  counts?: ZoneCounts;
+};
+
 // Saf çizim: karo katmanı + görüş alanı + iz kuyrukları + işaretçiler. `view` harita → ekran (CSS px)
 // dönüşümüdür; çağıranın o anki dönüşümü (ör. devicePixelRatio) taban olarak korunur. Task 21 tam kapsamı
 // çevrimdışı tuvale aynı fonksiyonla çizer.
@@ -295,14 +315,7 @@ export function drawMap(
   mosaic: Mosaic,
   gen: number,
   view: Affine,
-  opts: {
-    tracks: Track[];
-    selected: number | null;
-    motionOf: (id: number) => Motion;
-    zones?: ZoneDef[];
-    alarmZones?: Set<string>;
-    counts?: ZoneCounts;
-  },
+  opts: MapDrawOpts,
 ): void {
   const base = ctx.getTransform();
   const baseAffine: Affine = [base.a, base.b, base.c, base.d, base.e, base.f];
@@ -384,6 +397,54 @@ export function drawMap(
   }
 }
 
+// Çevrimdışı PNG (Faz 4 §5.13): tam harita ya da panelin o anki görünümü. Alt şeritte künye ve
+// hareket açıklaması yazar; "full" sınır yoksa null döner.
+export function renderMapCanvas(
+  mosaic: Mosaic,
+  gen: number,
+  opts: MapDrawOpts,
+  mode: "full" | { view: Affine; width: number; height: number },
+): HTMLCanvasElement | null {
+  let view: Affine;
+  let width: number;
+  let height: number;
+  if (mode === "full") {
+    const b = mosaic.bounds(gen);
+    if (b === null) return null;
+    const longer = Math.max(b.w, b.h);
+    const scale = longer > 0 ? Math.min(1, (EXPORT_MAX_SIDE - 2 * EXPORT_PAD) / longer) : 1;
+    width = Math.max(1, Math.ceil(b.w * scale) + 2 * EXPORT_PAD);
+    height = Math.max(1, Math.ceil(b.h * scale) + 2 * EXPORT_PAD);
+    view = [scale, 0, EXPORT_PAD - b.x * scale, 0, scale, EXPORT_PAD - b.y * scale];
+  } else {
+    view = mode.view;
+    width = Math.max(1, Math.round(mode.width));
+    height = Math.max(1, Math.round(mode.height));
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (ctx === null) return null;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  drawMap(ctx, mosaic, gen, view, opts);
+
+  // Alt şerit: iki satır (künye + hareket açıklaması), koyu zemin üzerinde.
+  const stripH = Math.min(height, EXPORT_STRIP_H);
+  const top = height - stripH;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = EXPORT_STRIP_BG;
+  ctx.fillRect(0, top, width, stripH);
+  ctx.font = EXPORT_FONT;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = TEXT;
+  ctx.fillText(MAP_CAPTION, EXPORT_PAD, top + stripH / 2 - EXPORT_LINE_H / 2);
+  ctx.fillText(EXPORT_LEGEND, EXPORT_PAD, top + stripH / 2 + EXPORT_LINE_H / 2);
+  return canvas;
+}
+
 export function MapPanel({
   mosaic,
   version,
@@ -396,6 +457,7 @@ export function MapPanel({
   counts,
   onMapClick,
   overlay,
+  exportRef,
 }: {
   mosaic: Mosaic;
   version: number;
@@ -412,6 +474,9 @@ export function MapPanel({
     toMap(p: [number, number]): [number, number];
     scale: number;
   }): ReactNode;
+  exportRef?: MutableRefObject<{
+    view(): { view: Affine; width: number; height: number } | null;
+  } | null>;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -474,6 +539,25 @@ export function MapPanel({
     setPercent(vp.percent());
     setViewState((prev) => ({ m: vp.matrix(), scale: vp.scale, tick: (prev?.tick ?? 0) + 1 }));
   }, [ensureViewport, mosaic, tracks, selected, motionOf, zones, alarmZones, counts]);
+
+  // Dışa aktarma: panelin o anki dönüşümü ve CSS boyutu (PNG "görünüm" kipi bunu kullanır).
+  useEffect(() => {
+    if (exportRef === undefined) return;
+    exportRef.current = {
+      view: () => {
+        const vp = viewRef.current;
+        const canvas = canvasRef.current;
+        if (vp === null || canvas === null) return null;
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        if (w === 0 || h === 0) return null;
+        return { view: vp.matrix(), width: w, height: h };
+      },
+    };
+    return () => {
+      exportRef.current = null;
+    };
+  }, [exportRef]);
 
   // Tuval boyutu: kapsayıcıya göre, devicePixelRatio ile.
   useEffect(() => {
