@@ -47,6 +47,9 @@ jobs:
           cache-to: type=gha,scope=engine,mode=max
       - name: models
         run: bash scripts/fetch_models.sh models
+      # Faz 4 eşlik paketi (Release fixtures-f4, sha256 configs/engine/fixtures.json) → fixtures/f4
+      - name: fixtures
+        run: bash scripts/prepare.sh --fixtures
       # Kabul 1 a ham referansı bu makinede: ORT'nin işlemciye göre yuvarlama farkı bizim kodumuz değil
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
@@ -57,8 +60,13 @@ jobs:
           uv sync --frozen
           uv run baykus-engine raw-ref --models ../models --manifest ../configs/engine/models.json \
             --out ../evidence/raw_ref.json
+          # Faz 4: ego izi (Ego.TraceParity) ve klip senaryolarının Python referansı (Kabul 1, 10 b)
+          uv run baykus-motion ego-trace --out ../evidence/ego_trace.json
+          uv run baykus-motion clip-ref --out ../evidence/clip_ref.json
       - name: test
-        run: RAW_REF=evidence/raw_ref.json EVIDENCE=evidence REQ=1 bash scripts/engine_test.sh
+        run: |
+          RAW_REF=evidence/raw_ref.json EGO_TRACE=evidence/ego_trace.json EVIDENCE=evidence REQ=1 \
+            bash scripts/engine_test.sh
       - name: evidence
         run: |
           for app in "parity_report parity_detect" "parity_health parity_health"; do
@@ -76,6 +84,14 @@ jobs:
             --out /out/dev_tracks_cpp.json.gz
           cd python && uv run baykus-track compare --py ../fixtures/tracks/dev_tracks_py.json.gz \
             --cpp ../evidence/dev_tracks_cpp.json.gz --out ../evidence/parity_track.json
+          # Kabul 1, 10 b: klip senaryoları C++ ↔ Python; karşılaştırıcının çıkış kodu kapıdır
+          docker run --rm -v "$PWD/../models:/models:ro" -v "$PWD/../fixtures:/fixtures:ro" \
+            -v "$PWD/../configs:/configs:ro" -v "$PWD/../evidence:/out" baykus-engine-build \
+            /build/bin/baykus_clip --models /models --manifest /configs/engine/models.json \
+            --motion /configs/engine/motion.json --tracker /configs/engine/tracker.json \
+            --tar /fixtures/f4 --out /out/clip_cpp.json
+          uv run baykus-motion parity --ref ../evidence/clip_ref.json --cpp ../evidence/clip_cpp.json \
+            --out ../evidence/parity_motion.json
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: engine-evidence
@@ -95,7 +111,9 @@ jobs:
             type=gha,scope=engine-asan
           cache-to: type=gha,scope=engine-asan,mode=max
       - name: test (sanitize)
-        run: IMAGE=baykus-engine-asan RAW_REF=evidence/raw_ref.json REQ=1 bash scripts/engine_test.sh
+        run: |
+          IMAGE=baykus-engine-asan RAW_REF=evidence/raw_ref.json EGO_TRACE=evidence/ego_trace.json \
+            REQ=1 bash scripts/engine_test.sh
 
   # Operatör ekranı (Faz 3 Görev 33): biçim, tip, birim testleri, derleme, kanıt 4 (adres taraması).
   ui:
