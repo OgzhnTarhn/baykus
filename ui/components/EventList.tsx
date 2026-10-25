@@ -30,7 +30,7 @@ export function EventList({
       {shown.length === 0 ? (
         <p className="text-sm text-muted">Henüz olay yok.</p>
       ) : (
-        <table className="w-full text-sm">
+        <table className="w-full text-sm [&_td]:pr-2 [&_th]:pr-2">
           <thead>
             <tr className="text-left text-xs text-muted">
               <th className="font-normal">Kare</th>
