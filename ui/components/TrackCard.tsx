@@ -1,5 +1,6 @@
 // Araç kartı (Faz 4 tasarımı §5.8): seçili aracın özeti — başlık, durum rozeti, süre, hareket
-// şeridi, duruş / yol satırları ve bölge ziyaretleri. Haritanın üstünde yüzer; kapatılabilir.
+// şeridi, duruş / yol satırları ve bölge ziyaretleri. Sağ sütunun başında durur (haritayı
+// örtmez); kapatılabilir.
 import type { CSSProperties } from "react";
 import type { CardView } from "@/lib/card";
 import type { Motion } from "@/lib/client";
@@ -54,7 +55,7 @@ export function TrackCard({
 }) {
   if (!view) {
     return (
-      <section className="absolute right-4 top-4 z-20 w-72 rounded border border-line bg-panel p-3">
+      <section className="rounded border border-line bg-panel p-3">
         <div className="flex items-start justify-between gap-2">
           <p className="text-xs text-muted">Seçili araç için özet henüz yok.</p>
           <CloseButton onClose={onClose} />
@@ -65,7 +66,7 @@ export function TrackCard({
 
   return (
     <section
-      className={`absolute right-4 top-4 z-20 w-72 rounded border border-line bg-panel p-3 ${
+      className={`rounded border border-line bg-panel p-3 ${
         view.ended ? "opacity-60" : ""
       }`}
     >

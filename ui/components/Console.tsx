@@ -811,19 +811,20 @@ export function Console() {
                   {layout === "map" && timelineBlock}
                 </div>
               )}
-              {selected !== null && (
-                <TrackCard
-                  view={card}
-                  onClose={() => setSelected(null)}
-                  onShowOnMap={() => {
-                    setLayout((l) => (l === "video" ? "both" : l));
-                    setFollow((f) => f + 1);
-                  }}
-                />
-              )}
             </div>
           )}
           <aside className="flex flex-col gap-4" aria-label="Durum">
+            {/* Araç kartı sağ sütunun başında: haritayı ve oynatıcıyı örtmez (çizim tıklamaları). */}
+            {selected !== null && (
+              <TrackCard
+                view={card}
+                onClose={() => setSelected(null)}
+                onShowOnMap={() => {
+                  setLayout((l) => (l === "video" ? "both" : l));
+                  setFollow((f) => f + 1);
+                }}
+              />
+            )}
             <div role="tablist" aria-label="Durum sekmeleri" className="flex flex-wrap gap-1">
               {TABS.map((t) => (
                 <button
