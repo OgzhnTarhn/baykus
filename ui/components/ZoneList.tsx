@@ -112,7 +112,7 @@ function Counters({ kind, c }: { kind: ZoneKind; c: ZoneCount | undefined }) {
         </>
       ) : (
         <>
-          içeride {num(c?.inside)} (H hareketli, D duran)
+          içeride {num(c?.inside)} ({num(c?.moving)} hareketli, {num(c?.stationary)} duran)
           {kind === "dwell" ? ` · aşan ${num(c?.exceeded_total)}` : ""}
           {kind === "area" || kind === "restricted" ? ` · giren ${num(c?.entered_total)}` : ""}
         </>
