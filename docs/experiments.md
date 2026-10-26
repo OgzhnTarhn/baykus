@@ -517,3 +517,8 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
 - **Denetim** (kullanıcı, laptop; sayfada sorulan araç sarı çerçeveyle işaretli, `57eb7f1`; ilk sayfa aracı işaretlemiyordu, cevap toplanmadan yenilendi): 100 iz, 100 cevap, 0 "bilmiyorum". Kayıt `results/data/m3ot_teacher_audit.json`.
 - **Sonuç:** doğruluk **0,92** (%95 güven aralığı 0,85–0,96); öğretmen tahmini sınıfına göre: car 89/93 (0,96), truck 1/5 (0,20), bus 2/2. Eşik 0,80 → **karar `teacher`** (tasarım §3 B kuralı).
 - **Not:** truck tahminleri zayıf (5 izin 1'i doğru), ama train'de truck tahmini yalnız 5 iz (647'nin %0,8'i); kural sınıf başına değil, toplam doğrulukla karar veriyor — kural değiştirilmedi. Görev 15C'de E3c-M'in truck AP'si ayrıca izlenecek.
+
+## 2026-10-26 · F4 · E3c-M ince ayar, ara durum — Görev 15B
+- **Koşu** `2026-10-26_e3c-m3ot_s_5c18b5d` (configs/e3c_m3ot.yaml, 20 epoch): ilk oturumda GPU ile 12/20 epoch Drive'a kaydedildi (son kayıt 2026-10-26T13:33:32Z); ilk oturumun etiket sayısı 37 033 (DroneVehicle 28 403 + M3OT 8 630).
+- **Sorun:** yenilenen oturum GPU'suz açıldı (torch +cpu, epoch ≈ 11 saat) ve hücre 6 atlanınca M3OT birleşmedi (etiket 28 403, train 17 954 görüntü); kullanıcı epoch 13'ün başında durdurdu, kayıt değişmedi. Hücre 9 `IndexError` = eğitim bitmemiş (bitti kaydı yok).
+- **Önlem:** hücre 7 ve 8 artık M3OT çifti 0 ise ya da GPU yoksa duruyor (`e5d4c5a`, `6d7b5d5`); hücre 10 eksik modelleri indiriyor (`92a3488`). Epoch 9-12'nin hangi veriyle koştuğu kullanıcıya soruldu.
