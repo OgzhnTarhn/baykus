@@ -173,3 +173,11 @@ def test_audit_page_then_score(tmp_path: Path):
     assert main(args) == 0
     rec = json.loads(out.read_text(encoding="utf-8"))
     assert rec["accuracy"] == 1.0 and rec["answered"] == 1 and rec["decision"] == "teacher"
+
+
+def test_merge_rejects_empty_source(tmp_path: Path):
+    # Defter oturumu yenilenip M3OT açılmadan birleştirme çağrılırsa sessizce 0 çift olmamalı (15B).
+    (tmp_path / "m3ot").mkdir()
+    (tmp_path / "dv").mkdir()
+    with pytest.raises(ValueError, match="çift yok"):
+        merge(tmp_path / "m3ot", tmp_path / "dv", "train")

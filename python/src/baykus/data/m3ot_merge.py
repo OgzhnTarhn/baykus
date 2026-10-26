@@ -68,6 +68,8 @@ def merge(m3ot_root: Path, dv_root: Path, split: str = "train", prefix: str = "m
         raise ValueError("test bölümü eğitime katılmaz")
     src, dst = Path(m3ot_root), Path(dv_root)
     stems = sorted(p.stem for p in (src / "ir/images" / split).glob("*.png"))
+    if not stems:  # açılmamış kaynak sessizce 0 çift vermesin (eğitim M3OT'suz sürerdi)
+        raise ValueError(f"M3OT kaynağında çift yok: {src / 'ir/images' / split}")
     jobs = []
     for stem in stems:
         for rel, ext in (("rgb/images", ".jpg"), ("ir/images", ".png"), ("labels_ir", ".txt")):
