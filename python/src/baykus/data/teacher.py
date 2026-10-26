@@ -254,11 +254,15 @@ def label_tracks(
 
 def audit_crops(
     root: Path, split: str, keys: list[str]
-) -> dict[str, tuple[np.ndarray, np.ndarray]]:
-    """Her izin ortanca karesi için ``(ir, bgr)`` kırpılmış çifti."""
+) -> dict[str, tuple[np.ndarray, np.ndarray, tuple[float, float, float, float]]]:
+    """Her izin ortanca karesi için ``(ir, bgr, box)``.
+
+    ``box`` ortanca satırın xyxy kutusunun kırpma penceresine kaydırılmış hâli:
+    ``(x1 - x0, y1 - y0, x2 - x0, y2 - y0)``.
+    """
     root = Path(root)
     tracks = track_rows(root, split)
-    out: dict[str, tuple[np.ndarray, np.ndarray]] = {}
+    out: dict[str, tuple[np.ndarray, np.ndarray, tuple[float, float, float, float]]] = {}
     for key in keys:
         rows = tracks.get(key)
         if not rows:
@@ -270,6 +274,13 @@ def audit_crops(
         )
         img_h, img_w = ir_full.shape[:2]
         win = window(row["box"], img_w, img_h)
+        x0, y0, _, _ = win
         bgr, ir = crop_pair(root, split, row["stem"], win)
-        out[key] = (ir, bgr)
+        box = (
+            float(row["box"][0]) - x0,
+            float(row["box"][1]) - y0,
+            float(row["box"][2]) - x0,
+            float(row["box"][3]) - y0,
+        )
+        out[key] = (ir, bgr, box)
     return out

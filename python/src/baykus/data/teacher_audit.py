@@ -3,9 +3,9 @@
 M3OT train izlerinden öğretmen etiketlerinin (E3c tahmini) insan denetimi. Örneklem: tahmini
 `car` olmayan izlerden en çok `non_car_max` (sınıf başına sayılarıyla orantılı), kalanı `car`
 izlerinden; iz anahtarları sıralı listeden seçilir, deterministik. Sayfa yerel ve internetsiz;
-tahmin gösterilmez (kör); IR ve RGB kırpıntısı 4× büyütülür. Puanlama `unknown` hariç
-cevaplananlarda tahminle aynı oranı; doğruluk ≥ 0,80 → öğretmen etiketleri, altında → bütün
-M3OT kutuları `car` (tasarım §3 B).
+tahmin gösterilmez (kör); IR ve RGB kırpıntısı 4× büyütülür, sorulan araç sarı çerçeveyle
+işaretli. Puanlama `unknown` hariç cevaplananlarda tahminle aynı oranı; doğruluk ≥ 0,80 →
+öğretmen etiketleri, altında → bütün M3OT kutuları `car` (tasarım §3 B).
 """
 
 from __future__ import annotations
@@ -82,13 +82,35 @@ def sample(
     return picked
 
 
+def _draw_mark(img: np.ndarray, box: tuple[float, float, float, float]) -> None:
+    """``box`` (kırpıntı koordinatı, xyxy) çevresine sarı çerçeve çizer.
+
+    Kutu ``SCALE`` ile büyütülür, çerçeve kutunun 3 px dışından 2 px kalınlıkla çizilir;
+    koordinatlar görüntü sınırlarına kırpılır.
+    """
+    h, w = img.shape[:2]
+    x1 = int(round(float(box[0]) * SCALE)) - 3
+    y1 = int(round(float(box[1]) * SCALE)) - 3
+    x2 = int(round(float(box[2]) * SCALE)) + 3
+    y2 = int(round(float(box[3]) * SCALE)) + 3
+    x1 = min(max(x1, 0), w - 1)
+    y1 = min(max(y1, 0), h - 1)
+    x2 = min(max(x2, 0), w - 1)
+    y2 = min(max(y2, 0), h - 1)
+    cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 255), 2)
+
+
 def render(
     keys: list[str],
-    crops: dict[str, tuple[np.ndarray, np.ndarray]],
+    crops: dict[str, tuple[np.ndarray, np.ndarray, tuple[float, float, float, float]]],
     out_dir: Path,
     seed: int = 42,
 ) -> dict[str, str]:
-    """Sayfa + kırpıntılar; dönen sözlük örnek kimliği → iz anahtarı."""
+    """Sayfa + kırpıntılar; dönen sözlük örnek kimliği → iz anahtarı.
+
+    ``crops`` değeri ``(ir, bgr, box)``; ``box`` kırpıntı koordinatında xyxy. Sorulan araç
+    iki görünümde de sarı çerçeveyle (kutunun 3 px dışı, 2 px kalın) işaretlenir.
+    """
     out_dir = Path(out_dir)
     crops_dir = out_dir / "crops"
     crops_dir.mkdir(parents=True, exist_ok=True)
@@ -96,9 +118,12 @@ def render(
     random.Random(seed + 1).shuffle(order)  # sayfa sırası tahminden bağımsız
     ids = {f"t{i + 1:03d}": k for i, k in enumerate(order)}
     for sid, key in ids.items():
-        ir, rgb = crops[key]
+        ir, rgb, box = crops[key]
+        if ir.ndim == 2:
+            ir = cv2.cvtColor(ir, cv2.COLOR_GRAY2BGR)
         for name, img in (("ir", ir), ("rgb", rgb)):
             big = cv2.resize(img, None, fx=SCALE, fy=SCALE, interpolation=cv2.INTER_NEAREST)
+            _draw_mark(big, box)
             imwrite_any(crops_dir / f"{sid}_{name}.jpg", big, [cv2.IMWRITE_JPEG_QUALITY, 90])
     # Tarayıcı kaydının anahtarı örnek kümesinden: başka bir turun sayfası bu kaydı açmaz.
     # Özet geri çevrilemez; tahmin ya da sınıf sızmaz.
@@ -172,7 +197,8 @@ button.on { border-color: var(--accent); outline: 2px solid var(--accent); }
 <body>
 <main>
 <h1>Bu araç hangi tür?</h1>
-<p>Her örnekte aynı aracın IR ve RGB kırpıntısı gösterilir. Aracın türünü seç; ayırt edemiyorsan
+<p>Her örnekte aynı aracın IR ve RGB kırpıntısı gösterilir; sorulan araç <strong>sarı
+çerçevenin içindeki</strong> araçtır. Aracın türünü seç; ayırt edemiyorsan
 "Bilmiyorum" seç. Kısayollar: 1 otomobil, 2 kamyon, 3 otobüs, 4 minibüs, 5 yük aracı, 6 bilmiyorum,
 ← → gezin.</p>
 <div class="bar"><strong id="pos"></strong><span class="grow"></span><span id="done"></span></div>

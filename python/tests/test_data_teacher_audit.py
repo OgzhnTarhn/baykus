@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import cv2
 import numpy as np
 import pytest
 
 from baykus.data.teacher_audit import render, sample, score
+from baykus.io import imread_any
 
 
 def _teacher(n_car: int, n_truck: int, n_bus: int) -> dict[str, dict]:
@@ -35,7 +37,10 @@ def test_audit_sample_stratified_seeded() -> None:
 
 def test_audit_page_hides_prediction(tmp_path: Path) -> None:
     keys = [f"k{i:04d}" for i in range(6)]
-    crops = {k: (np.zeros((8, 8, 3), np.uint8), np.zeros((8, 8, 3), np.uint8)) for k in keys}
+    crops = {
+        k: (np.zeros((8, 8, 3), np.uint8), np.zeros((8, 8, 3), np.uint8), (0.0, 0.0, 8.0, 8.0))
+        for k in keys
+    }
     render(keys, crops, tmp_path, seed=42)
     html = (tmp_path / "index.html").read_text(encoding="utf-8")
     for key in keys:
@@ -43,6 +48,22 @@ def test_audit_page_hides_prediction(tmp_path: Path) -> None:
     assert "cls_id" not in html
     for label in ("Otomobil", "Kamyon", "Otobüs", "Minibüs", "Yük aracı", "Bilmiyorum"):
         assert label in html
+
+
+def test_audit_crops_mark_the_asked_vehicle(tmp_path: Path) -> None:
+    ir = np.zeros((32, 40), np.uint8)
+    rgb = np.zeros((32, 40, 3), np.uint8)
+    box = (10.0, 8.0, 20.0, 16.0)
+    render(["k0000"], {"k0000": (ir, rgb, box)}, tmp_path, seed=42)
+    for name in ("ir", "rgb"):
+        img = imread_any(tmp_path / "crops" / f"t001_{name}.jpg", cv2.IMREAD_COLOR)
+        assert img is not None
+        assert img.shape == (128, 160, 3)
+        # Çerçeve çizgisi: kutunun 3 px dışı (kutu üstü 8*4 = 32, çizgi 27-28).
+        b, g, r = (int(v) for v in img[8 * 4 - 4, 15 * 4])
+        assert b < 80 and g > 170 and r > 170
+        # Kutunun içi (araç) boyanmaz.
+        assert all(int(v) < 60 for v in img[12 * 4, 15 * 4])
 
 
 def test_audit_score_excludes_unknown_and_decides() -> None:
