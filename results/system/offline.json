@@ -44,15 +44,17 @@
   },
   "browser_requests_external": 0,
   "browser": {
-    "requests": 80,
-    "detects": 33,
-    "fault_detects": 3,
+    "requests": 88,
+    "detects": 35,
+    "fault_detects": 2,
     "resets": 2,
+    "downloads": 3,
+    "zones_drawn": true,
     "external": []
   },
   "scan": {
     "violations": [],
-    "files": 148
+    "files": 193
   },
   "passed": true
 }
