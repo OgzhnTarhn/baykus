@@ -508,3 +508,7 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
 - **Koşu** (Colab defter 10 hücre 4, `baykus-data m3ot-teacher`, E3c Release `models-v1`, kod `031063a`, `teacher.json` `created_at` 2026-10-23T18:09:50Z): train 14 dizi, 647 iz; **oy alan iz 2** (`2_04:6` 1 oy, `2_04:7` 2 oy, hepsi `car`), 645 iz oysuz → kural gereği `car`; sınıf sayımı 647 car / 0 diğer.
 - **Neden:** hata. Tespit kırpılmış 160 × 128 pencerede yapılıyor, kutular zaten pencere koordinatında; kod pencere köşesini ikinci kez çıkarıp kutuları iz kutusundan kaydırıyordu. Birim testi 64 × 64 karelerle yazılmıştı (pencere köşesi hep (0, 0)), hatayı göremedi. Düzeltme ve 640 × 512 regresyon testi `98d537a`.
 - **Sonuç:** bu `teacher.json` kullanılmaz, kör denetim yapılmadı. Hücre 4-5 düzeltilmiş kodla yeniden çalışacak.
+
+## 2026-10-26 · F4 · M3OT öğretmen etiketleri, 2. koşu — Görev 15B
+- **Koşu** (Colab defter 10 hücre 3-5, düzeltilmiş kod, f4 dalı `d9066ad`; E3c Release `models-v1`): hücre 3 dönüştürülmüş train'i Drive önbelleğinden açtı (8630 çift, 14 dizi, RGB 111 678 / IR 110 893 kutu, eşsiz dizi yok, yalnız RGB kare 1); hücre 4 27 dk 44 sn, 647 iz: car 640, truck 5, bus 2, van 0, freight_car 0; hücre 5 kör denetim sayfası 100 örnek (`teacher_audit.zip` 8,6 MB, `teacher.json` 463 KB; 1. koşunun dosyası 140 KB — oylar dosyada tutulduğu için büyüme oyların geldiğini gösteriyor, oy alan iz sayısı dosya gelince ölçülecek).
+- **Sonraki adım:** kör denetim (kullanıcı, laptop) → `baykus-data m3ot-audit-score` → karar (eşik 0,80: altındaysa hepsi `car`).
