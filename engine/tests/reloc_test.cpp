@@ -94,7 +94,8 @@ TEST(Reloc, LargeShifts) {
     const cv::Mat warped = cv::imread((f4_dir() / rel).string(), cv::IMREAD_GRAYSCALE);
     ASSERT_FALSE(warped.empty()) << rel;
 
-    Ego ego(cfg, new Relocalizer(cfg));
+    Relocalizer reloc(cfg);  // Ego sahiplenmez (ham işaretçi)
+    Ego ego(cfg, &reloc);
     ego.update(nullptr, "none", {}, 0);  // ilk kare: kaynak kare
     // Kaynak kareyi doğrudan besle.
     const cv::Mat base_half = half_gray(base);
@@ -157,7 +158,8 @@ TEST(Reloc, OrbCanonicalOrder) {
 TEST(Reloc, MirroredNeverMerges) {
   BAYKUS_REQUIRE_FILES({ir_path(1), mirror_path(21)});
   const MotionCfg cfg = load_cfg();
-  Ego ego(cfg, new Relocalizer(cfg));
+  Relocalizer reloc(cfg);  // Ego sahiplenmez (ham işaretçi)
+  Ego ego(cfg, &reloc);
 
   for (int n = 1; n <= 20; ++n) {
     const cv::Mat g = half_gray(read_ir(n));

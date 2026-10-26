@@ -36,7 +36,8 @@ std::vector<std::vector<int>> rects(const std::vector<cv::Rect>& w) {
 
 TEST(Tiles, WindowsMatchPython) {
   BAYKUS_REQUIRE_FILES({cases_path()});
-  for (const auto& c : bt::read_json(cases_path()).at("windows")) {
+  const auto cases = bt::read_json(cases_path());  // geçici json döngü boyunca yaşasın
+  for (const auto& c : cases.at("windows")) {
     const auto got = rects(baykus::tile_windows(c.at("w").get<int>(), c.at("h").get<int>()));
     EXPECT_EQ(json(got), c.at("windows")) << c.dump();
   }
@@ -46,7 +47,8 @@ TEST(Tiles, MergeMatchesPython) {
   BAYKUS_REQUIRE_FILES({cases_path()});
   const auto wins = baykus::tile_windows(640, 512);
   int n = 0;
-  for (const auto& c : bt::read_json(cases_path()).at("merges")) {
+  const auto cases = bt::read_json(cases_path());  // geçici json döngü boyunca yaşasın
+  for (const auto& c : cases.at("merges")) {
     SCOPED_TRACE("durum " + std::to_string(n++));
     std::vector<std::vector<baykus::Det>> per_tile;
     for (const auto& t : c.at("per_tile")) per_tile.push_back(bt::dets_from_json(t));
