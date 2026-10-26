@@ -105,3 +105,16 @@ def test_write_json_is_atomic(tmp_path: Path, monkeypatch):
 def test_write_json_uses_lf_on_every_platform(tmp_path):
     p = write_json(tmp_path / "x.json", {"a": 1})
     assert b"\r" not in p.read_bytes()
+
+
+def test_every_train_config_model_gives_a_run_id():
+    # Eğitim başında run_id model adından çıkar; ince ayar yolunun adı da çözülebilmeli (15B).
+    import yaml
+
+    root = Path(__file__).resolve().parents[2] / "configs"
+    when = dt.datetime(2026, 10, 26, tzinfo=dt.UTC)
+    for path in sorted(root.glob("*.yaml")):
+        model = yaml.safe_load(path.read_text(encoding="utf-8")).get("model")
+        if model is None:
+            continue
+        assert make_run_id("x", model, "abc1234", when).endswith("_s_abc1234"), path.name
