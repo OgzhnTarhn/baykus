@@ -512,3 +512,8 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
 ## 2026-10-26 · F4 · M3OT öğretmen etiketleri, 2. koşu — Görev 15B
 - **Koşu** (Colab defter 10 hücre 3-5, düzeltilmiş kod, f4 dalı `d9066ad`; E3c Release `models-v1`): hücre 3 dönüştürülmüş train'i Drive önbelleğinden açtı (8630 çift, 14 dizi, RGB 111 678 / IR 110 893 kutu, eşsiz dizi yok, yalnız RGB kare 1); hücre 4 27 dk 44 sn, 647 iz: car 640, truck 5, bus 2, van 0, freight_car 0; hücre 5 kör denetim sayfası 100 örnek (`teacher_audit.zip` 8,6 MB, `teacher.json` 463 KB; 1. koşunun dosyası 140 KB — oylar dosyada tutulduğu için büyüme oyların geldiğini gösteriyor, dosya gelince ölçüldü: **oy alan iz 625 / 647** (1. koşuda 2), toplam 5081 oy, iz başına ortanca 9 oy; 22 iz oysuz → kural gereği `car`).
 - **Sonraki adım:** kör denetim (kullanıcı, laptop) → `baykus-data m3ot-audit-score` → karar (eşik 0,80: altındaysa hepsi `car`).
+
+## 2026-10-26 · F4 · M3OT öğretmen etiketleri, kör denetim — Görev 15B
+- **Denetim** (kullanıcı, laptop; sayfada sorulan araç sarı çerçeveyle işaretli, `57eb7f1`; ilk sayfa aracı işaretlemiyordu, cevap toplanmadan yenilendi): 100 iz, 100 cevap, 0 "bilmiyorum". Kayıt `results/data/m3ot_teacher_audit.json`.
+- **Sonuç:** doğruluk **0,92** (%95 güven aralığı 0,85–0,96); öğretmen tahmini sınıfına göre: car 89/93 (0,96), truck 1/5 (0,20), bus 2/2. Eşik 0,80 → **karar `teacher`** (tasarım §3 B kuralı).
+- **Not:** truck tahminleri zayıf (5 izin 1'i doğru), ama train'de truck tahmini yalnız 5 iz (647'nin %0,8'i); kural sınıf başına değil, toplam doğrulukla karar veriyor — kural değiştirilmedi. Görev 15C'de E3c-M'in truck AP'si ayrıca izlenecek.
