@@ -1,9 +1,9 @@
 {
-  "release": "models-v1",
-  "base_url": "https://github.com/OgzhnTarhn/baykus/releases/download/models-v1/",
+  "release": "models-v2",
+  "base_url": "https://github.com/OgzhnTarhn/baykus/releases/download/models-v2/",
   "files": {
     "e3c.onnx": {
-      "sha256": "2be00623074857a50006fa27ba14eae066175005bc2b724879501d6fa32259f9",
+      "sha256": "d3cb90872f1b4ec8ceaa81eb31056f31ed3e191cdebb893712570432c2ba3d3b",
       "bytes": 38175166
     },
     "thresholds.json": {
@@ -11,8 +11,8 @@
       "bytes": 2829
     },
     "calibration.json": {
-      "sha256": "b39ab6897c0c45cabd1d3fdadbe35a870e2a177bf498a33883bbaa8d893c4926",
-      "bytes": 10001
+      "sha256": "06578d6b95e586499893833632c77e0bfbf93711d0fef43a0d4159ce2301531b",
+      "bytes": 5538
     },
     "gate_model.json": {
       "sha256": "eb2807e2f32f20444322a680eaab821da025d67085ac6e887918a42646d5fd78",
