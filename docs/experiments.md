@@ -521,10 +521,11 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
 ## 2026-10-26 · F4 · E3c-M ince ayar, ara durum — Görev 15B
 - **Koşu** `2026-10-26_e3c-m3ot_s_5c18b5d` (configs/e3c_m3ot.yaml, 20 epoch): ilk oturumda GPU ile 12/20 epoch Drive'a kaydedildi (son kayıt 2026-10-26T13:33:32Z); ilk oturumun etiket sayısı 37 033 (DroneVehicle 28 403 + M3OT 8 630).
 - **Sorun:** yenilenen oturum GPU'suz açıldı (torch +cpu, epoch ≈ 11 saat) ve hücre 6 atlanınca M3OT birleşmedi (etiket 28 403, train 17 954 görüntü); kullanıcı epoch 13'ün başında durdurdu, kayıt değişmedi. Hücre 9 `IndexError` = eğitim bitmemiş (bitti kaydı yok).
-- **Önlem:** hücre 7 ve 8 artık M3OT çifti 0 ise ya da GPU yoksa duruyor (`e5d4c5a`, `6d7b5d5`); hücre 10 eksik modelleri indiriyor (`92a3488`). Epoch 9-12'nin hangi veriyle koştuğu kullanıcıya soruldu.
+- **Önlem:** hücre 7 ve 8 artık M3OT çifti 0 ise ya da GPU yoksa duruyor (`e5d4c5a`, `6d7b5d5`); hücre 10 eksik modelleri indiriyor (`92a3488`). Epoch 1-12 tek T4 oturumunda kesintisiz koştu (başlangıç 11:12:52Z, 12. kayıt 13:33:32Z; o oturumda etiket 37 033), yani M3OT'lu.
 
 ## 2026-10-27 · F4 · E3c-M (M3OT ince ayar) sonuçları — Görev 15B → 15C
 - **Eğitim** `2026-10-26_e3c-m3ot_s_5c18b5d` bitti (20/20 epoch, `status: finished`; epoch 1-12 T4, 13-20 A100; 13-20 etiket 37 033 = DroneVehicle 28 403 + M3OT 8 630, train 26 584 görüntü). Ultralytics val (PyTorch, `best.pt`, DroneVehicle val 1469 görüntü): mAP50 0,857 · mAP50-95 0,637; sınıf mAP50 car 0,986 · truck 0,823 · bus 0,972 · van 0,706 · freight_car 0,796.
 - **Sevk kuralı i (DroneVehicle val, ONNX FP32, `baykus-edge eval`, aynı protokol):** mAP50 **0,8452** (E3c 0,8411 → +0,41 puan; düşüş yok). Sınıf başına değerler `results/edge/2026-10-26_e3c-m3ot_s_5c18b5d_val_onnx_fp32_ir.json`'dan doğrulanacak (dosya Drive'da; Ultralytics val sınıflarının hepsi E3c'nin ONNX sınıf değerlerinin üstünde, ama protokol farklı).
 - **Sevk kuralı ii (M3OT val 1_08 + 2_08, `baykus-engine coverage --conds clean`, aynı Colab, aynı komut):** birleşik AP50 **0,3956 → 0,8847**; bulma (skor ≥ 0,3, IoU 0,5) 0,2303 → 0,8574, (IoU 0,3) 0,2512 → 0,8640; tespit / kare (skor ≥ 0,3) 3,43 → 10,97.
-- **Ön sonuç:** iki kural da tutuyor; sınıf başına ≤ 3 puan kontrolü JSON gelince kesinleşir, sonra Görev 15C (sevk ve yayılım).
+- **Sınıf başına (ONNX FP32 eval JSON'u, E3c → E3c-M):** car 0,977 → 0,978 · truck 0,802 → 0,809 · bus 0,957 → 0,961 · van 0,703 → 0,687 (−1,65) · freight_car 0,766 → 0,792; aydınlatma gündüz −0,32 · gece +0,33 · karanlık gece +0,66; boy küçük −1,15 · orta +0,33 · büyük +1,17 puan.
+- **Sevk kararı:** iki kural da tuttu (en kötü sınıf van −1,65 ≤ 3,0) → **E3c-M sevk edilir** (ADR 0010). ONNX sha256 `d3cb9087…3d3b` (38 175 166 bayt).
