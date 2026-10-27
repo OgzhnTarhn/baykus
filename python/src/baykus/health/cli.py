@@ -142,25 +142,36 @@ def _num(v: float | None) -> str:
 
 def _cmd_calibrate(a: argparse.Namespace) -> int:
     coco = Path(a.coco_dir)
-    vp, tp = Path(a.val_preds), Path(a.test_preds)
+    vp = Path(a.val_preds)
+    tp = Path(a.test_preds) if a.test_preds else None
     rec = calibrate(
         load_coco(coco / "val_ir.json"),
         load_predictions(vp),
-        load_coco(coco / "test_ir.json"),
-        load_predictions(tp),
+        load_coco(coco / "test_ir.json") if tp else None,
+        load_predictions(tp) if tp else None,
     )
     rec["model"] = a.model
     rec["label_set"] = "ir"
     rec["sources"] = {
         "val_preds": str(vp),
-        "test_preds": str(tp),
+        "test_preds": str(tp) if tp else None,
         "val_sha256": sha256_file(vp),
-        "test_sha256": sha256_file(tp),
+        "test_sha256": sha256_file(tp) if tp else None,
     }
     rec["git_commit"] = git_info()["git_commit"]
     rec["created_at"] = iso(utc_now())
     print(write_json(Path(a.out), rec))
     t, k4 = rec["test"], rec["k4"]
+    if t is None:
+        # test seti yalnız son ölçümde (Görev 23); val'deki ECE eğitim verisinde (in_sample)
+        # ve yalnız bilgi amaçlı.
+        v = rec["val"]
+        print(
+            f"val ECE (eğitim verisi) {_num(v['ece_before'])} → {_num(v['ece_after'])} "
+            f"({v['n_eval']} tespit, skor ≥ 0,25)"
+        )
+        print("test ölçümü yok (Görev 23)")
+        return 0
     print(
         f"test ECE {_num(t['ece_before'])} → {_num(t['ece_after'])} "
         f"({t['n_eval']} tespit, skor ≥ 0,25)"
@@ -350,7 +361,7 @@ def build_parser() -> argparse.ArgumentParser:
     c.set_defaults(func=_cmd_compare)
     k = sub.add_parser("calibrate", help="izotonik skor kalibrasyonu ve ECE")
     k.add_argument("--val-preds", required=True, help="val tahminleri (.json.gz, conf ≥ 0,001)")
-    k.add_argument("--test-preds", required=True)
+    k.add_argument("--test-preds", default=None, help="yoksa tablo val'de öğrenilir (Görev 23)")
     k.add_argument("--coco-dir", required=True, help="val_ir.json ve test_ir.json klasörü")
     k.add_argument("--out", default="../results/health/calibration_e3c_onnx_fp32.json")
     k.add_argument("--model", default="e3c_modality_dropout · onnx_fp32")

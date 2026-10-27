@@ -104,12 +104,34 @@ def ece(conf: np.ndarray, labels: np.ndarray, bins: int = ECE_BINS) -> float | N
 def calibrate(
     val_gt: COCO,
     val_dets: list[dict],
-    test_gt: COCO,
-    test_dets: list[dict],
+    test_gt: COCO | None = None,
+    test_dets: list[dict] | None = None,
     conf_min: float = CONF_MIN,
 ) -> dict:
     vs, vl = match_labels(val_gt, val_dets)
     x, y = fit_isotonic(vs, vl)
+    rec = {
+        "table": {"x": x.tolist(), "y": y.tolist()},
+        "conf_min": conf_min,
+        "bins": ECE_BINS,
+        "val": {"n_dets": int(len(vs))},
+        "test": None,
+        "k4": None,
+    }
+    if test_gt is None or test_dets is None:
+        # test seti yalnız son ölçümde (Görev 23); val'deki ECE eğitim verisinde (in_sample)
+        # ve yalnız bilgi amaçlı.
+        keep = vs >= conf_min
+        raw, lab = vs[keep], vl[keep]
+        cal = apply_isotonic(raw, x, y)
+        rec["val"] = {
+            "n_dets": int(len(vs)),
+            "n_eval": int(keep.sum()),
+            "ece_before": ece(raw, lab),
+            "ece_after": ece(cal, lab),
+            "in_sample": True,
+        }
+        return rec
     ts, tl = match_labels(test_gt, test_dets)
     keep = ts >= conf_min
     raw, lab = ts[keep], tl[keep]
@@ -119,20 +141,15 @@ def calibrate(
     before = evaluate_coco(test_gt, test_dets)["map50"]
     after = evaluate_coco(test_gt, test_cal)["map50"]
     delta = after - before
-    return {
-        "table": {"x": x.tolist(), "y": y.tolist()},
-        "conf_min": conf_min,
-        "bins": ECE_BINS,
-        "val": {"n_dets": int(len(vs))},
-        "test": {
-            "n_eval": int(keep.sum()),
-            "ece_before": ece(raw, lab),
-            "ece_after": ece(cal, lab),
-            "map50_before": before,
-            "map50_after": after,
-            "delta_map50": delta,
-            "bins_before": reliability(raw, lab),
-            "bins_after": reliability(cal, lab),
-        },
-        "k4": {"value": abs(delta), "limit": K4_LIMIT, "passed": bool(abs(delta) <= K4_LIMIT)},
+    rec["test"] = {
+        "n_eval": int(keep.sum()),
+        "ece_before": ece(raw, lab),
+        "ece_after": ece(cal, lab),
+        "map50_before": before,
+        "map50_after": after,
+        "delta_map50": delta,
+        "bins_before": reliability(raw, lab),
+        "bins_after": reliability(cal, lab),
     }
+    rec["k4"] = {"value": abs(delta), "limit": K4_LIMIT, "passed": bool(abs(delta) <= K4_LIMIT)}
+    return rec

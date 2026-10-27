@@ -99,6 +99,43 @@ def test_calibrate_ignores_low_raw_scores_in_ece():
     assert r["test"]["n_eval"] == 20  # ham skoru < 0,25 olan ECE'ye girmez
 
 
+def test_calibrate_without_test_fits_on_val_only():
+    # test verilmezse tablo val'de öğrenilir; val kendi üstünde (in-sample) ölçülür
+    r = calibrate(GT, _overconfident())
+    assert r["table"]["x"] == [0.95] and r["table"]["y"] == [0.5]
+    assert r["conf_min"] == 0.25 and r["bins"] == 15
+    assert r["test"] is None and r["k4"] is None
+    assert r["val"] == {
+        "n_dets": 20,
+        "n_eval": 20,
+        "ece_before": pytest.approx(0.45),
+        "ece_after": 0.0,
+        "in_sample": True,
+    }
+    json.dumps(r, allow_nan=False)
+
+
+def test_cli_calibrate_without_test_preds(tmp_path: Path, capsys):
+    from baykus.health.cli import main
+
+    coco = tmp_path / "coco"
+    coco.mkdir()
+    (coco / "val_ir.json").write_text(json.dumps(GT.dataset), encoding="utf-8")
+    v = save_predictions(tmp_path / "v.json.gz", _overconfident())
+    out = tmp_path / "res" / "cal.json"
+    args = ["calibrate", "--val-preds", str(v), "--coco-dir", str(coco), "--out", str(out)]
+    assert main(args) == 0
+    rec = json.loads(out.read_text(encoding="utf-8"))
+    assert rec["sources"]["test_preds"] is None and rec["sources"]["test_sha256"] is None
+    assert len(rec["sources"]["val_sha256"]) == 64
+    assert rec["test"] is None and rec["k4"] is None
+    assert rec["val"]["in_sample"] is True and rec["val"]["n_eval"] == 20
+    printed = capsys.readouterr().out
+    assert "val ECE (eğitim verisi)" in printed
+    assert "test ölçümü yok (Görev 23)" in printed
+    assert "Kabul 4" not in printed
+
+
 def test_cli_calibrate(tmp_path: Path):
     from baykus.health.cli import main
 
