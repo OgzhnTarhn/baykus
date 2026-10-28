@@ -584,3 +584,12 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
   | `--ir-drop 200:260` (`..._f4_irdrop.json`) | 76,9 | 86,9 | 66,3 | 7,3 | IR düşmesi p95 77,6 · deneme 126,6 |
   | `--seek-every 100` (`..._f4_seek.json`) | 79,9 | 92,0 | 70,6 | 8,0 | atlama p95 110,7 |
 - **Kabul 5 ✅ (97,9 ≤ 100), pay dar:** koşular arası oynama ≈ 7 ms gözlendi (CV=2 + ORT=8: 84,8 / 91,3 / 97,9). Tepe RSS 435 MB. Sonuç tek koşu kuralıyla yazılır; README'de pay ve oynama birlikte belirtilir.
+
+## 2026-10-28 · F4 · Kapalı ağ kanıtları, E3c-M imajlarıyla — Görev 22 Adım 2
+- `PW_CHANNEL=chrome bash scripts/offline_proof.sh evidence/f4_offline results/system/offline.json`: ilk koşu **düştü** — arayüz imajı (2026-10-26) eski `models.json`'u (models-v1) taşıyordu, motor models-v2 → `e3c.onnx`, `calibration.json` sha uyuşmazlığı (kontrol doğru çalıştı). Arayüz imajı yeniden derlendi → **geçti**: tespit 200 (17 tespit), sha'lar uyuşuyor; motor ve arayüzden dış TCP / DNS yok; tarayıcı 89 istek, dış istek 0; derlenmiş Next çıktısında adres ihlali 0 (`results/system/offline.json`).
+
+## 2026-10-28 · F4 · Kabul 10 b teşhisi: ileri atlama — Görev 15C
+- **Soru:** val'deki yeniden konumlama ölçümü (p95 1,95 px) klipteki `long_gap` durumunu temsil ediyor mu? (`results/motion/reloc_jumps_val.json`, `drift.reloc_trials`, maske ≥ 0,6.)
+- **Bulgu 1 (mevcut ölçüm, her 100 karede 50 kare atlama):** karşılaştırılan 12 denemenin **hepsi geri atlama** (haritanın bildiği bölgeye dönüş; ortanca 0,66 · p95 1,95 px). İleri atlama 10 denemenin 1'i başarılı, karşılaştırılamadı (0).
+- **Bulgu 2 (yeni, her 25 karede 17 kare atlama — klipteki boşluk ≈ 16 kare):** geri 48/48 başarı, ortanca 0,98 · p95 3,09 px, 47'nin 14'ü > 2 px; **ileri 28/46 başarı, ortanca 2,60 · p95 5,03 px, 27'nin 16'sı > 2 px**.
+- **Yorum:** klipteki 5,01 px (`long_gap` kare 46) yöntemin ileri boşluktaki tipik davranışı; E3c ile klipte 1,95 px şanstı. Fark kesintisiz zincire göre ölçülüyor; zincirin kendi kayması da farka giriyor (gerçek kamera konumu yok). Kabul 10 b ölçütü ve klip değiştirilmedi.

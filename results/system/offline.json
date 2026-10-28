@@ -4,7 +4,7 @@
     "sequence": "clip",
     "frame": 1,
     "detect_status": 200,
-    "detections": 10,
+    "detections": 17,
     "model_sha_ok": true,
     "mismatched": []
   },
@@ -44,7 +44,7 @@
   },
   "browser_requests_external": 0,
   "browser": {
-    "requests": 88,
+    "requests": 89,
     "detects": 35,
     "fault_detects": 2,
     "resets": 2,
