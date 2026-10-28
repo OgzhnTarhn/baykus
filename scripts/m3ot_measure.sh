@@ -8,6 +8,7 @@
 # Kullanım: bash scripts/m3ot_measure.sh dev
 #           bash scripts/m3ot_measure.sh test --i-know-this-is-test
 #           TILES=4 bash scripts/m3ot_measure.sh dev
+#           bash scripts/m3ot_measure.sh dev motion
 set -euo pipefail
 cd "$(dirname "$0")/.."
 part="${1:?kullanım: m3ot_measure.sh <dev|test> [--i-know-this-is-test]}"
@@ -28,6 +29,32 @@ case "$part" in
     ;;
 esac
 data="data/m3ot_$part"
+# Faz 4 hareket satırı (plan F4 Görev 16): dev motion | test --i-know-this-is-test motion → C++
+# baykus_sequence (ego + hareket + takip) → baykus-motion measure --row engine; dev'de kör örneklem r2.
+if [ "${@: -1}" = "motion" ] && [ $# -ge 2 ]; then
+  work="runs/m3ot_${part}_motion"
+  export MSYS_NO_PATHCONV=1
+  mkdir -p "$work" results/motion
+  rm -f "$work"/*.json.gz
+  runs=()
+  for d in "$data"/sequences/*/; do
+    s="$(basename "$d")"
+    docker run --rm -v "$PWD/models:/models:ro" -v "$PWD/configs:/configs:ro" \
+      -v "$PWD/$data:/data:ro" -v "$PWD/$work:/work" --entrypoint baykus_sequence baykus-engine \
+      --models /models --manifest /configs/engine/models.json --motion /configs/engine/motion.json \
+      --tracker /configs/engine/tracker.json --seq-dir "/data/sequences/$s" \
+      --out "/work/$s.json.gz" "${flag[@]}"
+    runs+=(--run "../$work/$s.json.gz")
+  done
+  audit=()
+  key="data/motion/audit_key_val_r2.json" answers="data/motion/audit_answers_val_r2.json"
+  if [ "$part" = dev ] && [ -f "$key" ] && [ -f "$answers" ]; then
+    audit=(--audit-key "../$key" --audit-answers "../$answers")
+  fi
+  (cd python && uv run baykus-motion measure --split "$part" --row engine "${runs[@]}" "${audit[@]}" \
+    --out "../results/motion/m3ot_${part}_engine.json" "${flag[@]}")
+  exit 0
+fi
 # TILES: 1 (varsayılan, tüm kutu) veya 4 (parçalı çıkarım, Görev 15D)
 tiles="${TILES:-1}"
 tiles_suf=""
