@@ -85,13 +85,14 @@ jobs:
           cd python && uv run baykus-track compare --py ../fixtures/tracks/dev_tracks_py.json.gz \
             --cpp ../evidence/dev_tracks_cpp.json.gz --out ../evidence/parity_track.json
           # Kabul 1, 10 b: klip senaryoları C++ ↔ Python; karşılaştırıcının çıkış kodu kapıdır
+          # (Kabul 10 b bilinen olumsuz sonuç, ADR 0011: yalnız 10 b düşerse geçer, JSON'da known_fail)
           docker run --rm -v "$PWD/../models:/models:ro" -v "$PWD/../fixtures:/fixtures:ro" \
             -v "$PWD/../configs:/configs:ro" -v "$PWD/../evidence:/out" baykus-engine-build \
             /build/bin/baykus_clip --models /models --manifest /configs/engine/models.json \
             --motion /configs/engine/motion.json --tracker /configs/engine/tracker.json \
             --tar /fixtures/f4 --out /out/clip_cpp.json
           uv run baykus-motion parity --ref ../evidence/clip_ref.json --cpp ../evidence/clip_cpp.json \
-            --out ../evidence/parity_motion.json
+            --out ../evidence/parity_motion.json --known-fail-10b docs/adr/0011-kabul-10b.md
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: engine-evidence
