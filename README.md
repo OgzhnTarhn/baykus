@@ -160,7 +160,8 @@ kanıt dosyalarından üretiliyor).
 - **IR hizasızlık alarmı M3OT'ta çalışmıyor:** iki kamera arasında doğal kayma var ve eşleşme yanıtı
   düşük; ürün kuralı temizde yanlış alarm vermiyor ama gerçek 20 px kaymayı da yakalamıyor.
 - Model DroneVehicle'ın 5 sınıfını biliyor (motosiklet yok); yoğun trafikte (M3OT val, kare başına
-  ≈ 11 araç) AP50 39,6'ya düşüyor.
+  ≈ 11 araç) AP50 39,6'ya düşüyordu. Faz 4'te M3OT train ile ince ayarlanan E3c-M'de M3OT val AP50 88,5
+  (`results/engine/m3ot_dev_detect.json`; test yalnız Faz 4 sonunda, bir kez).
 - H5'teki 60 ms Windows'ta yerel Python ölçümüydü; motor Docker'da ve çözme + sağlık dahil:
   **karşılaştırılamaz**.
 

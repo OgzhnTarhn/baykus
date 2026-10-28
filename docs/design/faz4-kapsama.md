@@ -90,6 +90,11 @@ aynen; yalnız parametreler), RGB-IR hizalama (ölçüldü: neden değil).
 - **Varsayılan kuralı:** bench'te (Görev 17) cihazda `tiles=4` p95 ≤ 100 ms ise varsayılan 4, değilse 1
   (laptop CPU'da beklenen 1; 4060'ta ölçülür). Ölçümden önce sabit.
 - Ölçüm: son model için val AP50 / bulma oranı / HOTA, `tiles` 1 ve 4 → `results/engine/m3ot_dev_tiles.json`.
+- **Sonuç ve karar (2026-10-28):** E3c-M ile val'de `tiles=4` her ölçüde daha kötü: AP50 0,885 → 0,833, bulma
+  0,857 → 0,784 (`results/engine/m3ot_dev_tiles.json`), HOTA 0,652 → 0,597, MOTA 0,760 → 0,656
+  (`results/track/m3ot_dev_engine.json`, `m3ot_dev_tiles4_engine.json`). Yukarıdaki kural yalnız gecikmeye bakıyordu
+  ve parçalı modun kapsamı artıracağını varsayıyordu; ölçüm bunu E3c-M için çürüttü. Kullanıcı kararı: varsayılan
+  **her cihazda 1**; `tiles=4` API'de isteğe bağlı kalır, Görev 17'deki `tiles=4` gecikme satırı yalnız bilgi.
 
 ## 4. Sıra ve etkiler
 

@@ -1058,6 +1058,8 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 | **4. Hareketli hedef** | 1 Şub - 28 Mar 2027 | Kamera hareketi telafisi, hareketli/duran ayrımı, göreli mozaik harita, bölge olayları (M3OT) | S11; `v0.3.0` | Faz 4 tasarımı, Faz 3 sonunda |
 | **5. Sunum** | 1-30 Nis 2027 | Aşağıdaki H10 içeriği: README, demo videosu, teknik yazı, CV; isteğe bağlı arXiv | S1-S11; `v1.0.0` | Faz 5 başında |
 
+**v4.6 (F4 Görev 15A-15D, 2026-10-28):** M3OT kapsamı için sevk edilen model **E3c-M** (E3c + M3OT train öğretmen etiketleriyle ince ayar, ADR 0010; M3OT val AP50 0,396 → 0,885, DroneVehicle val mAP50 0,841 → 0,845); takipçi eşikleri M3OT val'de HOTA kuralıyla (E3c-M ile 0,6 / 0,6, `docs/design/faz3.md`); isteğe bağlı parçalı çıkarım `tiles=4` motor ve API'de var, ama E3c-M ile val'de daha kötü (AP50 0,833, HOTA 0,597 · tam kare 0,652) → varsayılan her cihazda `tiles=1` (`docs/design/faz4-kapsama.md` §3 C). Ego maskesine yalnız ham skoru ≥ 0,6 tespitler girer (`ego.mask_min_score`).
+
 **v4.5:** H6-H9 tabloları tarihî kayıt; Faz 3'ün güncel görev listesi `docs/plans/F3.md` (37 görev). Farklar: #36 ve #37'deki **(S)** işaretleri kalktı (Faz 3'te bütün kodu Claude yazar, kullanıcı inceler); #37'nin YOLO11 NMS kısmı, #39 (C++ WBF) ve #41'in Python–C++ hız karşılaştırması kesildi; #46'da mod seçimi yok.
 
 Aşağıdaki haftalık tablolar v3.0'dan. **H1-H5 = Faz 1** ve geçerli. **H6-H9 içeriği Faz 3'e, H10 içeriği Faz 5'e taşındı**; bu haftaların tarihleri ve sırası ilgili fazın tasarımında yeniden yazılır. Faz 2 ve Faz 4'ün GPU ihtiyacı kendi tasarımlarında tahmin edilip `docs/gpu-budget.md`'ye eklenir; Faz 1'in bütçesi değişmez.

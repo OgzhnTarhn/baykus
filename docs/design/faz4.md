@@ -392,6 +392,8 @@ verilen en büyük kimlik + 1). Faz 3 takip eşliği takipçinin kendi kimlikler
 
 ```
 POST /v1/detect  sorgu: Faz 3 + frame=<dizi kare no> (isteğe bağlı) + focus=<track_id> (isteğe bağlı)
+                 + tiles=1|4 (isteğe bağlı; başka değer 400; varsayılan /v1/model "tiles".default = 1,
+                 faz4-kapsama.md §3 C; 4 = 2 × 2 parça, timing_ms.infer dört çıkarımın toplamı)
   →  Faz 3 yanıtı +
   detections[i].motion, .speed_rel, .map_xy            (gösterim katmanı, conf süzgeçli — Faz 3 gibi)
   tracks: [{"track_id","cls_id","box","score_raw","score","motion","speed_rel","map_xy"}]
@@ -413,6 +415,7 @@ POST /v1/session/alarms/ack?session=&alarm=<id>  → 200 | 404
 GET  /v1/session/track?session=&id=    → araç özeti | 404
 POST /v1/session/reset?session=&scope=all|tracks  (varsayılan all; Faz 3 davranışı)
 GET  /v1/model → + "motion": {configs/engine/motion.json parametreleri}, "motion_sha256"
+                 + "tiles": {"modes": [1, 4], "default": 1, "window_ratio": [9, 16], "nms_iou": 0.5}
 ```
 - `tracks[]` motorun mevcut takip girdisinden kurulur (`runtime.cpp`: takipçi `dets_all`'ın ham ≥ 0,1 kısmını
   görür; gösterim listesi ayrıca `filter_display(conf)` ile süzülür — Faz 3'te kimlikler yalnız süzülmüş
