@@ -48,3 +48,108 @@ def test_motion_val_matches_committed_fixture(tmp_path):
                  "--maps", str(maps), "--motion", str(motion), "--out", str(out)])  # fmt: skip
     assert code == 0
     assert out.read_bytes() == expected.read_bytes()
+
+
+_FM = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+
+
+def _parity_ego(frame_to_map=_FM, relocalized=False, merge=None) -> dict:
+    return {
+        "ok": True,
+        "source": "ir",
+        "map_gen": 1,
+        "provisional": False,
+        "frame_to_map": list(frame_to_map),
+        "keyframe": False,
+        "relinked": False,
+        "relocalized": relocalized,
+        "merge": merge,
+    }
+
+
+def _parity_frame(n: int, tracks: list[dict], ego: dict | None = None) -> dict:
+    return {
+        "frame": n,
+        "reset_before": None,
+        "tracks": tracks,
+        "ego": _parity_ego() if ego is None else ego,
+        "health": {
+            "rgb": {"flags": [], "frozen": False},
+            "ir": {"flags": [], "frozen": False},
+            "pair": {"misaligned": False},
+        },
+    }
+
+
+def _parity_reloc_case(dx: float) -> dict:
+    clean = [_parity_frame(n, []) for n in (1, 2, 3)]
+    moved = [_FM[0], _FM[1], _FM[2] + dx, _FM[3], _FM[4], _FM[5]]
+    merge = {"from": 2, "to": 1, "transform": _FM}
+    seek = [_parity_frame(1, []), _parity_frame(2, [], _parity_ego(moved, True, merge))]
+    return {"scenarios": {"clean": clean, "seek": seek}}
+
+
+def _parity_rows_case() -> dict:
+    track = {"track_id": 1, "motion": "moving", "speed_rel": 0.5, "map_xy": [10.0, 20.0]}
+    return {"scenarios": {"clean": [_parity_frame(i + 1, [dict(track)]) for i in range(3)]}}
+
+
+def _parity_cli(tmp_path, ref: dict, cpp: dict, *extra: str) -> tuple[int, dict]:
+    import json
+
+    from baykus.motion.cli import main
+
+    ref_p = tmp_path / "ref.json"
+    cpp_p = tmp_path / "cpp.json"
+    out = tmp_path / "parity.json"
+    ref_p.write_text(json.dumps(ref), encoding="utf-8")
+    cpp_p.write_text(json.dumps(cpp), encoding="utf-8")
+    code = main(["parity", "--ref", str(ref_p), "--cpp", str(cpp_p),
+                 "--out", str(out), *extra])  # fmt: skip
+    return code, json.loads(out.read_text(encoding="utf-8"))
+
+
+def test_parity_cli_known_fail_10b_exits_zero(tmp_path):
+    import copy
+
+    ref = _parity_reloc_case(2.5)
+    code, rec = _parity_cli(
+        tmp_path, ref, copy.deepcopy(ref), "--known-fail-10b", "docs/adr/0011-kabul-10b.md"
+    )
+    assert code == 0
+    assert rec["known_fail"] == {
+        "kabul10b": "docs/adr/0011-kabul-10b.md",
+        "still_failing": True,
+    }
+    assert rec["kabul1"] == "pass"
+
+
+def test_parity_cli_10b_fail_without_flag_exits_one(tmp_path):
+    import copy
+
+    ref = _parity_reloc_case(2.5)
+    code, rec = _parity_cli(tmp_path, ref, copy.deepcopy(ref))
+    assert code == 1
+    assert rec["kabul10b"]["pass"] is False
+
+
+def test_parity_cli_known_fail_does_not_hide_kabul1(tmp_path):
+    import copy
+
+    ref = _parity_rows_case()
+    cpp = copy.deepcopy(ref)
+    cpp["scenarios"]["clean"][1]["ego"]["keyframe"] = True
+    code, rec = _parity_cli(tmp_path, ref, cpp, "--known-fail-10b", "docs/adr/0011-kabul-10b.md")
+    assert code == 1
+    assert rec["kabul1"] == "fail"
+
+
+def test_parity_cli_known_fail_when_10b_passes(tmp_path):
+    import copy
+
+    ref = _parity_reloc_case(1.5)
+    code, rec = _parity_cli(
+        tmp_path, ref, copy.deepcopy(ref), "--known-fail-10b", "docs/adr/0011-kabul-10b.md"
+    )
+    assert code == 0
+    assert rec["known_fail"]["still_failing"] is False

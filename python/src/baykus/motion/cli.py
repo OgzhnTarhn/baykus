@@ -424,18 +424,32 @@ def _cmd_parity(a: argparse.Namespace) -> int:
         **git_info(),
         "created_at": iso(utc_now()),
     }
+    k10 = rec["kabul10b"]
+    if a.known_fail_10b:
+        rec["known_fail"] = {
+            "kabul10b": a.known_fail_10b,
+            "still_failing": not k10["pass"],
+        }
     write_json(Path(a.out), rec)
     for name, r in rec["per_scenario"].items():
         print(
             f"{name}: {r['compared']}/{r['rows']} satır (bantta {r['in_band']}, serbest "
             f"{r['free']}), hata {r['errors']}, köşe {r['max_corner_px']:.2g} px"
         )
-    k10 = rec["kabul10b"]
-    print(f"Kabul 10 b: {'geçti' if k10['pass'] else 'GEÇMEDİ'}")
+    line = f"Kabul 10 b: {'geçti' if k10['pass'] else 'GEÇMEDİ'}"
+    if a.known_fail_10b and not k10["pass"]:
+        line += f" (bilinen olumsuz sonuç: {a.known_fail_10b})"
+    print(line)
+    if a.known_fail_10b and k10["pass"]:
+        print(f"Not: Kabul 10 b artık geçiyor; {a.known_fail_10b} gözden geçirilmeli")
     for e in rec["errors"][:10]:
         print(f"  {e}")
-    print(f"Kabul 1: {rec['verdict']} → {a.out}")
-    return 0 if rec["verdict"] == "pass" else 1
+    print(f"Kabul 1: {rec['kabul1']} → {a.out}")
+    if rec["kabul1"] == "fail":
+        return 1
+    if not k10["pass"] and not a.known_fail_10b:
+        return 1
+    return 0
 
 
 def _common(p: argparse.ArgumentParser) -> None:
@@ -527,6 +541,12 @@ def build_parser() -> argparse.ArgumentParser:
     pa.add_argument("--ref", default="../evidence/clip_ref.json")
     pa.add_argument("--cpp", default="../evidence/clip_cpp.json")
     pa.add_argument("--out", default="../results/engine/parity_ego.json")
+    pa.add_argument(
+        "--known-fail-10b",
+        default=None,
+        metavar="ADR",
+        help="Kabul 10 b bilinen olumsuz sonuç (ADR yolu); yalnız 10 b düşerse çıkış 0",
+    )
     pa.set_defaults(func=_cmd_parity)
     et = sub.add_parser("ego-trace", help="ego girdi/çıktı izi (yeniden oynatma; bu makinede)")
     et.add_argument("--models", default="../models")

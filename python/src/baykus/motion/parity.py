@@ -302,9 +302,11 @@ def compare(
 
     kabul10b = _kabul10b(ref_scen, cpp_scen, reloc_tol, w, h)
 
-    ok = not errors and all(s["pass"] for s in per_scenario.values()) and kabul10b["pass"]
+    kabul1_ok = not errors and all(s["pass"] for s in per_scenario.values())
+    ok = kabul1_ok and kabul10b["pass"]
     return {
         "verdict": "pass" if ok else "fail",
+        "kabul1": "pass" if kabul1_ok else "fail",
         "per_scenario": per_scenario,
         "kabul10b": kabul10b,
         "errors": errors[:50],

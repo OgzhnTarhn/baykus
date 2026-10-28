@@ -96,3 +96,15 @@ def test_parity_reloc_tolerance():
     far = _reloc_case(2.5)
     out = compare(far, copy.deepcopy(far))
     assert not out["kabul10b"]["pass"] and out["verdict"] == "fail"
+
+
+def test_parity_kabul1_separate_from_10b():
+    far = _reloc_case(2.5)
+    out = compare(far, copy.deepcopy(far))
+    assert out["kabul1"] == "pass"
+    assert out["kabul10b"]["pass"] is False
+    assert out["verdict"] == "fail"
+    ref = {"scenarios": {"clean": _run([("moving", 0.5)] * 3)}}
+    cpp = copy.deepcopy(ref)
+    cpp["scenarios"]["clean"][1]["ego"]["keyframe"] = True
+    assert compare(ref, cpp)["kabul1"] == "fail"
