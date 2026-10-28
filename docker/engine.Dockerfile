@@ -60,6 +60,9 @@ RUN cmake -S /src/engine -B /build -G Ninja -DCMAKE_BUILD_TYPE=Release \
 FROM ${UBUNTU} AS runtime
 ARG DEBIAN_FRONTEND=noninteractive
 ENV ORT_DISABLE_TELEMETRY=1
+# Gecikme (plan F4 Görev 17, docs/experiments.md 2026-10-28): ego açıkken OpenCV ve ORT havuzları
+# 16 mantıksal çekirdek için yarışıyordu; hedef laptop 8 fiziksel çekirdek. Sonuçları değiştirmez.
+ENV BAYKUS_CV_THREADS=2 BAYKUS_ORT_THREADS=8
 RUN apt-get update \
  && apt-get install -y --no-install-recommends libssl3t64 zlib1g \
  && rm -rf /var/lib/apt/lists/* \
