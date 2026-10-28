@@ -1,5 +1,6 @@
 {
   "verdict": "fail",
+  "kabul1": "pass",
   "per_scenario": {
     "clean": {
       "rows": 1113,
@@ -120,7 +121,11 @@
   "errors": [],
   "ref_sha256": "831ab2123af25314c1673ab5b879aff65d10097ab02ff87c1278cc18b18e416d",
   "cpp_sha256": "549701b18527c4532466a78c22ff4030e7f3e721648600d0d3ae4de94796462f",
-  "git_commit": "c8901d9c014a5de74ac4df48be3299cb6289773c",
+  "git_commit": "8170fcf742ca05144b5411b1ee87b53955664dc9",
   "git_dirty": true,
-  "created_at": "2026-10-28T09:57:09Z"
+  "created_at": "2026-10-28T14:08:55Z",
+  "known_fail": {
+    "kabul10b": "docs/adr/0011-kabul-10b.md",
+    "still_failing": true
+  }
 }

@@ -162,6 +162,9 @@ kanıt dosyalarından üretiliyor).
 - Model DroneVehicle'ın 5 sınıfını biliyor (motosiklet yok); yoğun trafikte (M3OT val, kare başına
   ≈ 11 araç) AP50 39,6'ya düşüyordu. Faz 4'te M3OT train ile ince ayarlanan E3c-M'de M3OT val AP50 88,5
   (`results/engine/m3ot_dev_detect.json`; test yalnız Faz 4 sonunda, bir kez).
+- **Uzun görüntü kesintisinden sonra harita birkaç piksel kayabilir** (Faz 4): kamera kesinti sırasında
+  yeni bir bölgeye ilerlediyse yeniden konumlama, M3OT val'de kesintisiz koşuya göre köşelerde ortanca
+  2,6 px, p95 5,0 px fark veriyor (`results/motion/reloc_jumps_val.json`; Kabul 10 b, ADR 0011).
 - H5'teki 60 ms Windows'ta yerel Python ölçümüydü; motor Docker'da ve çözme + sağlık dahil:
   **karşılaştırılamaz**.
 

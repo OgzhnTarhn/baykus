@@ -755,7 +755,7 @@ Ek dokunulmamış bölüm yok (kullanıcı kararı §10/1 = A).
 | Kabul 1, 2, 3 (eşlik, sentetik doğruluk) | **çıkışı engeller** |
 | Kabul 4 (kör insan örneklemi, val) | **çıkışı engeller**; iki kez tutmazsa yalnız kullanıcının ADR'siyle B planına iner |
 | Kabul 5 (gecikme) | **çıkışı engeller**; aşılırsa ADR'yle kapanır, README'de olumsuz sonuç |
-| Kabul 6, 7, 8, 10, 11 (ürün davranışı) | **çıkışı engeller** |
+| Kabul 6, 7, 8, 10, 11 (ürün davranışı) | **çıkışı engeller** — istisna: Kabul 10 b ADR 0011 ile (2026-10-28) Kabul 5 kuralına geçti: ADR'yle kapanır, README'de olumsuz sonuç |
 | Kabul 9 (oracle işlev kapısı, val) | **çıkışı engeller**; tutmazsa ADR |
 | Motor satırı, test sonuçları, ego kalitesi, harita kayması, kararlılık, yeniden konumlama val raporu, donmuş kare, demo ölçütü, test audit'i | **yalnız raporlanır** |
 
