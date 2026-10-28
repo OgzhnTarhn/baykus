@@ -565,3 +565,9 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
 - **Dizi başına:** 1_08 BA 0,767 · P_mov 0,676; 2_08 BA 0,854 · P_mov 0,753.
 - **Demo ölçütü** (tasarım faz4 §6.3, ölçümden önce: BA ≥ 0,70 ve P_mov ≥ 0,80): 1_08 ❌ (P_mov), 2_08 ❌ (P_mov) → kural gereği demo `1_08` (`configs/m3ot_dev.json` `demo_motion`), iddia kuralı (§6.6) uygulanır; karar test'te.
 - **Yorum:** kayıp hassasiyette; hareketli çıktıların 934 / 7507'si GT ile eşleşmiyor (tespit / takip kaynaklı), 83'ü yanlış etiket. Oracle'da bile P_mov 0,79 — kural tek başına 0,80'e yetmiyor.
+
+## 2026-10-28 · F4 · Gecikme (Kabul 5) — Görev 17
+- **Koşu** (laptop prizde, Docker Desktop 4.62.0, VM 16 CPU / 7,96 GB, E3c-M ONNX FP32, `baykus_bench --sequence /data/1_08`, 50 ısınma + 500 ölçüm, `gate=advise`, takip + ego + hareket + 4 bölge, git `e716d30`): motor p95 **120,7 ms** (p50 85,1) → **Kabul 5 ❌** (sınır 100). Aşama p95: infer 87,0 · ego 19,1 · health 14,0 · decode 8,5 · pre 4,3; anahtar kare p95 124,2, yeniden konumlama denemesi p95 118,5; tepe RSS 435 MB. `results/bench/e3c_onnx_fp32_engine_laptop-docker_f4.json`.
+- **Aynı girdi, `--no-ego`** (bölgeler hareket ister, bu koşuda yok): p95 **85,5 ms** (p50 66,1); infer p95 64,7 · health 10,6 (`..._f4_noego.json`). Faz 3'ün 20 görüntülük sonucu 82,2 ms (ayrı protokol).
+- **Teşhis (ürün ayarı değişmeden):** tekrar koşusu p95 113,3 ms (infer 79,5, ego 19,3; koşular arası oynama ≈ 7 ms; `..._f4_diag_repeat.json`); `OPENCV_FOR_THREADS_NUM=1` ile p95 **101,9 ms** (infer 74,3 · ego 12,5 · health 7,9; `..._f4_diag_ocv1.json`).
+- **Yorum:** ego'nun kendi payı küçük (p95 ≈ 12-19 ms); asıl artış ego açıkken çıkarımın yavaşlaması (infer p95 64,7 → 79,5-87,0). OpenCV'nin iş parçacığı havuzu ile ONNX Runtime aynı çekirdekler için yarışıyor gibi; OpenCV'yi tek iş parçacığına indirmek farkın yarısını kapatıyor. IR düşmesi ve atlama koşuları yapılmadı (tasarım: aşılırsa dur). Karar kullanıcıda.
