@@ -1,0 +1,207 @@
+{
+  "row": "engine",
+  "split": "val",
+  "sequences": [
+    "1_08",
+    "2_08"
+  ],
+  "labels_sha256": {
+    "1_08": "11f3524f78ab61dd883a31783faf795203cf104f0025fa8a85a86b5d328932e3",
+    "2_08": "cf6918703604b049c9ad162f359b7bdad6774e821338f9e9ea368c7fa1c6eccb"
+  },
+  "tracks_sha256": "cf4e85e929c20149e2c8afa96d2ae1a7c3f1fc0d88d24f44cffb8877154868df",
+  "motion_sha256": "b89294835de23ab4e9b7b63b3af75b67c5726d39bd3e38348a92e746fce72176",
+  "runs_sha256": {
+    "1_08.json.gz": "438e850c366c744c04bc73921f7eef3403f4bc3a0fef8c0db00af59a7e04dc85",
+    "2_08.json.gz": "f1b16f9e659fe6c304f8a2bc486d50a486cca3740436063901f8d63cf3602be2"
+  },
+  "labeled": {
+    "n": 9813,
+    "n_moving": 6450,
+    "n_stationary": 3363,
+    "R_mov": 0.8350387596899225,
+    "R_sta": 0.8114778471602736,
+    "BA": 0.823258303425098,
+    "coverage": 0.8491796596351778,
+    "BA_decided": 0.9730157747619783,
+    "confusion": {
+      "moving": {
+        "moving": 5386,
+        "stationary": 135,
+        "unknown": 254,
+        "missed": 675
+      },
+      "stationary": {
+        "moving": 83,
+        "stationary": 2729,
+        "unknown": 323,
+        "missed": 228
+      }
+    }
+  },
+  "stable": {
+    "n": 9298,
+    "n_moving": 6131,
+    "n_stationary": 3167,
+    "R_mov": 0.8504322296525852,
+    "R_sta": 0.8285443637511841,
+    "BA": 0.8394882967018846,
+    "coverage": 0.8432996343299635,
+    "BA_decided": 0.99942900647126,
+    "confusion": {
+      "moving": {
+        "moving": 5214,
+        "unknown": 251,
+        "missed": 666
+      },
+      "stationary": {
+        "moving": 3,
+        "stationary": 2624,
+        "unknown": 313,
+        "missed": 227
+      }
+    }
+  },
+  "per_seq": {
+    "1_08": {
+      "n": 3997,
+      "n_moving": 2839,
+      "n_stationary": 1158,
+      "R_mov": 0.8249383585769637,
+      "R_sta": 0.7089810017271158,
+      "BA": 0.7669596801520397,
+      "coverage": 0.8093570177633225,
+      "BA_decided": 0.9746541308660908,
+      "confusion": {
+        "moving": {
+          "moving": 2342,
+          "stationary": 45,
+          "unknown": 101,
+          "missed": 351
+        },
+        "stationary": {
+          "moving": 27,
+          "stationary": 821,
+          "unknown": 176,
+          "missed": 134
+        }
+      }
+    },
+    "2_08": {
+      "n": 5816,
+      "n_moving": 3611,
+      "n_stationary": 2205,
+      "R_mov": 0.8429797839933536,
+      "R_sta": 0.8653061224489796,
+      "BA": 0.8541429532211666,
+      "coverage": 0.8765474552957359,
+      "BA_decided": 0.9713847337590347,
+      "confusion": {
+        "moving": {
+          "moving": 3044,
+          "stationary": 90,
+          "unknown": 153,
+          "missed": 324
+        },
+        "stationary": {
+          "moving": 56,
+          "stationary": 1908,
+          "unknown": 147,
+          "missed": 94
+        }
+      }
+    }
+  },
+  "precision": {
+    "moving": {
+      "total": 7507,
+      "correct": 5386,
+      "wrong_label": 83,
+      "excluded": 1104,
+      "unmatched": 934,
+      "P": 0.7174637005461569
+    },
+    "stationary": {
+      "total": 3768,
+      "correct": 2729,
+      "wrong_label": 135,
+      "excluded": 782,
+      "unmatched": 122,
+      "P": 0.7242569002123143
+    },
+    "false_moving_per_frame": 0.8475
+  },
+  "excluded": {
+    "band": {
+      "n": 1239,
+      "pred": {
+        "missed": 153,
+        "moving": 397,
+        "stationary": 528,
+        "unknown": 161
+      }
+    },
+    "edge": {
+      "n": 2422,
+      "pred": {
+        "missed": 694,
+        "moving": 707,
+        "stationary": 254,
+        "unknown": 767
+      }
+    }
+  },
+  "delay": {
+    "transitions": 33,
+    "reached": 33,
+    "not_reached": 0,
+    "median": 7.0,
+    "p90": 11.0
+  },
+  "bootstrap": {
+    "BA": [
+      0.7760682986083638,
+      0.8583453246422277
+    ],
+    "R_mov": [
+      0.7882920246906577,
+      0.8745325246796891
+    ],
+    "R_sta": [
+      0.7256517439833957,
+      0.8700197597259751
+    ],
+    "n_tracks": 78,
+    "resamples": 1000,
+    "seed": 42,
+    "note": "iz düzeyinde, yalnız dizi içi örnekleme belirsizliği; genelleme güvencesi değil"
+  },
+  "matched": true,
+  "iou_min": 0.5,
+  "k": 15,
+  "vs_human": {
+    "n": 120,
+    "agree": 89,
+    "rate": 0.7416666666666667,
+    "ci95": [
+      0.6567130404034741,
+      0.8116271619194934
+    ],
+    "product_unknown": 12,
+    "product_missed": 11,
+    "decided": {
+      "n": 97,
+      "agree": 89,
+      "rate": 0.9175257731958762,
+      "ci95": [
+        0.8456221298338819,
+        0.9576178028922945
+      ]
+    },
+    "key_sha256": "05263155b19a092a8b272450d77b675dfb7ee5774bc3b43621c1fd81b351ac47",
+    "answers_sha256": "e10cca3390180efdbbdbe1e9bc8ab4836acea419683a409f7b83bd9cb38b3a57"
+  },
+  "git_commit": "0311b7d9350532899ba3d605568506cff1b5dee1",
+  "git_dirty": false,
+  "created_at": "2026-10-28T12:11:57Z"
+}

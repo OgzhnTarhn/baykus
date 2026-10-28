@@ -558,3 +558,10 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
 - **Motor yolu (C++ `baykus_detect --tiles 4` → `baykus_track`, `TILES=4 bash scripts/m3ot_measure.sh dev`):** AP50 0,833 (Python ile aynı; `results/engine/m3ot_dev_tiles4_detect.json`), çift kutu 0,000, ECE ham 0,069 · kalibre 0,077; takip HOTA **0,597** · MOTA 0,656 · IDF1 0,767 (`results/track/m3ot_dev_tiles4_engine.json`) — tiles=1 ile HOTA 0,652 · MOTA 0,760 · IDF1 0,854 (`results/track/m3ot_dev_engine.json`, 2026-10-27).
 - **Yorum:** E3c-M ile parçalı kip val'de her ölçüde daha kötü (AP50 −5,2 puan, HOTA −5,5 puan); E3c'deki geçici tanıda tersiydi (0,40 → 0,50). Tasarım §3 C varsayılan kuralı yalnız gecikmeye bakıyor (Görev 17); kural değiştirilmedi, karar kullanıcıda.
 - **Not:** plan HOTA'yı `m3ot_dev_tiles.json`'a yazmayı söylüyordu; takip sonuçları `m3ot_measure.sh`'in kendi dosyalarında (yukarıda).
+
+## 2026-10-28 · F4 · Hareket: motor satırı (val) ve demo dizisi — Görev 16
+- **Koşu:** `bash scripts/m3ot_measure.sh dev motion` (C++ `baykus_sequence`, E3c-M, ego maskesi ≥ 0,6, takip 0,6 / 0,6) → `baykus-motion measure --row engine` (eşleşmeli); kör örneklem r2 ile. Kayıtlar `results/motion/m3ot_dev_engine.json` (iki dizi), `..._1_08.json`, `..._2_08.json` (demo ölçütü dizi başına; tek dizilik geçici dev config ile, kod değişmeden).
+- **Birleşik:** BA **0,823** · R_mov 0,835 · R_sta 0,811 · kapsam 0,849 · P_mov **0,717** · P_sta 0,724 · yanlış hareketli / kare 0,85; insanla uyum 89/120 (0,742, %95 GA 0,657–0,812). Oracle (GT kutuları, `results/motion/m3ot_dev_oracle.json`): BA 0,949, P_mov 0,791.
+- **Dizi başına:** 1_08 BA 0,767 · P_mov 0,676; 2_08 BA 0,854 · P_mov 0,753.
+- **Demo ölçütü** (tasarım faz4 §6.3, ölçümden önce: BA ≥ 0,70 ve P_mov ≥ 0,80): 1_08 ❌ (P_mov), 2_08 ❌ (P_mov) → kural gereği demo `1_08` (`configs/m3ot_dev.json` `demo_motion`), iddia kuralı (§6.6) uygulanır; karar test'te.
+- **Yorum:** kayıp hassasiyette; hareketli çıktıların 934 / 7507'si GT ile eşleşmiyor (tespit / takip kaynaklı), 83'ü yanlış etiket. Oracle'da bile P_mov 0,79 — kural tek başına 0,80'e yetmiyor.
