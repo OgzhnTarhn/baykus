@@ -1,17 +1,28 @@
 #include "baykus/detector.hpp"
 
+#include <opencv2/core.hpp>
+
 #include <stdexcept>
 
+#include "baykus/cpu.hpp"
 #include "baykus/detections.hpp"
 
 namespace baykus {
 
 namespace {
 
+// Gecikme ayarı (plan F4 Görev 17): BAYKUS_* değişkenleri yoksa davranış bugünküyle aynı.
 Ort::SessionOptions options(int threads) {
+  const CpuCfg cpu = cpu_cfg_from_env();
+  if (cpu.cv_threads) cv::setNumThreads(*cpu.cv_threads);
   Ort::SessionOptions opts;
   if (threads > 0) {
     opts.SetIntraOpNumThreads(threads);
+  } else if (cpu.ort_threads) {
+    opts.SetIntraOpNumThreads(*cpu.ort_threads);
+  }
+  if (cpu.ort_spinning) {
+    opts.AddConfigEntry("session.intra_op.allow_spinning", *cpu.ort_spinning ? "1" : "0");
   }
   opts.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);  // Python varsayılanı
   return opts;

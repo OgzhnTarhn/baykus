@@ -27,6 +27,7 @@
 #include <vector>
 
 #include "baykus/bench.hpp"
+#include "baykus/cpu.hpp"
 #include "baykus/files.hpp"
 #include "baykus/models.hpp"
 #include "baykus/motion_config.hpp"
@@ -231,7 +232,8 @@ int main(int argc, char** argv) {
                     {"ir_drop", ir_drop_str},
                     {"seek_every", seek_every},
                     {"zones", zones_file.empty() ? json(nullptr) : json(zones_file)}}},
-                  {"threads", nullptr}};  // ORT varsayılanı (Python OrtBackend gibi)
+                  {"threads", baykus::cpu_cfg_json(
+                                  baykus::cpu_cfg_from_env())}};  // null = kütüphane varsayılanı
       rec["stages"] = r.at("stages");
       rec["fps"] = r.at("fps");
       rec["peak_rss_mb"] = proc_status_mb("VmHWM");
@@ -274,7 +276,8 @@ int main(int argc, char** argv) {
                   {"session", "single"},
                   {"provider", "cpu"},
                   {"batch", 1}}},
-                {"threads", nullptr}};  // ORT varsayılanı (Python OrtBackend gibi)
+                {"threads", baykus::cpu_cfg_json(
+                                baykus::cpu_cfg_from_env())}};  // null = kütüphane varsayılanı
     json system = {{"nproc", std::thread::hardware_concurrency()}, {"cpu_model", cpu_model()}};
     if (url.empty()) {
       const auto models = baykus::load_models(models_dir, manifest);

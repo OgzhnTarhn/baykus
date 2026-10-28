@@ -46,6 +46,7 @@ target_link_libraries(baykus_httplib INTERFACE Threads::Threads)
 add_library(baykus_core STATIC
   src/bench.cpp
   src/calibration.cpp
+  src/cpu.cpp
   src/detections.cpp
   src/detector.cpp
   src/ego.cpp
@@ -98,6 +99,7 @@ add_executable(baykus_tests
   tests/models_test.cpp
   tests/pipeline_test.cpp
   tests/clip_test.cpp
+  tests/cpu_test.cpp
   tests/lsap_test.cpp
   tests/kalman_test.cpp
   tests/tracker_test.cpp
