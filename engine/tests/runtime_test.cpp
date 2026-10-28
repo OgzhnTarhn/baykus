@@ -202,6 +202,30 @@ TEST_F(RuntimeTest, DetectMatchesPythonFormat) {
   }
   const auto round = bt::dets_from_json(f1.at("dets"));  // test desteğinin Python okuyucusu
   EXPECT_EQ(round.size(), ref.dets_all.size());
+  EXPECT_FALSE(rec.contains("tiles"));  // tiles=1 çıktısı Python biçimini değiştirmez
+}
+
+TEST_F(RuntimeTest, DetectTiles4) {
+  const json rec =
+      baykus::detect_sequence(*runtime_, clip_dir().string(), 0.001, "advise", false, 4);
+  EXPECT_EQ(rec.at("tiles"), 4);
+  ASSERT_EQ(rec.at("frames").size(), 15u);
+  baykus::Pipeline pipe(*models_);
+  const auto ref = pipe.run(frames_[0].rgb, frames_[0].ir, "advise", 0.001f, nullptr, nullptr, 4);
+  const auto& f1 = rec.at("frames").at(0);
+  ASSERT_EQ(f1.at("dets").size(), ref.dets_all.size());
+  for (std::size_t i = 0; i < ref.dets_all.size(); ++i) {
+    const auto& d = f1.at("dets")[i];
+    EXPECT_EQ(d.at("index"), ref.dets_all[i].index);
+    EXPECT_EQ(d.at("cls_id"), ref.dets_all[i].cls_id);
+    EXPECT_EQ(d.at("score_raw").get<double>(), static_cast<double>(ref.dets_all[i].score_raw));
+    EXPECT_EQ(d.at("box")[0].get<double>(), ref.dets_all[i].x1);
+  }
+}
+
+TEST_F(RuntimeTest, DetectRejectsBadTiles) {
+  EXPECT_THROW(baykus::detect_sequence(*runtime_, clip_dir().string(), 0.001, "advise", false, 2),
+               std::invalid_argument);
 }
 
 TEST_F(RuntimeTest, DetectRefusesTestSplit) {

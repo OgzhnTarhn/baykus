@@ -2,7 +2,7 @@
 // `baykus-engine detect` ile aynı biçim (.json.gz), `Runtime` üzerinden, takip kapalı. M3OT
 // ölçümü (Görev 11 `measure`) ve takip girdisi bunu okur.
 // Kullanım: baykus_detect --models DIR --manifest M --seq-dir D --out F.json.gz [--floor 0.001]
-//                         [--gate off|advise|auto] [--i-know-this-is-test]
+//                         [--gate off|advise|auto] [--tiles 1|4] [--i-know-this-is-test]
 #include <exception>
 #include <iostream>
 #include <string>
@@ -16,7 +16,7 @@ namespace {
 
 int usage() {
   std::cerr << "kullanım: baykus_detect --models DIR --manifest M --seq-dir D --out F.json.gz "
-               "[--floor 0.001] [--gate advise] [--i-know-this-is-test]\n";
+               "[--floor 0.001] [--gate advise] [--tiles 1|4] [--i-know-this-is-test]\n";
   return 2;
 }
 
@@ -25,6 +25,7 @@ int usage() {
 int main(int argc, char** argv) {
   std::string models_dir, manifest, seq_dir, out, gate = "advise";
   double floor = 0.001;
+  int tiles = 1;
   bool allow_test = false;
   try {
     for (int i = 1; i < argc; ++i) {
@@ -42,6 +43,8 @@ int main(int argc, char** argv) {
         floor = std::stod(argv[++i]);
       } else if (a == "--gate" && has_value) {
         gate = argv[++i];
+      } else if (a == "--tiles" && has_value) {
+        tiles = std::stoi(argv[++i]);
       } else if (a == "--i-know-this-is-test") {
         allow_test = true;
       } else {
@@ -53,7 +56,7 @@ int main(int argc, char** argv) {
     const baykus::TrackerConfig cfg;  // takip kapalı; oturum açılmaz
     baykus::Sessions sessions(cfg, models.gate.window, models.gate.min_frames, models.gate.tol_px);
     baykus::Runtime runtime(models, cfg, sessions);
-    const auto rec = baykus::detect_sequence(runtime, seq_dir, floor, gate, allow_test);
+    const auto rec = baykus::detect_sequence(runtime, seq_dir, floor, gate, allow_test, tiles);
     baykus::write_gzip(out, rec.dump());
     std::cout << out << " (" << rec.at("frames").size() << " kare)\n";
   } catch (const std::exception& e) {

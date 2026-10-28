@@ -81,8 +81,8 @@ class Runtime {
 // Bir dizi klasörü (rgb/NNNNNN.jpg, ir/NNNNNN.png, index.json) → Python `baykus-engine detect`
 // biçiminde kayıt (seq, split, floor, gate, frames[frame, dets[index, cls_id, score_raw, score,
 // box]]). Takip kapalı, bütün katman (conf 0). Test dizisi allow_test olmadan
-// std::invalid_argument.
+// std::invalid_argument. tiles 1 ya da 4; 1 değilse kayda "tiles" eklenir.
 nlohmann::json detect_sequence(Runtime& runtime, const std::string& seq_dir, double floor,
-                               const std::string& gate, bool allow_test);
+                               const std::string& gate, bool allow_test, int tiles = 1);
 
 }  // namespace baykus

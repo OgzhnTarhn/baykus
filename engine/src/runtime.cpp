@@ -287,7 +287,8 @@ json response_json(const Response& r) {
 }
 
 json detect_sequence(Runtime& runtime, const std::string& seq_dir, double floor,
-                     const std::string& gate, bool allow_test) {
+                     const std::string& gate, bool allow_test, int tiles) {
+  if (tiles != 1 && tiles != 4) throw std::invalid_argument("tiles 1 ya da 4");
   const std::filesystem::path d(seq_dir);
   const auto index = json::parse(read_bytes((d / "index.json").string()));
   if (index.value("split", "") == "test" && !allow_test) {
@@ -305,6 +306,7 @@ json detect_sequence(Runtime& runtime, const std::string& seq_dir, double floor,
     req.conf = 0.0;  // bütün katman (kalibre skor ≥ 0)
     req.track = false;
     req.floor = static_cast<float>(floor);
+    req.tiles = tiles;
     json dets = json::array();
     for (const auto& det : runtime.process(req).dets) {
       dets.push_back({{"index", det.index},
@@ -315,11 +317,13 @@ json detect_sequence(Runtime& runtime, const std::string& seq_dir, double floor,
     }
     frames.push_back({{"frame", f}, {"dets", dets}});
   }
-  return {{"seq", index.at("name")},
-          {"split", index.at("split")},
-          {"floor", floor},
-          {"gate", gate},
-          {"frames", frames}};
+  json rec = {{"seq", index.at("name")},
+              {"split", index.at("split")},
+              {"floor", floor},
+              {"gate", gate},
+              {"frames", frames}};
+  if (tiles != 1) rec["tiles"] = tiles;
+  return rec;
 }
 
 }  // namespace baykus
