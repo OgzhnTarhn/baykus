@@ -1,0 +1,348 @@
+{
+ "note": "M3OT val (1_08, 2_08) yeniden konumlama denemeleri, ego maskesi kaynağına göre; betik .superpowers/sdd/F4/handoff/reloc_masks.py (MASK_FLOOR), dets runs/m3ot_dev/dets. Görev 15C, Kabul 10 b teşhisi.",
+ "rows": {
+  "oracle": {
+   "trials": 22,
+   "success": 13,
+   "success_rate": 0.5909090909090909,
+   "attempts": {
+    "median": 1.0,
+    "max": 6
+   },
+   "compared": 12,
+   "diff_px": {
+    "median": 0.6417992300292411,
+    "p95": 3.093322966352855
+   },
+   "false_links": 0,
+   "false_link_px": 10.0,
+   "per_seq": {
+    "1_08": {
+     "trials": 11,
+     "success": 7,
+     "success_rate": 0.6363636363636364,
+     "attempts": {
+      "median": 1.0,
+      "max": 6
+     },
+     "compared": 6,
+     "diff_px": {
+      "median": 0.7941914934832957,
+      "p95": 1.9672654697068053
+     },
+     "false_links": 0
+    },
+    "2_08": {
+     "trials": 11,
+     "success": 6,
+     "success_rate": 0.5454545454545454,
+     "attempts": {
+      "median": 1.0,
+      "max": 6
+     },
+     "compared": 6,
+     "diff_px": {
+      "median": 0.48984056001914894,
+      "p95": 3.7111376491543684
+     },
+     "false_links": 0
+    }
+   },
+   "boxes_per_frame_median": 10
+  },
+  "e3c": {
+   "trials": 22,
+   "success": 12,
+   "success_rate": 0.5454545454545454,
+   "attempts": {
+    "median": 1.0,
+    "max": 6
+   },
+   "compared": 12,
+   "diff_px": {
+    "median": 1.1213106028500404,
+    "p95": 3.180236302048365
+   },
+   "false_links": 0,
+   "false_link_px": 10.0,
+   "per_seq": {
+    "1_08": {
+     "trials": 11,
+     "success": 6,
+     "success_rate": 0.5454545454545454,
+     "attempts": {
+      "median": 1.0,
+      "max": 6
+     },
+     "compared": 6,
+     "diff_px": {
+      "median": 1.1213106028500404,
+      "p95": 2.346448888739189
+     },
+     "false_links": 0
+    },
+    "2_08": {
+     "trials": 11,
+     "success": 6,
+     "success_rate": 0.5454545454545454,
+     "attempts": {
+      "median": 1.0,
+      "max": 6
+     },
+     "compared": 6,
+     "diff_px": {
+      "median": 1.1534623520530707,
+      "p95": 3.278565271185038
+     },
+     "false_links": 0
+    }
+   },
+   "boxes_per_frame_median": 5
+  },
+  "e3cm": {
+   "trials": 22,
+   "success": 13,
+   "success_rate": 0.5909090909090909,
+   "attempts": {
+    "median": 1.0,
+    "max": 6
+   },
+   "compared": 12,
+   "diff_px": {
+    "median": 0.9252406649547239,
+    "p95": 5.279324660949788
+   },
+   "false_links": 0,
+   "false_link_px": 10.0,
+   "per_seq": {
+    "1_08": {
+     "trials": 11,
+     "success": 7,
+     "success_rate": 0.6363636363636364,
+     "attempts": {
+      "median": 1.0,
+      "max": 6
+     },
+     "compared": 6,
+     "diff_px": {
+      "median": 0.9252406649547239,
+      "p95": 5.874358331717977
+     },
+     "false_links": 0
+    },
+    "2_08": {
+     "trials": 11,
+     "success": 6,
+     "success_rate": 0.5454545454545454,
+     "attempts": {
+      "median": 1.0,
+      "max": 6
+     },
+     "compared": 6,
+     "diff_px": {
+      "median": 0.9450169890545603,
+      "p95": 3.762129888981298
+     },
+     "false_links": 0
+    }
+   },
+   "boxes_per_frame_median": 11
+  },
+  "e3cm_0.3": {
+   "trials": 22,
+   "success": 13,
+   "success_rate": 0.5909090909090909,
+   "attempts": {
+    "median": 1.0,
+    "max": 6
+   },
+   "compared": 12,
+   "diff_px": {
+    "median": 0.3710098292089111,
+    "p95": 2.096815007860287
+   },
+   "false_links": 0,
+   "false_link_px": 10.0,
+   "per_seq": {
+    "1_08": {
+     "trials": 11,
+     "success": 7,
+     "success_rate": 0.6363636363636364,
+     "attempts": {
+      "median": 1.0,
+      "max": 6
+     },
+     "compared": 6,
+     "diff_px": {
+      "median": 0.3710098292089111,
+      "p95": 2.338099496809095
+     },
+     "false_links": 0
+    },
+    "2_08": {
+     "trials": 11,
+     "success": 6,
+     "success_rate": 0.5454545454545454,
+     "attempts": {
+      "median": 1.0,
+      "max": 6
+     },
+     "compared": 6,
+     "diff_px": {
+      "median": 0.5453747714521793,
+      "p95": 1.4899049772713848
+     },
+     "false_links": 0
+    }
+   },
+   "boxes_per_frame_median": 10
+  },
+  "e3c_0.3": {
+   "trials": 22,
+   "success": 12,
+   "success_rate": 0.5454545454545454,
+   "attempts": {
+    "median": 1.0,
+    "max": 6
+   },
+   "compared": 12,
+   "diff_px": {
+    "median": 0.709287211679366,
+    "p95": 2.5785772841618613
+   },
+   "false_links": 0,
+   "false_link_px": 10.0,
+   "per_seq": {
+    "1_08": {
+     "trials": 11,
+     "success": 6,
+     "success_rate": 0.5454545454545454,
+     "attempts": {
+      "median": 1.0,
+      "max": 6
+     },
+     "compared": 6,
+     "diff_px": {
+      "median": 0.5180380014970013,
+      "p95": 1.139207268696838
+     },
+     "false_links": 0
+    },
+    "2_08": {
+     "trials": 11,
+     "success": 6,
+     "success_rate": 0.5454545454545454,
+     "attempts": {
+      "median": 1.0,
+      "max": 6
+     },
+     "compared": 6,
+     "diff_px": {
+      "median": 1.7559372025920617,
+      "p95": 2.793299941291825
+     },
+     "false_links": 0
+    }
+   },
+   "boxes_per_frame_median": 3
+  },
+  "e3cm_0.6": {
+   "trials": 22,
+   "success": 13,
+   "success_rate": 0.5909090909090909,
+   "attempts": {
+    "median": 1.0,
+    "max": 6
+   },
+   "compared": 12,
+   "diff_px": {
+    "median": 0.6625379884622218,
+    "p95": 1.9492079306545516
+   },
+   "false_links": 0,
+   "false_link_px": 10.0,
+   "per_seq": {
+    "1_08": {
+     "trials": 11,
+     "success": 7,
+     "success_rate": 0.6363636363636364,
+     "attempts": {
+      "median": 1.0,
+      "max": 6
+     },
+     "compared": 6,
+     "diff_px": {
+      "median": 0.6709863946651876,
+      "p95": 1.0707267751113945
+     },
+     "false_links": 0
+    },
+    "2_08": {
+     "trials": 11,
+     "success": 6,
+     "success_rate": 0.5454545454545454,
+     "attempts": {
+      "median": 1.0,
+      "max": 6
+     },
+     "compared": 6,
+     "diff_px": {
+      "median": 0.6625379884622218,
+      "p95": 2.202601904103259
+     },
+     "false_links": 0
+    }
+   },
+   "boxes_per_frame_median": 9
+  },
+  "e3c_0.6": {
+   "trials": 22,
+   "success": 12,
+   "success_rate": 0.5454545454545454,
+   "attempts": {
+    "median": 1.0,
+    "max": 6
+   },
+   "compared": 12,
+   "diff_px": {
+    "median": 0.777451347169307,
+    "p95": 2.527374120489855
+   },
+   "false_links": 0,
+   "false_link_px": 10.0,
+   "per_seq": {
+    "1_08": {
+     "trials": 11,
+     "success": 6,
+     "success_rate": 0.5454545454545454,
+     "attempts": {
+      "median": 1.0,
+      "max": 6
+     },
+     "compared": 6,
+     "diff_px": {
+      "median": 0.9145698967712488,
+      "p95": 2.5881369342257527
+     },
+     "false_links": 0
+    },
+    "2_08": {
+     "trials": 11,
+     "success": 6,
+     "success_rate": 0.5454545454545454,
+     "attempts": {
+      "median": 1.0,
+      "max": 6
+     },
+     "compared": 6,
+     "diff_px": {
+      "median": 0.777451347169307,
+      "p95": 1.6066066332801527
+     },
+     "false_links": 0
+    }
+   },
+   "boxes_per_frame_median": 2
+  }
+ }
+}

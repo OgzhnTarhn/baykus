@@ -536,3 +536,18 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
 - **M3OT val, motor yolu, son ayarlarla** (`scripts/m3ot_measure.sh dev`, C++ baykus_detect / baykus_track): AP50 **0,885** (E3c 0,396; Colab ölçümüyle aynı), çift kutu 0,001 (E3c 0,009), ECE ham 0,079 · kalibre 0,087 (E3c 0,213 · 0,209); takip HOTA **0,652** · MOTA 0,760 · IDF1 0,854 (E3c, 0,3 / 0,3: 0,292 · 0,207 · 0,436). Not: DroneVehicle'da öğrenilen kalibrasyon M3OT'ta ECE'yi biraz kötüleştiriyor (alan farkı); raporlanır, kural yok.
 - **Eşlik:** fikstürler yeniden (`baykus-engine fixtures`, `baykus-track run`, `baykus-motion motion-val`); pytest 839/839; motor 199/201 (ClipZones.Regression, ZonesEvidence.Write: klip bölge olayları değişti — bağımsız kural hesabı C++ adayıyla aynı, clean 20/20, long_gap 24/24; görsel gözden geçirme bekliyor). Kabul 4 ✅ (600/600 kare). Kabul 1: 8 senaryonun bütün satırları 0 hata.
 - **Kabul 10 b ❌:** `long_gap` kare 46 yeniden konumlama, `clean`'deki aynı kareden köşelerde **7,69 px** (sınır 2,0; E3c'de 1,95), `seek` kare 10 0,51 px (E3c 0,0). Python ve C++ aynı (algoritma sonucu, kod farkı değil). Yeniden konumlama kare 27'nin anahtar karesine bağlıyor; `clean` 36 ve 45'teki anahtar karelerden zincirle geliyor; klipte gerçek konum yok. Neden adayı: yeni model kare başına ≈ 20 iz → ego maskesi daha geniş. Kullanıcı kararı (2026-10-27): önce M3OT val'in tamamında harita kayması / yeniden konumlama raporu E3c ve E3c-M ile karşılaştırılacak; ölçüt değiştirilmez.
+
+## 2026-10-28 · F4 · Ego maskesine yalnız güvenilir tespitler — Görev 15C
+- **Teşhis (M3OT val 1_08 + 2_08, 22 yeniden konumlama denemesi, `results/motion/reloc_masks_val.json`):** motor ego'ya takip katmanının bütün kutularını (ham ≥ 0,1) maske olarak veriyordu; düşük skorlu kutular çoğu zaman sabit doku (yol çizgisi, gölge), maskelenince iyi sabit noktalar kayboluyor. Maske kaynağına göre başarı / ortanca / p95 köşe farkı (yanlış bağlama hepsinde 0):
+
+  | maske | başarı | ortanca px | p95 px |
+  |---|---|---|---|
+  | GT kutuları (oracle) | 13/22 | 0,64 | 3,09 |
+  | E3c, ham ≥ 0,1 | 12/22 | 1,12 | 3,18 |
+  | E3c-M, ham ≥ 0,1 (eski kural) | 13/22 | 0,93 | 5,28 |
+  | E3c-M, ham ≥ 0,3 | 13/22 | 0,37 | 2,10 |
+  | E3c-M, ham ≥ 0,6 | 13/22 | 0,66 | 1,95 |
+
+- **Karar (kullanıcı onayı 2026-10-28):** `ego.mask_min_score = 0,6` (val'de p95'i en iyi; takipçinin yüksek eşiğiyle aynı). Değer val'de seçildi; klip bu değeri ayarlamak için kullanılmadı. Python (`SessionRef`, `maps_val`) ve C++ (`ego_mask_boxes`) aynı kural; GT (oracle) kutularında kural yok. Takip, hareket ve bölgeler bütün katmanı kullanmaya devam ediyor.
+- **Eşlik:** `maps_val.json.gz` ve `motion_val.json` yeniden (ego ok 1_08 598/600, 2_08 600/600 — eskiyle aynı sayı); Release `fixtures-f4` değişmedi (girdi kareleri ve senaryolar). pytest 843/843; motor 201/203 (yalnız klip bölge olayları, sabitlenmedi).
+- **Klip, kuraldan sonra bir kez** (`results/engine/parity_ego.json`): Kabul 1 ✅ (8 senaryo, bütün satırlar 0 hata, köşe ≤ 2,2e-5 px). **Kabul 10 b ❌:** `long_gap` kare 46 **5,01 px** (eski kural 7,69; sınır 2,0), `seek` kare 10 0,34 px (0,51). Python = C++. Ölçüt ve klip değiştirilmedi; Kabul 10 b açık kalır (kullanıcı kararı: kural commit'lenir, bölge olaylarına geçilir).
