@@ -25,6 +25,15 @@ double ms_since(Clock::time_point t0) {
 
 }  // namespace
 
+std::vector<Box> ego_mask_boxes(const std::vector<Det>& layer, double min_score) {
+  std::vector<Box> boxes;
+  boxes.reserve(layer.size());
+  for (const auto& d : layer) {
+    if (d.score_raw >= min_score) boxes.push_back(Box{d.x1, d.y1, d.x2, d.y2});
+  }
+  return boxes;
+}
+
 Runtime::Runtime(const Models& models, const TrackerConfig& tracker_cfg, Sessions& sessions)
     : pipeline_(models), tracker_cfg_(tracker_cfg), sessions_(sessions) {}
 
@@ -94,9 +103,8 @@ Response Runtime::process(const Request& req) {
     const std::string source = ir_bad ? "none" : "ir";
     const cv::Mat* gray =
         (source == "none" || ir_frozen || fr.ir_half.empty()) ? nullptr : &fr.ir_half;
-    std::vector<Box> boxes;
-    boxes.reserve(layer.size());
-    for (const auto& d : layer) boxes.push_back(Box{d.x1, d.y1, d.x2, d.y2});
+    const std::vector<Box> boxes =
+        ego_mask_boxes(layer, sessions_.motion_cfg()->ego.mask_min_score);
     const auto t_ego = Clock::now();
     ego = s->motion->ego.update(gray, source, boxes, req.frame);
     ego_ms = ms_since(t_ego);

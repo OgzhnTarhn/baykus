@@ -56,6 +56,10 @@ struct Response {
 // `/v1/detect` gövdesi (Python `SessionRef.step` çıktısının ölçülen kısmı).
 nlohmann::json response_json(const Response& r);
 
+// Ego maskesine yalnız ham skoru >= min_score olan takip katmanı kutuları; düşük skorlu kutular
+// çoğu zaman sabit doku (Görev 15C, Kabul 10 b teşhisi, val). Giriş sırası korunur.
+std::vector<Box> ego_mask_boxes(const std::vector<Det>& layer, double min_score);
+
 class Runtime {
  public:
   Runtime(const Models& models, const TrackerConfig& tracker_cfg, Sessions& sessions);

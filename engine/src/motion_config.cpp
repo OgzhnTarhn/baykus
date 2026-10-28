@@ -53,11 +53,11 @@ T get(const json& raw, const char* key) {
 EgoCfg parse_ego(const std::string& path, const json& raw) {
   check_keys(
       path, "ego", raw,
-      {"enabled",         "max_corners",    "quality",         "min_distance",     "block_size",
-       "lk_win",          "lk_levels",      "relink_levels",   "fb_max_px",        "ransac_px",
-       "ransac_iters",    "confidence",     "refine_iters",    "ok_min_inliers",   "ok_min_ratio",
-       "key_min_inliers", "key_min_ratio",  "key_max_age",     "key_max_shift_px", "mask_dilate_px",
-       "border_px",       "relink_max_gap", "ir_return_frames"});
+      {"enabled",         "max_corners",   "quality",        "min_distance",     "block_size",
+       "lk_win",          "lk_levels",     "relink_levels",  "fb_max_px",        "ransac_px",
+       "ransac_iters",    "confidence",    "refine_iters",   "ok_min_inliers",   "ok_min_ratio",
+       "key_min_inliers", "key_min_ratio", "key_max_age",    "key_max_shift_px", "mask_dilate_px",
+       "mask_min_score",  "border_px",     "relink_max_gap", "ir_return_frames"});
   EgoCfg c;
   c.enabled = get<bool>(raw, "enabled");
   c.max_corners = get<int>(raw, "max_corners");
@@ -79,6 +79,7 @@ EgoCfg parse_ego(const std::string& path, const json& raw) {
   c.key_max_age = get<int>(raw, "key_max_age");
   c.key_max_shift_px = get<double>(raw, "key_max_shift_px");
   c.mask_dilate_px = get<double>(raw, "mask_dilate_px");
+  c.mask_min_score = get<double>(raw, "mask_min_score");
   c.border_px = get<int>(raw, "border_px");
   c.relink_max_gap = get<int>(raw, "relink_max_gap");
   c.ir_return_frames = get<int>(raw, "ir_return_frames");

@@ -38,6 +38,7 @@ class EgoCfg:
     key_max_age: int
     key_max_shift_px: float
     mask_dilate_px: float
+    mask_min_score: float
     border_px: int
     relink_max_gap: int
     ir_return_frames: int

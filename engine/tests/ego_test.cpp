@@ -22,10 +22,12 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 
+#include "baykus/detections.hpp"
 #include "baykus/ego.hpp"
 #include "baykus/geometry.hpp"
 #include "baykus/motion_config.hpp"
 #include "baykus/reloc.hpp"
+#include "baykus/runtime.hpp"
 #include "fixtures.hpp"
 
 namespace bt = baykus::test;
@@ -91,6 +93,70 @@ TEST(MotionConfig, LoadsAndRejectsUnknownKeys) {
   }
   EXPECT_THROW(baykus::MotionCfg::load(tmp.string()), std::invalid_argument);
   std::filesystem::remove(tmp);
+}
+
+TEST(MotionConfig, ReadsMaskMinScore) {
+  const auto p = config_path();
+  BAYKUS_REQUIRE_FILES({p});
+  const auto cfg = baykus::MotionCfg::load(p.string());
+  EXPECT_DOUBLE_EQ(cfg.ego.mask_min_score, 0.6);
+
+  std::ifstream in(p);
+  ASSERT_TRUE(in.good());
+  json raw;
+  in >> raw;
+  raw["ego"].erase("mask_min_score");
+  const auto tmp = std::filesystem::temp_directory_path() / "baykus_motion_no_mask_min_score.json";
+  {
+    std::ofstream out(tmp);
+    out << raw.dump();
+  }
+  EXPECT_THROW(baykus::MotionCfg::load(tmp.string()), std::invalid_argument);
+  std::filesystem::remove(tmp);
+}
+
+// --- ego mask ---------------------------------------------------------------------------------
+
+TEST(EgoMask, KeepsOnlyConfidentDetections) {
+  std::vector<baykus::Det> layer(3);
+  layer[0].index = 0;
+  layer[0].cls_id = 0;
+  layer[0].score_raw = 0.3f;
+  layer[0].score = 0.3;
+  layer[0].x1 = 0.0;
+  layer[0].y1 = 0.0;
+  layer[0].x2 = 10.0;
+  layer[0].y2 = 10.0;
+  layer[1].index = 1;
+  layer[1].cls_id = 0;
+  layer[1].score_raw = 0.6f;  // eşikte: tutulur
+  layer[1].score = 0.6;
+  layer[1].x1 = 20.0;
+  layer[1].y1 = 20.0;
+  layer[1].x2 = 30.0;
+  layer[1].y2 = 30.0;
+  layer[2].index = 2;
+  layer[2].cls_id = 0;
+  layer[2].score_raw = 0.9f;
+  layer[2].score = 0.9;
+  layer[2].x1 = 40.0;
+  layer[2].y1 = 40.0;
+  layer[2].x2 = 50.0;
+  layer[2].y2 = 50.0;
+
+  const std::vector<baykus::Box> boxes = baykus::ego_mask_boxes(layer, 0.6);
+  ASSERT_EQ(boxes.size(), 2u);
+  EXPECT_DOUBLE_EQ(boxes[0].x1, 20.0);
+  EXPECT_DOUBLE_EQ(boxes[0].y1, 20.0);
+  EXPECT_DOUBLE_EQ(boxes[0].x2, 30.0);
+  EXPECT_DOUBLE_EQ(boxes[0].y2, 30.0);
+  EXPECT_DOUBLE_EQ(boxes[1].x1, 40.0);
+  EXPECT_DOUBLE_EQ(boxes[1].y1, 40.0);
+  EXPECT_DOUBLE_EQ(boxes[1].x2, 50.0);
+  EXPECT_DOUBLE_EQ(boxes[1].y2, 50.0);
+
+  const std::vector<baykus::Det> empty;
+  EXPECT_TRUE(baykus::ego_mask_boxes(empty, 0.6).empty());
 }
 
 // --- geometry ---------------------------------------------------------------------------------

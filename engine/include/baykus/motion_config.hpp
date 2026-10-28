@@ -31,6 +31,7 @@ struct EgoCfg {
   int key_max_age;
   double key_max_shift_px;
   double mask_dilate_px;
+  double mask_min_score;
   int border_px;
   int relink_max_gap;
   int ir_return_frames;

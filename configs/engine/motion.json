@@ -20,6 +20,7 @@
     "key_max_age": 30,
     "key_max_shift_px": 40,
     "mask_dilate_px": 4,
+    "mask_min_score": 0.6,
     "border_px": 8,
     "relink_max_gap": 10,
     "ir_return_frames": 5

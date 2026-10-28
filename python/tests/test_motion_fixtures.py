@@ -244,6 +244,39 @@ def test_maps_val_shape():
         assert sum(f["ego"]["ok"] for f in s["frames"]) > 500
 
 
+def test_maps_val_masks_only_confident_dets(dev_root, mcfg, monkeypatch):
+    # Maske takip katmanından yalnız ham skoru ego.mask_min_score'u geçenler (SessionRef gibi).
+    dets = {
+        "sequences": [
+            {
+                "seq": fx.SEQ,
+                "split": "val",
+                "frames": [
+                    {
+                        "frame": 1,
+                        "dets": [
+                            {"box": [10, 10, 20, 20], "score_raw": 0.3},
+                            {"box": [30, 30, 40, 40], "score_raw": 0.9},
+                        ],
+                    }
+                ],
+            }
+        ]
+    }
+    seen: list[list] = []
+    orig = Ego.update
+
+    def spy(self, gray, source, boxes, frame):
+        seen.append(list(boxes))
+        return orig(self, gray, source, boxes, frame)
+
+    monkeypatch.setattr(fx.Ego, "update", spy)
+    maps = fx.maps_val(dev_root, dets, mcfg)
+    assert len(seen) == 1
+    assert seen[0] == [(30, 30, 40, 40)]
+    assert [f["frame"] for f in maps["sequences"][0]["frames"]] == [1]
+
+
 def test_motion_val_matches_reference(mcfg):
     maps = json.loads(gzip.decompress((ROOT / "fixtures/motion/maps_val.json.gz").read_bytes()))
     dets = json.loads(gzip.decompress((ROOT / "fixtures/tracks/dev_dets.json.gz").read_bytes()))

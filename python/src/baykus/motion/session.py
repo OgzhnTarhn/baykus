@@ -87,7 +87,10 @@ class SessionRef:
         ir_bad = "lost" in ir_flags or "noisy" in ir_flags or fz["ir"]["alarm"]
         source = "none" if ir_bad else "ir"
         gray = None if source == "none" or fz["ir"]["frozen"] else r["ir_half"]
-        ego = self.ego.update(gray, source, [d.box for d in layer], frame)
+        # düşük skorlu kutular çoğu zaman sabit doku; maskelenirse ego iyi sabit noktaları
+        # kaybeder — Görev 15C, Kabul 10 b teşhisi, val
+        mask_boxes = [d.box for d in layer if d.score_raw >= self.cfg.ego.mask_min_score]
+        ego = self.ego.update(gray, source, mask_boxes, frame)
 
         ids: dict[int, int] = {}
         for t in self.stepper.update([asdict(d) for d in layer]):

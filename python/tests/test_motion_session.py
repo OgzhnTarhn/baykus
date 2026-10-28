@@ -9,7 +9,7 @@ from baykus.engine_ref.pipeline import Pipeline
 from baykus.io import imread_any
 from baykus.motion.config import MotionCfg
 from baykus.motion.session import SessionRef
-from baykus.track.runner import load_cfg, run_tracks
+from baykus.track.runner import TRACK_FLOOR, load_cfg, run_tracks
 from tests.test_engine_ref import _models
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -129,6 +129,30 @@ def test_motion_fields_and_ego(mcfg, tcfg):
     assert set(d) >= {"cls", "cls_id", "score", "score_raw", "box", "track_id", "motion",
                       "speed_rel", "map_xy"}  # fmt: skip
     assert r["health"]["ir"]["frozen"] is False and r["health"]["ir"]["diff_mad"] > 0.5
+
+
+def test_ego_mask_skips_low_score_boxes(mcfg, tcfg, monkeypatch):
+    # Düşük skorlu kutu takip katmanında kalır ama ego maskesine girmez (Görev 15C, Kabul 10 b).
+    s = _session(mcfg, tcfg)
+    seen: list[list] = []
+    orig = s.ego.update
+
+    def spy(gray, source, boxes, frame):
+        seen.append(list(boxes))
+        return orig(gray, source, boxes, frame)
+
+    monkeypatch.setattr(s.ego, "update", spy)
+    for f in range(1, 11):
+        r = s.step(*_pair(f), frame=f)
+        if f < 6:  # 2. araç 6. kareden sonra ham 0,2; diğerleri 0,8-0,9
+            continue
+        dets = s.last_dets_all
+        low = [d.box for d in dets if d.score_raw < mcfg.ego.mask_min_score]
+        high = [d.box for d in dets if d.score_raw >= mcfg.ego.mask_min_score]
+        assert low and high
+        assert all(d.score_raw >= TRACK_FLOOR for d in dets)  # ikisi de takip katmanında
+        assert seen[-1] == high
+    assert len(r["tracks"]) == 3  # takip katmanı bütün katmanı kullanır
 
 
 def _run_with_ir_drop(mcfg, tcfg, drop: range, n: int):

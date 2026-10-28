@@ -17,8 +17,9 @@ Faz 3'ün 1/100'ü: ölçülen C++ / Python farkı ≤ 4e-12 px, ≤ 2e-16 göre
 beklenen nesil olaylarını üretmeyen başlangıç karesi bir sonrakine kaydırılır (yalnız eşlik için).
 
 Repoda: `fixtures/motion/maps_val.json.gz` (iki dizi × 600 kare ego, Python; maske takip katmanı
-tespitleri, kaynak her karede IR) ve `fixtures/expected/motion_val.json` (hareket birim eşliği,
-Kabul 2): ego sabitken `MotionState`'in iz × kare çıktısı `[track_id, motion, speed_rel, x, y]`.
+tespitlerinden ham skoru `ego.mask_min_score`'u geçenler, kaynak her karede IR) ve
+`fixtures/expected/motion_val.json` (hareket birim eşliği, Kabul 2): ego sabitken
+`MotionState`'in iz × kare çıktısı `[track_id, motion, speed_rel, x, y]`.
 """
 
 from __future__ import annotations
@@ -685,8 +686,9 @@ def _readme(meta: dict, notes: list[str]) -> str:
 
 
 def maps_val(dev_root: Path, dets: dict, cfg: MotionCfg) -> dict:
-    """Tam çözünürlük IR'den ego (yeniden konumlama dahil); maske takip katmanı tespitleri,
-    `frame` dizi kare numarası. Sağlık / donmuş kare yok: kaynak her karede IR (val temiz)."""
+    """Tam çözünürlük IR'den ego (yeniden konumlama dahil); maske takip katmanı tespitlerinden
+    ham skoru `ego.mask_min_score` eşiğini geçenler (`SessionRef` gibi), `frame` dizi kare
+    numarası. Sağlık / donmuş kare yok: kaynak her karede IR (val temiz)."""
     seqs = []
     for s in dets["sequences"]:
         if s["split"] == "test":
@@ -695,7 +697,8 @@ def maps_val(dev_root: Path, dets: dict, cfg: MotionCfg) -> dict:
         ego = Ego(cfg, Relocalizer(cfg))
         rows = []
         for fr in s["frames"]:
-            boxes = [tuple(d["box"]) for d in fr["dets"] if d["score_raw"] >= TRACK_FLOOR]
+            layer = [d for d in fr["dets"] if d["score_raw"] >= TRACK_FLOOR]
+            boxes = [tuple(d["box"]) for d in layer if d["score_raw"] >= cfg.ego.mask_min_score]
             r = ego.update(half_gray(frames.ir(fr["frame"])), "ir", boxes, fr["frame"])
             rows.append({"frame": fr["frame"], "ego": r.to_json()})
         seqs.append({"seq": s["seq"], "split": s["split"], "frames": rows})
