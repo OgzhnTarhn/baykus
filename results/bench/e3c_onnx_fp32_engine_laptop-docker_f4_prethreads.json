@@ -1,0 +1,117 @@
+{
+ "created_at": "2026-10-28T12:24:25Z",
+ "fps": 11.118024659809796,
+ "hardware": "laptop-docker",
+ "ir_drop_p95": null,
+ "kabul5": {
+  "passed": false,
+  "threshold_ms": 100.0,
+  "total_p95_ms": 120.73248489999997
+ },
+ "keyframe_p95": 124.18673319999996,
+ "mode": "memory",
+ "models": [
+  {
+   "name": "e3c",
+   "sha256": "d3cb90872f1b4ec8ceaa81eb31056f31ed3e191cdebb893712570432c2ba3d3b"
+  }
+ ],
+ "peak_rss_mb": 434.66,
+ "pipeline": "e3c",
+ "protocol": {
+  "batch": 1,
+  "conf": 0.25,
+  "ego": true,
+  "gate": "advise",
+  "inputs": "sequence",
+  "ir_drop": null,
+  "provider": "cpu",
+  "runs": 500,
+  "seek_every": 0,
+  "seq": "1_08",
+  "session": "single",
+  "track": true,
+  "warmup": 50,
+  "zones": "/configs/engine/bench_zones.json"
+ },
+ "relink_p95": null,
+ "reloc_attempt_p95": 118.53251200000001,
+ "seek_p95": null,
+ "seeks": 0,
+ "stages": {
+  "decode": {
+   "mean": 6.738443169999994,
+   "n": 500,
+   "p50": 6.507604000000001,
+   "p95": 8.538138899999998
+  },
+  "ego": {
+   "mean": 11.257148703999999,
+   "n": 500,
+   "p50": 10.782786999999999,
+   "p95": 19.134338799999995
+  },
+  "health": {
+   "mean": 10.255082745999994,
+   "n": 500,
+   "p50": 10.221062,
+   "p95": 14.003351399999996
+  },
+  "infer": {
+   "mean": 57.93663515399997,
+   "n": 500,
+   "p50": 51.5837115,
+   "p95": 86.98121034999994
+  },
+  "motion": {
+   "mean": 0.022670825999999984,
+   "n": 500,
+   "p50": 0.021296500000000003,
+   "p95": 0.037552999999999996
+  },
+  "post": {
+   "mean": 0.0051703859999999964,
+   "n": 500,
+   "p50": 0.004509,
+   "p95": 0.006683999999999999
+  },
+  "pre": {
+   "mean": 3.618741396000002,
+   "n": 500,
+   "p50": 3.5069155,
+   "p95": 4.289267349999999
+  },
+  "total": {
+   "mean": 89.94403507799989,
+   "n": 500,
+   "p50": 85.14501999999999,
+   "p95": 120.73248489999997
+  },
+  "track": {
+   "mean": 0.059153078,
+   "n": 500,
+   "p50": 0.051824999999999996,
+   "p95": 0.08811204999999998
+  },
+  "zones": {
+   "mean": 0.050989617999999994,
+   "n": 500,
+   "p50": 0.0455975,
+   "p95": 0.07664104999999996
+  }
+ },
+ "system": {
+  "cpu_model": "AMD Ryzen 7 8845HS w/ Radeon 780M Graphics",
+  "docker_desktop": "4.62.0 (219486)",
+  "docker_vm_cpus": "16",
+  "docker_vm_mem_gb": "7.96",
+  "git_commit": "e716d30",
+  "nproc": 16,
+  "onnxruntime": "1.30.0",
+  "opencv": "5.0.0",
+  "power": "AC (Win32_Battery BatteryStatus 2)",
+  "wslconfig": "yok (WSL varsayılanı)"
+ },
+ "threads": null,
+ "variant": "onnx_fp32_engine"
+}

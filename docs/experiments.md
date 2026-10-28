@@ -567,7 +567,20 @@ Her girdi: tarih · deney ID · hipotez · kurulum (config, commit, seed) · son
 - **Yorum:** kayıp hassasiyette; hareketli çıktıların 934 / 7507'si GT ile eşleşmiyor (tespit / takip kaynaklı), 83'ü yanlış etiket. Oracle'da bile P_mov 0,79 — kural tek başına 0,80'e yetmiyor.
 
 ## 2026-10-28 · F4 · Gecikme (Kabul 5) — Görev 17
-- **Koşu** (laptop prizde, Docker Desktop 4.62.0, VM 16 CPU / 7,96 GB, E3c-M ONNX FP32, `baykus_bench --sequence /data/1_08`, 50 ısınma + 500 ölçüm, `gate=advise`, takip + ego + hareket + 4 bölge, git `e716d30`): motor p95 **120,7 ms** (p50 85,1) → **Kabul 5 ❌** (sınır 100). Aşama p95: infer 87,0 · ego 19,1 · health 14,0 · decode 8,5 · pre 4,3; anahtar kare p95 124,2, yeniden konumlama denemesi p95 118,5; tepe RSS 435 MB. `results/bench/e3c_onnx_fp32_engine_laptop-docker_f4.json`.
-- **Aynı girdi, `--no-ego`** (bölgeler hareket ister, bu koşuda yok): p95 **85,5 ms** (p50 66,1); infer p95 64,7 · health 10,6 (`..._f4_noego.json`). Faz 3'ün 20 görüntülük sonucu 82,2 ms (ayrı protokol).
+- **Koşu** (laptop prizde, Docker Desktop 4.62.0, VM 16 CPU / 7,96 GB, E3c-M ONNX FP32, `baykus_bench --sequence /data/1_08`, 50 ısınma + 500 ölçüm, `gate=advise`, takip + ego + hareket + 4 bölge, git `e716d30`): motor p95 **120,7 ms** (p50 85,1) → **Kabul 5 ❌** (sınır 100). Aşama p95: infer 87,0 · ego 19,1 · health 14,0 · decode 8,5 · pre 4,3; anahtar kare p95 124,2, yeniden konumlama denemesi p95 118,5; tepe RSS 435 MB. `results/bench/e3c_onnx_fp32_engine_laptop-docker_f4_prethreads.json` (ilk adı `..._f4.json`; ayardan sonraki koşu o adı aldı).
+- **Aynı girdi, `--no-ego`** (bölgeler hareket ister, bu koşuda yok): p95 **85,5 ms** (p50 66,1); infer p95 64,7 · health 10,6 (`..._f4_prethreads_noego.json`). Faz 3'ün 20 görüntülük sonucu 82,2 ms (ayrı protokol).
 - **Teşhis (ürün ayarı değişmeden):** tekrar koşusu p95 113,3 ms (infer 79,5, ego 19,3; koşular arası oynama ≈ 7 ms; `..._f4_diag_repeat.json`); `OPENCV_FOR_THREADS_NUM=1` ile p95 **101,9 ms** (infer 74,3 · ego 12,5 · health 7,9; `..._f4_diag_ocv1.json`).
 - **Yorum:** ego'nun kendi payı küçük (p95 ≈ 12-19 ms); asıl artış ego açıkken çıkarımın yavaşlaması (infer p95 64,7 → 79,5-87,0). OpenCV'nin iş parçacığı havuzu ile ONNX Runtime aynı çekirdekler için yarışıyor gibi; OpenCV'yi tek iş parçacığına indirmek farkın yarısını kapatıyor. IR düşmesi ve atlama koşuları yapılmadı (tasarım: aşılırsa dur). Karar kullanıcıda.
+
+## 2026-10-28 · F4 · Gecikme, iş parçacığı ayarı ve Kabul 5 — Görev 17
+- **Karar (kullanıcı, seçenek 1):** ölçülmüş bir iş parçacığı ayarı. Motor ortamdan okur (`4b341e2`): `BAYKUS_CV_THREADS`, `BAYKUS_ORT_THREADS`, `BAYKUS_ORT_SPINNING`; ayarsız = bugünkü davranış.
+- **Tarama** (aynı protokol, 1_08 + ego + 4 bölge, tek koşu; dosyalar yerelde, ürün kararı aşağıdaki resmî koşulara dayanır): CV=1 117,9 · ORT spin kapalı 123,5 · CV=1 + spin kapalı 121,7 · ORT=8 132,6 · CV=1 + ORT=8 85,9 / tekrar 95,4 · CV=1 + ORT=8 + spin kapalı 103,2 · **CV=2 + ORT=8 84,8 / tekrar 91,3** ms (p95). İşlemci 8 fiziksel / 16 mantıksal çekirdek; iki havuz birden sınırlanınca yarış kalkıyor, tek başına hiçbiri yetmiyor; ORT'nin dönmesini kapatmak kötüleştiriyor.
+- **Seçim:** CV=2 + ORT=8 (iki koşuda da en iyi) → `docker/engine.Dockerfile` runtime `ENV`. Eşlik: bu ayarla motor testleri 209/209 (eşlik fikstürleri dahil); klip Kabul 1 satırları 0 hata, Kabul 10 b değişmedi (5,009 px) — ayar sonuçları değiştirmiyor.
+- **Resmî dört koşu** (yeni imaj, `threads` kayıtta `{cv_threads: 2, ort_threads: 8}`; kayıttaki `git_commit` `4b341e2`, Dockerfile değişikliği o anda commit'siz, bir sonraki commit'te):
+  | koşu | p50 | p95 | infer p95 | ego p95 | ayrıca |
+  |---|---|---|---|---|---|
+  | ego + hareket + 4 bölge (`..._f4.json`) | 79,4 | **97,9** | 75,0 | 7,2 | anahtar kare p95 94,1 · yeniden konumlama denemesi 98,9 |
+  | `--no-ego` (bölgesiz; `..._f4_noego.json`) | 72,0 | 79,5 | 65,5 | — | |
+  | `--ir-drop 200:260` (`..._f4_irdrop.json`) | 76,9 | 86,9 | 66,3 | 7,3 | IR düşmesi p95 77,6 · deneme 126,6 |
+  | `--seek-every 100` (`..._f4_seek.json`) | 79,9 | 92,0 | 70,6 | 8,0 | atlama p95 110,7 |
+- **Kabul 5 ✅ (97,9 ≤ 100), pay dar:** koşular arası oynama ≈ 7 ms gözlendi (CV=2 + ORT=8: 84,8 / 91,3 / 97,9). Tepe RSS 435 MB. Sonuç tek koşu kuralıyla yazılır; README'de pay ve oynama birlikte belirtilir.
