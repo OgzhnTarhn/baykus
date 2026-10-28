@@ -3,8 +3,11 @@
 # → AP50 / ECE / çift kutu; takip (C++ baykus_track) motor tespitleri ve oracle (M3OT kutuları skor 1)
 # → HOTA / MOTA / IDF1. Önce geliştirme bölümünde (dev) prova edilir; test yalnız son ölçümde, bir kez.
 # Önkoşul: baykus-engine imajı, models/, data/m3ot_<dev|test>/{sequences,labels}, python/'da uv sync.
+# TILES=4 bash scripts/m3ot_measure.sh dev  → parçalı çıkarım (Görev 15D): motor tespitleri 4 karo
+# üzerinden çalışır; çıktıları ayrı dosyalara yazar ( *_tiles4 ), tiles=1 koşumu bozulmaz. Varsayılan 1.
 # Kullanım: bash scripts/m3ot_measure.sh dev
 #           bash scripts/m3ot_measure.sh test --i-know-this-is-test
+#           TILES=4 bash scripts/m3ot_measure.sh dev
 set -euo pipefail
 cd "$(dirname "$0")/.."
 part="${1:?kullanım: m3ot_measure.sh <dev|test> [--i-know-this-is-test]}"
@@ -25,7 +28,22 @@ case "$part" in
     ;;
 esac
 data="data/m3ot_$part"
-work="runs/m3ot_$part"
+# TILES: 1 (varsayılan, tüm kutu) veya 4 (parçalı çıkarım, Görev 15D)
+tiles="${TILES:-1}"
+tiles_suf=""
+tiles_flag=()
+case "$tiles" in
+  1) ;;
+  4)
+    tiles_suf="_tiles4"
+    tiles_flag=(--tiles 4)
+    ;;
+  *)
+    echo "HATA: TILES yalnız 1 veya 4 olabilir (TILES=$tiles)" >&2
+    exit 2
+    ;;
+esac
+work="runs/m3ot_$part$tiles_suf"
 export MSYS_NO_PATHCONV=1
 mkdir -p "$work/dets" results/engine results/track
 rm -f "$work"/dets/*.json.gz "$work"/*.json.gz
@@ -40,28 +58,35 @@ echo "== 1/4 motor tespitleri (baykus_detect, ham ≥ 0,001)"
 for s in "${seqs[@]}"; do
   "${engine[@]}" baykus_detect baykus-engine --models /models \
     --manifest /configs/engine/models.json --seq-dir "/data/sequences/$s" \
-    --out "/work/dets/$s.json.gz" --floor 0.001 "${flag[@]}"
+    --out "/work/dets/$s.json.gz" --floor 0.001 "${tiles_flag[@]}" "${flag[@]}"
 done
 dets=()
 for s in "${seqs[@]}"; do dets+=("../$work/dets/$s.json.gz"); done
 
 echo "== 2/4 AP50, ECE, çift kutu"
 (cd python && uv run baykus-engine measure --dets "${dets[@]}" --labels "../$data/labels" \
-  --out "../results/engine/m3ot_${part}_detect.json" "${flag[@]}")
+  --out "../results/engine/m3ot_${part}${tiles_suf}_detect.json" "${flag[@]}")
 
-echo "== 3/4 oracle tespitleri (M3OT kutuları skor 1)"
-dirs=()
-for s in "${seqs[@]}"; do dirs+=("../$data/sequences/$s"); done
-(cd python && uv run baykus-track oracle --gt-csv "../$data/labels/tracks_ir.csv" \
-  --seq-dir "${dirs[@]}" --out "../$work/oracle_dets.json.gz" "${flag[@]}")
+if [ "$tiles" = "4" ]; then
+  # Oracle tespiti/takibi dedektörden bağımsızdır (M3OT kutuları skor 1); 4 karo koşumunda tekrarlanmaz.
+  echo "== 3/4 oracle tespitleri atlandı (TILES=4: oracle dedektörden bağımsız)"
+else
+  echo "== 3/4 oracle tespitleri (M3OT kutuları skor 1)"
+  dirs=()
+  for s in "${seqs[@]}"; do dirs+=("../$data/sequences/$s"); done
+  (cd python && uv run baykus-track oracle --gt-csv "../$data/labels/tracks_ir.csv" \
+    --seq-dir "${dirs[@]}" --out "../$work/oracle_dets.json.gz" "${flag[@]}")
+fi
 
 echo "== 4/4 takip (baykus_track) ve HOTA, MOTA, IDF1"
 for s in "${seqs[@]}"; do
   "${engine[@]}" baykus_track baykus-engine --dets "/work/dets/$s.json.gz" \
     --config /configs/engine/tracker.json --out "/work/tracks_$s.json.gz" "${flag[@]}"
 done
-"${engine[@]}" baykus_track baykus-engine --dets /work/oracle_dets.json.gz \
-  --config /configs/engine/tracker.json --out /work/oracle_tracks.json.gz "${flag[@]}"
+if [ "$tiles" != "4" ]; then
+  "${engine[@]}" baykus_track baykus-engine --dets /work/oracle_dets.json.gz \
+    --config /configs/engine/tracker.json --out /work/oracle_tracks.json.gz "${flag[@]}"
+fi
 (cd python && uv run python - "../$work" "${seqs[@]}" <<'EOF'
 # dizi başına iz dosyalarını tek dosyada topla (eval tek --tracks alır)
 import gzip, json, sys
@@ -75,7 +100,11 @@ data = json.dumps(out, ensure_ascii=False, separators=(",", ":")).encode("utf-8"
 EOF
 )
 (cd python && uv run baykus-track eval --tracks "../$work/engine_tracks.json.gz" --dets "${dets[@]}" \
-  --gt-csv "../$data/labels/tracks_ir.csv" --out "../results/track/m3ot_${part}_engine.json" "${flag[@]}")
-(cd python && uv run baykus-track eval --tracks "../$work/oracle_tracks.json.gz" \
-  --dets "../$work/oracle_dets.json.gz" --gt-csv "../$data/labels/tracks_ir.csv" \
-  --out "../results/track/m3ot_${part}_oracle.json" "${flag[@]}")
+  --gt-csv "../$data/labels/tracks_ir.csv" --out "../results/track/m3ot_${part}${tiles_suf}_engine.json" "${flag[@]}")
+if [ "$tiles" = "4" ]; then
+  echo "== oracle takibi/ölçümü atlandı (TILES=4: oracle dedektörden bağımsız)"
+else
+  (cd python && uv run baykus-track eval --tracks "../$work/oracle_tracks.json.gz" \
+    --dets "../$work/oracle_dets.json.gz" --gt-csv "../$data/labels/tracks_ir.csv" \
+    --out "../results/track/m3ot_${part}_oracle.json" "${flag[@]}")
+fi
