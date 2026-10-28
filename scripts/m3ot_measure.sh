@@ -16,7 +16,7 @@ flag=()
 case "$part" in
   dev) split=val ;;
   test)
-    [ "${2:-}" = "--i-know-this-is-test" ] || {
+    [[ " ${*:2} " == *" --i-know-this-is-test "* ]] || {
       echo "HATA: test yalnız son ölçümde, --i-know-this-is-test ile" >&2
       exit 2
     }
@@ -29,9 +29,9 @@ case "$part" in
     ;;
 esac
 data="data/m3ot_$part"
-# Faz 4 hareket satırı (plan F4 Görev 16): dev motion | test --i-know-this-is-test motion → C++
+# Faz 4 hareket satırı (plan F4 Görev 16): dev motion | test motion --i-know-this-is-test (sıra serbest) → C++
 # baykus_sequence (ego + hareket + takip) → baykus-motion measure --row engine; dev'de kör örneklem r2.
-if [ "${@: -1}" = "motion" ] && [ $# -ge 2 ]; then
+if [[ " ${*:2} " == *" motion "* ]]; then
   work="runs/m3ot_${part}_motion"
   export MSYS_NO_PATHCONV=1
   mkdir -p "$work" results/motion
