@@ -1,5 +1,6 @@
 // Bölge editörü taslağı (Faz 4 §5.8): her değişiklik motora PUT ile gider; motor reddederse
-// son kabul edilen kümeye dönülür ve hata ekranda tutulur.
+// son kabul edilen kümeye dönülür ve hata ekranda tutulur. PUT kabulünde onaylı küme ve askı
+// durumu motordan alınır; çalışma kümesi yalnız bekleyen yerel düzenleme yoksa tazelenir.
 import type { LineCount, ZoneDef, ZoneKind } from "@/lib/client";
 import { ZONE_KIND_TEXT } from "@/lib/texts";
 
@@ -51,6 +52,22 @@ export class ZoneDraft {
     }
     this.tool = null;
     this.draftPoints = [];
+    this.lastError = null;
+  }
+
+  // PUT yanıtı: onaylı küme ve askı durumu motordan gelir; kimlik sayacı geri gitmez.
+  // replace true ise çalışma kümesi de yanıtla tazelenir (motor alanları kazanır);
+  // false ise daha yeni yerel düzenlemeler korunur. Açık çizim her durumda korunur.
+  accept(zones: ZoneDef[], replace: boolean): void {
+    this.accepted = zones.map(copyZone);
+    this.suspended = new Set(
+      zones.filter((z) => z.status === "suspended").map((z) => z.id),
+    );
+    for (const z of zones) {
+      const m = /^z(\d+)$/.exec(z.id);
+      if (m) this.nextId = Math.max(this.nextId, Number(m[1]) + 1);
+    }
+    if (replace) this.zones = zones.map(copyZone);
     this.lastError = null;
   }
 

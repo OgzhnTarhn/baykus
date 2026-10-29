@@ -1,6 +1,8 @@
 // Bölge eşitleme (Faz 4 §5.8): her değişiklik PUT ile motora gider; yolda tek istek uçar,
-// aradaki değişiklikler tek takip isteğinde birleşir; motor reddederse son kabul edilen kümeye
-// dönülür ve hata taslakta tutulur.
+// aradaki değişiklikler tek takip isteğinde birleşir. Motor kabul ederse onaylı küme ve askı
+// durumu yanıttan alınır; bekleyen yerel düzenleme varsa çalışma kümesi korunur, yoksa yanıt
+// çalışma kümesini de belirler. Motor reddederse son kabul edilen kümeye dönülür, hata taslakta
+// tutulur ve reddedilen kümenin üstüne binen bekleyen düzenleme düşer (takip PUT'u doğurmaz).
 import type { ZoneDef } from "@/lib/client";
 import type { ZoneDraft } from "@/lib/editor";
 
@@ -72,10 +74,13 @@ export class ZoneSync {
   private settle(result: PutResult): void {
     this.inFlight = false;
     if (result.ok) {
-      // Motor kimliği ve durumu kendi yanıtıyla tazeler.
-      this.draft.load(result.zones);
+      // Motor kimliği ve durumu kendi yanıtıyla tazeler; bekleyen yerel düzenleme
+      // varsa çalışma kümesi korunur, yoksa yanıt çalışma kümesini de belirler.
+      this.draft.accept(result.zones, this.pending === null);
     } else {
+      // Reddedilen kümenin üstüne binen düzenleme de düşer: takip PUT'u doğurmaz.
       this.draft.commit({ ok: false, error: result.error });
+      this.pending = null;
     }
     this.onChange();
     if (this.pending !== null) {
