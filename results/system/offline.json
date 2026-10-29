@@ -44,11 +44,11 @@
   },
   "browser_requests_external": 0,
   "browser": {
-    "requests": 89,
-    "detects": 35,
-    "fault_detects": 2,
+    "requests": 94,
+    "detects": 37,
+    "fault_detects": 4,
     "resets": 2,
-    "downloads": 3,
+    "downloads": 4,
     "zones_drawn": true,
     "external": []
   },

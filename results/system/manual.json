@@ -26,5 +26,49 @@
     {"id": "alarm temizlenme (kare 427, kare 152)", "file": "docs/figures/system/15-alarm-temizlendi.jpg", "ok": true},
     {"id": "alarm sıfırlama (Oturumu sıfırla: alarm, geçmiş, şerit boş)", "file": "docs/figures/system/16-sifirlama.jpg", "ok": true},
     {"id": "kapı rozeti (uyar: 'yalnız uyarı'; otomatik: 'IR modele verilmiyor')", "file": "docs/figures/system/14-ir-kapat-kapi.jpg", "ok": true}
-  ]
+  ],
+  "faz4": {
+    "date": "2026-10-29",
+    "sequence": "1_08 (madde 8: 2_08'e geçiş)",
+    "ui_commit": "8fd29c3",
+    "how": "Madde 10 Excel dosyası kullanıcı tarafından Türkçe Excel'de açıldı (sütunlar ayrı, Türkçe harfler doğru). Maddeler 1-11 Claude'un headless Playwright betikleriyle (.superpowers/sdd/F4/kabul6/*.cjs, normal compose, 127.0.0.1:3000) sürüldü; her görüntüde ekran metinleri ve sayılar betikte denetlendi, Claude görüntülere baktı; kullanıcı seçili görüntülere bakıp onayladı ('okey gibi', 2026-10-29). Madde 12 kullanıcı tarafından Wi-Fi kapalıyken elle.",
+    "wifi_off": true,
+    "wifi_off_file": "docs/figures/system/f4-29-wifi-kapali-olaylar.csv",
+    "wifi_off_note": "kullanıcı beyanı: Wi-Fi kapalıyken uygulama çalıştı (2_08 oynatma, atlama sonrası yeniden konumlama ve birleşme, olaylar CSV dışa aktarma; dosya bu kayıtta). Bölge çizimi bitirilemedi: kullanıcı çizim adımlarını anlamadı (kullanım sorunu, ağla ilgisiz; çizim maddeleri 4-5 ağ açıkken görüntüyle geçti).",
+    "notes": [
+      "Kaydırıcı en fazla 0,95 (tasarım §6.5 '1,0' diyor); madde 6 en üst değerle, aynı 80 kare iki yeni oturumda (0,25 / 0,95) adım adım oynatılıp karşılaştırıldı: sayaçlar ve 11 olay aynı, kutu 6 / 0.",
+      "Madde 7: 10 karelik IR kesintisinden sonra birleşme kesintinin yerine bağlı (ölçüm 2026-10-29: 85. ve 190. kareden sonra birleşme, 86. ve 87. kareden sonra yeni nesil); ADR 0011 sınırlaması. Görüntü 190. karede; '10 kare kesinti 85-87 arası' ayrıntısı docs/experiments.md'de.",
+      "Kontrol sırasında bulunan ve düzeltilen iki ekran hatası: cfa0f31 (alan bölgesinde 'giren –'), 2f971ea (dizi değişince bölge listesi ilk kareye kadar eskiyi gösteriyordu)."
+    ],
+    "items": [
+      {"id": "1 kutu durum biçimleri (H düz / D kesikli)", "file": "docs/figures/system/f4-01-kutu-durum.jpg", "ok": true},
+      {"id": "1 'yalnız hareketliler' süzgeci", "file": "docs/figures/system/f4-02-yalniz-hareketliler.jpg", "ok": true},
+      {"id": "1 liste durum sütunu", "file": "docs/figures/system/f4-03-liste-durum.jpg", "ok": true},
+      {"id": "2 harita mozaiği, görüş alanı, kuyruklar", "file": "docs/figures/system/f4-04-harita-mozaik.jpg", "ok": true},
+      {"id": "2 kaydır / yakınlaştır / sığdır / kamerayı izle", "file": "docs/figures/system/f4-05-harita-yakinlastir.jpg", "ok": true},
+      {"id": "3 kutudan araç seçimi, araç kartı", "file": "docs/figures/system/f4-06-kutudan-secim.jpg", "ok": true},
+      {"id": "3 haritadan araç seçimi", "file": "docs/figures/system/f4-07-haritadan-secim.jpg", "ok": true},
+      {"id": "3 'haritada göster'", "file": "docs/figures/system/f4-08-haritada-goster.jpg", "ok": true},
+      {"id": "4 dört bölge türü", "file": "docs/figures/system/f4-09-dort-bolge.jpg", "ok": true},
+      {"id": "4 köşe / ad / bekleme saniyesi / hat yönü / sil", "file": "docs/figures/system/f4-10-bolge-duzenleme.jpg", "ok": true},
+      {"id": "4 motorun 400 iletisi (kendini kesen çokgen)", "file": "docs/figures/system/f4-11-kendini-kesen.jpg", "ok": true},
+      {"id": "5 yasak bölge kırmızı alarm", "file": "docs/figures/system/f4-12-kirmizi-alarm.jpg", "ok": true},
+      {"id": "5 onayla → çıkınca geçmişe", "file": "docs/figures/system/f4-13-alarm-gecmis.jpg", "ok": true},
+      {"id": "5 bekleme sınırı turuncu alarm", "file": "docs/figures/system/f4-14-turuncu-alarm.jpg", "ok": true},
+      {"id": "5 alan sayaçları, sayım hattı iki yön", "file": "docs/figures/system/f4-15-sayaclar.jpg", "ok": true},
+      {"id": "6 güven eşiği 0,95'te olaylar ve sayaçlar aynı (aynı 80 kare, 0,25 ile karşılaştırma)", "file": "docs/figures/system/f4-17-guven-095.jpg", "ok": true},
+      {"id": "7 IR kapalı → ego kayıp", "file": "docs/figures/system/f4-18-ir-kapali.jpg", "ok": true},
+      {"id": "7 IR geri → aynı harita (nesil 1) ve bölge aktif", "file": "docs/figures/system/f4-19-ir-geri-birlesme.jpg", "ok": true},
+      {"id": "8 geri atla → harita ve bölgeler korunuyor", "file": "docs/figures/system/f4-20-geri-atla.jpg", "ok": true},
+      {"id": "8 dizi değiştir → her şey sıfır", "file": "docs/figures/system/f4-21-dizi-degisti.jpg", "ok": true},
+      {"id": "9 zaman çizelgesi işaretleri ve süzgeç", "file": "docs/figures/system/f4-22-cizelge.jpg", "ok": true},
+      {"id": "9 anlık görüntü", "file": "docs/figures/system/f4-23-anlik-goruntu.jpg", "ok": true},
+      {"id": "9 'o kareye git'", "file": "docs/figures/system/f4-24-kareye-git.jpg", "ok": true},
+      {"id": "10 dışa aktarma JSON / CSV / harita PNG", "file": "docs/figures/system/f4-25-disa-aktar.jpg", "ok": true},
+      {"id": "10 CSV (motor biçimi, virgül)", "file": "docs/figures/system/f4-28-olaylar.csv", "ok": true},
+      {"id": "10 CSV (hesap tablosu: Excel, noktalı virgül; 8fd29c3)", "file": "docs/figures/system/f4-28-olaylar-excel.csv", "ok": true},
+      {"id": "11 donmuş rozeti + alarm + 'kareyi dondur'", "file": "docs/figures/system/f4-26-donmus.jpg", "ok": true},
+      {"id": "11 ego durumu sağlık panelinde", "file": "docs/figures/system/f4-27-saglik-ego.jpg", "ok": true}
+    ]
+  }
 }
