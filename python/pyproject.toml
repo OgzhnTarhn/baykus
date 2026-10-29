@@ -63,6 +63,8 @@ select = ["E", "F", "I", "B", "UP"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# CI'da ara sıra bir test kilitleniyordu (6 sa); takılan test adıyla düşsün
+# CI'da ara sıra bir test kilitleniyordu (6 sa); takılan test adıyla düşsün. "thread": ana
+# iş parçacığı dahil bütün yığınları döker ("signal" yığını yazamadan INTERNALERROR verdi)
 timeout = 300
+timeout_method = "thread"
 markers = ["slow: gerçek veri veya ağ gerektiren testler (CI'da çalışmaz)"]
