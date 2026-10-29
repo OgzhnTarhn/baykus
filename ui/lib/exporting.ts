@@ -13,7 +13,7 @@ export type ExportMeta = {
   zones: ZoneDef[];
 };
 
-export type ExportKind = "olaylar" | "harita";
+export type ExportKind = "olaylar" | "olaylar-excel" | "harita";
 export type ExportExt = "json" | "csv" | "png";
 
 const pad = (v: number, width: number = 2) => String(v).padStart(width, "0");
@@ -40,6 +40,68 @@ export function eventsJson(meta: ExportMeta, events: ZoneEvent[]): Blob {
 // Motorun CSV metni olduğu gibi korunur; yalnız başına UTF-8 BOM eklenir (Excel Türkçe).
 export function csvBlob(csv: string): Blob {
   return new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" });
+}
+
+// Türkçe Excel liste ayırıcısı ';' olduğu için motorun virgüllü CSV'si yeniden yazılır: alanlar
+// RFC 4180'e göre çözülür (tırnaklı alan, ikilenmiş tırnak, tırnak içinde CR/LF) ve ';' ile
+// birleştirilir. Virgüllü dosya motorun sözleşmesidir, aynen kalır; bu yalnız bir kopyadır.
+export function excelCsv(csv: string): string {
+  const records: string[][] = [];
+  const seps: string[] = [];
+  let i = 0;
+  while (i < csv.length) {
+    const fields: string[] = [];
+    for (;;) {
+      if (csv[i] === '"') {
+        // Tırnaklı alan: ikilenmiş tırnak tek tırnağa iner, CR/LF alanı bölmez.
+        let buf = "";
+        i += 1;
+        while (i < csv.length) {
+          if (csv[i] === '"') {
+            if (csv[i + 1] === '"') {
+              buf += '"';
+              i += 2;
+            } else {
+              i += 1;
+              break;
+            }
+          } else {
+            buf += csv[i];
+            i += 1;
+          }
+        }
+        fields.push(buf);
+      } else {
+        let buf = "";
+        while (i < csv.length && csv[i] !== "," && csv[i] !== "\r" && csv[i] !== "\n") {
+          buf += csv[i];
+          i += 1;
+        }
+        fields.push(buf);
+      }
+      if (csv[i] === ",") {
+        i += 1;
+        continue;
+      }
+      break;
+    }
+    // Kayıt ayırıcısı girişten kopyalanır (LF ya da CRLF); son satır sonu korunur.
+    let sep = "";
+    if (csv[i] === "\r" && csv[i + 1] === "\n") {
+      sep = "\r\n";
+      i += 2;
+    } else if (csv[i] === "\r" || csv[i] === "\n") {
+      sep = csv[i];
+      i += 1;
+    }
+    records.push(fields);
+    seps.push(sep);
+    if (sep === "") break;
+  }
+  // Alan yalnız ';', '"', CR ya da LF içeriyorsa tırnaklanır; iç tırnaklar ikilenir.
+  const emit = (field: string): string =>
+    /[;"\r\n]/.test(field) ? `"${field.replace(/"/g, '""')}"` : field;
+  return records.map((fields, r) => fields.map(emit).join(";") + seps[r]).join("");
 }
 
 // Blob'u geçici bir <a download> ile indirir; nesne URL'si tıklamadan sonra serbest bırakılır.

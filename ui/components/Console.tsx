@@ -67,7 +67,7 @@ import {
 } from "@/lib/client";
 import { cardView } from "@/lib/card";
 import { ZoneDraft, type Tool } from "@/lib/editor";
-import { csvBlob, download, eventsJson, fileName, mapPng } from "@/lib/exporting";
+import { csvBlob, download, eventsJson, excelCsv, fileName, mapPng } from "@/lib/exporting";
 import { LatencyWindow } from "@/lib/latency";
 import { Mosaic } from "@/lib/mosaic";
 import { createPlayer, type PlayerSnapshot } from "@/lib/player";
@@ -650,6 +650,15 @@ export function Console() {
       download(csvBlob(await fetchEventsCsv(session())), fileName("olaylar", seq, new Date(), "csv"));
     });
 
+  // Türkçe Excel ';' ayırıcısı ister; motorun virgüllü CSV'si olduğu gibi kalır, bu bir kopyadır.
+  const onEventsCsvExcel = () =>
+    runExport(async () => {
+      download(
+        csvBlob(excelCsv(await fetchEventsCsv(session()))),
+        fileName("olaylar-excel", seq, new Date(), "csv"),
+      );
+    });
+
   // Harita PNG: panelin çizim seçenekleriyle aynı nesne; "görünen" kip panelin o anki dönüşümü.
   const mapOpts: MapDrawOpts = {
     tracks,
@@ -745,6 +754,7 @@ export function Console() {
             <ExportMenu
               onEventsJson={onEventsJson}
               onEventsCsv={onEventsCsv}
+              onEventsCsvExcel={onEventsCsvExcel}
               onMapFull={() => exportMap("full")}
               onMapView={() => exportMap("view")}
               busy={exportBusy}

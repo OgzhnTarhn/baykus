@@ -1,12 +1,14 @@
 "use client";
 // Dışa aktarma menüsü (Faz 4 §5.13): "Dışa aktar" düğmesi küçük bir menü açar; olay günlüğü
-// (JSON/CSV) ve harita (PNG: tamamı / görünen) indirmeleri üst bileşenden gelir. Menü tıklamadan
-// sonra, Esc ile ve dışarı tıklanınca kapanır; iş sürerken düğmeler kilitlenir.
+// (JSON/CSV, ayrıca Türkçe Excel için ';' ayırıcılı CSV) ve harita (PNG: tamamı / görünen)
+// indirmeleri üst bileşenden gelir. Menü tıklamadan sonra, Esc ile ve dışarı tıklanınca kapanır;
+// iş sürerken düğmeler kilitlenir.
 import { useEffect, useRef, useState } from "react";
 
 export type ExportMenuProps = {
   onEventsJson(): Promise<void>;
   onEventsCsv(): Promise<void>;
+  onEventsCsvExcel(): Promise<void>;
   onMapFull(): Promise<void>;
   onMapView(): Promise<void>;
   disabled?: boolean;
@@ -17,6 +19,7 @@ export type ExportMenuProps = {
 export function ExportMenu({
   onEventsJson,
   onEventsCsv,
+  onEventsCsvExcel,
   onMapFull,
   onMapView,
   disabled = false,
@@ -52,6 +55,7 @@ export function ExportMenu({
   const items: { label: string; run(): Promise<void> }[] = [
     { label: "Olaylar (JSON)", run: onEventsJson },
     { label: "Olaylar (CSV)", run: onEventsCsv },
+    { label: "Olaylar (CSV, Excel)", run: onEventsCsvExcel },
     { label: "Harita (PNG: tamamı)", run: onMapFull },
     { label: "Harita (PNG: görünen)", run: onMapView },
   ];

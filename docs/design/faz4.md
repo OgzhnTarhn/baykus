@@ -460,7 +460,8 @@ Bileşenler:
   ayrıntısı + anlık görüntü (§5.13) + "o kareye git" (atlama: `scope=tracks`, §5.11).
 - **Olay listesi:** zaman çizelgesiyle aynı süzgeç; satırda kare, tür (Türkçe metin tablosu), bölge, iz, yön;
   tıklama → araç kartı.
-- **Dışa aktarma:** "Olaylar (JSON)", "Olaylar (CSV)", "Harita (PNG: tamamı / görünen)" (§5.13).
+- **Dışa aktarma:** "Olaylar (JSON)", "Olaylar (CSV)", "Olaylar (CSV, Excel)", "Harita (PNG: tamamı / görünen)"
+  (§5.13).
 - **Sağlık paneli:** donmuş rozeti; alarm listesine `rgb_frozen`, `ir_frozen`; ego durumu (kanal, nesil,
   geçici / kalıcı, iç nokta, son yeniden konumlama).
 - **Arıza simülasyonu:** "kareyi dondur (RGB / IR)".
@@ -584,6 +585,8 @@ dolunca en eski iki bölüm birleştirilir), `stationary_frames` (toplam), `path
   - "Olayları indir (JSON)": `{meta: {sequence, session, created_at, model_sha256 (`/v1/model`),
     motion_sha256, fps_assumed, zones}, events: [...]}` — günlüğün tamamı motordan.
   - "Olayları indir (CSV)": motorun CSV'si aynen.
+  - "Olaylar (CSV, Excel)" (2026-10-29, Kabul 6 bulgusu): aynı alanlar `;` ile (Türkçe Excel liste ayırıcısı;
+    virgüllü dosya çift tıklamada tek sütunda açılıyordu); motorun CSV sözleşmesi değişmez.
   - "Haritayı indir (PNG)": geçerli neslin tam kapsamı (en çok 4096 px kenar) ya da yalnız görünen alan; izler,
     bölgeler, sayaçlar, lejant ve "göreli harita" başlığıyla.
 - **Anlık görüntü (ekran):** her bölge olayında ve alarm başlangıcında ekran, o karenin RGB ve IR

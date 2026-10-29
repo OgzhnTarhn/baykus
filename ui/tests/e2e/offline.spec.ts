@@ -93,6 +93,7 @@ test("browser talks only to the local ui while playing with a fault", async ({ p
   };
   await exportItem("Olaylar (JSON)", "json");
   await exportItem("Olaylar (CSV)", "csv");
+  await exportItem("Olaylar (CSV, Excel)", "csv");
   await exportItem("Harita (PNG: tamamı)", "png");
 
   const record = {
@@ -109,7 +110,7 @@ test("browser talks only to the local ui while playing with a fault", async ({ p
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, "browser.json"), `${JSON.stringify(record, null, 2)}\n`, "utf-8");
   }
-  expect(downloads).toBe(3);
+  expect(downloads).toBe(4);
   expect(resets).toBeGreaterThanOrEqual(1); // klip 15 kare: 30 karede tur başı sıfırlaması
   expect(external).toEqual([]);
 });

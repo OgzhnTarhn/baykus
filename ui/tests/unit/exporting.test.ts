@@ -3,7 +3,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ZoneDef, ZoneEvent } from "@/lib/client";
-import { csvBlob, eventsJson, fileName, type ExportMeta } from "@/lib/exporting";
+import { csvBlob, eventsJson, excelCsv, fileName, type ExportMeta } from "@/lib/exporting";
 
 function zone(id: string, over: Partial<ZoneDef> = {}): ZoneDef {
   return {
@@ -110,5 +110,61 @@ describe("exporting", () => {
     // BOM'dan sonrası motorun CSV'siyle birebir aynı (Türkçe karakterler UTF-8).
     expect(new TextDecoder("utf-8").decode(bytes.slice(3))).toBe(csv);
     expect(await blob.text()).toBe(csv);
+  });
+
+  it("excel csv turns commas into semicolons for plain rows", () => {
+    // Düz satırlar: virgül ayırıcısı noktalı virgüle döner, satır sonları korunur.
+    expect(excelCsv("seq,kind,zone_name\n1,enter,Çıkış\n")).toBe(
+      "seq;kind;zone_name\n1;enter;Çıkış\n",
+    );
+    // CRLF girişte CRLF kalır.
+    expect(excelCsv("seq,kind,zone_name\r\n1,enter,Çıkış\r\n")).toBe(
+      "seq;kind;zone_name\r\n1;enter;Çıkış\r\n",
+    );
+    // Sondaki satır sonu yoksa eklenmez.
+    expect(excelCsv("seq,kind\n1,enter")).toBe("seq;kind\n1;enter");
+  });
+
+  it("excel csv keeps empty fields", () => {
+    // Boş alan boş kalır (motor null -> boş alan).
+    expect(excelCsv("1,,x")).toBe("1;;x");
+  });
+
+  it("excel csv unquotes fields that no longer need quoting", () => {
+    // Virgül içeren tırnaklı alan, ';' / '"' / CR / LF yoksa tırnaksız kalır.
+    expect(excelCsv('1,"A, B"')).toBe("1;A, B");
+  });
+
+  it("excel csv quotes fields containing a semicolon", () => {
+    // Noktalı virgül içeren alan tırnaklanır.
+    expect(excelCsv("1,a;b")).toBe('1;"a;b"');
+  });
+
+  it("excel csv doubles inner quotes", () => {
+    // İç tırnaklar ikilenir, alan tırnaklı kalır.
+    expect(excelCsv('1,"say ""hi"""')).toBe('1;"say ""hi"""');
+  });
+
+  it("excel csv keeps an embedded LF inside one quoted field", () => {
+    // Gömülü LF alanı bölmez; alan tırnaklı tek parça olarak kalır.
+    expect(excelCsv('1,"a\nb"\n2,c\n')).toBe('1;"a\nb"\n2;c\n');
+  });
+
+  it("excel csv maps an empty string to an empty string", () => {
+    expect(excelCsv("")).toBe("");
+  });
+
+  it("excel csv file name uses the olaylar-excel kind", () => {
+    // Yeni tür 'olaylar-excel' dosya adında görünür.
+    expect(fileName("olaylar-excel", "s1", new Date(2026, 0, 2, 3, 4, 5), "csv")).toBe(
+      "baykus_s1_olaylar-excel_20260102-030405.csv",
+    );
+  });
+
+  it("excel csv blob starts with a BOM", async () => {
+    // Excel CSV'si de UTF-8 BOM ile başlar.
+    const blob = csvBlob(excelCsv("seq,kind\n1,enter\n"));
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    expect(Array.from(bytes.slice(0, 3))).toEqual([0xef, 0xbb, 0xbf]);
   });
 });
