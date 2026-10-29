@@ -187,7 +187,10 @@ Server::Server(const Models& models, const TrackerConfig& tracker_cfg, Runtime& 
       r.track = req.has_param("track") && parse_bool("track", req.get_param_value("track"));
       if (req.has_param("gate")) r.gate = req.get_param_value("gate");
       if (req.has_param("session")) r.session = req.get_param_value("session");
-      if (req.has_param("frame")) r.frame = parse_int("frame", req.get_param_value("frame"));
+      if (req.has_param("frame")) {
+        r.frame = parse_int("frame", req.get_param_value("frame"));
+        if (*r.frame < 0) throw std::invalid_argument("frame 0 ya da daha büyük olmalı");
+      }
       if (req.has_param("focus")) r.focus = parse_int("focus", req.get_param_value("focus"));
       if (req.has_param("tiles")) r.tiles = parse_int("tiles", req.get_param_value("tiles"));
       const auto out = runtime.process(r);
@@ -234,6 +237,7 @@ Server::Server(const Models& models, const TrackerConfig& tracker_cfg, Runtime& 
         throw std::invalid_argument(std::string("gövde JSON değil: ") + e.what());
       }
       auto defs = parse_zone_defs(body);
+      check_zone_gens(defs, mp.ego.generations());
       int max_gen = 1;
       const auto& gens = mp.ego.generations();
       if (!gens.empty()) {

@@ -141,4 +141,8 @@ class Zones {
 // std::invalid_argument (Türkçe, bölge sırası / id ile). Değer sınırları `Zones::set`'te.
 std::vector<ZoneDef> parse_zone_defs(const nlohmann::json& body);
 
+// Bölge nesli var olan ve birleşmemiş bir nesil olmalı (tasarım §5.5); gens boşsa yalnız 1.
+// İlk hatada std::invalid_argument (Türkçe, bölge id ile).
+void check_zone_gens(const std::vector<ZoneDef>& defs, const std::map<int, GenInfo>& gens);
+
 }  // namespace baykus

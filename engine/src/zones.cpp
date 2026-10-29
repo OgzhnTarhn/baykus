@@ -2,6 +2,8 @@
 
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
+#include <limits>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -35,6 +37,20 @@ bool valid_id(const std::string& id) {
 
 bool is_polygon_kind(const std::string& kind) {
   return kind == "area" || kind == "restricted" || kind == "dwell";
+}
+
+// JSON tam sayısını int'e daraltır; int aralığı dışındaysa std::invalid_argument.
+int json_int(const nlohmann::json& j, const std::string& where, const std::string& field) {
+  std::int64_t v = 0;
+  try {
+    v = j.get<std::int64_t>();
+  } catch (const nlohmann::json::exception&) {
+    throw std::invalid_argument(where + ": " + field + " tam sayı aralık dışında");
+  }
+  if (v < std::numeric_limits<int>::min() || v > std::numeric_limits<int>::max()) {
+    throw std::invalid_argument(where + ": " + field + " tam sayı aralık dışında");
+  }
+  return static_cast<int>(v);
 }
 
 // Değişmeyen bölge: kind, gen, points (birebir), dwell_frames, count aynı.
@@ -800,7 +816,7 @@ std::vector<ZoneDef> parse_zone_defs(const nlohmann::json& body) {
     if (jgen == j.end() || !jgen->is_number_integer()) {
       throw std::invalid_argument(where_id + ": gen tam sayı olmalı");
     }
-    d.gen = jgen->get<int>();
+    d.gen = json_int(*jgen, where_id, "gen");
     const auto jpts = j.find("points");
     if (jpts == j.end() || !jpts->is_array()) {
       throw std::invalid_argument(where_id + ": points dizi olmalı");
@@ -818,7 +834,7 @@ std::vector<ZoneDef> parse_zone_defs(const nlohmann::json& body) {
       if (!jdwell->is_number_integer()) {
         throw std::invalid_argument(where_id + ": dwell_frames tam sayı olmalı");
       }
-      d.dwell_frames = jdwell->get<int>();
+      d.dwell_frames = json_int(*jdwell, where_id, "dwell_frames");
     }
     const auto jcount = j.find("count");
     if (jcount != j.end()) {
@@ -832,6 +848,25 @@ std::vector<ZoneDef> parse_zone_defs(const nlohmann::json& body) {
     defs.push_back(std::move(d));
   }
   return defs;
+}
+
+void check_zone_gens(const std::vector<ZoneDef>& defs, const std::map<int, GenInfo>& gens) {
+  for (const ZoneDef& d : defs) {
+    if (gens.empty()) {
+      if (d.gen != 1) {
+        throw std::invalid_argument("bölge " + d.id + ": geçersiz nesil");
+      }
+      continue;
+    }
+    const auto it = gens.find(d.gen);
+    if (it == gens.end()) {
+      throw std::invalid_argument("bölge " + d.id + ": geçersiz nesil");
+    }
+    if (it->second.merged_into) {
+      throw std::invalid_argument("bölge " + d.id + ": nesil " + std::to_string(d.gen) +
+                                  " birleşti (" + std::to_string(*it->second.merged_into) + ")");
+    }
+  }
 }
 
 }  // namespace baykus

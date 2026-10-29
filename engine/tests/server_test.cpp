@@ -343,6 +343,19 @@ TEST_F(ServerTest, DetectHasMotionFields) {
   }
 }
 
+TEST_F(ServerTest, NegativeFrameIs400) {
+  BAYKUS_REQUIRE_FILES({configs() / "motion.json"});
+  start_motion_server();
+  ASSERT_TRUE(motion_client_);
+  const auto r =
+      motion_client_->Post("/v1/detect?track=true&session=neg&frame=-1", parts(rgb_, ir_));
+  ASSERT_TRUE(r);
+  EXPECT_EQ(r->status, 400) << r->body;
+  const auto j = json::parse(r->body);
+  ASSERT_TRUE(j.contains("error"));
+  EXPECT_TRUE(j.at("error").is_string());
+}
+
 TEST_F(ServerTest, ResetScopeParam) {
   BAYKUS_REQUIRE_FILES({configs() / "motion.json"});
   start_motion_server();

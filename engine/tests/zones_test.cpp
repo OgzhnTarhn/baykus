@@ -108,6 +108,16 @@ ZoneDef line(const std::string& id, cv::Point2d a, cv::Point2d b, const std::str
   return d;
 }
 
+// Bölge gövdesi: tek `area` bölgesi, verilen gen ile.
+nlohmann::json area_body(int gen) {
+  nlohmann::json zone = {{"id", "z1"},
+                         {"name", "z1"},
+                         {"kind", "area"},
+                         {"gen", gen},
+                         {"points", {{0, 0}, {10, 0}, {10, 10}, {0, 10}}}};
+  return nlohmann::json{{"zones", nlohmann::json::array({zone})}};
+}
+
 }  // namespace
 
 TEST(Zones, EnterNeedsThreeObs) {
@@ -706,6 +716,48 @@ TEST(Zones, LineCountFilter) {
   for (int i = 0; i < 3; ++i) EXPECT_EQ(kinds(step(z, n++, left), "line_cross"), 0);
   EXPECT_EQ(z.counts()["z1"]["a_to_b"].get<int>(), 1);
   EXPECT_TRUE(z.counts()["z1"]["b_to_a"].is_null());
+}
+
+TEST(Zones, MergedGenRejected) {
+  std::map<int, baykus::GenInfo> gens;
+  gens[1] = baykus::GenInfo{false, 1, std::nullopt};
+  gens[2] = baykus::GenInfo{false, 40, 1};  // gen 1'e birleşti
+  gens[3] = baykus::GenInfo{true, 90, std::nullopt};
+
+  // Birleşmiş nesil (gen 2) reddedilir; ileti "birleşti" içerir.
+  try {
+    baykus::check_zone_gens(baykus::parse_zone_defs(area_body(2)), gens);
+    FAIL() << "birleşmiş nesil kabul edildi";
+  } catch (const std::invalid_argument& e) {
+    EXPECT_NE(std::string(e.what()).find("birleşti"), std::string::npos) << e.what();
+  }
+
+  // Açık (gen 1) ve geçici (gen 3) nesiller kabul edilir.
+  EXPECT_NO_THROW(baykus::check_zone_gens(baykus::parse_zone_defs(area_body(1)), gens));
+  EXPECT_NO_THROW(baykus::check_zone_gens(baykus::parse_zone_defs(area_body(3)), gens));
+
+  // Bilinmeyen nesil (gen 4) reddedilir.
+  EXPECT_THROW(baykus::check_zone_gens(baykus::parse_zone_defs(area_body(4)), gens),
+               std::invalid_argument);
+
+  // Boş gens: yalnız gen 1 kabul edilir.
+  const std::map<int, baykus::GenInfo> empty;
+  EXPECT_NO_THROW(baykus::check_zone_gens(baykus::parse_zone_defs(area_body(1)), empty));
+  EXPECT_THROW(baykus::check_zone_gens(baykus::parse_zone_defs(area_body(2)), empty),
+               std::invalid_argument);
+}
+
+TEST(Zones, HugeIntsRejected) {
+  // int aralığını aşan gen: ayrıştırma std::invalid_argument ile reddeder.
+  nlohmann::json huge_gen = area_body(1);
+  huge_gen["zones"][0]["gen"] = 4294967297LL;
+  EXPECT_THROW(baykus::parse_zone_defs(huge_gen), std::invalid_argument);
+
+  // int aralığını aşan dwell_frames: aynı şekilde reddedilir.
+  nlohmann::json huge_dwell = area_body(1);
+  huge_dwell["zones"][0]["kind"] = "dwell";
+  huge_dwell["zones"][0]["dwell_frames"] = 4294967297LL;
+  EXPECT_THROW(baykus::parse_zone_defs(huge_dwell), std::invalid_argument);
 }
 
 TEST(ZonesEvidence, Write) {
