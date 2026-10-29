@@ -1,0 +1,174 @@
+{
+  "row": "engine",
+  "split": "test",
+  "sequences": [
+    "1_03",
+    "2_03"
+  ],
+  "labels_sha256": {
+    "1_03": "c30c2695ab25ac5fef8a44e0f0d91fd328bf72793e9e0f487bae6358fedf3b30",
+    "2_03": "9141b8849cef47a8a676deca23827d5df1d09e2069af6201cda116e65bd35d83"
+  },
+  "tracks_sha256": "c22e6e5dc2f75bc92371adf2cbe5ad4f6d35f2c9e4df5174b006213395692a7b",
+  "motion_sha256": "b89294835de23ab4e9b7b63b3af75b67c5726d39bd3e38348a92e746fce72176",
+  "runs_sha256": {
+    "1_03.json.gz": "2803212ffd232cf3864e6fde981e81628c5623730ccb94c0c4c1d6e864317448",
+    "2_03.json.gz": "4856ea925be8f6a798eeb4762400b2706011f84afb6a8fe7953928e3adba70cd"
+  },
+  "labeled": {
+    "n": 1325,
+    "n_moving": 1325,
+    "n_stationary": 0,
+    "R_mov": 0.9177358490566038,
+    "R_sta": null,
+    "BA": null,
+    "coverage": 0.9177358490566038,
+    "BA_decided": null,
+    "confusion": {
+      "moving": {
+        "moving": 1216,
+        "unknown": 95,
+        "missed": 14
+      },
+      "stationary": {}
+    }
+  },
+  "stable": {
+    "n": 1325,
+    "n_moving": 1325,
+    "n_stationary": 0,
+    "R_mov": 0.9177358490566038,
+    "R_sta": null,
+    "BA": null,
+    "coverage": 0.9177358490566038,
+    "BA_decided": null,
+    "confusion": {
+      "moving": {
+        "moving": 1216,
+        "unknown": 95,
+        "missed": 14
+      },
+      "stationary": {}
+    }
+  },
+  "per_seq": {
+    "1_03": {
+      "n": 731,
+      "n_moving": 731,
+      "n_stationary": 0,
+      "R_mov": 0.9616963064295485,
+      "R_sta": null,
+      "BA": null,
+      "coverage": 0.9616963064295485,
+      "BA_decided": null,
+      "confusion": {
+        "moving": {
+          "moving": 703,
+          "unknown": 19,
+          "missed": 9
+        },
+        "stationary": {}
+      }
+    },
+    "2_03": {
+      "n": 594,
+      "n_moving": 594,
+      "n_stationary": 0,
+      "R_mov": 0.8636363636363636,
+      "R_sta": null,
+      "BA": null,
+      "coverage": 0.8636363636363636,
+      "BA_decided": null,
+      "confusion": {
+        "moving": {
+          "moving": 513,
+          "unknown": 76,
+          "missed": 5
+        },
+        "stationary": {}
+      }
+    }
+  },
+  "precision": {
+    "moving": {
+      "total": 1791,
+      "correct": 1216,
+      "wrong_label": 0,
+      "excluded": 557,
+      "unmatched": 18,
+      "P": 0.6789503070910106
+    },
+    "stationary": {
+      "total": 0,
+      "correct": 0,
+      "wrong_label": 0,
+      "excluded": 0,
+      "unmatched": 0,
+      "P": null
+    },
+    "false_moving_per_frame": 0.01875
+  },
+  "excluded": {
+    "edge": {
+      "n": 1140,
+      "pred": {
+        "missed": 53,
+        "moving": 557,
+        "unknown": 530
+      }
+    }
+  },
+  "delay": {
+    "transitions": 0,
+    "reached": 0,
+    "not_reached": 0,
+    "median": null,
+    "p90": null
+  },
+  "bootstrap": {
+    "BA": [
+      null,
+      null
+    ],
+    "R_mov": [
+      0.8758641806624017,
+      0.9559824386140175
+    ],
+    "R_sta": [
+      null,
+      null
+    ],
+    "n_tracks": 38,
+    "resamples": 1000,
+    "seed": 42,
+    "note": "iz düzeyinde, yalnız dizi içi örnekleme belirsizliği; genelleme güvencesi değil"
+  },
+  "matched": true,
+  "iou_min": 0.5,
+  "k": 15,
+  "vs_human": {
+    "n": 80,
+    "agree": 72,
+    "rate": 0.9,
+    "ci95": [
+      0.8148912101660255,
+      0.9484530008223144
+    ],
+    "product_unknown": 8,
+    "product_missed": 0,
+    "decided": {
+      "n": 72,
+      "agree": 72,
+      "rate": 1.0,
+      "ci95": [
+        0.9493470601886036,
+        1.0
+      ]
+    },
+    "key_sha256": "43fddb72d919ba11d0d3021b9795c64678f1111ad008b9e4b90089f69769269f",
+    "answers_sha256": "dd69c4778c2bd4e7af7ac3fccb58a42b277db64a2853082562a40328da9a2ac0"
+  },
+  "git_commit": "041a274b11e4ac03cfc2dfb3e28507e07ba4421f",
+  "git_dirty": false,
+  "created_at": "2026-10-29T16:47:44Z"
+}

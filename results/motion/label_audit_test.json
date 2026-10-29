@@ -1,0 +1,48 @@
+{
+  "a_agreement": {
+    "k": 80,
+    "n": 80,
+    "rate": 1.0,
+    "ci95": [
+      0.954180263735425,
+      1.0
+    ],
+    "pass": true
+  },
+  "b_unsure": {
+    "k": 0,
+    "n": 80,
+    "rate": 0.0,
+    "ci95": null,
+    "pass": true
+  },
+  "c_covered": {
+    "k": 80,
+    "n": 80,
+    "rate": 1.0,
+    "ci95": [
+      0.954180263735425,
+      1.0
+    ],
+    "pass": true
+  },
+  "targeted": {},
+  "n_uniform": 80,
+  "n_targeted": 0,
+  "thresholds": {
+    "a_min": 0.95,
+    "b_max": 0.15,
+    "c_min": 0.8
+  },
+  "verdict": "pass",
+  "split": "test",
+  "key_sha256": "43fddb72d919ba11d0d3021b9795c64678f1111ad008b9e4b90089f69769269f",
+  "answers_sha256": "dd69c4778c2bd4e7af7ac3fccb58a42b277db64a2853082562a40328da9a2ac0",
+  "labels_sha256": {
+    "1_03": "c30c2695ab25ac5fef8a44e0f0d91fd328bf72793e9e0f487bae6358fedf3b30",
+    "2_03": "9141b8849cef47a8a676deca23827d5df1d09e2069af6201cda116e65bd35d83"
+  },
+  "git_commit": "041a274b11e4ac03cfc2dfb3e28507e07ba4421f",
+  "git_dirty": false,
+  "created_at": "2026-10-29T16:47:30Z"
+}
