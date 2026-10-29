@@ -151,6 +151,18 @@ describe("timeline", () => {
     expect(t.all().map((e: ZoneEvent) => e.seq)).toEqual([5]);
   });
 
+  it("lastSeq is the highest stored seq", () => {
+    const t = new Timeline();
+    t.reset("s", 0);
+    expect(t.lastSeq()).toBe(0);
+
+    t.add([ev(3, 3, "enter"), ev(7, 7, "exit")], "s", 0);
+    expect(t.lastSeq()).toBe(7);
+
+    t.reset("s", 0);
+    expect(t.lastSeq()).toBe(0);
+  });
+
   it("duplicate seq is stored once", () => {
     const t = new Timeline();
     t.reset("s1", 1);

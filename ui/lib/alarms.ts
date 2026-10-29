@@ -105,6 +105,19 @@ export class ZoneAlarmBook {
   private current: Alarm[] = [];
   private acked = new Set<string>();
   private past: ZoneAlarmHistory[] = [];
+  // /v1/detect yanıtına hiç gelmeyen günlük kayıtları (PUT zones, ack, reset): alarm_id → clear karesi.
+  private noted = new Map<string, number>();
+
+  // Bant dışı günlük kayıtları: alarm_clear karesini kimliğe göre anımsa, alarm_ack kimliğini
+  // onaylı say. Yalnız bilinen (açık ya da daha önce not edilmiş) kimlikler saklanır; harita küçük kalır.
+  note(events: ZoneEvent[]): void {
+    const known = new Set([...this.current.map((a) => a.id), ...this.noted.keys()]);
+    for (const e of events) {
+      if (e.alarm_id === null || !known.has(e.alarm_id)) continue;
+      if (e.kind === "alarm_clear") this.noted.set(e.alarm_id, e.frame);
+      else if (e.kind === "alarm_ack") this.acked.add(e.alarm_id);
+    }
+  }
 
   update(alarms: Alarm[], events: ZoneEvent[]): void {
     const known = new Set([...this.current.map((a) => a.id), ...alarms.map((a) => a.id)]);
@@ -121,7 +134,10 @@ export class ZoneAlarmBook {
     for (const prev of this.current) {
       if (nextIds.has(prev.id)) continue;
       const clear = events.find((e) => e.kind === "alarm_clear" && e.alarm_id === prev.id);
-      const cleared_frame = clear ? clear.frame : (maxFrame ?? prev.since_frame);
+      // Bant dışı not edilen clear karesi, bu güncellemedeki en büyük kareden önce gelir.
+      const noted = this.noted.get(prev.id);
+      const cleared_frame = clear ? clear.frame : (noted ?? maxFrame ?? prev.since_frame);
+      this.noted.delete(prev.id);
       this.past.unshift({ alarm: prev, cleared_frame, acked: this.acked.has(prev.id) });
       this.acked.delete(prev.id);
     }
@@ -144,6 +160,7 @@ export class ZoneAlarmBook {
     this.current = [];
     this.acked = new Set();
     this.past = [];
+    this.noted = new Map();
   }
 }
 

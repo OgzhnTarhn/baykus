@@ -214,6 +214,34 @@ function makeConsole(
     timelineStamp = s;
     snaps.clear();
   };
+  // Zaman çizelgesine olay yazımı: hiç kurulmadıysa kurulur; dönem yalnız scope=tracks ile
+  // değiştiyse (silme yolları resetTimeline çağırır) olaylar korunarak damga ilerletilir.
+  const ingest = (events: ZoneEvent[]) => {
+    const now = stamp();
+    if (timelineStamp === null || timelineStamp.session !== now.session) {
+      timeline.reset(now.session, now.epoch);
+      timelineStamp = now;
+    } else if (timelineStamp.epoch !== now.epoch) {
+      timeline.restamp(now.session, now.epoch);
+      timelineStamp = now;
+    }
+    timeline.add(events, now.session, now.epoch);
+    if (events.length > 0) timelineVersion += 1;
+  };
+  // Bant dışı günlük kayıtları (bölge PUT'u, alarm onayı, scope=tracks sıfırlaması) yalnız
+  // /v1/session/events ile okunur: çizelge ve alarm kitabı bu sayfayla tazelenir.
+  const pullLog = async (): Promise<void> => {
+    const sent = stamp();
+    try {
+      const page = await fetchEvents(sid(), timeline.lastSeq());
+      if (!isCurrent(sent, stamp())) return;
+      ingest(page.events);
+      zoneBook.note(page.events);
+      emit();
+    } catch {
+      // günlük okunamadı: ekran olduğu gibi kalır
+    }
+  };
   let strip: StripEntry[] = [];
   let held: Freeze = {}; // dondurulan kanalların tuttuğu kare (Faz 4 §5.6)
   let lastReloc: number | null = null; // ego'nun son yeniden konumlandığı kare
@@ -300,16 +328,7 @@ function makeConsole(
       // Zaman çizelgesi: hiç kurulmadıysa kurulur; dönem yalnız scope=tracks ile değiştiyse (silme
       // yolları resetTimeline çağırır) olaylar korunarak damga ilerletilir.
       const events = response.events ?? [];
-      const now = stamp();
-      if (timelineStamp === null || timelineStamp.session !== now.session) {
-        timeline.reset(now.session, now.epoch);
-        timelineStamp = now;
-      } else if (timelineStamp.epoch !== now.epoch) {
-        timeline.restamp(now.session, now.epoch);
-        timelineStamp = now;
-      }
-      timeline.add(events, now.session, now.epoch);
-      if (events.length > 0) timelineVersion += 1;
+      ingest(events);
       // Anlık görüntüler (Faz 4 §5.13): iz kutusu çevresi; kanal pikselleri kare başına bir kez.
       const trackById = new Map((response.tracks ?? []).map((t) => [t.track_id, t]));
       let rgbPx: Pixels | null = null;
@@ -363,6 +382,8 @@ function makeConsole(
         clearZones();
         mosaic.reset(epoch);
         resetTimeline(); // dönem değişti: çizelge ve anlık görüntüler bırakılır
+      } else if (scope === "tracks") {
+        void pullLog(); // motor günlüğe session_reset_tracks yazdı: çizelge tazelenir
       }
     },
     sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
@@ -396,6 +417,7 @@ function makeConsole(
     session: () => sid(),
     timeline,
     snaps,
+    pullLog,
   };
 }
 
@@ -434,7 +456,7 @@ export function Console() {
   const [faults, setFaults] = useState<FaultConfig>(NO_FAULTS);
   const [snapState, setSnap] = useState<PlayerSnapshot<FrameView> | null>(null);
   const [monitor, setMonitor] = useState<Monitor>(EMPTY_MONITOR);
-  const [{ player, settings, load, getMosaic, session, timeline, snaps }] = useState(() =>
+  const [{ player, settings, load, getMosaic, session, timeline, snaps, pullLog }] = useState(() =>
     makeConsole(setSnap, setMonitor),
   );
   const snap = snapState ?? player.snapshot();
@@ -461,7 +483,19 @@ export function Console() {
   const [tool, setTool] = useState<Tool | null>(null);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [draft] = useState(() => new ZoneDraft(fps));
-  const [sync] = useState(() => new ZoneSync(draft, (defs) => putZones(session(), defs), bump));
+  const [sync] = useState(
+    () =>
+      new ZoneSync(
+        draft,
+        async (defs) => {
+          const result = await putZones(session(), defs);
+          // Başarılı PUT günlüğe zones_updated yazar: çizelge ve alarm kitabı tazelenir.
+          if (result.ok) void pullLog();
+          return result;
+        },
+        bump,
+      ),
+  );
 
   useEffect(() => {
     settings.set({ conf, track, gate, faults, tiles, focus: selected });
@@ -596,6 +630,10 @@ export function Console() {
     setPending((p) => new Set(p).add(id));
     setAckError(null);
     postAck(session(), id)
+      .then(() => {
+        // Onay günlüğe alarm_ack yazar: çizelge ve alarm kitabı tazelenir.
+        void pullLog();
+      })
       .catch((e: Error) => setAckError(e.message))
       .finally(() =>
         setPending((p) => {

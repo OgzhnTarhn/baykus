@@ -115,6 +115,24 @@ describe("ZoneAlarmBook", () => {
     expect(book.history()[0].acked).toBe(true);
   });
 
+  it("clear frame noted out of band is used", () => {
+    const book = new ZoneAlarmBook();
+    const a = alarm();
+    book.update([a], []);
+    book.note([event({ kind: "alarm_clear", alarm_id: "a1", frame: 42 })]);
+    book.update([], []);
+    expect(book.history()[0].cleared_frame).toBe(42);
+  });
+
+  it("ack noted out of band marks history acked", () => {
+    const book = new ZoneAlarmBook();
+    const a = alarm();
+    book.update([a], []);
+    book.note([event({ kind: "alarm_ack", alarm_id: "a1", frame: 21 })]);
+    book.update([], []);
+    expect(book.history()[0].acked).toBe(true);
+  });
+
   it("reset empties the book", () => {
     const book = new ZoneAlarmBook();
     const a = alarm();

@@ -65,6 +65,13 @@ export class Timeline {
     return [...this.events];
   }
 
+  // Saklanan en büyük seq; boşken 0 (reset de sıfırlar). Günlük imleci bununla ilerletilir.
+  lastSeq(): number {
+    let max = 0;
+    for (const seq of this.seqs) if (seq > max) max = seq;
+    return max;
+  }
+
   filtered(f: TimelineFilter): ZoneEvent[] {
     const kinds = f.kinds && f.kinds.length ? new Set(f.kinds) : null;
     return this.events.filter(
