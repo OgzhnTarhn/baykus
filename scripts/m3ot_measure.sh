@@ -9,6 +9,8 @@
 #           bash scripts/m3ot_measure.sh test --i-know-this-is-test
 #           TILES=4 bash scripts/m3ot_measure.sh dev
 #           bash scripts/m3ot_measure.sh dev motion
+# OUT_SUFFIX=_e3cm: sonuç dosyalarının adına ek (Faz 4 Görev 23: E3c-M test ölçümü Faz 3'ün E3c test
+# dosyalarının üzerine yazmasın). Varsayılan boş.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 part="${1:?kullanım: m3ot_measure.sh <dev|test> [--i-know-this-is-test]}"
@@ -92,7 +94,7 @@ for s in "${seqs[@]}"; do dets+=("../$work/dets/$s.json.gz"); done
 
 echo "== 2/4 AP50, ECE, çift kutu"
 (cd python && uv run baykus-engine measure --dets "${dets[@]}" --labels "../$data/labels" \
-  --out "../results/engine/m3ot_${part}${tiles_suf}_detect.json" "${flag[@]}")
+  --out "../results/engine/m3ot_${part}${tiles_suf}${OUT_SUFFIX:-}_detect.json" "${flag[@]}")
 
 if [ "$tiles" = "4" ]; then
   # Oracle tespiti/takibi dedektörden bağımsızdır (M3OT kutuları skor 1); 4 karo koşumunda tekrarlanmaz.
@@ -127,11 +129,11 @@ data = json.dumps(out, ensure_ascii=False, separators=(",", ":")).encode("utf-8"
 EOF
 )
 (cd python && uv run baykus-track eval --tracks "../$work/engine_tracks.json.gz" --dets "${dets[@]}" \
-  --gt-csv "../$data/labels/tracks_ir.csv" --out "../results/track/m3ot_${part}${tiles_suf}_engine.json" "${flag[@]}")
+  --gt-csv "../$data/labels/tracks_ir.csv" --out "../results/track/m3ot_${part}${tiles_suf}${OUT_SUFFIX:-}_engine.json" "${flag[@]}")
 if [ "$tiles" = "4" ]; then
   echo "== oracle takibi/ölçümü atlandı (TILES=4: oracle dedektörden bağımsız)"
 else
   (cd python && uv run baykus-track eval --tracks "../$work/oracle_tracks.json.gz" \
     --dets "../$work/oracle_dets.json.gz" --gt-csv "../$data/labels/tracks_ir.csv" \
-    --out "../results/track/m3ot_${part}_oracle.json" "${flag[@]}")
+    --out "../results/track/m3ot_${part}${OUT_SUFFIX:-}_oracle.json" "${flag[@]}")
 fi
