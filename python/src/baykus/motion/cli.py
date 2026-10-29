@@ -21,6 +21,7 @@ from baykus.motion.config import MotionCfg
 from baykus.motion.explore import METHOD, explore_sequence
 from baykus.motion.images import load_sequence
 from baykus.motion.labels import gt_tracks, label_sequence, read_labels, write_labels
+from baykus.motion.report import acceptance, claims, load_results, motion_markdown
 from baykus.runinfo import git_info, iso, utc_now, write_json
 
 K, LO, HI = 15, 0.03, 0.10  # tasarım §5.2 / §5.3 (ölçümden önce sabit)
@@ -452,6 +453,26 @@ def _cmd_parity(a: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_report(a: argparse.Namespace) -> int:
+    res = load_results(Path(a.results))
+    rows = acceptance(res)
+    out = Path(a.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(motion_markdown(res), encoding="utf-8", newline="\n")
+    for r in rows:
+        mark = f"❌ (ADR: {r['known_fail']})" if r["known_fail"] else ("✅" if r["ok"] else "❌")
+        print(f"{r['id']}: {mark} {r['text']}")
+    c = claims(res, rows)
+    for name, label in (("motion", "hareket"), ("product", "ürün")):
+        cl = c[name]
+        line = f"{label} iddiası: {'✅' if cl['ok'] else '❌'}"
+        if cl["reasons"]:
+            line += " (" + "; ".join(cl["reasons"]) + ")"
+        print(line)
+    print(f"→ {out}")
+    return 0
+
+
 def _common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--split", choices=("dev", "test"), default="dev")
     p.add_argument("--dev", default="../configs/m3ot_dev.json")
@@ -556,6 +577,12 @@ def build_parser() -> argparse.ArgumentParser:
     et.add_argument("--tar", default="../fixtures/f4", help="açılmış fixtures-f4 paketi")
     et.add_argument("--out", default="../evidence/ego_trace.json")
     et.set_defaults(func=_cmd_ego_trace)
+    rp = sub.add_parser(
+        "report", help="results/**/*.json → docs/motion.md (Kabul satırları, iddialar)"
+    )
+    rp.add_argument("--results", default="../results", help="kanıt JSON'larının kökü")
+    rp.add_argument("--out", default="../docs/motion.md", help="yazılacak markdown")
+    rp.set_defaults(func=_cmd_report)
     return p
 
 

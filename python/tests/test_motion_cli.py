@@ -109,6 +109,18 @@ def _parity_cli(tmp_path, ref: dict, cpp: dict, *extra: str) -> tuple[int, dict]
     return code, json.loads(out.read_text(encoding="utf-8"))
 
 
+def test_report_cli_writes_markdown(tmp_path):
+    from baykus.motion.cli import main
+
+    results = tmp_path / "results"
+    results.mkdir()
+    out = tmp_path / "motion.md"
+    code = main(["report", "--results", str(results), "--out", str(out)])
+    assert code == 0
+    assert out.is_file()
+    assert "kanıt yok" in out.read_text(encoding="utf-8")
+
+
 def test_parity_cli_known_fail_10b_exits_zero(tmp_path):
     import copy
 
