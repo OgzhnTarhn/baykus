@@ -124,6 +124,18 @@ TEST(Summary, PathRelInBoxUnits) {
   EXPECT_DOUBLE_EQ(ts.get(1)->at("path_rel").get<double>(), 3.0);
 }
 
+TEST(Summary, SizeSamplesBounded) {
+  TrackSummaries ts(SummaryCfg{200, 500});
+  // Kutu 10 × 10, ölçek 1 → her boy örneği 10; 10000 karede örnek sayısı sınırlı kalmalı.
+  for (int f = 1; f <= 10000; ++f) {
+    step(ts, f, {{1, 0, "moving", cv::Point2d(static_cast<double>(f), 0.0)}});
+  }
+  EXPECT_LE(ts.size_samples(1), 4096u);
+  EXPECT_GT(ts.size_samples(1), 0u);
+  EXPECT_NEAR(ts.get(1)->at("path_rel").get<double>(), 9999.0 / 10.0, 1e-9);
+  EXPECT_EQ(ts.size_samples(99), 0u);
+}
+
 TEST(Summary, ZoneVisits) {
   TrackSummaries ts(SummaryCfg{200, 500});
   step(ts, 100, {{1}});

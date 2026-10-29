@@ -28,6 +28,9 @@ class TrackSummaries {
 
   std::optional<nlohmann::json> get(int id) const;
 
+  // İz başına tutulan kutu boyu örneği sayısı (test ve tanı için); bilinmeyen id → 0.
+  std::size_t size_samples(int id) const;
+
   void reset();
 
  private:
@@ -54,7 +57,10 @@ class TrackSummaries {
     int motion_since_frame = 0;
     std::vector<Segment> segments;
     int stationary_frames = 0;
-    std::vector<double> sizes;  // kutu boyları (path_rel ortancası)
+    std::vector<double> sizes;  // kutu boyu örnekleri en çok 4096; aşınca eşit aralıkla
+                                // seyreltilir (ortanca yaklaşık, tasarım §5.12 bellek sınırı)
+    int size_stride = 1;        // kaç gözlemde bir örnek alınır
+    int size_seen = 0;          // boy örneği adayı gözlem sayısı
     double path = 0.0;
     std::optional<cv::Point2d> last_point;  // son harita noktası
     int last_point_gen = 0;

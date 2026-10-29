@@ -12,6 +12,9 @@ namespace baykus {
 
 namespace {
 
+// İz başına kutu boyu örneği üst sınırı (tasarım §5.12 bellek sınırı).
+constexpr std::size_t kSizeSamplesMax = 4096;
+
 // Boyların ortancası (çift sayıda ortadaki iki değerin ortalaması).
 double median(std::vector<double> v) {
   std::sort(v.begin(), v.end());
@@ -112,7 +115,19 @@ void TrackSummaries::update(int n, int frame, const std::vector<TrackOut>& track
       const cv::Point2d p = *mit->second.map_xy;
       const double w = t.box.x2 - t.box.x1;
       const double h = t.box.y2 - t.box.y1;
-      rec.sizes.push_back(std::sqrt(w * h) * scale(*ego.frame_to_map));
+      // Boy örnekleri: sınır aşılınca eşit aralıkla seyreltilir (ortanca yaklaşık kalır).
+      rec.size_seen++;
+      if ((rec.size_seen - 1) % rec.size_stride == 0) {
+        rec.sizes.push_back(std::sqrt(w * h) * scale(*ego.frame_to_map));
+        if (rec.sizes.size() > kSizeSamplesMax) {
+          std::size_t keep = 0;
+          for (std::size_t i = 0; i < rec.sizes.size(); i += 2) {
+            rec.sizes[keep++] = rec.sizes[i];
+          }
+          rec.sizes.resize(keep);
+          rec.size_stride *= 2;
+        }
+      }
       if (rec.last_point && rec.last_point_gen == ego.map_gen) {
         rec.path += std::hypot(p.x - rec.last_point->x, p.y - rec.last_point->y);
       }
@@ -166,6 +181,14 @@ void TrackSummaries::update(int n, int frame, const std::vector<TrackOut>& track
     tracks_.erase(victim);
     ended--;
   }
+}
+
+std::size_t TrackSummaries::size_samples(int id) const {
+  const auto it = tracks_.find(id);
+  if (it == tracks_.end()) {
+    return 0;
+  }
+  return it->second.sizes.size();
 }
 
 std::optional<nlohmann::json> TrackSummaries::get(int id) const {
