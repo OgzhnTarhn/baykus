@@ -145,6 +145,18 @@ describe("exporting", () => {
     expect(excelCsv('1,"say ""hi"""')).toBe('1;"say ""hi"""');
   });
 
+  it("excel csv neutralises formula-looking text fields", () => {
+    // Formül gibi görünen metin alanları tek tırnakla etkisizleştirilir; sayılar ve boş alanlar
+    // dokunulmaz. Girdi RFC 4180'e göre tırnaklıdır (iç tırnaklar ikilenmiş).
+    const input =
+      "seq,zone_id,zone_name,alarm_id,extra,count,other,empty\r\n" +
+      '1,-z1,"=HYPERLINK(""x"")",@a,+b,-5,12,\r\n';
+    const expected =
+      "seq;zone_id;zone_name;alarm_id;extra;count;other;empty\r\n" +
+      "1;'-z1;\"'=HYPERLINK(\"\"x\"\")\";'@a;'+b;-5;12;\r\n";
+    expect(excelCsv(input)).toBe(expected);
+  });
+
   it("excel csv keeps an embedded LF inside one quoted field", () => {
     // Gömülü LF alanı bölmez; alan tırnaklı tek parça olarak kalır.
     expect(excelCsv('1,"a\nb"\n2,c\n')).toBe('1;"a\nb"\n2;c\n');

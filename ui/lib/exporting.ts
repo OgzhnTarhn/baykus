@@ -98,9 +98,15 @@ export function excelCsv(csv: string): string {
     seps.push(sep);
     if (sep === "") break;
   }
-  // Alan yalnız ';', '"', CR ya da LF içeriyorsa tırnaklanır; iç tırnaklar ikilenir.
-  const emit = (field: string): string =>
-    /[;"\r\n]/.test(field) ? `"${field.replace(/"/g, '""')}"` : field;
+  // Excel formül enjeksiyonu koruması (OWASP): =, +, -, @, TAB ya da CR ile başlayan ve düz sayı
+  // olmayan alan, tırnaklamadan önce tek tırnakla etkisizleştirilir; sayılar ve boş alanlar kalır.
+  const plainNumber = /^-?\d+(\.\d+)?$/;
+  const emit = (field: string): string => {
+    const risky = /^[=+@\t\r-]/.test(field) && !plainNumber.test(field);
+    const safe = risky ? `'${field}` : field;
+    // Alan yalnız ';', '"', CR ya da LF içeriyorsa tırnaklanır; iç tırnaklar ikilenir.
+    return /[;"\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
+  };
   return records.map((fields, r) => fields.map(emit).join(";") + seps[r]).join("");
 }
 
