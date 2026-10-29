@@ -83,7 +83,8 @@ Response Runtime::process(const Request& req) {
   // Ego (Python `SessionRef.step` sırası); oturum kilidi tutuluyor, çıkarım kilidi dışında.
   std::optional<EgoResult> ego;
   double ego_ms = 0.0;
-  if (s && s->motion) {
+  // ego, hareket, bölgeler ve günlük yalnız track=true + session ile (tasarım §5.7).
+  if (req.track && s && s->motion) {
     ++s->n;
     bool ir_bad = false;
     if (fr.health.contains("ir") && fr.health["ir"].contains("flags")) {

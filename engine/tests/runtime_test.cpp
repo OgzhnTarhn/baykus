@@ -327,6 +327,29 @@ TEST_F(MotionRuntimeTest, NoSessionNoEgo) {
   EXPECT_TRUE(j.at("health").at("rgb").at("diff_mad").is_null());
 }
 
+TEST_F(MotionRuntimeTest, TrackOffSkipsMotion) {
+  // Tasarım §5.7: ego, hareket, bölgeler ve olay günlüğü yalnız track=true + oturumla çalışır.
+  for (int f = 1; f <= 4; ++f) {
+    SCOPED_TRACE("kare " + std::to_string(f));
+    auto r = request(f4_frame(f), "off");
+    r.frame = f;
+    r.track = false;
+    const auto out = runtime_->process(r);
+    EXPECT_FALSE(out.ego.has_value());
+    EXPECT_TRUE(out.tracks.empty());
+    EXPECT_TRUE(out.log_events.is_array());
+    EXPECT_TRUE(out.log_events.empty());
+    EXPECT_TRUE(out.alarms.empty());
+    EXPECT_TRUE(baykus::response_json(out).at("ego").is_null());
+  }
+  const auto s = sessions_->find("off");
+  ASSERT_TRUE(s);
+  ASSERT_TRUE(s->motion);
+  EXPECT_EQ(s->motion->log.last_seq(), 0);
+  const auto on = step(5, "off");
+  ASSERT_TRUE(on.ego.has_value());
+}
+
 TEST_F(MotionRuntimeTest, ScopeTracksKeepsMapRaisesIdBase) {
   int max_before = -1;
   for (int f = 1; f <= 12; ++f) {
