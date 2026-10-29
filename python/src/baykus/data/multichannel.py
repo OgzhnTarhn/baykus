@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import multiprocessing
 from collections.abc import Iterable
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
@@ -73,6 +74,8 @@ def build_rgbt4(
         for job in jobs:
             _write_one(job)
     else:
-        with ProcessPoolExecutor(max_workers=workers) as ex:
+        # çok iş parçacıklı süreçte fork kilitlenebilir (Python uyarısı); diğer havuzlar gibi spawn
+        ctx = multiprocessing.get_context("spawn")
+        with ProcessPoolExecutor(max_workers=workers, mp_context=ctx) as ex:
             list(ex.map(_write_one, jobs, chunksize=32))
     return len(jobs)
