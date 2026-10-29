@@ -148,6 +148,56 @@ describe("mozaik katmanları", () => {
     expect(kept[149]).toEqual([154, 0]);
   });
 
+  it("trails of tracks unseen for TRAIL_MAX pushes are dropped", () => {
+    const m = new Mosaic([64, 48], 4);
+    const t = thumb("t");
+    const at = (f: number) => ego({ map_gen: 1, frame_to_map: [1, 0, f, 0, 1, 0] });
+
+    // 0. kare: iki takip de görülür
+    m.push(0, at(0), [track(1, [0, 0]), track(2, [0, 0])], t);
+    // 1..150: yalnız takip 2 görülür (takip 1 için tam 150 itme)
+    for (let f = 1; f <= 150; f++) m.push(f, at(f), [track(2, [f, 0])], t);
+    expect(m.layer(1).trails.has(1)).toBe(true);
+    expect(m.layer(1).trails.has(2)).toBe(true);
+
+    // 151. itme: TRAIL_MAX aşıldı, takip 1'in izi düşer
+    m.push(151, at(151), [track(2, [151, 0])], t);
+    expect(m.layer(1).trails.has(1)).toBe(false);
+    expect(m.layer(1).trails.has(2)).toBe(true);
+  });
+
+  it("merged-in trail keeps its age", () => {
+    const m = new Mosaic([64, 48], 4);
+    const t = thumb("t");
+
+    // 2. kuşak geçici: takip 5 burada doğar
+    m.push(
+      0,
+      ego({ map_gen: 2, provisional: true, frame_to_map: [1, 0, 0, 0, 1, 0] }),
+      [track(5, [0, 0])],
+      t,
+    );
+    // birleşme: 2. kuşağın izi 1. kuşağa taşınır; takip 5 bu itmede görülmez
+    m.push(
+      1,
+      ego({
+        map_gen: 2,
+        frame_to_map: [1, 0, 1, 0, 1, 0],
+        merge: { from: 2, to: 1, transform: [1, 0, 0, 0, 1, 0] },
+      }),
+      [],
+      t,
+    );
+    expect(m.layer(1).trails.has(5)).toBe(true);
+
+    // 151 itme daha: takip 5 görülmez -> iz düşer, takip 6 kalır
+    for (let f = 2; f <= 152; f++) {
+      m.push(f, ego({ map_gen: 1, frame_to_map: [1, 0, f, 0, 1, 0] }), [track(6, [f, 0])], t);
+    }
+    expect(m.layer(1).trails.has(5)).toBe(false);
+    expect(m.layer(1).trails.has(6)).toBe(true);
+  });
+
   it("merge moves tiles and trails into the target layer", () => {
     const m = new Mosaic([64, 48], 4);
     const t = thumb("t");

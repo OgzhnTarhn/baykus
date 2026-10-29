@@ -15,7 +15,9 @@ export type Layer = {
   gen: number;
   provisional: boolean;
   tiles: { m: Affine; thumb: CanvasImageSource }[];
+  // kuyruk son 150 kare (tasarım §5.4); o süre görünmeyen izin kuyruğu düşer.
   trails: Map<number, [number, number][]>;
+  seen: Map<number, number>;
   footprint: [number, number][] | null;
 };
 
@@ -54,7 +56,14 @@ export function fromCanvas(m: {
 }
 
 function emptyLayer(gen: number): Layer {
-  return { gen, provisional: false, tiles: [], trails: new Map(), footprint: null };
+  return {
+    gen,
+    provisional: false,
+    tiles: [],
+    trails: new Map(),
+    seen: new Map(),
+    footprint: null,
+  };
 }
 
 // Dolunca eşit aralıkla seyrelt: çift sıralar kalır, harita kapsamı korunur.
@@ -72,6 +81,7 @@ export class Mosaic {
   private tileCount = 0;
   private broken = new Set<number>();
   private epochNo = 0;
+  private counter = 0;
 
   constructor(frame: [number, number], thumbScale: number) {
     this.frame = frame;
@@ -85,6 +95,7 @@ export class Mosaic {
     this.tileCount = 0;
     this.broken.clear();
     this.epochNo = epoch;
+    this.counter = 0;
   }
 
   epoch(): number {
@@ -112,8 +123,10 @@ export class Mosaic {
     epoch: number = this.epochNo,
   ): void {
     if (epoch !== this.epochNo) return; // önceki dönemin geç gelen yanıtı
+    this.counter += 1;
     if (ego === null) {
       this.breakTrails(tracks);
+      this.prune(this.gen === null ? undefined : this.layers.get(this.gen));
       return;
     }
     const l = this.layerOf(ego);
@@ -122,6 +135,7 @@ export class Mosaic {
     if (!ego.ok || ego.frame_to_map === null) {
       l.footprint = null;
       this.breakTrails(tracks);
+      this.prune(l);
       return;
     }
     const m = ego.frame_to_map;
@@ -143,7 +157,20 @@ export class Mosaic {
       pts.push([t.map_xy[0], t.map_xy[1]]);
       if (pts.length > TRAIL_MAX) pts.splice(0, pts.length - TRAIL_MAX);
       l.trails.set(t.track_id, pts);
+      l.seen.set(t.track_id, this.counter);
       this.broken.delete(t.track_id);
+    }
+    this.prune(l);
+  }
+
+  // TRAIL_MAX itmeden uzun süre görülmeyen izlerin kuyruğu düşer.
+  private prune(l: Layer | undefined): void {
+    if (l === undefined) return;
+    for (const [id, at] of l.seen) {
+      if (at < this.counter - TRAIL_MAX) {
+        l.trails.delete(id);
+        l.seen.delete(id);
+      }
     }
   }
 
@@ -205,6 +232,9 @@ export class Mosaic {
       );
       const old = dst.trails.get(id) ?? [];
       dst.trails.set(id, old.concat(moved));
+    }
+    for (const [id, at] of src.seen) {
+      dst.seen.set(id, Math.max(dst.seen.get(id) ?? -Infinity, at));
     }
     if (src.footprint !== null) {
       dst.footprint = src.footprint.map((p) => apply(transform, p));
