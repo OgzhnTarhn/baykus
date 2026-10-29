@@ -45,7 +45,7 @@ baykus-system = "baykus.system.cli:main"
 baykus-motion = "baykus.motion.cli:main"
 
 [dependency-groups]
-dev = ["pytest>=8.0", "ruff>=0.6", "pre-commit>=3.7"]
+dev = ["pytest>=8.0", "ruff>=0.6", "pre-commit>=3.7", "pytest-timeout>=2.3"]
 
 [build-system]
 requires = ["hatchling"]
@@ -63,4 +63,6 @@ select = ["E", "F", "I", "B", "UP"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# CI'da ara sıra bir test kilitleniyordu (6 sa); takılan test adıyla düşsün
+timeout = 300
 markers = ["slow: gerçek veri veya ağ gerektiren testler (CI'da çalışmaz)"]
