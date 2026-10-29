@@ -4,9 +4,10 @@
 kamerayı birleştirerek gece-gündüz araç tespiti; bir kamera bozulsa da çalışan, laptop işlemcisinde
 gerçek zamana yakın, her sayısı ölçümle kanıtlı bir sistem.
 
-> **Durum: `v0.2.0` — Faz 3 (sistem).** C++ çıkarım motoru, takip, operatör ekranı ve internetsiz Docker
-> kurulumu tamam; Faz 1 (model, ölçüm) ve Faz 2 (sensör sağlığı) üzerine. Tasarım: [docs/spec.md](docs/spec.md) ·
-> sistem raporu: [docs/system.md](docs/system.md) · deney günlüğü: [docs/experiments.md](docs/experiments.md) ·
+> **Durum: `v0.3.0` — Faz 4 (hareketli hedef).** Kamera hareketi telafisi, hareketli / duran araç, göreli
+> harita, bölgeler ve alarmlar; Faz 1 (model), Faz 2 (sensör sağlığı) ve Faz 3 (C++ motor, ekran, internetsiz
+> kurulum) üzerine. Tasarım: [docs/spec.md](docs/spec.md) · raporlar: [docs/motion.md](docs/motion.md),
+> [docs/system.md](docs/system.md) · deney günlüğü: [docs/experiments.md](docs/experiments.md) ·
 > kararlar: [docs/adr/](docs/adr/)
 
 ## Sevk edilen sistem
@@ -24,6 +25,32 @@ kapatılarak (modality dropout) eğitildi.
 Seçim, ölçümden **önce** yazılmış bir kuralla yapıldı ([ADR 0007](docs/adr/0007-latency-target.md)):
 laptop CPU'da p95 ≤ 100 ms ve en fazla 1 puan doğruluk kaybı. İki modelli geç füzyon (E4) daha sağlam
 ama işlemcide 2 kat yavaş (p95 132 ms), bu yüzden elendi.
+
+Faz 4'ten itibaren motor **E3c-M**'yi çalıştırıyor: aynı model, M3OT eğitim dizileriyle ince ayarlı
+([ADR 0010](docs/adr/0010-e3c-m3ot.md); DroneVehicle val mAP50 84,1 → 84,5).
+
+## Faz 4: hareketli hedef — kamera hareketi, bölgeler, harita
+
+![Operatör ekranı: yasak bölgeye giren araçlar kırmızı alarm verdi](docs/figures/system/f4-12-kirmizi-alarm.jpg)
+
+Drone kamerası hareket ederken motor, IR görüntüsünden kameranın kendi hareketini çıkarıyor, araçları göreli
+bir haritaya yerleştiriyor ve her aracı hareketli / duran diye işaretliyor. Operatör haritaya alan, yasak
+bölge, bekleme sınırı ve sayım hattı çiziyor; girişler, bekleme aşımları ve hat geçişleri alarm ve olay
+olarak düşüyor; olay günlüğü JSON / CSV, harita PNG olarak indiriliyor. Hepsi C++ motorunda, Python
+referansıyla eşlikli ve internetsiz. Ayrıntılar ve bütün tablolar: [docs/motion.md](docs/motion.md).
+
+| | Değer | Kaynak |
+|---|---|---|
+| M3OT test araç bulma AP50 (E3c-M, motor) | **98,8** (Faz 3, E3c: 86,0) | `results/engine/m3ot_test_e3cm_detect.json` |
+| M3OT test takip HOTA / IDF1 (motor) | **0,771** / 0,936 (Faz 3: 0,489 / 0,677) | `results/track/m3ot_test_e3cm_engine.json` |
+| Hareketli araçların "hareketli" bulunması (test, motor) | **%91,8** | `results/motion/m3ot_test_engine.json` |
+| Hareketli / duran dengeli doğruluk (val, motor) | **0,823** | `results/motion/m3ot_dev_engine.json` |
+| Motor gecikmesi (Docker; ego, hareket, 4 bölge dahil) | p95 **97,9 ms** (eşik 100) | `results/bench/e3c_onnx_fp32_engine_laptop-docker_f4.json` |
+
+- Ölçümler M3OT'un iki val ve iki test dizisinde; test dizilerinde duran araç yok.
+- Uzun görüntü kesintisinden sonra harita birkaç piksel kayabilir ya da eski haritaya bağlanmayabilir
+  ([ADR 0011](docs/adr/0011-kabul-10b.md)).
+- Gecikme payı dar: koşudan koşuya 7-13 ms oynuyor.
 
 ## Sonuçlar
 
@@ -160,11 +187,7 @@ kanıt dosyalarından üretiliyor).
 - **IR hizasızlık alarmı M3OT'ta çalışmıyor:** iki kamera arasında doğal kayma var ve eşleşme yanıtı
   düşük; ürün kuralı temizde yanlış alarm vermiyor ama gerçek 20 px kaymayı da yakalamıyor.
 - Model DroneVehicle'ın 5 sınıfını biliyor (motosiklet yok); yoğun trafikte (M3OT val, kare başına
-  ≈ 11 araç) AP50 39,6'ya düşüyordu. Faz 4'te M3OT train ile ince ayarlanan E3c-M'de M3OT val AP50 88,5
-  (`results/engine/m3ot_dev_detect.json`; test yalnız Faz 4 sonunda, bir kez).
-- **Uzun görüntü kesintisinden sonra harita birkaç piksel kayabilir** (Faz 4): kamera kesinti sırasında
-  yeni bir bölgeye ilerlediyse yeniden konumlama, M3OT val'de kesintisiz koşuya göre köşelerde ortanca
-  2,6 px, p95 5,0 px fark veriyor (`results/motion/reloc_jumps_val.json`; Kabul 10 b, ADR 0011).
+  ≈ 11 araç) AP50 39,6'ya düşüyordu; Faz 4'ün E3c-M'si bunu kapattı (yukarıda).
 - H5'teki 60 ms Windows'ta yerel Python ölçümüydü; motor Docker'da ve çözme + sağlık dahil:
   **karşılaştırılamaz**.
 
@@ -220,8 +243,8 @@ git commit'i ve seed'iyle bağlı.
 ## Yol haritası
 
 Faz 2 (bitti, olumsuz sonuç): kare başına sensör sağlığı, kanal kapısı, güven kalibrasyonu · Faz 3
-(bitti, `v0.2.0`): C++ motoru, takip, operatör ekranı, internetsiz Docker kurulumu · Faz 4: hareketli
-hedef · Faz 5: sunum. Ayrıntı: [docs/spec.md](docs/spec.md) §22.
+(bitti, `v0.2.0`): C++ motoru, takip, operatör ekranı, internetsiz Docker kurulumu · Faz 4 (bitti,
+`v0.3.0`): hareketli hedef, bölgeler, harita · Faz 5: sunum. Ayrıntı: [docs/spec.md](docs/spec.md) §22.
 
 ## Lisans ve atıflar
 

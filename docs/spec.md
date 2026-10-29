@@ -1,7 +1,7 @@
 # Baykuş — RGB + Termal Füzyonlu Hava Görüntüsü Tespiti, Edge için Optimize, Uçtan Uca Sistem
 
 > **Proje adı:** Baykuş · **Repo / paket adı:** `baykus` · **Alt başlık (EN):** *RGB-Thermal aerial vehicle detection on the edge*
-> **Sahibi:** Oğuzhan Tarhan · **Tarih:** 2026-10-07 · **Sürüm:** v4.5 (Faz 3 tasarımı ve planı; v4.4: Faz 2; v4.3: H5 planı; v4.2: H4 planı, E3b kesildi; v4.1: H1 kapanışı; v4.0: kapsam genişletme: güvenilirlik farkındalığı + hareketli hedef, ADR 0006; eğitim: Colab, kullanıcı çalıştırır · laptop: AMD Ryzen 7 8845HS) · **Süre:** 5 faz, ~7 ay (5 Ekim 2026-30 Nisan 2027) · **Durum:** v3.0 onaylandı (2026-10-02); v4.0 yol haritası onaylandı (2026-10-07)
+> **Sahibi:** Oğuzhan Tarhan · **Tarih:** 2026-10-07 · **Sürüm:** v4.6 (Faz 4 kapanışı: hareketli hedef ve ürün davranışı; v4.5: Faz 3 tasarımı ve planı; v4.4: Faz 2; v4.3: H5 planı; v4.2: H4 planı, E3b kesildi; v4.1: H1 kapanışı; v4.0: kapsam genişletme: güvenilirlik farkındalığı + hareketli hedef, ADR 0006; eğitim: Colab, kullanıcı çalıştırır · laptop: AMD Ryzen 7 8845HS) · **Süre:** 5 faz, ~7 ay (5 Ekim 2026-30 Nisan 2027) · **Durum:** v3.0 onaylandı (2026-10-02); v4.0 yol haritası onaylandı (2026-10-07)
 
 ---
 
@@ -39,6 +39,9 @@
 ---
 
 ## 0. v1'den bu yana ne değişti
+
+### v4.6 (2026-10-29) — Faz 4 kapanışı
+Faz 4 (`docs/design/faz4.md`, plan `docs/plans/F4.md`): IR'den kamera hareketi (LK + RANSAC, ego maskesi ham skor ≥ 0,6), harita nesilleri ve ORB ile yeniden konumlama, iz başına hareket durumu (15 kare, 0,03 / 0,10), donmuş kare dedektörü, bölgeler (alan, yasak bölge, bekleme sınırı, sayım hattı) ve alarmlar, araç özeti, olay günlüğü (JSON / CSV, Türkçe Excel için `;`'li kopya), ekranda göreli mozaik harita, araç kartı, zaman çizelgesi ve dışa aktarma; hepsi C++ motorunda, Python referansıyla eşlikli (Kabul 1-3) ve internetsiz. Sevk edilen model E3c-M (ADR 0010); motor iş parçacıkları OpenCV 2 / ORT 8 (Kabul 5: p95 97,9 ms). Olumsuz sonuç: Kabul 10 b (uzun boşluktan sonra yeniden konumlama ≤ 2,0 px) tutmadı, ADR 0011. Test bir kez, `f4-freeze` sonrası (ADR 0009, `docs/motion.md`). Modül listesi, API alanları, ekran ve bench protokolü tasarımın §5'inde; aşağıdaki bölümler Faz 3 hâlini anlatır. Değişen yerler: §2.3 (S11), §22 (Faz 4), §23.
 
 ### v4.5 (2026-10-18) — Faz 3 tasarımı ve planı
 Faz 3 yalın tutuldu (`docs/design/faz3.md` v3, plan `docs/plans/F3.md`): sevk edilen tek model (E3c · ONNX FP32) C++ motorunda; geç füzyon + C++ WBF ve ham çıktı + NMS yolu yok; Python referansıyla tanımlı eşlik (Kabul 1-4); Faz 2 sağlık dedektörü motorda, hizasızlıkta kare kuralı (train'de seçilen yanıt eşiği) ve videoda zaman kuralı; kapı varsayılanı yalnız uyarı; takip `trackers==2.6.1` ByteTrack'inin C++ uyarlaması; tek sayfa Next.js ekranı (sağlık paneli, alarm sözleşmesi, kapı modu; mod seçimi yok); compose + kapalı katmanla NFR-1 kanıtları; M3OT test yalnız son ölçümde, geliştirme ve demo M3OT val (yoksa train) bölümünden. Bu fazda (S) görev yok. Takvim ≈ 7-8 hafta (tampon dahil). Değişen yerler: §2.3 (S7, S8), §7.4 (FR-E, FR-U), §7.5 (NFR-1), §8.4, §15, §16, §17, §18, §22 (Faz 3, H6-H9), §23.
@@ -153,7 +156,7 @@ Mezuniyette (Haziran 2027) **Türk savunma sanayii** şirketlerinde (ASELSAN, HA
 - [x] **S8 — Kapalı ağ:** *(Faz 3: Kabul 6 ✅ — kanıt 1-4 geçti, tarayıcıdan dış istek 0, Wi-Fi kapalı demo 2026-10-19. Kanıt: `results/system/offline.json`, `results/system/manual.json`, `docs/system.md`.)* `docker compose up` dış ağa çıkmadan çalışıyor: kapalı katmanda uçtan uca kare, iki konteynerden dış bağlantı denemesinin başarısızlığı, tarayıcının yalnız `127.0.0.1:3000`'a istek yapması (CI) ve Wi-Fi kapalı elle demo (`docs/design/faz3.md` §4.5, Kabul 6).
 - [ ] **S9 — Sunum:** README, demo videosu ve teknik yazı yayında.
 - [x] **S10 — Güvenilirlik farkındalığı (Faz 2):** *(ölçüldü, olumsuz: kapı bozuk IR'de val +40,7 puan [+38,3; +43,1], ama temiz val'de −3,1 puan ve %4,1 yanlış alarm → Kabul 1, 3 ❌, 2 ✅; kalibrasyon ECE 0,080 → 0,007, mAP |Δ| 0,112 puan → Kabul 4 ❌. Kanıt: `docs/health.md`, `results/health/`. Düzeltme Faz 3'e.)* Uyarlanabilir füzyon, en iyi sabit füzyona (E3c / E4b) karşı sağlamlık paketinin bozulmaları ve kamera kaybında güven aralığıyla ölçülmüş; güven kalibrasyonu (ECE) önce/sonra raporlanmış; sensör arıza tespitinin doğruluğu ölçülmüş. Sonuç olumsuz çıkarsa o da raporlanır. Ayrıntılı ölçütler Faz 2 tasarımında. Ölçütler ve kabul eşikleri: `docs/design/faz2.md` §6 (v4.4).
-- [ ] **S11 — Hareketli hedef (Faz 4):** M3OT'ta hareketli/duran ayrımı ölçülmüş (etiketler iz yörüngelerinden türetilmiş, yöntemi belgelenmiş); göreli mozaik harita ve bölge olayları demoda çalışıyor. Ayrıntılı ölçütler Faz 4 tasarımında.
+- [x] **S11 — Hareketli hedef (Faz 4):** *(Faz 4: Kabul 1-11 ✅, Kabul 10 b ADR 0011; test bir kez: hareketli araçların motor R_mov 0,918, oracle 0,998; test dizilerinde duran araç yok → BA tanımsız, "ayrım çalışıyor" iddiası yapılmaz (iddia kuralı); val BA motor 0,823 / oracle 0,949; bölgeler, alarmlar, harita belleği, dışa aktarma demoda ✅. Kanıt: `docs/motion.md`, ADR 0009, `results/motion/`.)* M3OT'ta hareketli/duran ayrımı ölçülmüş (etiketler iz yörüngelerinden türetilmiş, yöntemi belgelenmiş); göreli mozaik harita ve bölge olayları demoda çalışıyor. Ayrıntılı ölçütler Faz 4 tasarımında.
 
 ---
 
@@ -1055,7 +1058,7 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 | **1. Çekirdek** | 5 Eki - 8 Kas 2026 | Aşağıdaki H1-H5 (değişmedi) + kancalar K1-K5 (§6.1) | 🚩 MVP, `v0.1.0` | Bu spec |
 | **2. Güvenilirlik farkındalığı** | ≈ 1,5 hafta (v4.4) | Kare başına RGB/IR sağlık dedektörü (sensör arıza tespiti), arızaya duyarlı kanal kapısı (uyarlanabilir füzyon), güven kalibrasyonu (ECE) | S10 | `docs/design/faz2.md` (onaylı, 2026-10-17) |
 | **3. Sistem** | ≈ 7-8 hafta, tampon dahil (v4.5; pencere 7 Ara 2026 - 31 Oca 2027) | C++ motor (tek model, sağlık, kalibre skor, ByteTrack), Next.js ekranı (sağlık paneli, alarmlar, arıza simülasyonu), compose + kapalı ağ kanıtları | S7, S8; `v0.2.0` | `docs/design/faz3.md` (onaylı, 2026-10-18), plan `docs/plans/F3.md` |
-| **4. Hareketli hedef** | 1 Şub - 28 Mar 2027 | Kamera hareketi telafisi, hareketli/duran ayrımı, göreli mozaik harita, bölge olayları (M3OT) | S11; `v0.3.0` | Faz 4 tasarımı, Faz 3 sonunda |
+| **4. Hareketli hedef** | bitti 2026-10-29 (v4.6) | Kamera hareketi telafisi, hareketli/duran ayrımı, göreli mozaik harita, bölgeler ve alarmlar, olay günlüğü, dışa aktarma (M3OT) | S11; `v0.3.0` | `docs/design/faz4.md`, plan `docs/plans/F4.md`, sonuç `docs/motion.md` |
 | **5. Sunum** | 1-30 Nis 2027 | Aşağıdaki H10 içeriği: README, demo videosu, teknik yazı, CV; isteğe bağlı arXiv | S1-S11; `v1.0.0` | Faz 5 başında |
 
 **v4.6 (F4 Görev 15A-15D, 2026-10-28):** M3OT kapsamı için sevk edilen model **E3c-M** (E3c + M3OT train öğretmen etiketleriyle ince ayar, ADR 0010; M3OT val AP50 0,396 → 0,885, DroneVehicle val mAP50 0,841 → 0,845); takipçi eşikleri M3OT val'de HOTA kuralıyla (E3c-M ile 0,6 / 0,6, `docs/design/faz3.md`); isteğe bağlı parçalı çıkarım `tiles=4` motor ve API'de var, ama E3c-M ile val'de daha kötü (AP50 0,833, HOTA 0,597 · tam kare 0,652) → varsayılan her cihazda `tiles=1` (`docs/design/faz4-kapsama.md` §3 C). Ego maskesine yalnız ham skoru ≥ 0,6 tespitler girer (`ego.mask_min_score`).
@@ -1227,7 +1230,7 @@ Hareketli / duran araç v4.0'da ek hedef olmaktan çıktı, Faz 4'ün çekirdeğ
 | Kodu anlamadan ilerlemek | Orta | **Yüksek (mülakat)** | §21.1 ilkeleri ve DoD |
 | Faz 2 yöntemi sabit füzyona (E3c/E4b) göre anlamlı kazanç sağlamıyor | Orta | Orta | Olumsuz sonuç da raporlanır; yöntem "yenilik" diye değil ölçülmüş deneme olarak sunulur. Kalibrasyon ve arıza tespiti füzyon kazancından bağımsız değer taşır. Sentetik bozulmada çalışan dedektörün gerçek arızada çalışmaması sınırlama olarak yazılır; Faz 3'te M3OT dizilerinde niteliksel kontrol (v4.4). |
 | Uzun süre (~7 ay), dönem içi ders yükü, motivasyon kaybı | Orta | Yüksek | Her faz kendi sürümüyle biter (`v0.1.0` → `v1.0.0`); Ocak için Faz 3'e geniş süre; §20.6 kesme sırası |
-| M3OT'tan hareketli/duran etiketi türetilemiyor (iz sayısı az, kamera hareketi telafisi kötü) | Orta | Orta | Faz 4 tasarımında küçük bir alt kümede elle doğrulama; olmazsa niteliksel demo |
+| M3OT'tan hareketli/duran etiketi türetilemiyor (iz sayısı az, kamera hareketi telafisi kötü) | Orta | Orta | Faz 4 tasarımında küçük bir alt kümede elle doğrulama; olmazsa niteliksel demo  — **v4.6:** etiketler türetildi ve kör insan örneklemiyle doğrulandı (val 72/73, test 80/80); kalan risk test dizilerinde duran araç olmaması (ADR 0009) |
 
 ---
 
