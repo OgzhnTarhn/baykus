@@ -493,3 +493,75 @@ describe("player second review fixes", () => {
     expect(p.snapshot().state).toBe("paused");
   });
 });
+
+// Dizi değişimi sıfırlamayı bekletmeden, hemen gönderir: yeni dizinin ilk karesi istenmeden önce
+// oturum temizlenmiş olur. Yoldaki istek varsa sıfırlama onun yanına konmaz, bitince uygulanır.
+describe("player sequence change resets at once", () => {
+  it("reset is sent right after loading another sequence, before any frame", async () => {
+    const h = harness({ autoResolve: true });
+    const p = createPlayer(h.deps);
+    p.load("a", [1, 2]);
+    p.step();
+    await flush();
+    expect(h.log).toEqual(["detect a 1"]);
+
+    p.load("b", [1, 2]); // dizi değişimi: kare istenmeden sıfırlar
+    await flush();
+    expect(h.log).toEqual(["detect a 1", "reset"]);
+    expect(h.scopes).toEqual(["all"]);
+
+    p.step();
+    await flush();
+    expect(h.log).toEqual(["detect a 1", "reset", "detect b 1"]); // tek sıfırlama
+  });
+
+  it("onReset gets 'all' right after loading another sequence, before any frame", async () => {
+    const h = harness({ autoResolve: true });
+    const seen: ResetScope[] = [];
+    const p = createPlayer({ ...h.deps, onReset: (scope: ResetScope) => seen.push(scope) });
+    p.load("a", [1, 2]);
+    p.step();
+    await flush();
+    p.load("b", [1, 2]);
+    await flush();
+    expect(seen).toEqual(["all"]); // henüz kare istenmedi
+    expect(h.log).toEqual(["detect a 1", "reset"]);
+  });
+
+  it("the very first load does not reset", async () => {
+    const h = harness({ autoResolve: true });
+    const p = createPlayer(h.deps);
+    p.load("a", [1, 2]); // henüz hiçbir kare istenmedi
+    await flush();
+    expect(h.log).toEqual([]);
+    expect(h.scopes).toEqual([]);
+  });
+
+  it("re-loading the same sequence does not reset by itself", async () => {
+    const h = harness({ autoResolve: true });
+    const p = createPlayer(h.deps);
+    p.load("a", [1, 2]);
+    p.step();
+    await flush();
+    p.load("a", [1, 2]); // aynı dizi: sıfırlama gerekmez
+    await flush();
+    expect(h.log).toEqual(["detect a 1"]);
+  });
+
+  it("loading another sequence while a request is in flight waits for it", async () => {
+    const h = harness(); // istek elle çözülür
+    const p = createPlayer(h.deps);
+    p.load("a", [1, 2]);
+    p.step();
+    await flush();
+    p.load("b", [7, 8]);
+    await flush();
+    expect(h.log).toEqual(["detect a 1"]); // istek yoldayken sıfırlama yanına konmaz
+    h.calls[0].resolve("r1");
+    await flush();
+    expect(h.log).toEqual(["detect a 1", "reset"]); // istek bitince uygulanır
+    p.step();
+    await flush();
+    expect(h.log).toEqual(["detect a 1", "reset", "detect b 7"]);
+  });
+});

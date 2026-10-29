@@ -3,6 +3,7 @@
 // - hız bir üst sınırdır (kare aralığının kalanı beklenir), kare atlanmaz;
 // - motor hatasında durur ve iletiyi gösterir (yeniden deneme döngüsü yok);
 // - dizi sonunda başa döner; oturum kuralı (session.ts) gerekirse önce motor oturumunu sıfırlar;
+// - dizi değişimi oturumu hemen sıfırlar (motor başka dizinin karesini görmüşse "all" istenir);
 // - sıfırlama kapsamlıdır (Faz 4 §5.8): dizi içi geçişler "tracks", dizi değişimi ve elle istenen
 //   sıfırlama "all"; bekleyen kapsamlar birleşir, "all" kazanır.
 import type { ResetScope } from "@/lib/client";
@@ -52,10 +53,11 @@ export function createPlayer<R>(deps: PlayerDeps<R>): Player<R> {
   let result: R | null = null;
   let error: string | null = null;
   let busy = false; // istek yolda (oturum sıfırlama dahil)
+  let resetting = false; // yalnız oturum sıfırlama sürüyor (istek yok)
   let waiting = false; // oynatırken kare aralığının kalanı bekleniyor
   let pendingSeek: number | null = null;
   let fps = DEFAULT_FPS;
-  let last: Position | null = null; // motora en son başarıyla verilen kare
+  let last: Position | null = null; // motora en son verilen kare (yanıt beklenmeden yazılır)
   let pendingReset: ResetScope | null = null; // bekleyen sıfırlama kapsamı (null = yok); "all" kazanır
 
   const mergeScope = (a: ResetScope | null, b: ResetScope | null): ResetScope | null =>
@@ -86,6 +88,7 @@ export function createPlayer<R>(deps: PlayerDeps<R>): Player<R> {
   // gelen atlama ya da oynat, sıfırlama bitince uygulanır.
   async function resetOnly(): Promise<void> {
     busy = true;
+    resetting = true;
     emit();
     try {
       await doReset(pendingReset ?? "all");
@@ -96,6 +99,7 @@ export function createPlayer<R>(deps: PlayerDeps<R>): Player<R> {
       return;
     } finally {
       busy = false;
+      resetting = false;
       emit();
     }
     if (pendingSeek !== null) {
@@ -115,8 +119,8 @@ export function createPlayer<R>(deps: PlayerDeps<R>): Player<R> {
     try {
       const scope = mergeScope(pendingReset, resetScope(last, pos));
       if (scope !== null) await doReset(scope);
+      last = pos; // motorun gördüğü son kare (yanıt gelmeden de dizi değişimi görülür)
       const r = await deps.detect(pos.seq, requested[target]);
-      last = pos; // motorun gördüğü son kare (yanıt gösterilmese de)
       if (pos.seq === seq) {
         // başka dizi yüklendiyse eski yanıt gösterilmez; oynatma yeni diziyle sürer
         index = target;
@@ -171,7 +175,10 @@ export function createPlayer<R>(deps: PlayerDeps<R>): Player<R> {
   };
 
   return {
+    // Dizi değişimi oturumu hemen sıfırlar: motor başka dizinin karesini gördüyse "all" istenir
+    // (istek yoldayken ya da bekleme sırasında istek bitince uygulanır, yanına konmaz).
     load(s, f) {
+      const changed = last !== null && last.seq !== s;
       seq = s;
       frames = f;
       index = -1;
@@ -180,6 +187,10 @@ export function createPlayer<R>(deps: PlayerDeps<R>): Player<R> {
       pendingSeek = null;
       state = "idle";
       emit();
+      if (changed) {
+        pendingReset = mergeScope(pendingReset, "all");
+        if (!busy && !waiting) void resetOnly();
+      }
     },
     play() {
       if (frames.length === 0 || state === "playing") return;
@@ -192,7 +203,7 @@ export function createPlayer<R>(deps: PlayerDeps<R>): Player<R> {
       emit();
     },
     step() {
-      if (busy) return;
+      if (busy && !resetting) return; // yoldaki istek sırasında adım yok sayılır
       if (state === "playing") state = "paused";
       start(nextIndex());
     },
