@@ -13,6 +13,29 @@ ExportMenu}.tsx`, `MapPanel.tsx` (kuyruk çizimi); `python/src/baykus/motion/{me
 (C++ eşliği Kabul 1 ile CI'da sınanıyor), `engine/apps/{sequence,clip,bench}.cpp`, `bench.cpp`,
 `cpu.cpp`, `motion_config.cpp`, `MapPanel.tsx` kalanı, testlerin çoğu.
 
+## Durum (2026-10-29, dal `f4`, v0.3.1 adayı)
+
+Her satırda önce düşen test yazıldı (orkestra `f4-v031`, run `20261029-211742-4263`), sonra düzeltildi.
+Son doğrulama: UI `npm test` 172/172, lint ve `tsc` temiz; motor kaynaktan derlemeyle 214/214
+(`Ego.TraceParity`, `ZonesEvidence.Write` önceden olduğu gibi atlanıyor: dış iz / kanıt klasörü ister).
+
+| Bulgu | Durum | Commit | Önce düşen test |
+|---|---|---|---|
+| Ö1 | düzeltildi (yanıt bekleyen düzenlemeyi ve açık çizimi korur; reddedilen kümenin üstündeki bekleyen düşer) | `b78dc50` | `zone-sync.test.ts` 3 yeni durum |
+| Ö2 | düzeltildi (ego / hareket / bölge / günlük yalnız `track=true`) | `2c06745` | `MotionRuntimeTest.TrackOffSkipsMotion` |
+| Ö3 | düzeltildi (PUT, onay ve `scope=tracks` sonrası `/events` çekilir; alarm kitabı bant dışı kapanış karesini kullanır) | `9a31714` | `timeline.test.ts`, `alarm-panel.test.ts` |
+| K1 | düzeltildi (iz başına en çok 4096 boy örneği; aşınca eşit aralıkla seyreltilir, altında birebir aynı) | `91d8c6e` | `Summary.SizeSamplesBounded` |
+| K2 | düzeltildi (150 itmeden uzun görülmeyen izin kuyruğu düşer) | `1469aa7` | `mosaic.test.ts` 2 yeni durum |
+| K3 | düzeltildi (Excel kopyasında `= + - @ TAB CR` ile başlayan sayı dışı alana `'`; motor CSV'si aynı) | `3d8a4aa` | `exporting.test.ts` |
+| K4 | düzeltildi (birleşmiş / olmayan nesil 400; `int` dışı tam sayı 400; negatif `frame` 400) | `c2e3285` | `Zones.MergedGenRejected`, `Zones.HugeIntsRejected`, `ServerTest.NegativeFrameIs400` |
+
+**Kararlar (yanlışsa yalnız yer / ayrıntı):** K1'de 4096 sınırı `motion.json`'a eklenmedi (yapılandırma
+sha'sı değişmesin; dosya içi sabit). K2'de "son 150 kare" iz başına değil zaman penceresi olarak okundu
+(tasarım §5.4); bitmiş izin kartındaki "Haritada göster" 150 kareden sonra haritayı kaydırmaz. Ö1'de
+reddedilen PUT'un üstüne kurulan bekleyen düzenleme gönderilmez (operatör yeniden yapar).
+**Not:** `scripts/engine_test.sh` imajın içindeki derlemeyi koşar, çalışma ağacındaki kaynağı derlemez;
+kaynak değişikliği `.orkestra/engine_check.sh '.'` (ya da imaj yeniden derlenerek) sınanmalı.
+
 ## Önemli
 
 ### Ö1 · Bölge eşitleme: üst üste gelen düzenlemede bir değişiklik sessizce kaybolur
