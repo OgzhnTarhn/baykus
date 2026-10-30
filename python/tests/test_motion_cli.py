@@ -52,7 +52,8 @@ def test_motion_val_matches_committed_fixture(tmp_path):
     want = json.loads(expected.read_text(encoding="utf-8"))
     # bayt eşitliği değil: CI işlemcisine göre son ondalık hane değişebiliyor; büyük dosyada
     # pytest'in difflib farkı saatler sürüyordu (CI "takılması"); ilk farkı kısa yaz
-    assert _first_diff(got, want) is None
+    diff = _first_diff(got, want)  # assert içinde çağrı: pytest iki büyük sözlüğü de basıyordu
+    assert diff is None, diff
 
 
 def _first_diff(a, b, path="$"):
