@@ -10,8 +10,10 @@ repos:
       # --unsafe: yalnız sözdizimi; Compose'un `!reset` etiketi (compose.offline.yml) bilinmeyen etiket
       - id: check-yaml
         args: ["--unsafe"]
+      # README demo GIF'i (4,6 MB) tek istisna; veri / model dosyaları için sınır aynen 1 MB
       - id: check-added-large-files
         args: ["--maxkb=1024"]
+        exclude: ^docs/figures/demo\.gif$
       - id: detect-private-key
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.16.10
