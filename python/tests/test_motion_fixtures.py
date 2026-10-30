@@ -17,6 +17,7 @@ from baykus.motion.geometry import SIMILARITIES, similarity
 from baykus.motion.images import half_gray
 from baykus.motion.reloc import Relocalizer
 from baykus.track.runner import load_cfg
+from tests.json_diff import first_diff
 from tests.test_engine_ref import _models
 from tests.test_motion_session import ScriptBackend
 
@@ -285,7 +286,8 @@ def test_motion_val_matches_reference(mcfg):
     )
     want = json.loads((ROOT / "fixtures/expected/motion_val.json").read_text(encoding="utf-8"))
     got = fx.motion_expected(maps, dets, tracks, mcfg)
-    assert got["sequences"] == want["sequences"]
+    diff = first_diff(got["sequences"], want["sequences"], "$.sequences")
+    assert diff is None, diff
     rows = [t for s in got["sequences"] for f in s["frames"] for t in f["tracks"]]
     assert {r[1] for r in rows} == {"moving", "stationary", "unknown"}
 
