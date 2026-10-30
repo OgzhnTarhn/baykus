@@ -1,7 +1,7 @@
 # Baykuş — RGB + Termal Füzyonlu Hava Görüntüsü Tespiti, Edge için Optimize, Uçtan Uca Sistem
 
 > **Proje adı:** Baykuş · **Repo / paket adı:** `baykus` · **Alt başlık (EN):** *RGB-Thermal aerial vehicle detection on the edge*
-> **Sahibi:** Oğuzhan Tarhan · **Tarih:** 2026-10-07 · **Sürüm:** v4.6 (Faz 4 kapanışı: hareketli hedef ve ürün davranışı; v4.5: Faz 3 tasarımı ve planı; v4.4: Faz 2; v4.3: H5 planı; v4.2: H4 planı, E3b kesildi; v4.1: H1 kapanışı; v4.0: kapsam genişletme: güvenilirlik farkındalığı + hareketli hedef, ADR 0006; eğitim: Colab, kullanıcı çalıştırır · laptop: AMD Ryzen 7 8845HS) · **Süre:** 5 faz, ~7 ay (5 Ekim 2026-30 Nisan 2027) · **Durum:** v3.0 onaylandı (2026-10-02); v4.0 yol haritası onaylandı (2026-10-07)
+> **Sahibi:** Oğuzhan Tarhan · **Tarih:** 2026-10-07 · **Sürüm:** v4.7 (Faz 5 kısaltıldı ve kapandı: `v1.0.0`; v4.6: Faz 4 kapanışı: hareketli hedef ve ürün davranışı; v4.5: Faz 3 tasarımı ve planı; v4.4: Faz 2; v4.3: H5 planı; v4.2: H4 planı, E3b kesildi; v4.1: H1 kapanışı; v4.0: kapsam genişletme: güvenilirlik farkındalığı + hareketli hedef, ADR 0006; eğitim: Colab, kullanıcı çalıştırır · laptop: AMD Ryzen 7 8845HS) · **Süre:** 5 faz, ~7 ay (5 Ekim 2026-30 Nisan 2027) · **Durum:** v3.0 onaylandı (2026-10-02); v4.0 yol haritası onaylandı (2026-10-07)
 
 ---
 
@@ -39,6 +39,13 @@
 ---
 
 ## 0. v1'den bu yana ne değişti
+
+### v4.7 (2026-10-30) — Faz 5 kısaltıldı, `v1.0.0`
+Proje portfolyo için yapıldığından Faz 5 sunum işine indirildi ve Nisan 2027 yerine hemen yapıldı: README'nin
+en üstünde operatör ekranının GIF'i (`docs/figures/demo.gif`, M3OT `1_08`), kısa README (ayrıntılar
+`docs/details.md`'ye taşındı, içerik silinmedi), teknik soru-cevap belgesi `docs/faq.md`, `v1.0.0` etiketi.
+Yapılmayanlar: demo videosu (GIF yeterli görüldü), teknik yazı, İngilizce README, arXiv (Faz 2 sonucu makaleye
+değmedi). Değişen yerler: §22 (Faz 5).
 
 ### v4.6 (2026-10-29) — Faz 4 kapanışı
 Faz 4 (`docs/design/faz4.md`, plan `docs/plans/F4.md`): IR'den kamera hareketi (LK + RANSAC, ego maskesi ham skor ≥ 0,6), harita nesilleri ve ORB ile yeniden konumlama, iz başına hareket durumu (15 kare, 0,03 / 0,10), donmuş kare dedektörü, bölgeler (alan, yasak bölge, bekleme sınırı, sayım hattı) ve alarmlar, araç özeti, olay günlüğü (JSON / CSV, Türkçe Excel için `;`'li kopya), ekranda göreli mozaik harita, araç kartı, zaman çizelgesi ve dışa aktarma; hepsi C++ motorunda, Python referansıyla eşlikli (Kabul 1-3) ve internetsiz. Sevk edilen model E3c-M (ADR 0010); motor iş parçacıkları OpenCV 2 / ORT 8 (Kabul 5: p95 97,9 ms). Olumsuz sonuç: Kabul 10 b (uzun boşluktan sonra yeniden konumlama ≤ 2,0 px) tutmadı, ADR 0011. Test bir kez, `f4-freeze` sonrası (ADR 0009, `docs/motion.md`). Modül listesi, API alanları, ekran ve bench protokolü tasarımın §5'inde; aşağıdaki bölümler Faz 3 hâlini anlatır. Değişen yerler: §2.3 (S11), §22 (Faz 4), §23.
@@ -1059,7 +1066,7 @@ Laptop: JSON + mlruns'u indir → results/'a ekle → `mlflow ui` ile incele →
 | **2. Güvenilirlik farkındalığı** | ≈ 1,5 hafta (v4.4) | Kare başına RGB/IR sağlık dedektörü (sensör arıza tespiti), arızaya duyarlı kanal kapısı (uyarlanabilir füzyon), güven kalibrasyonu (ECE) | S10 | `docs/design/faz2.md` (onaylı, 2026-10-17) |
 | **3. Sistem** | ≈ 7-8 hafta, tampon dahil (v4.5; pencere 7 Ara 2026 - 31 Oca 2027) | C++ motor (tek model, sağlık, kalibre skor, ByteTrack), Next.js ekranı (sağlık paneli, alarmlar, arıza simülasyonu), compose + kapalı ağ kanıtları | S7, S8; `v0.2.0` | `docs/design/faz3.md` (onaylı, 2026-10-18), plan `docs/plans/F3.md` |
 | **4. Hareketli hedef** | bitti 2026-10-29 (v4.6) | Kamera hareketi telafisi, hareketli/duran ayrımı, göreli mozaik harita, bölgeler ve alarmlar, olay günlüğü, dışa aktarma (M3OT) | S11; `v0.3.0` | `docs/design/faz4.md`, plan `docs/plans/F4.md`, sonuç `docs/motion.md` |
-| **5. Sunum** | 1-30 Nis 2027 | Aşağıdaki H10 içeriği: README, demo videosu, teknik yazı, CV; isteğe bağlı arXiv | S1-S11; `v1.0.0` | Faz 5 başında |
+| **5. Sunum** | bitti 2026-10-30 (v4.7, kısaltıldı) | README GIF'i, kısa README + `docs/details.md`, `docs/faq.md`; video, teknik yazı ve arXiv yapılmadı | S1-S11; `v1.0.0` | — |
 
 **v4.6 (F4 Görev 15A-15D, 2026-10-28):** M3OT kapsamı için sevk edilen model **E3c-M** (E3c + M3OT train öğretmen etiketleriyle ince ayar, ADR 0010; M3OT val AP50 0,396 → 0,885, DroneVehicle val mAP50 0,841 → 0,845); takipçi eşikleri M3OT val'de HOTA kuralıyla (E3c-M ile 0,6 / 0,6, `docs/design/faz3.md`); isteğe bağlı parçalı çıkarım `tiles=4` motor ve API'de var, ama E3c-M ile val'de daha kötü (AP50 0,833, HOTA 0,597 · tam kare 0,652) → varsayılan her cihazda `tiles=1` (`docs/design/faz4-kapsama.md` §3 C). Ego maskesine yalnız ham skoru ≥ 0,6 tespitler girer (`ego.mask_min_score`).
 
